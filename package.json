@@ -1,5 +1,5 @@
 {
-  "name": "nicebook",
+  "name": "@nicebook/repo",
   "private": true,
   "scripts": {
     "build": "turbo build",
