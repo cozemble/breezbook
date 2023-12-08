@@ -19,16 +19,19 @@ export default {
   },
 
   plugins: [
-    svelte({
-      include: "src/**/*.svelte",
-      emitCss: false,
-      preprocess: sveltePreprocess(),
-    }),
     resolve({
       browser: true,
       exportConditions: ["svelte"],
       extensions: [".svelte"],
     }),
+    svelte({
+      include: "src/**/*.svelte",
+      emitCss: false,
+      preprocess: sveltePreprocess({
+        postcss: true,
+      }),
+    }),
+
     commonjs(),
     typescript(),
     production && terser(),
