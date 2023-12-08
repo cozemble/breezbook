@@ -1,0 +1,25 @@
+{
+  "name": "@nicebook/web-components",
+  "version": "0.1.0",
+  "description": "Web components for Nicebook to be integrated in any web app",
+  "main": "./dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c rollup.config.js --environment NODE_ENV:production",
+    "dev": "rollup -c rollup.config.js --watch --environment NODE_ENV:development"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@tsconfig/svelte": "^5.0.2",
+    "rollup": "^4.7.0",
+    "rollup-plugin-livereload": "^2.0.5",
+    "rollup-plugin-serve": "^3.0.0",
+    "rollup-plugin-svelte": "^7.1.6",
+    "svelte": "^4.2.8",
+    "svelte-preprocess": "^5.1.1",
+    "typescript": "^5.2.2"
+  }
+}
