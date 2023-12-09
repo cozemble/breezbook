@@ -1,24 +1,38 @@
-# Turborepo starter
+# BreezBook
 
-This is an official starter Turborepo.
+BreezBook is a white-label booking app that can be used by customers to book appointments with the business.
 
-## Using this example
+## Features
+  - White-label for multiple tenants
+  - Services for a tenant
+    - Multiple services for a tenant
+    - Time slots
+       <!-- TODO Different services may share the same time slots -->
+    - Accessories
+    - Extra customer details specific to the service
+    
+  - Cart system for multiple bookings or services
+  - Payment
+  - Custom themes
+    - Automatic theme detection from the tenant's website
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
-```
+## Tech Stack
+  - Turborepo
+  - TypeScript
+  - SvelteKit
+  - TailwindCSS + DaisyUI
+  - Stripe
+  - Vercel
+  - Airtable
+  - AI
 
 ## What's inside?
 
-This Turborepo includes the following packages/apps:
+This repo includes the following packages/apps:
 
 ### Apps and Packages
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@breezbook/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@breezbook/booking`: Booking app made with SvelteKit for customers to book appointments with the business
 - `@breezbook/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
 - `@breezbook/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
@@ -36,8 +50,7 @@ This Turborepo has some additional tools already setup for you:
 
 To build all apps and packages, run the following command:
 
-```
-cd my-turborepo
+```bash
 pnpm build
 ```
 
@@ -45,8 +58,7 @@ pnpm build
 
 To develop all apps and packages, run the following command:
 
-```
-cd my-turborepo
+```bash
 pnpm dev
 ```
 
