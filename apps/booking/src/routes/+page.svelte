@@ -1,4 +1,29 @@
-<div class="card p-4 w-64 bg-base-200 rounded-box shadow-lg">
-	<h1 class="text-3xl font-bold mb-10">Hello world!</h1>
-	<button class="btn btn-primary">Action</button>
+<script lang="ts">
+	import backend from '$lib/common/backend';
+
+	let tenants: Tenant[] = [];
+
+	backend.tenant.getAll().then((res) => {
+		tenants = res;
+	});
+</script>
+
+<svelte:head>
+	<title>breezbook</title>
+</svelte:head>
+
+<div class="p-10">
+	<h1 class="text-4xl mb-10 font-black text-accent">
+		<span class="text-primary">breez</span>book
+	</h1>
+
+	<h2 class="text-xl mb-8">Tenants</h2>
+
+	<ul class="menu border-l">
+		{#each tenants as tenant}
+			<li>
+				<a href="/{tenant.slug}" class="link text-secondary">{tenant.name}</a>
+			</li>
+		{/each}
+	</ul>
 </div>
