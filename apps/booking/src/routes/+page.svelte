@@ -2,9 +2,3 @@
 	<h1 class="text-3xl font-bold mb-10">Hello world!</h1>
 	<button class="btn btn-primary">Action</button>
 </div>
-
-<style lang="postcss">
-	:global(html) {
-		background-color: theme(colors.gray.100);
-	}
-</style>
