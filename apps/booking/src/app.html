@@ -3,7 +3,18 @@
 	<head>
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+		<style>
+			/* Prevent false padding on right of the screen */
+			html,
+			body {
+				width: 100%;
+				overflow-x: hidden;
+				position: relative;
+			}
+		</style>
+
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" data-theme="winter">
