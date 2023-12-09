@@ -8,10 +8,10 @@ importers:
 
   .:
     devDependencies:
-      '@nicebook/eslint-config':
+      '@breezbook/eslint-config':
         specifier: workspace:*
         version: link:packages/eslint-config
-      '@nicebook/typescript-config':
+      '@breezbook/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config
       prettier:

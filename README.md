@@ -18,9 +18,9 @@ This Turborepo includes the following packages/apps:
 
 - `docs`: a [Next.js](https://nextjs.org/) app
 - `web`: another [Next.js](https://nextjs.org/) app
-- `@nicebook/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@nicebook/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@nicebook/typescript-config`: `tsconfig.json`s used throughout the monorepo
+- `@breezbook/ui`: a stub React component library shared by both `web` and `docs` applications
+- `@breezbook/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
+- `@breezbook/typescript-config`: `tsconfig.json`s used throughout the monorepo
 
 Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
 

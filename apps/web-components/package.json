@@ -1,5 +1,5 @@
 {
-  "name": "@nicebook/web-components",
+  "name": "@breezbook/web-components",
   "version": "0.1.0",
   "description": "Web components for Nicebook to be integrated in any web app",
   "main": "./dist/index.js",

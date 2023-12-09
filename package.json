@@ -1,5 +1,5 @@
 {
-  "name": "@nicebook/repo",
+  "name": "@breezbook/repo",
   "private": true,
   "scripts": {
     "build": "turbo build",
@@ -8,8 +8,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "devDependencies": {
-    "@nicebook/eslint-config": "workspace:*",
-    "@nicebook/typescript-config": "workspace:*",
+    "@breezbook/eslint-config": "workspace:*",
+    "@breezbook/typescript-config": "workspace:*",
     "prettier": "^3.1.0",
     "turbo": "latest"
   },
