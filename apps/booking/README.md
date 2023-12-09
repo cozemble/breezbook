@@ -1,38 +1,60 @@
-# create-svelte
+# BreezBook - Booking App
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+This app is used by customers to book appointments with the business.
 
-## Creating a project
+## Customer Journey
+  0. Customer redirected from the tenant's website to the booking app 
+    - with the service selected
+    - starts with the [services](#services) page
+  1. Multiple options from here:
+    - Can go into the [booking](#booking) for the selected service
+    - Can select another service and go into the [booking journey](#booking)
 
-If you're seeing this, you've probably already done this step. Congrats!
+### Services
+  - Display all the services the tenant provides
+    - In a grid of cards
+    - Service details
+      - Name
+      - Description
+      - Image
+      - Price (approximate because of the time slot and accessories)
+      - Duration (approximate)
+      - Action to go to [booking](#booking) from here
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+### Booking
+  0. Display the service details
+    - Name
+    - Description
+    - Price (approximate because of the time slot and accessories)
+    - Duration
+    - Image
+    - Display other services too so that the customer can add more services to the cart
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+  1. Select a time slot
+    - Display the available time slots
+    - Display the time slots based on the service duration
+    - Different pricings based on rules defined by the tenant
+  
+  2. Select accessories
+    - Optional
+    - Provide extra details for the accessories
+    - Do price calculations based on the accessories and their details
+  
+  3. Provide customer details
+    - Name
+    - Email
+    - Phone
+    - Address
+    - Extra details specific to the service or the tenant
+  
+  4. Add to cart
+    - Can go to [cart](#cart) from here
+    - Can select more services before going to the cart
 
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+### Cart
+  - Can add multiple services to the cart
+  - Can checkout and pay for all the services in the cart
+  - Can remove services from the cart
+  - Can edit the services in the cart - (later)
+  - Block booking if the time slot have become unavailable while in the cart - (later)
+  - Can save the cart for later (on local storage) - (later) 
