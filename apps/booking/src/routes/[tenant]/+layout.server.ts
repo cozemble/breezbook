@@ -8,7 +8,10 @@ export const load: LayoutServerLoad = async ({ params }) => {
 
 	if (!tenant) throw error(404, 'Not found');
 
+	const services = await backend.service.getAll(params.tenant);
+
 	return {
-		tenant
+		tenant,
+		services
 	};
 };

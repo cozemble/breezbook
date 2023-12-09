@@ -1,10 +1,13 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import backend from '$lib/common/backend';
 
 export const load: PageServerLoad = ({ params }) => {
-	if (params.service === 'car-wash') {
-		return { title: 'Hey!', content: "Welcome To Mike's Car Wash!" };
-	}
+	const service = backend.service.getOne(params.tenant, params.service);
 
-	throw error(404, 'Not found');
+	if (!service) throw error(404, 'Not found');
+
+	return {
+		service
+	};
 };
