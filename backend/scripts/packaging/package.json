@@ -1,0 +1,16 @@
+{
+  "name": "@breezbook/backend-scripts-packaging",
+  "version": "1.0.0",
+  "description": "",
+  "module": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^16.11.6",
+    "strip-ansi": "~6.0.0"
+  }
+}
