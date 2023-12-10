@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ServiceCard from '$lib/components/ServiceCard.svelte';
 	import type { PageData } from './$types';
+	import Hero from './Hero.svelte';
 
 	export let data: PageData;
 	const tenant = data.tenant;
@@ -8,11 +9,8 @@
 </script>
 
 <svelte:head>
-	<title>{data.tenant.name}</title>
+	<title>{tenant.name}</title>
 </svelte:head>
-
-<h1 class="text-4xl font-bold">{tenant.name}</h1>
-<p>{tenant.description}</p>
 
 <h2 class="text-2xl">Our Services</h2>
 <div class="container">
@@ -26,3 +24,4 @@
 		</ul>
 	{/if}
 </div>
+<Hero {tenant} />

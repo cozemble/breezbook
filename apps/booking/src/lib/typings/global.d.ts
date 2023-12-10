@@ -2,6 +2,7 @@ declare interface Tenant {
 	id: string;
 	slug: string;
 	name: string;
+	heading: string;
 	description: string;
 	// status: string;
 	// createdAt: string;

@@ -3,22 +3,25 @@ export const tenants: Tenant[] = [
 		id: '1',
 		slug: 'the-smart-wash',
 		name: 'The Smart Wash',
+		heading: 'Get your car cleaned in a smart way.',
 		description:
-			'Get your car cleaned in a smart way. We use the latest technology to clean your car. Your car will shine like a new one.'
+			'We use the latest technology to clean your car. Your car will shine like a new one.'
 	},
 	{
 		id: '2',
 		slug: 'robs-robbery-team',
 		name: "Rob's Robbery Team",
+		heading: 'We rob. We are professionals.',
 		description:
-			'We rob any place for you. We are professionals. Just tell us where and when. We are not responsible for any consequences. And remember, there is no rest for the wicked.'
+			'We rob any place for you. Just tell us where and when. We are not responsible for any consequences. And remember, there is no rest for the wicked.'
 	},
 	{
 		id: '3',
 		slug: 'monkey-business',
 		name: 'Monkey Business',
+		heading: 'We do monkey business.',
 		description:
-			'We do monkey business. We are monkeys. We do business. We love bananas. We love climbing. We love throwing bananas to people.'
+			'We are monkeys. We do business. We love bananas. We love climbing. We love throwing bananas to people.'
 	}
 ];
 
