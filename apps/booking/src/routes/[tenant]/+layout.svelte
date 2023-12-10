@@ -7,10 +7,12 @@
 	const tenant = data.tenant;
 </script>
 
-<div class="min-h-screen flex flex-col">
+<div class="min-h-screen flex flex-col items-center">
 	<Header {tenant} />
-	<main class="p-6 flex-grow">
-		<slot />
+	<main class="p-6 flex-grow w-full flex flex-col items-center">
+		<div class="max-w-7xl w-full">
+			<slot />
+		</div>
 	</main>
 	<Footer {tenant} />
 </div>
