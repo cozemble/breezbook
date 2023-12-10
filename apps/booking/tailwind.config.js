@@ -4,10 +4,13 @@ import daisyui from 'daisyui';
 export default {
 	content: ['./src/**/*.svelte', './src/**/*.html'],
 	theme: {
+		fontFamily: {
+			sans: ['"Castoro"', 'sans-serif']
+		},
 		extend: {}
 	},
 	plugins: [daisyui],
 	daisyui: {
-		themes: ['winter', 'dim']
+		themes: ['winter', 'corporate', 'dim']
 	}
 };
