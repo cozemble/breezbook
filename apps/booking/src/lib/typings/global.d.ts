@@ -4,6 +4,7 @@ declare interface Tenant {
 	name: string;
 	heading: string;
 	description: string;
+	heroImage: string;
 	// status: string;
 	// createdAt: string;
 	// updatedAt: string;

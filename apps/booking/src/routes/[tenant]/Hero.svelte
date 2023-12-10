@@ -13,6 +13,11 @@
 			</p>
 		</div>
 
-		<img src="https://picsum.photos/800/450" class="max-w-sm rounded-lg shadow-2xl" />
+		<img
+			src={tenant.heroImage}
+			class="max-w-sm rounded-lg shadow-2xl"
+			aria-hidden
+			alt="Hero Image"
+		/>
 	</div>
 </div>

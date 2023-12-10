@@ -5,7 +5,8 @@ export const tenants: Tenant[] = [
 		name: 'The Smart Wash',
 		heading: 'Get your car cleaned in a smart way.',
 		description:
-			'We use the latest technology to clean your car. Your car will shine like a new one.'
+			'We use the latest technology to clean your car. Your car will shine like a new one.',
+		heroImage: 'https://picsum.photos/800/450'
 	},
 	{
 		id: '2',
@@ -13,7 +14,8 @@ export const tenants: Tenant[] = [
 		name: "Rob's Robbery Team",
 		heading: 'We rob. We are professionals.',
 		description:
-			'We rob any place for you. Just tell us where and when. We are not responsible for any consequences. And remember, there is no rest for the wicked.'
+			'We rob any place for you. Just tell us where and when. We are not responsible for any consequences. And remember, there is no rest for the wicked.',
+		heroImage: 'https://picsum.photos/800/450'
 	},
 	{
 		id: '3',
@@ -21,7 +23,8 @@ export const tenants: Tenant[] = [
 		name: 'Monkey Business',
 		heading: 'We do monkey business.',
 		description:
-			'We are monkeys. We do business. We love bananas. We love climbing. We love throwing bananas to people.'
+			'We are monkeys. We do business. We love bananas. We love climbing. We love throwing bananas to people.',
+		heroImage: 'https://picsum.photos/800/450'
 	}
 ];
 
@@ -42,7 +45,7 @@ export const services: Service[] = [
 		slug: 'small-car-wash',
 		name: 'Small Car Wash',
 		description: 'We wash your small car.',
-		image: 'https://picsum.photos/400/200',
+		image: 'https://picsum.photos/400/201',
 		approximatePrice: 50,
 		approximateDuration: 30
 	},
@@ -52,7 +55,7 @@ export const services: Service[] = [
 		slug: 'rob-a-bank',
 		name: 'Rob a Bank',
 		description: 'We rob a bank for you.',
-		image: 'https://picsum.photos/400/200',
+		image: 'https://picsum.photos/400/202',
 		approximatePrice: 1000000,
 		approximateDuration: 120
 	},
@@ -62,7 +65,7 @@ export const services: Service[] = [
 		slug: 'rob-a-store',
 		name: 'Rob a Store',
 		description: 'We rob a store for you.',
-		image: 'https://picsum.photos/400/200',
+		image: 'https://picsum.photos/400/203',
 		approximatePrice: 1000,
 		approximateDuration: 30
 	},
@@ -72,7 +75,7 @@ export const services: Service[] = [
 		slug: 'rob-a-house',
 		name: 'Rob a House',
 		description: 'We rob a house for you.',
-		image: 'https://picsum.photos/400/200',
+		image: 'https://picsum.photos/400/204',
 		approximatePrice: 10000,
 		approximateDuration: 60
 	},
@@ -82,7 +85,7 @@ export const services: Service[] = [
 		slug: 'steal-a-car',
 		name: 'Steal a Car',
 		description: 'We steal a car for you. Must be a nice one.',
-		image: 'https://picsum.photos/400/200',
+		image: 'https://picsum.photos/400/205',
 		approximatePrice: 20000,
 		approximateDuration: 60
 	},
@@ -92,7 +95,7 @@ export const services: Service[] = [
 		slug: 'rob-a-jewelry-store',
 		name: 'Rob a Jewelry Store',
 		description: 'Jewelry is expensive. We rob a jewelry store for you.',
-		image: 'https://picsum.photos/400/200',
+		image: 'https://picsum.photos/400/206',
 		approximatePrice: 500000,
 		approximateDuration: 90
 	},
@@ -112,7 +115,7 @@ export const services: Service[] = [
 		slug: 'climb-a-tree',
 		name: 'Climb a tree',
 		description: 'Climb a tree. Like a monkey.',
-		image: 'https://picsum.photos/400/200',
+		image: 'https://picsum.photos/400/201',
 		approximatePrice: 50,
 		approximateDuration: 20
 	},
@@ -122,7 +125,7 @@ export const services: Service[] = [
 		slug: 'throw-banana-to-someone',
 		name: 'Throw banana to someone',
 		description: 'Throw banana to someone. Like a monkey.',
-		image: 'https://picsum.photos/400/200',
+		image: 'https://picsum.photos/400/202',
 		approximatePrice: 100,
 		approximateDuration: 30
 	},
@@ -132,7 +135,7 @@ export const services: Service[] = [
 		slug: 'climb-a-building',
 		name: 'Climb a building',
 		description: 'Climb a building. Like a monkey. Dangerous.',
-		image: 'https://picsum.photos/400/200',
+		image: 'https://picsum.photos/400/203',
 		approximatePrice: 5000,
 		approximateDuration: 120
 	}
