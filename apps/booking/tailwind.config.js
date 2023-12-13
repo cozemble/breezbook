@@ -5,7 +5,15 @@ export default {
 	content: ['./src/**/*.svelte', './src/**/*.html'],
 	theme: {
 		fontFamily: {
-			sans: ['"Castoro"', 'sans-serif']
+			sans: [
+				'"Commissioner"',
+				'"Ysabeau"',
+				'"Castoro"',
+				'"Comfortaa"',
+				'"Kalnia"',
+				'"Bangers"',
+				'sans-serif'
+			]
 		},
 		extend: {}
 	},
