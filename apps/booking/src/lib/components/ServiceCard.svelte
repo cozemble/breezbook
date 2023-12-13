@@ -18,7 +18,9 @@
 			<span class="opacity-30 text-2xl"> ≈ </span>
 
 			£{service.approximatePrice}
-			<span class="text-base font-thin opacity-60">/ {service.approximateDuration} mins</span>
+			<span class="text-base font-thin opacity-60 whitespace-nowrap"
+				>/ {service.approximateDuration} mins</span
+			>
 		</span>
 		<span class="text-xs opacity-50">extras may affect the price</span>
 
