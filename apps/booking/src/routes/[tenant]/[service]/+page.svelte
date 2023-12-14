@@ -6,6 +6,10 @@
 	const service = data.service;
 </script>
 
+<svelte:head>
+	<title>{tenant.name} - {service.name}</title>
+</svelte:head>
+
 <!-- Service hero -->
 <section class="flex justify-between items-center my-10 rounded-lg">
 	<div>

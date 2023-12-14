@@ -7,6 +7,10 @@
 	const service = data.service;
 </script>
 
+<svelte:head>
+	<title>{tenant.name} - {service.name} | Booking</title>
+</svelte:head>
+
 <div class="text-sm breadcrumbs">
 	<ul>
 		<li><a href="/{tenant.slug}">Services</a></li>
