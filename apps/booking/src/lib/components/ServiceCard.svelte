@@ -24,6 +24,6 @@
 		</span>
 		<span class="text-xs opacity-50">extras may affect the price</span>
 
-		<a href="/{tenant.slug}/{service.slug}" class="btn btn-primary mt-4">Book now</a>
+		<a href="/{tenant.slug}/{service.slug}" class="btn btn-primary mt-4">Details</a>
 	</div>
 </li>

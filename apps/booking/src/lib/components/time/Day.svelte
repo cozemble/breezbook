@@ -12,7 +12,9 @@
 
 <div class="card">
 	<div class="card-body p-4">
-		<h2 class="card-title text-lg text-secondary justify-center font-normal border-b pb-2">
+		<h2
+			class="card-title text-lg text-secondary justify-center font-normal border-b border-base-300 pb-2"
+		>
 			{formattedDate}
 		</h2>
 
