@@ -306,7 +306,6 @@ export function businessConfiguration(availability: BusinessAvailability, resour
 }
 
 
-
 export interface BookableSlots {
     date: string;
     bookableSlots: BookableSlot[];
@@ -347,20 +346,16 @@ function listDays(fromDate: string, toDate: string) {
     return dates;
 }
 
-interface ResourceUsage {
-    date: string;
-    fromTime: TwentyFourHourClockTime
-    toTime: TwentyFourHourClockTime
-    resource: Resource;
-}
-
-function hasNecessaryResources(date: string, slot: BookableSlot, service: Service, resourceUsageByDateAndTime: ResourceUsage[], availableResources: AvailableResources[]): boolean {
+function hasNecessaryResources(date: string, slot: BookableSlot, service: Service, bookingWithResourceUsage: BookingWithResourceUsage[], availableResources: AvailableResources[]): boolean {
     if (slot._type === 'exact.time.availability') {
         throw new Error(`Can't handle exact time availability yet`);
     }
-    const resourcesUsedDuringSlot = resourceUsageByDateAndTime.filter(r => r.date === date && r.fromTime.value < slot.to.value && r.toTime.value > slot.from.value);
+    const resourcesUsedDuringSlot = bookingWithResourceUsage.filter(r => {
+        const {fromTime, toTime} = calcFromAndToTimes(r.booking.slot, service.duration);
+        return r.booking.date === date && fromTime.value < slot.to.value && toTime.value > slot.from.value;
+    }).flatMap(r => r.resources);
     const availableResourcesOnDay: AvailableResources[] = availableResources.filter(r => r.date === date) ?? [] as AvailableResources[];
-    const resourcesTypesAvailable = availableResourcesOnDay.flatMap(a => a.resources).filter(r => !resourcesUsedDuringSlot.find(used => used.resource.id.value === r.id.value)).map(r => r.type);
+    const resourcesTypesAvailable = availableResourcesOnDay.flatMap(a => a.resources).filter(r => !resourcesUsedDuringSlot.find(used => used.id.value === r.id.value)).map(r => r.type);
     return service.resourceTypes.every(rt => resourcesTypesAvailable.find(rta => rta.value === rt.value));
 }
 
@@ -375,26 +370,62 @@ function calcFromAndToTimes(slot: BookableSlot, serviceDuration: number) {
     return {fromTime, toTime};
 }
 
+interface BookingWithResourceUsage {
+    booking: Booking;
+    resources: Resource[]
+}
+
+interface ResourceTimeSlot {
+    resourceId: string;
+    fromTime: string;
+    toTime: string;
+}
+
+
+function assignResourcesToBookings(config: BusinessConfiguration, bookings: Booking[]): BookingWithResourceUsage[] {
+    const resourceTimeSlots: ResourceTimeSlot[] = [];
+    return bookings.map(booking => {
+        const bookedService = mandatory(config.services.find(s => s.id.value === booking.serviceId.value), `Service with id ${booking.serviceId.value} not found`);
+        const {fromTime, toTime} = calcFromAndToTimes(booking.slot, bookedService.duration);
+        const bookedResources = bookedService.resourceTypes.map((rt: ResourceType) => {
+            const possibleResources = config.resources.filter(r => r.type.value === rt.value);
+            const resource = possibleResources.find(r => !resourceTimeSlots.find(rts => rts.resourceId === r.id.value && rts.fromTime < toTime.value && rts.toTime > fromTime.value));
+            if (!resource) {
+                throw new Error(`No resource of type ${rt.value} available for booking ${booking.id.value}`);
+            }
+            resourceTimeSlots.push({resourceId: resource.id.value, fromTime: fromTime.value, toTime: toTime.value});
+            return resource;
+        })
+        return {
+            booking,
+            resources: bookedResources,
+        }
+    })
+
+}
+
 function calculateTimeslotAvailability(config: BusinessConfiguration, bookingsInDateRange: Booking[], service: Service, fromDate: string, toDate: string): BookableSlots[] {
     const dates = listDays(fromDate, toDate);
     const allSlotsForAllDays = dates.map(date => bookableSlots(date, config.timeslots));
     const allResourcesForAllDays = dates.map(date => availableResources(date, config.resources));
-    const resourceUsageByDateAndTime = bookingsInDateRange.flatMap(booking => {
-        const bookedService = mandatory(config.services.find(s => s.id.value === booking.serviceId.value), `Service with id ${booking.serviceId.value} not found`);
-        const bookedResources = config.resources.filter(r => bookedService.resourceTypes.find((rt: ResourceType) => rt.value === r.type.value));
-        return bookedResources.map(r => {
-            const {fromTime, toTime} = calcFromAndToTimes(booking.slot, bookedService.duration);
-            const usage: ResourceUsage = {
-                date: booking.date,
-                fromTime,
-                toTime,
-                resource: r,
-            }
-            return usage
-        });
-    })
+    const bookingsWithResources = assignResourcesToBookings(config, bookingsInDateRange);
+    // const resourceUsageByDateAndTime = bookingsInDateRange.flatMap(booking => {
+    //     const bookedService = mandatory(config.services.find(s => s.id.value === booking.serviceId.value), `Service with id ${booking.serviceId.value} not found`);
+    //     const bookedResources = bookedService.resourceTypes.flatMap((rt: ResourceType) => config.resources.find(r => r.type.value === rt.value));
+    //     return bookedResources.map(r => {
+    //         const {fromTime, toTime} = calcFromAndToTimes(booking.slot, bookedService.duration);
+    //         const usage: ResourceUsage = {
+    //             date: booking.date,
+    //             fromTime,
+    //             toTime,
+    //             resource: r,
+    //             bookedServiceId: booking.serviceId,
+    //         }
+    //         return usage
+    //     });
+    // })
     return allSlotsForAllDays.map(slotsForDay => {
-        const slotsWithResources = slotsForDay.bookableSlots.filter(slot => hasNecessaryResources(slotsForDay.date, slot, service, resourceUsageByDateAndTime, allResourcesForAllDays));
+        const slotsWithResources = slotsForDay.bookableSlots.filter(slot => hasNecessaryResources(slotsForDay.date, slot, service, bookingsWithResources, allResourcesForAllDays));
         return bookableSlots(slotsForDay.date, slotsWithResources)
     })
 }

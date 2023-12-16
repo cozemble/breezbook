@@ -1,4 +1,4 @@
-import {test} from 'vitest'
+import {test, expect} from 'vitest'
 
 import {
     booking,
@@ -47,6 +47,9 @@ const existingBookings = [mikeOnMonday, meteOnMonday, mikeOnTuesday, meteOnTuesd
 
 
 test("can get availability for a given date range", () => {
-    const smallCarWashAvailability = calculateAvailability(config, existingBookings, smallCarWash.id, '2021-05-13', '2021-05-27');
-    console.log(JSON.stringify(smallCarWashAvailability, null, 2));
+    const smallCarWashAvailability = calculateAvailability(config, existingBookings, smallCarWash.id, '2021-05-23', '2021-05-26');
+    expect(smallCarWashAvailability[0]?.bookableSlots).toHaveLength(3);
+    expect(smallCarWashAvailability[1]?.bookableSlots).toHaveLength(2);
+    expect(smallCarWashAvailability[2]?.bookableSlots).toHaveLength(3);
+    expect(smallCarWashAvailability[3]?.bookableSlots).toHaveLength(3);
 })
