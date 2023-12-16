@@ -14,3 +14,9 @@
 		letter-spacing: -0.02em;
 	}
 }
+
+img,
+svg {
+	object-fit: cover;
+	object-position: center;
+}
