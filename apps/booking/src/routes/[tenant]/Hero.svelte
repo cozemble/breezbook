@@ -12,9 +12,11 @@
 			<h1 class="mb-5 text-5xl font-bold text-primary">
 				{tenant.heading}
 			</h1>
-			<p class="">
+			<p class="mb-10">
 				{tenant.description}
 			</p>
+
+			<a class="btn btn-primary" href="#services"> Discover Our Services </a>
 		</div>
 
 		<img
