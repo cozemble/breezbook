@@ -15,7 +15,13 @@ export const tenants: Tenant[] = [
 		heading: 'We rob. We are professionals.',
 		description:
 			'We rob any place for you. Just tell us where and when. We are not responsible for any consequences. And remember, there is no rest for the wicked.',
-		heroImage: 'https://picsum.photos/800/450'
+		heroImage: 'https://picsum.photos/800/450',
+		theme: {
+			font: {
+				sans: 'Comfortaa'
+			},
+			theme: 'sunset'
+		}
 	},
 	{
 		id: '3',
@@ -24,7 +30,13 @@ export const tenants: Tenant[] = [
 		heading: 'We do monkey business.',
 		description:
 			'We are monkeys. We do business. We love bananas. We love climbing. We love throwing bananas to people.',
-		heroImage: 'https://picsum.photos/800/450'
+		heroImage: 'https://picsum.photos/800/450',
+		theme: {
+			font: {
+				sans: 'Bangers'
+			},
+			theme: 'cyberpunk'
+		}
 	}
 ];
 

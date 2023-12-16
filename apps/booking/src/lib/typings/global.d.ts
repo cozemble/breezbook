@@ -8,6 +8,30 @@ declare interface Tenant {
 	// status: string;
 	// createdAt: string;
 	// updatedAt: string;
+	theme?: Theme;
+}
+
+declare interface Theme {
+	font: {
+		sans: string;
+		/** sans is used if not specified */
+		display?: string;
+	};
+	theme: string;
+	// colors: {
+	// 	primary: string;
+	// 	secondary: string;
+	// 	accent: string;
+	// 	neutral: string;
+	// 	'base-100': string;
+	// 	'base-200': string;
+	// 	'base-300': string;
+
+	// 	success: string;
+	// 	info: string;
+	// 	warning: string;
+	// 	error: string;
+	// };
 }
 
 declare interface Service {

@@ -19,6 +19,6 @@ export default {
 	},
 	plugins: [daisyui],
 	daisyui: {
-		themes: ['winter', 'corporate', 'dim']
+		themes: ['winter', 'corporate', 'dim', 'sunset', 'cyberpunk']
 	}
 };
