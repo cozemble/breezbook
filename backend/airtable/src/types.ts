@@ -24,13 +24,6 @@ export function customerId(value: string): CustomerId {
     };
 }
 
-export interface Date {
-    _type: 'date';
-    year: number;
-    month: number;
-    day: number;
-}
-
 export interface Timezone extends ValueType<string> {
     _type: 'timezone';
 }
@@ -45,6 +38,17 @@ export function time24(value: string, timezone?: Timezone): TwentyFourHourClockT
         _type: 'twenty.four.hour.clock.time',
         value,
         timezone,
+    };
+}
+
+export interface Duration extends ValueType<number> {
+    _type: 'duration';
+}
+
+export function duration(value: number): Duration {
+    return {
+        _type: 'duration',
+        value,
     };
 }
 
@@ -109,30 +113,26 @@ export function serviceId(value: string): ServiceId {
 
 export interface TimeRangeAvailability {
     _type: 'time.range.availability';
-    from: TwentyFourHourClockTime;
-    to: TwentyFourHourClockTime;
+    timeRange: TimePeriod
 }
 
 export function timeRangeAvailability(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime): TimeRangeAvailability {
     return {
         _type: 'time.range.availability',
-        from,
-        to,
+        timeRange: timePeriod(from, to),
     };
 }
 
-export type AvailabilitySpec = ExactAvailabilitySpec | TimeRangeAvailability;
+export type AvailabilitySpec = TimeRangeAvailability;
 
-export interface ExactAvailabilitySpec {
+export interface ExactTimeAvailability {
     _type: 'exact.time.availability';
-    description?: string;
     time: TwentyFourHourClockTime
 }
 
-export function exactAvailability(time: TwentyFourHourClockTime, description?: string): ExactAvailabilitySpec {
+export function exactTimeAvailability(time: TwentyFourHourClockTime): ExactTimeAvailability {
     return {
         _type: 'exact.time.availability',
-        description,
         time,
     };
 }
@@ -140,26 +140,50 @@ export function exactAvailability(time: TwentyFourHourClockTime, description?: s
 export interface TimeslotSpec {
     _type: 'timeslot.spec';
     description: string;
-    from: TwentyFourHourClockTime
-    to: TwentyFourHourClockTime
+    slot: TimePeriod
 }
 
 export function timeslotSpec(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime, description: string): TimeslotSpec {
     return {
         _type: 'timeslot.spec',
         description,
-        from,
-        to,
+        slot: timePeriod(from, to),
+    };
+}
+
+export interface DayAvailability {
+    _type: 'day.availability';
+    day: string;
+    availability: AvailabilitySpec[];
+}
+
+export function dayAvailability(day: string, availability: AvailabilitySpec[]): DayAvailability {
+    return {
+        _type: 'day.availability',
+        day,
+        availability,
+    };
+}
+
+export interface AvailabilityCalendar {
+    _type: 'availability.calendar';
+    availability: DayAvailability[];
+}
+
+export function availabilityCalendar(availability: DayAvailability[]): AvailabilityCalendar {
+    return {
+        _type: 'availability.calendar',
+        availability,
     };
 }
 
 export interface BusinessAvailability {
     _type: 'business.availability';
     timezone?: Timezone;
-    availability: AvailabilitySpec[];
+    availability: AvailabilityCalendar;
 }
 
-export function businessAvailability(availability: AvailabilitySpec[], timezone?: Timezone): BusinessAvailability {
+export function businessAvailability(availability: AvailabilityCalendar, timezone?: Timezone): BusinessAvailability {
     return {
         _type: 'business.availability',
         availability,
@@ -185,7 +209,7 @@ export function customer(firstName: string, lastName: string, email: string, pho
     };
 }
 
-export type BookableSlot = ExactAvailabilitySpec | TimeslotSpec;
+export type BookableSlot = ExactTimeAvailability | TimeslotSpec;
 
 export interface Booking {
     id: BookingId;
@@ -293,33 +317,60 @@ export interface BusinessConfiguration {
     resources: Resource[];
     services: Service[];
     timeslots: TimeslotSpec[];
+    startTimeSpec: StartTimeSpec
 }
 
-export function businessConfiguration(availability: BusinessAvailability, resources: Resource[], services: Service[], timeslots: TimeslotSpec[]): BusinessConfiguration {
+export interface PeriodicStartTime {
+    _type: 'periodic.start.time';
+    period: Duration;
+}
+
+export function periodicStartTime(period: Duration): PeriodicStartTime {
+    return {
+        _type: 'periodic.start.time',
+        period,
+    };
+}
+
+export interface DiscreteStartTimes {
+    _type: 'discrete.start.times';
+    times: TwentyFourHourClockTime[];
+}
+
+export function discreteStartTimes(times: TwentyFourHourClockTime[]): DiscreteStartTimes {
+    return {
+        _type: 'discrete.start.times',
+        times,
+    };
+}
+
+export type StartTimeSpec = PeriodicStartTime | DiscreteStartTimes;
+
+export function businessConfiguration(availability: BusinessAvailability, resources: Resource[], services: Service[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec): BusinessConfiguration {
     return {
         _type: 'business.configuration',
         availability,
         resources,
         services,
         timeslots,
+        startTimeSpec,
     };
 }
 
 
-export interface BookableSlots {
+export interface BookableTimeSlots {
     date: string;
-    bookableSlots: BookableSlot[];
+    bookableSlots: TimeslotSpec[];
+}
+
+export interface BookableTimes {
+    date: string;
+    bookableTimes: ExactTimeAvailability[];
 }
 
 interface AvailableResources {
     date: string;
     resources: Resource[];
-}
-
-interface BookingsByDate {
-    date: string;
-    bookings: Booking[];
-
 }
 
 function availableResources(date: string, resources: Resource[]): AvailableResources {
@@ -329,7 +380,7 @@ function availableResources(date: string, resources: Resource[]): AvailableResou
     };
 }
 
-export function bookableSlots(date: string, bookableSlots: BookableSlot[]): BookableSlots {
+export function bookableTimeSlots(date: string, bookableSlots: TimeslotSpec[]): BookableTimeSlots {
     return {
         date,
         bookableSlots,
@@ -347,27 +398,23 @@ function listDays(fromDate: string, toDate: string) {
 }
 
 function hasNecessaryResources(date: string, slot: BookableSlot, service: Service, bookingWithResourceUsage: BookingWithResourceUsage[], availableResources: AvailableResources[]): boolean {
-    if (slot._type === 'exact.time.availability') {
-        throw new Error(`Can't handle exact time availability yet`);
-    }
+    const slotDuration = calcServiceTime(slot, service.duration)
     const resourcesUsedDuringSlot = bookingWithResourceUsage.filter(r => {
-        const {fromTime, toTime} = calcFromAndToTimes(r.booking.slot, service.duration);
-        return r.booking.date === date && fromTime.value < slot.to.value && toTime.value > slot.from.value;
+        const serviceTime = calcServiceTime(r.booking.slot, service.duration);
+        return r.booking.date === date && timePeriodFns.overlaps(serviceTime, slotDuration);
     }).flatMap(r => r.resources);
     const availableResourcesOnDay: AvailableResources[] = availableResources.filter(r => r.date === date) ?? [] as AvailableResources[];
     const resourcesTypesAvailable = availableResourcesOnDay.flatMap(a => a.resources).filter(r => !resourcesUsedDuringSlot.find(used => used.id.value === r.id.value)).map(r => r.type);
     return service.resourceTypes.every(rt => resourcesTypesAvailable.find(rta => rta.value === rt.value));
 }
 
-function calcFromAndToTimes(slot: BookableSlot, serviceDuration: number) {
+function calcServiceTime(slot: BookableSlot, serviceDuration: number): TimePeriod {
     if (slot._type === 'exact.time.availability') {
         const fromTime = slot.time;
         const toTime = time24Fns.addMinutes(slot.time, serviceDuration);
-        return {fromTime, toTime};
+        return timePeriod(fromTime, toTime);
     }
-    const fromTime = slot.from;
-    const toTime = slot.to;
-    return {fromTime, toTime};
+    return slot.slot;
 }
 
 interface BookingWithResourceUsage {
@@ -377,8 +424,8 @@ interface BookingWithResourceUsage {
 
 interface ResourceTimeSlot {
     resourceId: string;
-    fromTime: string;
-    toTime: string;
+    date: string;
+    allocatedTime: TimePeriod;
 }
 
 
@@ -386,14 +433,14 @@ function assignResourcesToBookings(config: BusinessConfiguration, bookings: Book
     const resourceTimeSlots: ResourceTimeSlot[] = [];
     return bookings.map(booking => {
         const bookedService = mandatory(config.services.find(s => s.id.value === booking.serviceId.value), `Service with id ${booking.serviceId.value} not found`);
-        const {fromTime, toTime} = calcFromAndToTimes(booking.slot, bookedService.duration);
+        const serviceTime = calcServiceTime(booking.slot, bookedService.duration);
         const bookedResources = bookedService.resourceTypes.map((rt: ResourceType) => {
             const possibleResources = config.resources.filter(r => r.type.value === rt.value);
-            const resource = possibleResources.find(r => !resourceTimeSlots.find(rts => rts.resourceId === r.id.value && rts.fromTime < toTime.value && rts.toTime > fromTime.value));
+            const resource = possibleResources.find(r => !resourceTimeSlots.find(rts => rts.date === booking.date && rts.resourceId === r.id.value && timePeriodFns.overlaps(rts.allocatedTime, serviceTime)));
             if (!resource) {
-                throw new Error(`No resource of type ${rt.value} available for booking ${booking.id.value}`);
+                throw new Error(`No resource of type '${rt.value}' available for booking ${booking.id.value}`);
             }
-            resourceTimeSlots.push({resourceId: resource.id.value, fromTime: fromTime.value, toTime: toTime.value});
+            resourceTimeSlots.push({resourceId: resource.id.value, allocatedTime: serviceTime, date: booking.date});
             return resource;
         })
         return {
@@ -404,38 +451,77 @@ function assignResourcesToBookings(config: BusinessConfiguration, bookings: Book
 
 }
 
-function calculateTimeslotAvailability(config: BusinessConfiguration, bookingsInDateRange: Booking[], service: Service, fromDate: string, toDate: string): BookableSlots[] {
-    const dates = listDays(fromDate, toDate);
-    const allSlotsForAllDays = dates.map(date => bookableSlots(date, config.timeslots));
+function applyBusinessHours(availability: BusinessAvailability, slot: BookableTimeSlots): BookableTimeSlots {
+    const dayAvailability = availability.availability.availability.find(a => a.day === slot.date);
+    if (!dayAvailability) {
+        return bookableTimeSlots(slot.date, [])
+    }
+    const availableSlots = slot.bookableSlots.filter(s => dayAvailability.availability.find(availability => {
+        return timePeriodFns.overlaps(availability.timeRange, s.slot)
+    }))
+    return bookableTimeSlots(slot.date, availableSlots);
+}
+
+function calculateTimeslotAvailability(config: BusinessConfiguration, bookingsInDateRange: Booking[], service: Service, dates: string[]): BookableTimeSlots[] {
+    const allSlotsForAllDays = dates.map(date => bookableTimeSlots(date, config.timeslots)).map(timeslot => applyBusinessHours(config.availability, timeslot));
     const allResourcesForAllDays = dates.map(date => availableResources(date, config.resources));
     const bookingsWithResources = assignResourcesToBookings(config, bookingsInDateRange);
-    // const resourceUsageByDateAndTime = bookingsInDateRange.flatMap(booking => {
-    //     const bookedService = mandatory(config.services.find(s => s.id.value === booking.serviceId.value), `Service with id ${booking.serviceId.value} not found`);
-    //     const bookedResources = bookedService.resourceTypes.flatMap((rt: ResourceType) => config.resources.find(r => r.type.value === rt.value));
-    //     return bookedResources.map(r => {
-    //         const {fromTime, toTime} = calcFromAndToTimes(booking.slot, bookedService.duration);
-    //         const usage: ResourceUsage = {
-    //             date: booking.date,
-    //             fromTime,
-    //             toTime,
-    //             resource: r,
-    //             bookedServiceId: booking.serviceId,
-    //         }
-    //         return usage
-    //     });
-    // })
     return allSlotsForAllDays.map(slotsForDay => {
         const slotsWithResources = slotsForDay.bookableSlots.filter(slot => hasNecessaryResources(slotsForDay.date, slot, service, bookingsWithResources, allResourcesForAllDays));
-        return bookableSlots(slotsForDay.date, slotsWithResources)
+        return bookableTimeSlots(slotsForDay.date, slotsWithResources)
     })
 }
 
-export function calculateAvailability(config: BusinessConfiguration, bookings: Booking[], serviceId: ServiceId, fromDate: string, toDate: string): BookableSlots[] {
+function calculatePeriodicStartTimes(config: BusinessConfiguration, date: string, bookingsWithResources: BookingWithResourceUsage[], service: Service, allResources: Resource[]): ExactTimeAvailability[] {
+    return []
+}
+
+function calculateDiscreteStartTimes(discreteStartTimes: DiscreteStartTimes, config: BusinessConfiguration, date: string, bookingsWithResources: BookingWithResourceUsage[], service: Service, allResources: Resource[]): ExactTimeAvailability[] {
+    const availableTimes = discreteStartTimes.times.filter(time => hasNecessaryResources(date, exactTimeAvailability(time), service, bookingsWithResources, [availableResources(date, allResources)]));
+    return availableTimes.map(time => exactTimeAvailability(time));
+}
+
+function calculateExactTimeAvailabilityForDate(config: BusinessConfiguration, bookingsInDateRange: Booking[], service: Service, date: string): BookableTimes {
+    const bookingsWithResources = assignResourcesToBookings(config, bookingsInDateRange);
+    const availableTimes = config.startTimeSpec._type === 'periodic.start.time' ? calculatePeriodicStartTimes(config, date, bookingsWithResources, service, config.resources) : calculateDiscreteStartTimes(config.startTimeSpec, config, date, bookingsWithResources, service, config.resources);
+    return {
+        date,
+        bookableTimes: availableTimes
+    };
+
+}
+
+function calculateExactTimeAvailability(config: BusinessConfiguration, bookingsInDateRange: Booking[], service: Service, dates: string[]): BookableTimes[] {
+    return dates.map(date => calculateExactTimeAvailabilityForDate(config, bookingsInDateRange, service, date));
+}
+
+export function calculateAvailability(config: BusinessConfiguration, bookings: Booking[], serviceId: ServiceId, fromDate: string, toDate: string): BookableTimeSlots[] | BookableTimes[] {
     const service = mandatory(config.services.find(s => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
     const bookingsInDateRange = bookings.filter(b => b.date >= fromDate && b.date <= toDate);
+    const dates = listDays(fromDate, toDate);
     if (service.requiresTimeslot) {
-        return calculateTimeslotAvailability(config, bookingsInDateRange, service, fromDate, toDate);
+        return calculateTimeslotAvailability(config, bookingsInDateRange, service, dates);
     }
-    throw new Error(`Can only do timeslots right now`);
+    return calculateExactTimeAvailability(config, bookingsInDateRange, service, dates);
+}
+
+export interface TimePeriod {
+    _type: 'time.period';
+    from: TwentyFourHourClockTime;
+    to: TwentyFourHourClockTime;
+}
+
+export function timePeriod(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime): TimePeriod {
+    return {
+        _type: 'time.period',
+        from,
+        to,
+    };
+}
+
+export const timePeriodFns = {
+    overlaps: (period1: TimePeriod, period2: TimePeriod): boolean => {
+        return period1.from.value <= period2.from.value && period1.to.value >= period2.to.value;
+    }
 }
 

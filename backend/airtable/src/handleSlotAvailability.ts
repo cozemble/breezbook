@@ -4,14 +4,14 @@ import {
     Service,
     ServiceId,
     serviceId as makeServiceId,
-    BookableSlots,
+    BookableTimeSlots,
     tenantId as makeTenantId,
     TenantId
 } from "./types.js";
 import express from 'express';
 import {supabaseClient} from "./supabase.js";
 
-const AVAILABILITY: BookableSlots = {
+const AVAILABILITY: BookableTimeSlots = {
     "date": "2023-05-24",
     "slots": ["09:00", "10:00", "13:00", "14:00", "15:00"]
 };
