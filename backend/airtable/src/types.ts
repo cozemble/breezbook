@@ -362,7 +362,7 @@ export interface BookableTimes {
     bookableTimes: ExactTimeAvailability[];
 }
 
-interface ResourceDayAvailability {
+export interface ResourceDayAvailability {
     resource: Resource
     availability: DayAndTimePeriod[]
 }
@@ -394,16 +394,18 @@ function listDays(fromDate: IsoDate, toDate: IsoDate) {
 
 function hasResourcesForSlot(date: IsoDate, slot: BookableSlot, service: Service, bookingWithResourceUsage: BookingWithResourceUsage[], availableResources: ResourceDayAvailability[]): boolean {
     const slotDayAndTime = dayAndTimePeriod(date, calcSlotPeriod(slot, service.duration))
-    const resourcesUsedDuringSlot = bookingWithResourceUsage.filter(r => {
-        const serviceTime = calcBookingPeriod(r.booking, service.duration);
-        return dayAndTimePeriodFns.overlaps(serviceTime, slotDayAndTime);
-    }).flatMap(r => r.resources);
+    const resourcesUsedDuringSlot = bookingWithResourceUsage
+        .filter(r => dayAndTimePeriodFns.overlaps(calcBookingPeriod(r.booking, service.duration), slotDayAndTime))
+        .flatMap(r => r.resources);
     const availableResourcesForSlot = availableResources.filter(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da, slotDayAndTime)));
-    const resourcesTypesAvailable = availableResourcesForSlot.flatMap(a => [a.resource]).filter(r => !resourcesUsedDuringSlot.find(used => values.isEqual(used.id, r.id))).map(r => r.type);
+    const resourcesTypesAvailable = availableResourcesForSlot
+        .map(a => a.resource)
+        .filter(r => !resourcesUsedDuringSlot.find(used => values.isEqual(used.id, r.id)))
+        .map(r => r.type);
     return service.resourceTypes.every(rt => resourcesTypesAvailable.find(rta => values.isEqual(rta, rt)));
 }
 
-function calcBookingPeriod(booking: Booking, serviceDuration: number): DayAndTimePeriod {
+export function calcBookingPeriod(booking: Booking, serviceDuration: number): DayAndTimePeriod {
     return dayAndTimePeriod(booking.date, calcSlotPeriod(booking.slot, serviceDuration));
 }
 
@@ -523,6 +525,19 @@ export function dayAndTimePeriod(day: IsoDate, period: TimePeriod): DayAndTimePe
 export const dayAndTimePeriodFns = {
     overlaps: (dayAndTimePeriod1: DayAndTimePeriod, dayAndTimePeriod2: DayAndTimePeriod): boolean => {
         return isoDateFns.isEqual(dayAndTimePeriod1.day, dayAndTimePeriod2.day) && timePeriodFns.overlaps(dayAndTimePeriod1.period, dayAndTimePeriod2.period);
+    },
+    splitPeriod(da: DayAndTimePeriod, bookingPeriod: DayAndTimePeriod):DayAndTimePeriod[] {
+        if(!dayAndTimePeriodFns.overlaps(da, bookingPeriod)) {
+            return [da];
+        }
+        const remainingTimePeriods = [] as TimePeriod[]
+        if(timePeriodFns.startsEarlier(da.period, bookingPeriod.period)) {
+            remainingTimePeriods.push(timePeriod(da.period.from, bookingPeriod.period.from))
+        }
+        if(timePeriodFns.endsLater(da.period, bookingPeriod.period)) {
+            remainingTimePeriods.push(timePeriod(bookingPeriod.period.to, da.period.to));
+        }
+        return remainingTimePeriods.map(tp => dayAndTimePeriod(da.day, tp));
     }
 }
 
@@ -537,6 +552,12 @@ export function timePeriod(from: TwentyFourHourClockTime, to: TwentyFourHourCloc
 export const timePeriodFns = {
     overlaps: (period1: TimePeriod, period2: TimePeriod): boolean => {
         return period1.from.value <= period2.from.value && period1.to.value >= period2.to.value;
+    },
+    startsEarlier(period: TimePeriod, period2: TimePeriod) {
+        return period.from.value < period2.from.value;
+    },
+    endsLater(period: TimePeriod, period2: TimePeriod) {
+        return period.to.value > period2.to.value;
     }
 }
 
