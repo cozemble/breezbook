@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -32,7 +33,11 @@
 					</span>
 				</div>
 			</div>
-			<a href="./{service.slug}/booking" class="btn btn-primary mt-8">Book Now</a>
+			<a href="./{service.slug}/booking" class="btn btn-primary mt-8"
+				>Book Now
+
+				<Icon icon="mdi:arrow-right" class="w-5 h-5" />
+			</a>
 		</div>
 
 		<img
