@@ -1,7 +1,6 @@
 import {expect, test} from 'vitest'
 
 import {
-    availabilityCalendar,
     booking,
     businessAvailability,
     businessConfiguration,
@@ -30,10 +29,10 @@ const nineThirty = time24('09:30');
 const morningCheckInTimes = [nineAm, nineTen, nineTwenty, nineThirty];
 const nineToTen = timePeriod(nineAm, time24('10:00'));
 
-const availability = businessAvailability(availabilityCalendar([
+const availability = businessAvailability([
     dayAndTimePeriod(isoDate('2021-05-24'), nineToTen),
     dayAndTimePeriod(isoDate('2021-05-25'), nineToTen),
-]), timezone('Europe/London'));
+], timezone('Europe/London'));
 
 const staff = resourceType('staff');
 const amy = resource(staff, "Amy");

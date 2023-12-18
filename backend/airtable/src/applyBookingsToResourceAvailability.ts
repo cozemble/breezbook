@@ -1,5 +1,14 @@
 import {mandatory} from "./utils.js";
-import {Booking, calcBookingPeriod, dayAndTimePeriodFns, ResourceDayAvailability, Service, values} from "./types.js";
+import {
+    Booking,
+    calcBookingPeriod,
+    DayAndTimePeriod,
+    dayAndTimePeriodFns,
+    isoDateFns,
+    ResourceDayAvailability,
+    Service,
+    values
+} from "./types.js";
 
 export function applyBookingsToResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookings: Booking[], services: Service[]): ResourceDayAvailability[] {
     return bookings.reduce((resourceAvailability, booking) => {
@@ -23,4 +32,26 @@ export function applyBookingsToResourceAvailability(resourceAvailability: Resour
             return ra;
         })
     }, resourceAvailability);
+}
+
+function fitTime(period: DayAndTimePeriod, fitTimes: DayAndTimePeriod[]): DayAndTimePeriod[] {
+    const fitTimesForDay = fitTimes.filter(bh => isoDateFns.isEqual(bh.day, period.day))
+    if (fitTimesForDay.length === 0) {
+        return [];
+    }
+    return fitTimesForDay.map(bh => {
+        if (dayAndTimePeriodFns.intersects(bh, period)) {
+            return dayAndTimePeriodFns.intersection(bh, period);
+        }
+        return undefined;
+    }).filter(bh => bh !== undefined) as DayAndTimePeriod[];
+}
+
+export function fitAvailability(resourceAvailability: ResourceDayAvailability[], fitTimes: DayAndTimePeriod[]): ResourceDayAvailability[] {
+    return resourceAvailability.map(ra => {
+        return {
+            ...ra,
+            availability: ra.availability.flatMap(datp => fitTime(datp, fitTimes))
+        }
+    })
 }

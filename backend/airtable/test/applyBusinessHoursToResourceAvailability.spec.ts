@@ -1,0 +1,48 @@
+import {expect, test} from "vitest";
+import {fitAvailability} from "../src/applyBookingsToResourceAvailability.js";
+import {
+    dayAndTimePeriod,
+    isoDate,
+    resource,
+    resourceDayAvailability,
+    resourceType,
+    time24,
+    timePeriod
+} from "../src/types.js";
+
+const van = resourceType('van');
+const van1 = resource(van, "Van 1");
+const eightAm = time24('08:00')
+const nineAm = time24('09:00')
+const nineThirty = time24('09:30')
+const tenAm = time24('10:00')
+const may23 = isoDate("2021-05-23");
+const initialAvailability = [resourceDayAvailability(van1, [dayAndTimePeriod(may23, timePeriod(nineAm, tenAm))])];
+
+test("no business hours removes all resource availability", () => {
+    const adjustedAvailability = fitAvailability(initialAvailability, []);
+    expect(adjustedAvailability).toHaveLength(1);
+    expect(adjustedAvailability[0].availability).toHaveLength(0);
+})
+
+test("business hours that span resource availability", () => {
+    const businessHours = [dayAndTimePeriod(may23, timePeriod(eightAm, tenAm))];
+    const adjustedAvailability = fitAvailability(initialAvailability, businessHours);
+    expect(adjustedAvailability).toHaveLength(1);
+    expect(adjustedAvailability).toEqual(initialAvailability);
+
+})
+
+test("business hours that start after resource availability", () => {
+    const businessHours = [dayAndTimePeriod(may23, timePeriod(nineThirty, tenAm))];
+    const adjustedAvailability = fitAvailability(initialAvailability, businessHours);
+    expect(adjustedAvailability).toHaveLength(1);
+    expect(adjustedAvailability[0].availability).toEqual([dayAndTimePeriod(may23, timePeriod(nineThirty, tenAm))]);
+})
+
+test("business hours that start before resource availability", () => {
+    const businessHours = [dayAndTimePeriod(may23, timePeriod(eightAm, nineThirty))];
+    const adjustedAvailability = fitAvailability(initialAvailability, businessHours);
+    expect(adjustedAvailability).toHaveLength(1);
+    expect(adjustedAvailability[0].availability).toEqual([dayAndTimePeriod(may23, timePeriod(nineAm, nineThirty))]);
+})
