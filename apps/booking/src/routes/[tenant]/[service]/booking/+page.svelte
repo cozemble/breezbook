@@ -1,6 +1,9 @@
 <script lang="ts">
 	import DayList from '$lib/components/time/DayList.svelte';
 	import type { PageData } from './$types';
+	import DetailsStep from './DetailsStep.svelte';
+	import ExtrasStep from './ExtrasStep.svelte';
+	import PickTimeStep from './PickTimeStep.svelte';
 
 	export let data: PageData;
 	const tenant = data.tenant;
@@ -11,37 +14,27 @@
 	<title>{tenant.name} - {service.name} | Booking</title>
 </svelte:head>
 
-<div class="text-sm breadcrumbs">
-	<ul>
-		<li><a href="/{tenant.slug}">Services</a></li>
-		<li><a href="/{tenant.slug}/{service.slug}">{service.name}</a></li>
-		<li>Booking</li>
-	</ul>
-</div>
+<!-- Service details -->
+<section class="mb-10 pb-2 flex justify-between items-end border-b">
+	<div>
+		<span class="text-base font-bold"> Booking: </span>
+		<h1 class="text-2xl font-semibold">
+			<a href="./" class="link-hover link-accent">{service.name}</a>
+		</h1>
+	</div>
 
-<!-- Booking area -->
-<section class="">
-	<section class="flex flex-col justify-center items-center mb-10">
-		<!-- Steps -->
-		<div class=" flex-grow flex flex-col items-center">
-			<ul class="steps w-96">
-				<li class="step step-primary font-semibold text-primary text-lg">Pick a Time</li>
-				<li class="step">Extras</li>
-				<li class="step">Details</li>
-			</ul>
-		</div>
+	<!-- Display total -->
+	<div class="">
+		<span class="text-base font-normal text-secondary mr-4">Total:</span>
+		<span class="text-2xl font-bold mt-4">
+			£{service.approximatePrice}
+		</span>
+	</div>
+</section>
 
-	</section>
-
-	<section>
-		<div class="border-base-300">
-			<!-- <h1 class="text-xl text-secondary font-semibold pb-2 mb-6 border-b">Pick a time</h1> -->
-			<!-- Service time slots -->
-
-			<DayList />
-		</div>
-		<div class="flex justify-end">
-			<button class="btn btn-primary"> Next </button>
-		</div>
-	</section>
+<!-- Steps as accordion -->
+<section>
+	<PickTimeStep />
+	<ExtrasStep />
+	<DetailsStep />
 </section>
