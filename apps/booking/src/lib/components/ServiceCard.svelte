@@ -4,25 +4,22 @@
 </script>
 
 <!-- TODO finish the design -->
-<li class="card bg-base-200 rounded-box shadow-lg w-full">
+<li class="card bg-base-200 rounded-lg shadow-lg w-full">
 	<figure>
-		<img src={service.image} alt={service.name} class="w-full aspect-[5/2] object-cover" />
+		<img src={service.image} alt={service.name} class="w-full aspect-[3/1] object-cover" />
 	</figure>
 
 	<div class="card-body">
-		<h2 class="text-2xl font-bold">{service.name}</h2>
-		<p>{service.description}</p>
+		<h2 class="text-2xl font-bold capitalize leading-6">{service.name}</h2>
+		<p class="mb-4">{service.description}</p>
 
-		<!-- TODO format properly -->
-		<span class="text-4xl font-bold mt-4">
-			<span class="opacity-30 text-2xl"> ≈ </span>
-
+		<span class="text-xs font-light opacity-60"> starting at: </span>
+		<span class="text-4xl font-bold">
 			£{service.approximatePrice}
-			<span class="text-base font-thin opacity-60 whitespace-nowrap"
+			<span class="text-base font-thin opacity-60 whitespace-nowrap text-base-content"
 				>/ {service.approximateDuration} mins</span
 			>
 		</span>
-		<span class="text-xs opacity-50">extras may affect the price</span>
 
 		<a href="/{tenant.slug}/{service.slug}" class="btn btn-primary mt-4">Details</a>
 	</div>
