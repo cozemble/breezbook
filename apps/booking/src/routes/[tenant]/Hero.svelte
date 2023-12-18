@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '@iconify/svelte';
 	export let tenant: Tenant;
 </script>
 
@@ -16,7 +17,11 @@
 				{tenant.description}
 			</p>
 
-			<a class="btn btn-primary" href="#services"> Discover Our Services </a>
+			<a class="btn btn-primary" href="#services">
+				Discover Our Services
+
+				<Icon icon="mdi:arrow-down" class="w-5 h-5" />
+			</a>
 		</div>
 
 		<img
