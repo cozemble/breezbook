@@ -156,6 +156,9 @@ importers:
       '@types/uuid':
         specifier: ^9.0.7
         version: 9.0.7
+      eslint:
+        specifier: ^8.28.0
+        version: 8.54.0
       typescript:
         specifier: 5.3.3
         version: 5.3.3
