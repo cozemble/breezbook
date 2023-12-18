@@ -13,7 +13,7 @@
 	style={tenant.theme?.font.sans && `font-family: ${tenant.theme?.font.sans};`}
 >
 	<Header {tenant} />
-	<main class="p-6 flex-grow w-full flex flex-col items-center">
+	<main class="p-3 md:p-6 flex-grow w-full flex flex-col items-center">
 		<div class="max-w-7xl w-full">
 			<slot />
 		</div>

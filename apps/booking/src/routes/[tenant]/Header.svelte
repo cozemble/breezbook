@@ -2,7 +2,7 @@
 	export let tenant: Tenant;
 </script>
 
-<header class="navbar px-6 flex border-b sticky top-0 left-0 right-0 z-50">
+<header class="navbar px-3 md:px-6 flex border-b sticky top-0 left-0 right-0 z-50">
 	<div class="flex-1">
 		<a href="/{tenant.slug}" class="text-xl font-bold hover-link">{tenant.name}</a>
 	</div>
