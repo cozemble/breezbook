@@ -71,8 +71,21 @@ const existingBookings = [mikeOnMonday, meteOnMonday, mikeOnTuesday, meteOnTuesd
 
 test("can get availability for a given date range", () => {
     const smallCarWashAvailability = calculateAvailability(config, existingBookings, smallCarWash.id, isoDate('2021-05-23'), isoDate('2021-05-26'));
-    expect(smallCarWashAvailability[0]?.bookableSlots).toHaveLength(1);
-    expect(smallCarWashAvailability[1]?.bookableSlots).toHaveLength(2);
-    expect(smallCarWashAvailability[2]?.bookableSlots).toHaveLength(3);
-    expect(smallCarWashAvailability[3]?.bookableSlots).toHaveLength(0);
+    expect(smallCarWashAvailability[0]?.bookableSlots).toHaveLength(1); // only open from 4pm to 6pm
+    expect(smallCarWashAvailability[1]?.bookableSlots).toHaveLength(2); // three slots available, one fully taken
+    expect(smallCarWashAvailability[2]?.bookableSlots).toHaveLength(3); // three slots available, none taken
+    expect(smallCarWashAvailability[3]?.bookableSlots).toHaveLength(0); // not open on this day
+})
+
+test("resource unavailability drops slots", () => {
+    const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
+        dayAndTimePeriod(isoDate("2021-05-23"), nineToOne.slot),
+        dayAndTimePeriod(isoDate("2021-05-24"), nineToSix),
+        dayAndTimePeriod(isoDate("2021-05-25"), nineToSix),
+        dayAndTimePeriod(isoDate("2021-05-26"), nineToSix),
+    ]))
+    const config = businessConfiguration(availability, resourceAvailability, services, timeslots, periodicStartTime(duration(30)));
+    const smallCarWashAvailability = calculateAvailability(config, existingBookings, smallCarWash.id, isoDate('2021-05-23'), isoDate('2021-05-26'));
+    expect(smallCarWashAvailability[0]?.bookableSlots).toHaveLength(0); // only open from 4pm to 6pm, but resources only available from 9am to 1pm
+
 })

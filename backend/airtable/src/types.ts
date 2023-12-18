@@ -392,14 +392,14 @@ function listDays(fromDate: IsoDate, toDate: IsoDate) {
     return dates;
 }
 
-function hasNecessaryResources(date: IsoDate, slot: BookableSlot, service: Service, bookingWithResourceUsage: BookingWithResourceUsage[], availableResources: ResourceDayAvailability[]): boolean {
+function hasResourcesForSlot(date: IsoDate, slot: BookableSlot, service: Service, bookingWithResourceUsage: BookingWithResourceUsage[], availableResources: ResourceDayAvailability[]): boolean {
     const slotDayAndTime = dayAndTimePeriod(date, calcSlotPeriod(slot, service.duration))
     const resourcesUsedDuringSlot = bookingWithResourceUsage.filter(r => {
         const serviceTime = calcBookingPeriod(r.booking, service.duration);
         return dayAndTimePeriodFns.overlaps(serviceTime, slotDayAndTime);
     }).flatMap(r => r.resources);
-    const availableResourcesOnDay = availableResources.filter(r => r.availability.some(availability => isoDateFns.isEqual(availability.day, date))) ?? [] as ResourceDayAvailability[];
-    const resourcesTypesAvailable = availableResourcesOnDay.flatMap(a => [a.resource]).filter(r => !resourcesUsedDuringSlot.find(used => values.isEqual(used.id, r.id))).map(r => r.type);
+    const availableResourcesForSlot = availableResources.filter(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da, slotDayAndTime)));
+    const resourcesTypesAvailable = availableResourcesForSlot.flatMap(a => [a.resource]).filter(r => !resourcesUsedDuringSlot.find(used => values.isEqual(used.id, r.id))).map(r => r.type);
     return service.resourceTypes.every(rt => resourcesTypesAvailable.find(rta => values.isEqual(rta, rt)));
 }
 
@@ -431,9 +431,7 @@ function assignResourcesToBookings(config: BusinessConfiguration, bookings: Book
         const bookedService = mandatory(config.services.find(s => values.isEqual(s.id, booking.serviceId)), `Service with id ${booking.serviceId.value} not found`);
         const serviceTime = calcBookingPeriod(booking, bookedService.duration);
         const bookedResources = bookedService.resourceTypes.map((rt: ResourceType) => {
-            const possibleResources = config.resourceAvailability.filter(ra => ra.availability.some(da => {
-                return dayAndTimePeriodFns.overlaps(da, serviceTime);
-            })).map(a => a.resource);
+            const possibleResources = config.resourceAvailability.filter(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da, serviceTime))).map(a => a.resource);
             const resource = possibleResources.find(r => !resourceTimeSlots.find(rts => dayAndTimePeriodFns.overlaps(rts.allocation,serviceTime) && values.isEqual(rts.resourceId, r.id)));
             if (!resource) {
                 throw new Error(`No resource of type '${rt.value}' available for booking ${booking.id.value}`);
@@ -464,7 +462,7 @@ function calculateTimeslotAvailability(config: BusinessConfiguration, bookingsIn
     const allSlotsForAllDays = dates.map(date => bookableTimeSlots(date, config.timeslots)).map(timeslot => applyBusinessHours(config.availability, timeslot));
     const bookingsWithResources = assignResourcesToBookings(config, bookingsInDateRange);
     return allSlotsForAllDays.map(slotsForDay => {
-        const slotsWithResources = slotsForDay.bookableSlots.filter(slot => hasNecessaryResources(slotsForDay.date, slot, service, bookingsWithResources, config.resourceAvailability));
+        const slotsWithResources = slotsForDay.bookableSlots.filter(slot => hasResourcesForSlot(slotsForDay.date, slot, service, bookingsWithResources, config.resourceAvailability));
         return bookableTimeSlots(slotsForDay.date, slotsWithResources)
     })
 }
@@ -474,7 +472,7 @@ function calculatePeriodicStartTimes(): ExactTimeAvailability[] {
 }
 
 function calculateDiscreteStartTimes(discreteStartTimes: DiscreteStartTimes, config: BusinessConfiguration, date: IsoDate, bookingsWithResources: BookingWithResourceUsage[], service: Service): ExactTimeAvailability[] {
-    const availableTimes = discreteStartTimes.times.filter(time => hasNecessaryResources(date, exactTimeAvailability(time), service, bookingsWithResources, config.resourceAvailability));
+    const availableTimes = discreteStartTimes.times.filter(time => hasResourcesForSlot(date, exactTimeAvailability(time), service, bookingsWithResources, config.resourceAvailability));
     return availableTimes.map(time => exactTimeAvailability(time));
 }
 

@@ -46,7 +46,6 @@ const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(isoDate("2021-05-26"), nineToTen),
 ]))
 
-
 const bicycleRepair = service('Bicycle Repair', [staff], 5, false, price(3500, GBP));
 const services = [bicycleRepair];
 
