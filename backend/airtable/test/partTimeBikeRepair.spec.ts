@@ -4,7 +4,6 @@ import {
     booking,
     businessAvailability,
     businessConfiguration,
-    calculateAvailability,
     customer,
     dayAndTimePeriod,
     discreteStartTimes,
@@ -20,6 +19,7 @@ import {
     timePeriod,
     timezone
 } from "../src/types.js";
+import {calculateAvailability} from "../src/calculateAvailability.js";
 
 const nineAm = time24('09:00');
 const nineTen = time24('09:10');

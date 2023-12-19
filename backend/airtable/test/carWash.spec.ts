@@ -6,7 +6,6 @@ import {
     booking,
     businessAvailability,
     businessConfiguration,
-    calculateAvailability,
     customer,
     dayAndTimePeriod,
     duration,
@@ -23,6 +22,7 @@ import {
     timeslotSpec,
     timezone
 } from "../src/types.js";
+import {calculateAvailability} from "../src/calculateAvailability.js";
 
 const nineAm = time24('09:00');
 const onePm = time24('13:00');

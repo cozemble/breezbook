@@ -1,7 +1,6 @@
 import {mandatory} from "./utils.js";
 import {
     Booking,
-    calcBookingPeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
     isoDateFns,
@@ -9,6 +8,7 @@ import {
     Service,
     values
 } from "./types.js";
+import {calcBookingPeriod} from "./calculateAvailability.js";
 
 export function applyBookingsToResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookings: Booking[], services: Service[]): ResourceDayAvailability[] {
     return bookings.reduce((resourceAvailability, booking) => {
