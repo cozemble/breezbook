@@ -4,8 +4,6 @@ import {
     BookableSlot,
     BookableTimes,
     bookableTimeSlot,
-    bookedTimeSlot,
-    BookedTimeSlot,
     Booking,
     BusinessConfiguration,
     DayAndTimePeriod,
@@ -19,6 +17,8 @@ import {
     isoDateFns,
     Resource,
     ResourceDayAvailability,
+    resourcedTimeSlot,
+    ResourcedTimeSlot,
     ResourceId,
     ResourceType,
     Service,
@@ -54,7 +54,7 @@ export function calcBookingPeriod(booking: Booking, serviceDuration: number): Da
     return dayAndTimePeriod(booking.date, calcSlotPeriod(booking.slot, serviceDuration));
 }
 
-function calcSlotPeriod(slot: BookableSlot, serviceDuration: number): TimePeriod {
+export function calcSlotPeriod(slot: BookableSlot, serviceDuration: number): TimePeriod {
     if (slot._type === 'exact.time.availability') {
         return timePeriod(slot.time, time24Fns.addMinutes(slot.time, serviceDuration));
     }
@@ -87,14 +87,14 @@ function assignResourcesToBookings(config: BusinessConfiguration, bookings: Book
 
 }
 
-function applyBookedTimeSlotsToResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookedSlot: BookedTimeSlot, service: Service): ResourceDayAvailability[] {
+function applyBookedTimeSlotsToResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookedSlot: ResourcedTimeSlot): ResourceDayAvailability[] {
     return resourceAvailability.map(resource => {
         if (bookedSlot.resources.find(r => values.isEqual(r.id, resource.resource.id))) {
             return {
                 ...resource,
                 availability: resource.availability.flatMap(da => {
                     if (isoDateFns.sameDay(da.day, bookedSlot.date)) {
-                        return dayAndTimePeriodFns.splitPeriod(da, dayAndTimePeriod(bookedSlot.date, calcSlotPeriod(bookedSlot.slot, service.duration)));
+                        return dayAndTimePeriodFns.splitPeriod(da, dayAndTimePeriod(bookedSlot.date, calcSlotPeriod(bookedSlot.slot, bookedSlot.service.duration)));
                     }
                     return [da];
                 })
@@ -104,8 +104,8 @@ function applyBookedTimeSlotsToResourceAvailability(resourceAvailability: Resour
     })
 }
 
-function calculateTimeslotAvailability(timeslots: TimeslotSpec[], service: Service, dates: IsoDate[], resourceAvailability: ResourceDayAvailability[]): BookedTimeSlot[] {
-    let collectedSlots: BookedTimeSlot[] = [];
+function calculateTimeslotAvailability(timeslots: TimeslotSpec[], service: Service, dates: IsoDate[], resourceAvailability: ResourceDayAvailability[]): ResourcedTimeSlot[] {
+    let collectedSlots: ResourcedTimeSlot[] = [];
     dates.forEach(date => {
         const slotsForDay = timeslots.map(slot => bookableTimeSlot(date, slot));
         for (const slotForDay of slotsForDay) {
@@ -113,9 +113,9 @@ function calculateTimeslotAvailability(timeslots: TimeslotSpec[], service: Servi
             while (resourcesMayRemain) {
                 const resourcesForSlot = getAllResources(service.resourceTypes, resourceAvailability, dayAndTimePeriod(date, calcSlotPeriod(slotForDay.slot, service.duration)));
                 if (resourcesForSlot && resourcesForSlot.length > 0) {
-                    const bookedSlot = bookedTimeSlot(slotForDay, resourcesForSlot);
+                    const bookedSlot = resourcedTimeSlot(slotForDay, resourcesForSlot, service);
                     collectedSlots.push(bookedSlot);
-                    resourceAvailability = applyBookedTimeSlotsToResourceAvailability(resourceAvailability, bookedSlot, service);
+                    resourceAvailability = applyBookedTimeSlotsToResourceAvailability(resourceAvailability, bookedSlot);
                 } else {
                     resourcesMayRemain = false;
                 }
@@ -148,17 +148,6 @@ function calculateExactTimeAvailability(config: BusinessConfiguration, bookingsI
     return dates.map(date => calculateExactTimeAvailabilityForDate(config, bookingsInDateRange, service, date));
 }
 
-export function calculateAvailability(config: BusinessConfiguration, bookings: Booking[], serviceId: ServiceId, fromDate: IsoDate, toDate: IsoDate): BookedTimeSlot[] | BookableTimes[] {
-    const service = mandatory(config.services.find(s => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
-    const bookingsInDateRange = bookings.filter(b => b.date >= fromDate && b.date <= toDate);
-    const dates = listDays(fromDate, toDate);
-    const actualResourceAvailability = fitAvailability(applyBookingsToResourceAvailability(config.resourceAvailability, bookingsInDateRange, config.services), config.availability.availability);
-    if (service.requiresTimeslot) {
-        return calculateTimeslotAvailability(config.timeslots, service, dates, actualResourceAvailability);
-    }
-    return calculateExactTimeAvailability(config, bookingsInDateRange, service, dates);
-}
-
 function hasResourcesForSlot(date: IsoDate, slot: BookableSlot, service: Service, bookingWithResourceUsage: BookingWithResourceUsage[], availableResources: ResourceDayAvailability[]): boolean {
     const slotDayAndTime = dayAndTimePeriod(date, calcSlotPeriod(slot, service.duration))
     const resourcesUsedDuringSlot = bookingWithResourceUsage
@@ -189,4 +178,15 @@ function getAllResources(resourceTypes: ResourceType[], availabilities: Resource
         }
     })
     return resources;
+}
+
+export function calculateAvailability(config: BusinessConfiguration, bookings: Booking[], serviceId: ServiceId, fromDate: IsoDate, toDate: IsoDate): ResourcedTimeSlot[] | BookableTimes[] {
+    const service = mandatory(config.services.find(s => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
+    const bookingsInDateRange = bookings.filter(b => b.date >= fromDate && b.date <= toDate);
+    const dates = listDays(fromDate, toDate);
+    const actualResourceAvailability = fitAvailability(applyBookingsToResourceAvailability(config.resourceAvailability, bookingsInDateRange, config.services), config.availability.availability);
+    if (service.requiresTimeslot) {
+        return calculateTimeslotAvailability(config.timeslots, service, dates, actualResourceAvailability);
+    }
+    return calculateExactTimeAvailability(config, bookingsInDateRange, service, dates);
 }

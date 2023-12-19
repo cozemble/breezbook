@@ -1,8 +1,8 @@
 import {expect, test} from 'vitest'
 
 import {
-    bookableTimeSlot, BookedTimeSlot,
-    bookedTimeSlot,
+    bookableTimeSlot, ResourcedTimeSlot,
+    resourcedTimeSlot,
     booking,
     businessAvailability,
     businessConfiguration,
@@ -50,6 +50,11 @@ const van1 = resource(van, "Van 1");
 const van2 = resource(van, "Van 2");
 const ourAdmin = resource(admin, "Admin");
 const resources = [van1, van2, ourAdmin];
+const smallCarWash = service('Small Car Wash', [van], 120, true, price(1000, GBP));
+const mediumCarWash = service('Medium Car Wash', [van], 120, true, price(1500, GBP));
+const largeCarWash = service('Large Car Wash', [van], 120, true, price(2000, GBP));
+const thirtyMinuteZoomCall = service('Sales Call on Zoom', [admin], 30, false, price(0, GBP));
+const services = [smallCarWash, mediumCarWash, largeCarWash, thirtyMinuteZoomCall];
 
 const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(may23, nineToSix),
@@ -57,12 +62,6 @@ const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(isoDate("2021-05-25"), nineToSix),
     dayAndTimePeriod(isoDate("2021-05-26"), nineToSix),
 ]))
-
-const smallCarWash = service('Small Car Wash', [van], 120, true, price(1000, GBP));
-const mediumCarWash = service('Medium Car Wash', [van], 120, true, price(1500, GBP));
-const largeCarWash = service('Large Car Wash', [van], 120, true, price(2000, GBP));
-const thirtyMinuteZoomCall = service('Sales Call on Zoom', [admin], 30, false, price(0, GBP));
-const services = [smallCarWash, mediumCarWash, largeCarWash, thirtyMinuteZoomCall];
 
 const config = businessConfiguration(availability, resourceAvailability, services, timeslots, periodicStartTime(duration(30)));
 
@@ -77,18 +76,18 @@ const meteOnTuesday = booking(mete.id, largeCarWash.id, isoDate('2021-05-25'), f
 const existingBookings = [mikeOnMonday, meteOnMonday, mikeOnTuesday, meteOnTuesday];
 
 test("can get availability for a given date range", () => {
-    const smallCarWashAvailability = calculateAvailability(config, existingBookings, smallCarWash.id, isoDate('2021-05-23'), isoDate('2021-05-26')) as BookedTimeSlot[]
+    const smallCarWashAvailability = calculateAvailability(config, existingBookings, smallCarWash.id, isoDate('2021-05-23'), isoDate('2021-05-26')) as ResourcedTimeSlot[]
     expect(smallCarWashAvailability).toHaveLength(10)
-    expect(smallCarWashAvailability[0]).toEqual(bookedTimeSlot(bookableTimeSlot(may23, fourToSix), [van1]));
-    expect(smallCarWashAvailability[1]).toEqual(bookedTimeSlot(bookableTimeSlot(may23, fourToSix), [van2]));
-    expect(smallCarWashAvailability[2]).toEqual(bookedTimeSlot(bookableTimeSlot(isoDate('2021-05-24'), oneToFour), [van1]));
-    expect(smallCarWashAvailability[3]).toEqual(bookedTimeSlot(bookableTimeSlot(isoDate('2021-05-24'), oneToFour), [van2]));
-    expect(smallCarWashAvailability[4]).toEqual(bookedTimeSlot(bookableTimeSlot(isoDate('2021-05-24'), fourToSix), [van1]));
-    expect(smallCarWashAvailability[5]).toEqual(bookedTimeSlot(bookableTimeSlot(isoDate('2021-05-24'), fourToSix), [van2]));
-    expect(smallCarWashAvailability[6]).toEqual(bookedTimeSlot(bookableTimeSlot(isoDate('2021-05-25'), nineToOne), [van1]));
-    expect(smallCarWashAvailability[7]).toEqual(bookedTimeSlot(bookableTimeSlot(isoDate('2021-05-25'), nineToOne), [van2]));
-    expect(smallCarWashAvailability[8]).toEqual(bookedTimeSlot(bookableTimeSlot(isoDate('2021-05-25'), oneToFour), [van2]));
-    expect(smallCarWashAvailability[9]).toEqual(bookedTimeSlot(bookableTimeSlot(isoDate('2021-05-25'), fourToSix), [van2]));
+    expect(smallCarWashAvailability[0]).toEqual(resourcedTimeSlot(bookableTimeSlot(may23, fourToSix), [van1], smallCarWash));
+    expect(smallCarWashAvailability[1]).toEqual(resourcedTimeSlot(bookableTimeSlot(may23, fourToSix), [van2], smallCarWash));
+    expect(smallCarWashAvailability[2]).toEqual(resourcedTimeSlot(bookableTimeSlot(isoDate('2021-05-24'), oneToFour), [van1], smallCarWash));
+    expect(smallCarWashAvailability[3]).toEqual(resourcedTimeSlot(bookableTimeSlot(isoDate('2021-05-24'), oneToFour), [van2], smallCarWash));
+    expect(smallCarWashAvailability[4]).toEqual(resourcedTimeSlot(bookableTimeSlot(isoDate('2021-05-24'), fourToSix), [van1], smallCarWash));
+    expect(smallCarWashAvailability[5]).toEqual(resourcedTimeSlot(bookableTimeSlot(isoDate('2021-05-24'), fourToSix), [van2], smallCarWash));
+    expect(smallCarWashAvailability[6]).toEqual(resourcedTimeSlot(bookableTimeSlot(isoDate('2021-05-25'), nineToOne), [van1], smallCarWash));
+    expect(smallCarWashAvailability[7]).toEqual(resourcedTimeSlot(bookableTimeSlot(isoDate('2021-05-25'), nineToOne), [van2], smallCarWash));
+    expect(smallCarWashAvailability[8]).toEqual(resourcedTimeSlot(bookableTimeSlot(isoDate('2021-05-25'), oneToFour), [van2], smallCarWash));
+    expect(smallCarWashAvailability[9]).toEqual(resourcedTimeSlot(bookableTimeSlot(isoDate('2021-05-25'), fourToSix), [van2], smallCarWash));
 })
 
 test("resource unavailability drops slots", () => {

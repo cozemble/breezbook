@@ -150,8 +150,8 @@ export function exactTimeAvailability(time: TwentyFourHourClockTime): ExactTimeA
 
 export interface TimeslotSpec {
     _type: 'timeslot.spec';
-    description: string;
     slot: TimePeriod
+    description: string;
 }
 
 export function timeslotSpec(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime, description: string): TimeslotSpec {
@@ -359,14 +359,16 @@ export function bookableTimeSlot(date: IsoDate, slot: TimeslotSpec): BookableTim
     };
 }
 
-export interface BookedTimeSlot extends BookableTimeSlot {
+export interface ResourcedTimeSlot extends BookableTimeSlot {
     resources: Resource[]
+    service: Service
 }
 
-export function bookedTimeSlot(slot: BookableTimeSlot, resources: Resource[]): BookedTimeSlot {
+export function resourcedTimeSlot(slot: BookableTimeSlot, resources: Resource[], service:Service): ResourcedTimeSlot {
     return {
         ...slot,
         resources,
+        service
     };
 }
 
@@ -444,6 +446,7 @@ export function timePeriod(from: TwentyFourHourClockTime, to: TwentyFourHourCloc
 }
 
 export const timePeriodFns = {
+    allDay: timePeriod(time24('00:00'), time24('23:59')),
     overlaps: (period1: TimePeriod, period2: TimePeriod): boolean => {
         return period1.from.value <= period2.from.value && period1.to.value >= period2.to.value;
     },
