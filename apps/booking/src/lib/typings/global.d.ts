@@ -52,3 +52,19 @@ declare interface Service {
 	// createdAt: string;
 	// updatedAt: string;
 }
+
+declare type GenericStatus = 'success' | 'error' | 'warning' | 'info' | 'default';
+
+declare namespace Service {
+	interface Extra {
+		name: string;
+		price: number;
+		selected: boolean;
+		// <!-- TODO detail inputs -->
+	}
+
+	interface Details {
+		// TODO
+		[key: string]: string;
+	}
+}

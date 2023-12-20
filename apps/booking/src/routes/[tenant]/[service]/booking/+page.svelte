@@ -4,6 +4,7 @@
 	import DetailsStep from './DetailsStep.svelte';
 	import ExtrasStep from './ExtrasStep.svelte';
 	import PickTimeStep from './PickTimeStep.svelte';
+	import Steps from './Steps.svelte';
 
 	export let data: PageData;
 	const tenant = data.tenant;
@@ -34,7 +35,5 @@
 
 <!-- Steps as accordion -->
 <section>
-	<PickTimeStep />
-	<ExtrasStep />
-	<DetailsStep />
+	<Steps />
 </section>

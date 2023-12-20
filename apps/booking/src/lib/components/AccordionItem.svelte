@@ -1,19 +1,26 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 
-	export let name: string;
-
+	export let open: boolean = false;
 	/** keep shorter than 15 for mobile */
 	export let label: string;
-
-	export let status: 'success' | 'error' | 'warning' | 'info' | 'default' = 'default';
-
+	export let status: GenericStatus = 'default';
 	/** keep shorter than 25 for mobile */
 	export let collapsedDetails: string = '';
+
+	// export let onToggle: (open: boolean) => void;
+
+	export let action:
+		| {
+				label: string;
+				disabled?: boolean;
+				handle: () => void;
+				// loading?: boolean; // <!-- TODO if needed -->
+		  }
+		| undefined;
 </script>
 
-<div class="collapse collapse-arrow border">
-	<input type="radio" {name} checked />
+<div class="collapse collapse-arrow border {open && 'collapse-open'}">
 	<div
 		class="collapse-title flex items-center justify-start
     {status === 'success' && 'text-success'}
@@ -45,7 +52,16 @@
 			{collapsedDetails}
 		</span>
 	</div>
+
 	<div class="collapse-content">
 		<slot />
+
+		{#if action}
+			<div class="flex justify-end">
+				<button class="btn btn-primary" on:click={action.handle} disabled={action.disabled}>
+					{action.label}
+				</button>
+			</div>
+		{/if}
 	</div>
 </div>
