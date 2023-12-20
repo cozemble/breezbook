@@ -12,7 +12,8 @@
     "test:watch": "vitest watch",
     "start": "nodemon dist/esm/index.js",
     "db:migrate": "dotenv -- bash -c 'npx postgrator --username $PG_ADMIN_USER --password $PG_ADMIN_PASSWORD'",
-    "db:migrate-local": "npx postgrator --host 127.0.0.1 --database postgres --username user --password password",
+    "db:migrate-local": "npx postgrator --config=migrations/schema/postgratorrc.json",
+    "db:migrate-carwash-local": "npx postgrator --config=migrations/data/carwash/postgratorrc.json",
     "dev": "nodemon -x \"npm run buildrun\"",
     "buildrun": "npm run compile && npm run server",
     "build-run-db": "npm run compile && npm run bounce:db",
@@ -27,11 +28,13 @@
     "eslint": "^8.28.0",
     "typescript": "5.3.3",
     "vite": "5.0.7",
-    "vitest": "0.33.0"
+    "vitest": "0.33.0",
+    "postgrator-cli": "^7.0.0"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
     "express": "^4.18.2",
+    "pg": "^8.11.3",
     "uuid": "^9.0.1"
   }
 }

@@ -15,7 +15,7 @@ import {
     isoDate,
     IsoDate,
     isoDateFns,
-    Resource,
+    FungibleResource,
     ResourceDayAvailability,
     resourcedTimeSlot,
     ResourcedTimeSlot,
@@ -32,7 +32,7 @@ import {
 
 interface BookingWithResourceUsage {
     booking: Booking;
-    resources: Resource[]
+    resources: FungibleResource[]
 }
 
 interface ResourceTimeSlot {
@@ -161,14 +161,14 @@ function hasResourcesForSlot(date: IsoDate, slot: BookableSlot, service: Service
     return service.resourceTypes.every(rt => resourcesTypesAvailable.find(rta => values.isEqual(rta, rt)));
 }
 
-function getResource(availabilities: ResourceDayAvailability[], resourceType: ResourceType, period: DayAndTimePeriod): Resource | null {
+function getResource(availabilities: ResourceDayAvailability[], resourceType: ResourceType, period: DayAndTimePeriod): FungibleResource | null {
     const availableResources = availabilities.filter(ra => values.isEqual(ra.resource.type, resourceType));
     const availableResource = availableResources.find(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da, period)));
     return availableResource ? availableResource.resource : null;
 }
 
-function getAllResources(resourceTypes: ResourceType[], availabilities: ResourceDayAvailability[], period: DayAndTimePeriod): Resource[] | null {
-    const resources: Resource[] = [];
+function getAllResources(resourceTypes: ResourceType[], availabilities: ResourceDayAvailability[], period: DayAndTimePeriod): FungibleResource[] | null {
+    const resources: FungibleResource[] = [];
     resourceTypes.forEach(rt => {
         const resource = getResource(availabilities, rt, period);
         if (resource) {

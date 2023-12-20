@@ -11,6 +11,17 @@ export const values = {
     }
 }
 
+export interface TenantId extends ValueType<string> {
+    _type: 'tenant.id';
+}
+
+export function tenantId(value: string): TenantId {
+    return {
+        _type: 'tenant.id',
+        value,
+    };
+}
+
 export interface IsoDate extends ValueType<string> {
     _type: 'iso.date';
 }
@@ -273,8 +284,8 @@ export function service(name: string, resourceTypes: ResourceType[], duration: n
     };
 }
 
-export interface Resource {
-    _type: 'resource';
+export interface FungibleResource {
+    _type: 'fungible.resource';
     id: ResourceId;
     type: ResourceType;
     name: string;
@@ -287,9 +298,9 @@ export function resourceId(value: string): ResourceId {
     };
 }
 
-export function resource(type: ResourceType, name: string): Resource {
+export function resource(type: ResourceType, name: string): FungibleResource {
     return {
-        _type: 'resource',
+        _type: 'fungible.resource',
         id: resourceId(uuidv4()),
         type,
         name,
@@ -360,11 +371,11 @@ export function bookableTimeSlot(date: IsoDate, slot: TimeslotSpec): BookableTim
 }
 
 export interface ResourcedTimeSlot extends BookableTimeSlot {
-    resources: Resource[]
+    resources: FungibleResource[]
     service: Service
 }
 
-export function resourcedTimeSlot(slot: BookableTimeSlot, resources: Resource[], service:Service): ResourcedTimeSlot {
+export function resourcedTimeSlot(slot: BookableTimeSlot, resources: FungibleResource[], service: Service): ResourcedTimeSlot {
     return {
         ...slot,
         resources,
@@ -378,11 +389,11 @@ export interface BookableTimes {
 }
 
 export interface ResourceDayAvailability {
-    resource: Resource
+    resource: FungibleResource
     availability: DayAndTimePeriod[]
 }
 
-export function resourceDayAvailability(resource: Resource, availability: DayAndTimePeriod[]): ResourceDayAvailability {
+export function resourceDayAvailability(resource: FungibleResource, availability: DayAndTimePeriod[]): ResourceDayAvailability {
     return {
         resource,
         availability,
