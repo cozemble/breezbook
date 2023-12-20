@@ -40,15 +40,6 @@ interface ResourceTimeSlot {
     allocation: DayAndTimePeriod
 }
 
-function listDays(fromDate: IsoDate, toDate: IsoDate) {
-    const from = new Date(fromDate.value);
-    const to = new Date(toDate.value);
-    const dates: IsoDate[] = [];
-    for (let date = from; date <= to; date.setDate(date.getDate() + 1)) {
-        dates.push(isoDate(date.toISOString().split('T')[0]));
-    }
-    return dates;
-}
 
 export function calcBookingPeriod(booking: Booking, serviceDuration: number): DayAndTimePeriod {
     return dayAndTimePeriod(booking.date, calcSlotPeriod(booking.slot, serviceDuration));
@@ -183,7 +174,7 @@ function getAllResources(resourceTypes: ResourceType[], availabilities: Resource
 export function calculateAvailability(config: BusinessConfiguration, bookings: Booking[], serviceId: ServiceId, fromDate: IsoDate, toDate: IsoDate): ResourcedTimeSlot[] | BookableTimes[] {
     const service = mandatory(config.services.find(s => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
     const bookingsInDateRange = bookings.filter(b => b.date >= fromDate && b.date <= toDate);
-    const dates = listDays(fromDate, toDate);
+    const dates = isoDateFns.listDays(fromDate, toDate);
     const actualResourceAvailability = fitAvailability(applyBookingsToResourceAvailability(config.resourceAvailability, bookingsInDateRange, config.services), config.availability.availability);
     if (service.requiresTimeslot) {
         return calculateTimeslotAvailability(config.timeslots, service, dates, actualResourceAvailability);

@@ -36,12 +36,26 @@ export function isoDate(value: string): IsoDate {
     };
 }
 
+export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+
 export const isoDateFns = {
     isEqual(date1: IsoDate, date2: IsoDate): boolean {
         return date1.value === date2.value;
     },
     sameDay(date1: IsoDate, date2: IsoDate) {
         return this.isEqual(date1, date2);
+    },
+    listDays(fromDate: IsoDate, toDate: IsoDate) {
+        const from = new Date(fromDate.value);
+        const to = new Date(toDate.value);
+        const dates: IsoDate[] = [];
+        for (let date = from; date <= to; date.setDate(date.getDate() + 1)) {
+            dates.push(isoDate(date.toISOString().split('T')[0]));
+        }
+        return dates;
+    },
+    dayOfWeek(date: IsoDate) {
+        return new Date(date.value).toLocaleDateString('en-GB', {weekday: 'long'}) as DayOfWeek;
     }
 }
 
@@ -195,9 +209,9 @@ export interface Customer {
     phone: string;
 }
 
-export function customer(firstName: string, lastName: string, email: string, phone: string): Customer {
+export function customer(firstName: string, lastName: string, email: string, phone: string, id = customerId(uuidv4())): Customer {
     return {
-        id: customerId(uuidv4()),
+        id,
         firstName,
         lastName,
         email,
@@ -215,9 +229,9 @@ export interface Booking {
     serviceId: ServiceId;
 }
 
-export function booking(customerId: CustomerId, serviceId: ServiceId, date: IsoDate, slot: BookableSlot): Booking {
+export function booking(customerId: CustomerId, serviceId: ServiceId, date: IsoDate, slot: BookableSlot, id = bookingId(uuidv4())): Booking {
     return {
-        id: bookingId(uuidv4()),
+        id,
         customerId,
         date,
         slot,
@@ -273,9 +287,9 @@ export interface Service {
     price: Price;
 }
 
-export function service(name: string, resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price): Service {
+export function service(name: string, resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price, id = serviceId(uuidv4())): Service {
     return {
-        id: serviceId(uuidv4()),
+        id,
         name,
         duration,
         resourceTypes,
@@ -298,10 +312,10 @@ export function resourceId(value: string): ResourceId {
     };
 }
 
-export function resource(type: ResourceType, name: string): FungibleResource {
+export function resource(type: ResourceType, name: string, id = resourceId(uuidv4())): FungibleResource {
     return {
         _type: 'fungible.resource',
-        id: resourceId(uuidv4()),
+        id,
         type,
         name,
     };

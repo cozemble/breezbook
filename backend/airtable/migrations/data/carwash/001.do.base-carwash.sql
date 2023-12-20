@@ -69,16 +69,16 @@ insert into add_on(id, tenant_id, name, price, price_currency, expect_quantity)
 values ('addOn#4', 'tenant1', 'Clean carpets', 2000, 'GBP', false);
 
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
-                     permitted_add_on_ids, resource_types_required)
+                     permitted_add_on_ids, resource_types_required, requires_time_slot)
 values ('smallCarWash', 'tenant1', 'service#1', 'Small Car wash', 'Small Car wash', 30, 1000, 'GBP',
-        array['addOn#1', 'addOn#2'], array['vanResourceType']);
+        array['addOn#1', 'addOn#2'], array['vanResourceType'], true);
 
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
-                     permitted_add_on_ids, resource_types_required)
+                     permitted_add_on_ids, resource_types_required, requires_time_slot)
 values ('mediumCarWash', 'tenant1', 'service#2', 'Medium Car wash', 'Medium Car wash', 45, 1500, 'GBP',
-        array['addOn#1', 'addOn#2'], array['vanResourceType']);
+        array['addOn#1', 'addOn#2'], array['vanResourceType'], true);
 
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
-                     permitted_add_on_ids, resource_types_required)
+                     permitted_add_on_ids, resource_types_required, requires_time_slot)
 values ('largeCarWash', 'tenant1', 'service#3', 'Large Car wash', 'Large Car wash', 60, 2000, 'GBP',
-        array['addOn#1', 'addOn#2', 'addOn#3', 'addOn#4'], array['vanResourceType']);
+        array['addOn#1', 'addOn#2', 'addOn#3', 'addOn#4'], array['vanResourceType'], true);
