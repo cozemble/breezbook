@@ -1,7 +1,7 @@
 import {
     BookableTimeSlots,
     BusinessAvailability,
-    BusinessConfiguration,
+    BusinessConfiguration, IsoDate,
     isoDate, ResourceDayAvailability, Service, StartTimeSpec,
     TenantId,
     tenantId,
@@ -10,6 +10,7 @@ import {
 } from "./types.js";
 import express from 'express';
 import {PricingRule} from "./calculatePrice.js";
+import {withAdminPgClient} from "./infra/postgresPool.js";
 
 const AVAILABILITY: BookableTimeSlots = {
     "date": isoDate("2023-05-24"),
@@ -23,7 +24,7 @@ export interface EverythingForTenant {
     pricingRules: PricingRule[]
 }
 
-async function getEverythingForTenant(tenantId: TenantId) {
+async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toDate: IsoDate) {
     // availability: BusinessAvailability;
     // resourceAvailability: ResourceDayAvailability[];
     // services: Service[];
@@ -41,19 +42,23 @@ async function getEverythingForTenant(tenantId: TenantId) {
      * Load time slots
      * Load pricing rules
      */
+    return withAdminPgClient(async (client) => {
+        const businessHours = await client.query(`select * from business_hours where tenant_id = $1`, [tenantId.value]).then(r => r.rows)
+        console.log({businessHours})
+    });
 
 }
 
 export async function getServiceAvailability(req: express.Request, res: express.Response) {
     const tenantIdValue = req.params.tenantId;
     const serviceIdValue = req.params.serviceId;
-    const fromDateValue = req.query.fromDate;
-    const toDateValue = req.query.toDate;
+    const fromDateValue = req.query.fromDate as string;
+    const toDateValue = req.query.toDate as string;
     console.log(`Getting availability for tenant ${tenantIdValue} and service ${serviceIdValue} from ${fromDateValue} to ${toDateValue}`);
     if(!tenantIdValue || !serviceIdValue || !fromDateValue || !toDateValue) {
         res.status(400).send('Missing required parameters');
         return;
     }
-    const everythingForTenant = await getEverythingForTenant(tenantId(tenantIdValue));
+    const everythingForTenant = await getEverythingForTenant(tenantId(tenantIdValue), isoDate(fromDateValue), isoDate(toDateValue));
     res.send([AVAILABILITY]);
 }
