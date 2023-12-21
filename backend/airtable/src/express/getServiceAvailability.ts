@@ -230,7 +230,6 @@ async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toD
             periodicStartTime(duration(30))
         ), pricingRules.map(pr => pr.definition) as PricingRule[], bookings.map(b => toDomainBooking(b)))
     });
-
 }
 
 function getServiceSummary(services: DomainService[], serviceId: ServiceId): ServiceSummary {
