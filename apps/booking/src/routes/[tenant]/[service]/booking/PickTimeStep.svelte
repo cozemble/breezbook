@@ -1,8 +1,6 @@
 <script lang="ts">
 	import DayList from '$lib/components/time/DayList.svelte';
 
-	export let onComplete: () => void;
-
 	export let value: TimeSlot | null;
 </script>
 

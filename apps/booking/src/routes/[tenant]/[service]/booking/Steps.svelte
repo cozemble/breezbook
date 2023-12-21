@@ -1,20 +1,20 @@
 <script lang="ts">
-	import AccordionItem from '$lib/components/AccordionItem.svelte';
+	import Step from './Step.svelte';
 	import DetailsStep from './DetailsStep.svelte';
 	import ExtrasStep from './ExtrasStep.svelte';
 	import PickTimeStep from './PickTimeStep.svelte';
 
 	// <!-- TODO clean this mess up -->
 
-	interface Step {
+	interface IStep {
 		name: 'time' | 'extras' | 'details';
 		label: string;
 		status: GenericStatus;
 		summary: string;
-		component: typeof DetailsStep | typeof ExtrasStep | typeof PickTimeStep;
 		open: boolean;
+		dependencies?: IStep[];
 		onComplete: () => void;
-		// value: (typeof values)[Step['name']];
+		onOpen: () => void;
 	}
 
 	const values: {
@@ -27,46 +27,68 @@
 		details: null
 	};
 
-	const timeStep: Step = {
+	const timeStep: IStep = {
 		name: 'time',
 		label: 'Pick a time',
 		status: 'default',
 		summary: '',
-		component: PickTimeStep,
 		open: true,
 		onComplete: () => {
-			timeStep.open = false;
+			if (!values.time) return;
+
 			timeStep.status = 'success';
-			extrasStep.open = true;
 			timeStep.summary = 'Wed, 11 Dec 14:00 - 17:00'; // <!-- TODO properly format the value -->
+			extrasStep.onOpen();
+		},
+		onOpen: () => {
+			timeStep.open = true;
+			extrasStep.open = false;
+			detailsStep.open = false;
 		}
 	};
 
-	const extrasStep: Step = {
+	const extrasStep: IStep = {
 		name: 'extras',
 		label: 'Extras',
 		status: 'default',
 		summary: '',
-		component: ExtrasStep,
 		open: false,
+		dependencies: [timeStep],
 		onComplete: () => {
-			extrasStep.open = false;
+			if (!values.extras) return;
+
 			extrasStep.status = 'success';
-			detailsStep.open = true;
-			extrasStep.summary = `${values.extras?.length || 0} extras selected`;
+			extrasStep.summary = `${values.extras?.length || 'no'} extras selected`;
+			detailsStep.onOpen();
+		},
+		onOpen: () => {
+			if (extrasStep.dependencies?.some((step) => step.status !== 'success')) return;
+
+			extrasStep.open = true;
+			timeStep.open = false;
+			detailsStep.open = false;
 		}
 	};
 
-	const detailsStep: Step = {
+	const detailsStep: IStep = {
 		name: 'details',
 		label: 'Details',
 		status: 'default',
 		summary: '',
-		component: DetailsStep,
 		open: false,
+		dependencies: [timeStep, extrasStep],
 		onComplete: () => {
+			if (!values.details) return;
+
 			detailsStep.open = false;
 			detailsStep.status = 'success';
+		},
+		onOpen: () => {
+			if (detailsStep.dependencies?.some((step) => step.status !== 'success')) return;
+
+			detailsStep.open = true;
+			timeStep.open = false;
+			extrasStep.open = false;
 		}
 	};
 </script>
@@ -75,11 +97,12 @@
 <!-- TODO the form logic -->
 <!-- TODO step data change based on other steps -->
 
-<AccordionItem
-	open={timeStep.open}
+<Step
 	label={timeStep.label}
 	status={timeStep.status}
-	collapsedDetails={timeStep.summary}
+	summary={timeStep.summary}
+	open={timeStep.open}
+	onOpen={timeStep.onOpen}
 	action={{
 		label: 'Next',
 		disabled: !values.time,
@@ -88,19 +111,15 @@
 		}
 	}}
 >
-	<PickTimeStep
-		onComplete={() => {
-			timeStep.onComplete();
-		}}
-		bind:value={values.time}
-	/>
-</AccordionItem>
+	<PickTimeStep bind:value={values.time} />
+</Step>
 
-<AccordionItem
-	open={extrasStep.open}
+<Step
 	label={extrasStep.label}
 	status={extrasStep.status}
-	collapsedDetails={extrasStep.summary}
+	summary={extrasStep.summary}
+	open={extrasStep.open}
+	onOpen={extrasStep.onOpen}
 	action={{
 		label: 'Next',
 		disabled: !values.extras,
@@ -110,13 +129,14 @@
 	}}
 >
 	<ExtrasStep bind:value={values.extras} />
-</AccordionItem>
+</Step>
 
-<AccordionItem
-	open={detailsStep.open}
+<Step
 	label={detailsStep.label}
 	status={detailsStep.status}
-	collapsedDetails={detailsStep.summary}
+	summary={detailsStep.summary}
+	open={detailsStep.open}
+	onOpen={detailsStep.onOpen}
 	action={{
 		label: 'Complete',
 		disabled: !values.details,
@@ -126,4 +146,4 @@
 	}}
 >
 	<DetailsStep bind:value={values.details} />
-</AccordionItem>
+</Step>

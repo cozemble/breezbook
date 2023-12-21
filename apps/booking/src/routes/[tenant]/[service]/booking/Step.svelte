@@ -6,9 +6,9 @@
 	export let label: string;
 	export let status: GenericStatus = 'default';
 	/** keep shorter than 25 for mobile */
-	export let collapsedDetails: string = '';
+	export let summary: string = '';
 
-	// export let onToggle: (open: boolean) => void;
+	export let onOpen: () => void;
 
 	export let action:
 		| {
@@ -21,7 +21,7 @@
 </script>
 
 <div class="collapse collapse-arrow border {open && 'collapse-open'}">
-	<div
+	<button
 		class="collapse-title flex items-center justify-start
     {status === 'success' && 'text-success'}
     {status === 'error' && 'text-error'}
@@ -29,6 +29,7 @@
     {status === 'info' && 'text-info'}
     {status === 'default' && 'text-secondary'}
   "
+		on:click={() => onOpen()}
 	>
 		<span class="text-base sm:text-lg font-semibold">
 			{label}
@@ -49,9 +50,9 @@
 
 		<!-- collapsed details -->
 		<span class="ml-auto text-xs sm:text-sm font-normal text-base-content/60">
-			{collapsedDetails}
+			{summary}
 		</span>
-	</div>
+	</button>
 
 	<div class="collapse-content">
 		<slot />
