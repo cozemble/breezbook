@@ -133,8 +133,6 @@ export interface Customers {
   tenant_id: string;
   name: string;
   email: string;
-  extra_details: Json;
-  form_id: string | null;
   form_data: Json | null;
 }
 export interface CustomersInput {
@@ -142,19 +140,14 @@ export interface CustomersInput {
   tenant_id: string;
   name: string;
   email: string;
-  extra_details: Json;
-  form_id?: string | null;
   form_data?: Json | null;
 }
 const customers = {
   tableName: 'customers',
-  columns: ['id', 'tenant_id', 'name', 'email', 'extra_details', 'form_id', 'form_data'],
-  requiredForInsert: ['id', 'tenant_id', 'name', 'email', 'extra_details'],
+  columns: ['id', 'tenant_id', 'name', 'email', 'form_data'],
+  requiredForInsert: ['id', 'tenant_id', 'name', 'email'],
   primaryKey: 'id',
-  foreignKeys: {
-    tenant_id: { table: 'tenants', column: 'tenant_id', $type: null as unknown as Tenants },
-    form_id: { table: 'forms', column: 'id', $type: null as unknown as Forms },
-  },
+  foreignKeys: { tenant_id: { table: 'tenants', column: 'tenant_id', $type: null as unknown as Tenants }, },
   $type: null as unknown as Customers,
   $input: null as unknown as CustomersInput
 } as const;
@@ -372,7 +365,7 @@ export interface Services {
   resource_types_required: string[];
   requires_time_slot: boolean;
   form_id: string | null;
-  form_data: Json | null;
+  customer_form_id: string | null;
 }
 export interface ServicesInput {
   id: string;
@@ -387,16 +380,17 @@ export interface ServicesInput {
   resource_types_required: string[];
   requires_time_slot: boolean;
   form_id?: string | null;
-  form_data?: Json | null;
+  customer_form_id?: string | null;
 }
 const services = {
   tableName: 'services',
-  columns: ['id', 'tenant_id', 'service_id', 'name', 'description', 'duration_minutes', 'price', 'price_currency', 'permitted_add_on_ids', 'resource_types_required', 'requires_time_slot', 'form_id', 'form_data'],
+  columns: ['id', 'tenant_id', 'service_id', 'name', 'description', 'duration_minutes', 'price', 'price_currency', 'permitted_add_on_ids', 'resource_types_required', 'requires_time_slot', 'form_id', 'customer_form_id'],
   requiredForInsert: ['id', 'tenant_id', 'service_id', 'name', 'duration_minutes', 'price', 'price_currency', 'permitted_add_on_ids', 'resource_types_required', 'requires_time_slot'],
   primaryKey: 'id',
   foreignKeys: {
     tenant_id: { table: 'tenants', column: 'tenant_id', $type: null as unknown as Tenants },
     form_id: { table: 'forms', column: 'id', $type: null as unknown as Forms },
+    customer_form_id: { table: 'forms', column: 'id', $type: null as unknown as Forms },
   },
   $type: null as unknown as Services,
   $input: null as unknown as ServicesInput

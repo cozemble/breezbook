@@ -68,17 +68,85 @@ values ('addOn#3', 'tenant1', 'Clean seats', 2000, 'GBP', true);
 insert into add_on(id, tenant_id, name, price, price_currency, expect_quantity)
 values ('addOn#4', 'tenant1', 'Clean carpets', 2000, 'GBP', false);
 
+insert into forms (id, tenant_id, name, description, definition)
+values ('car-details-form',
+        'tenant1',
+        'Car details',
+        'Car details',
+        '{
+          "_type": "json.schema.form",
+          "id": {"_type": "form.id", "value": "car-details-form"},
+          "name": "Car Details Form",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+              "make": {
+                "type": "string",
+                "description": "The manufacturer of the car."
+              },
+              "model": {
+                "type": "string",
+                "description": "The model of the car."
+              },
+              "colour": {
+                "type": "string",
+                "description": "The color of the car."
+              },
+              "year": {
+                "type": "integer",
+                "description": "The manufacturing year of the car."
+              }
+            },
+            "required": ["make", "model", "colour", "year"],
+            "additionalProperties": false
+          }
+        }
+        ');
+
+insert into forms (id, tenant_id, name, description, definition)
+values ('contact-details-form',
+        'tenant1',
+        'Contact Details',
+        'Contact Details Form',
+        '{
+          "_type": "json.schema.form",
+          "id": {"_type": "form.id", "value": "contact-details-form"},
+          "name": "Customer Details Form",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {
+              "phone": {
+                "type": "string",
+                "description": "Your phone number."
+              },
+              "firstLineOfAddress": {
+                "type": "string",
+                "description": "The first line of your address."
+              },
+              "postcode": {
+                "type": "string",
+                "description": "Your postcode."
+              }
+            },
+            "required": ["phone", "firstLineOfAddress", "postcode"],
+            "additionalProperties": false
+          }
+        }');
+
+
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
-                     permitted_add_on_ids, resource_types_required, requires_time_slot)
+                     permitted_add_on_ids, resource_types_required, requires_time_slot, form_id, customer_form_id)
 values ('smallCarWash', 'tenant1', 'service#1', 'Small Car wash', 'Small Car wash', 30, 1000, 'GBP',
-        array['addOn#1', 'addOn#2'], array['vanResourceType'], true);
+        array ['addOn#1', 'addOn#2'], array ['vanResourceType'], true, 'car-details-form', 'contact-details-form');
 
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
-                     permitted_add_on_ids, resource_types_required, requires_time_slot)
+                     permitted_add_on_ids, resource_types_required, requires_time_slot,  form_id, customer_form_id)
 values ('mediumCarWash', 'tenant1', 'service#2', 'Medium Car wash', 'Medium Car wash', 45, 1500, 'GBP',
-        array['addOn#1', 'addOn#2'], array['vanResourceType'], true);
+        array ['addOn#1', 'addOn#2'], array ['vanResourceType'], true, 'car-details-form', 'contact-details-form');
 
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
-                     permitted_add_on_ids, resource_types_required, requires_time_slot)
+                     permitted_add_on_ids, resource_types_required, requires_time_slot, form_id, customer_form_id)
 values ('largeCarWash', 'tenant1', 'service#3', 'Large Car wash', 'Large Car wash', 60, 2000, 'GBP',
-        array['addOn#1', 'addOn#2', 'addOn#3', 'addOn#4'], array['vanResourceType'], true);
+        array ['addOn#1', 'addOn#2', 'addOn#3', 'addOn#4'], array ['vanResourceType'], true, 'car-details-form', 'contact-details-form');

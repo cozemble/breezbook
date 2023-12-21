@@ -1,3 +1,5 @@
+import {Form} from "./types.js";
+
 export interface TimeSlotAvailability {
     _type: 'time.slot.availability'
     startTime24hr: string
@@ -42,14 +44,14 @@ export type Availability = TimeSlotAvailability
 
 // export type Availability = TimeSlotAvailability | ExactTimeAvailability
 
-export interface Slots {
-    [date: string]: Availability[]
-}
+export type Slots = Record<string, Availability[]>;
 
 export interface ServiceSummary {
     id: string
     name: string
-    durationMinutes: number
+    durationMinutes: number,
+    form?: Form,
+    customerForm?: Form,
 }
 
 export interface AddOnSummary {

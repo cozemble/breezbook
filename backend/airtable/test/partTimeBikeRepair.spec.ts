@@ -48,7 +48,7 @@ const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
 const bicycleRepair = service('Bicycle Repair', [staff], 5, false, price(3500, GBP), []);
 const services = [bicycleRepair];
 
-const config = businessConfiguration(availability, resourceAvailability, services, [],[], discreteStartTimes(morningCheckInTimes));
+const config = businessConfiguration(availability, resourceAvailability, services, [],[], [],discreteStartTimes(morningCheckInTimes));
 
 const mike = customer('Mike', 'Hogan', 'mike@email.com', '555-555-555');
 const mete = customer('Mete', 'Bora', 'mete@email.com', '666-666-666');

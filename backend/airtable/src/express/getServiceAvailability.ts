@@ -12,10 +12,11 @@ import {
     DayAndTimePeriod,
     dayAndTimePeriodFns,
     duration,
+    Form, formId,
     FungibleResource,
     IsoDate,
     isoDate,
-    isoDateFns,
+    isoDateFns, JsonSchemaForm,
     periodicStartTime,
     price,
     resource,
@@ -42,7 +43,7 @@ import {
     AddOn,
     BlockedTime,
     Bookings,
-    BusinessHours,
+    BusinessHours, Forms,
     PricingRules,
     ResourceAvailability,
     ResourceBlockedTime,
@@ -144,7 +145,10 @@ export function makeResourceAvailability(mappedResourceTypes: ResourceType[], re
 function toDomainService(s: Services, resourceTypes: ResourceType[]): DomainService {
     const mappedResourceTypes = s.resource_types_required.map(rt => mandatory(resourceTypes.find(rtt => rtt.value === rt), `No resource type ${rt}`));
     const permittedAddOns = s.permitted_add_on_ids.map(id => addOnId(id));
-    return service(s.name, mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price, currency(s.price_currency)), permittedAddOns, serviceId(s.id))
+    const result = service(s.name, mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price, currency(s.price_currency)), permittedAddOns, serviceId(s.id))
+    result.serviceFormId = s.form_id ? formId(s.form_id) : undefined;
+    result.customerFormId = s.customer_form_id ? formId(s.customer_form_id) : undefined;
+    return result
 }
 
 function toDomainBooking(b: Bookings): Booking {
@@ -153,6 +157,10 @@ function toDomainBooking(b: Bookings): Booking {
 
 function toDomainAddOn(a: AddOn): DomainAddOn {
     return addOn(a.name, price(a.price, currency(a.price_currency)), a.expect_quantity, addOnId(a.id));
+}
+
+function toDomainForm(f: Forms):Form {
+    return f.definition as Form;
 }
 
 async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toDate: IsoDate): Promise<EverythingForTenant> {
@@ -216,10 +224,15 @@ async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toD
                                                and date >= $2
                                                and date <= $3`, [tenantId.value, fromDate.value, toDate.value]).then(r => r.rows) as Bookings[]
 
+        const forms = await client.query(`select *
+                                          from forms
+                                          where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as Forms[]
+
 
         const dates = isoDateFns.listDays(fromDate, toDate);
         const mappedResourceTypes = resourceTypes.map(rt => resourceType(rt.id));
         const mappedAddOns = addOns.map(a => toDomainAddOn(a));
+        const mappedForms = forms.map(f => toDomainForm(f));
 
         return everythingForTenant(businessConfiguration(
             makeBusinessAvailability(businessHours, blockedTime, dates),
@@ -227,14 +240,24 @@ async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toD
             services.map(s => toDomainService(s, mappedResourceTypes)),
             mappedAddOns,
             timeSlots.map(ts => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description)),
+            mappedForms,
             periodicStartTime(duration(30))
         ), pricingRules.map(pr => pr.definition) as PricingRule[], bookings.map(b => toDomainBooking(b)))
     });
 }
 
-function getServiceSummary(services: DomainService[], serviceId: ServiceId): ServiceSummary {
+function getServiceSummary(services: DomainService[], serviceId: ServiceId, forms: Form[]): ServiceSummary {
     const service = mandatory(services.find(s => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
-    return {name: service.name, id: serviceId.value, durationMinutes: service.duration};
+    const result: ServiceSummary = {name: service.name, id: serviceId.value, durationMinutes: service.duration};
+    const serviceFormId = service.serviceFormId;
+    if (serviceFormId) {
+        result.form = mandatory(forms.find(f => values.isEqual(f.id, serviceFormId)), `Form with id ${serviceFormId.value} not found`);
+    }
+    const customerFormId = service.customerFormId;
+    if (customerFormId) {
+        result.customerForm = mandatory(forms.find(f => values.isEqual(f.id, customerFormId)), `Form with id ${customerFormId.value} not found`);
+    }
+    return result;
 }
 
 function getAddOnSummaries(services: DomainService[], addOns: DomainAddOn[], serviceId: ServiceId): AddOnSummary[] {
@@ -279,7 +302,7 @@ export async function getServiceAvailability(req: express.Request, res: express.
         acc.slots[curr.slot.date.value] = slotsForDate;
         return acc;
     }, emptyAvailabilityResponse(
-        getServiceSummary(everythingForTenant.businessConfiguration.services, serviceId(serviceIdValue)),
+        getServiceSummary(everythingForTenant.businessConfiguration.services, serviceId(serviceIdValue), everythingForTenant.businessConfiguration.forms),
         getAddOnSummaries(everythingForTenant.businessConfiguration.services, everythingForTenant.businessConfiguration.addOns, serviceId(serviceIdValue))))
 
     res.send(response);

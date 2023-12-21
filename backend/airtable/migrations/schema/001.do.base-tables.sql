@@ -91,9 +91,8 @@ create table services
     resource_types_required text[]                              not null,
     requires_time_slot      boolean                             not null,
     form_id                 text                                null default null references forms (id),
-    form_data               jsonb                               null default null
+    customer_form_id        text                                null default null references forms (id)
 );
-
 
 create table time_slots
 (
@@ -114,13 +113,11 @@ create table pricing_rules
 
 create table customers
 (
-    id            text primary key,
-    tenant_id     text references tenants (tenant_id) not null,
-    name          text                                not null,
-    email         text                                not null,
-    extra_details jsonb                               not null,
-    form_id       text                                null default null references forms (id),
-    form_data     jsonb                               null default null
+    id        text primary key,
+    tenant_id text references tenants (tenant_id) not null,
+    name      text                                not null,
+    email     text                                not null,
+    form_data jsonb                               null default null
 );
 
 create table bookings

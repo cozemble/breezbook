@@ -207,6 +207,8 @@ export interface Customer {
     lastName: string;
     email: string;
     phone: string;
+    formId?: FormId
+    formData?: unknown
 }
 
 export function customer(firstName: string, lastName: string, email: string, phone: string, id = customerId(uuidv4())): Customer {
@@ -227,6 +229,7 @@ export interface Booking {
     date: IsoDate;
     slot: BookableSlot;
     serviceId: ServiceId;
+    formData?: unknown
 }
 
 export function booking(customerId: CustomerId, serviceId: ServiceId, date: IsoDate, slot: BookableSlot, id = bookingId(uuidv4())): Booking {
@@ -248,7 +251,6 @@ export function numberWithoutDecimalPlaces(value: number): NumberWithoutDecimalP
         _type: 'number.without.decimal.places',
         value,
     };
-
 }
 
 export interface Currency extends ValueType<string> {
@@ -286,6 +288,8 @@ export interface Service {
     requiresTimeslot: boolean;
     price: Price;
     permittedAddOns: AddOnId[];
+    serviceFormId?: FormId
+    customerFormId?: FormId
 }
 
 export function service(name: string, resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price, permittedAddOns: AddOnId[], id = serviceId(uuidv4())): Service {
@@ -330,6 +334,7 @@ export interface BusinessConfiguration {
     services: Service[];
     addOns: AddOn[];
     timeslots: TimeslotSpec[];
+    forms: Form[]
     startTimeSpec: StartTimeSpec
 }
 
@@ -378,7 +383,7 @@ export interface AddOn {
     requiresQuantity: boolean
 }
 
-export function addOn(name: string, price: Price,requiresQuantity: boolean, id = addOnId(uuidv4())): AddOn {
+export function addOn(name: string, price: Price, requiresQuantity: boolean, id = addOnId(uuidv4())): AddOn {
     return {
         _type: 'add.on',
         id,
@@ -388,7 +393,7 @@ export function addOn(name: string, price: Price,requiresQuantity: boolean, id =
     };
 }
 
-export function businessConfiguration(availability: BusinessAvailability, resources: ResourceDayAvailability[], services: Service[], addOns: AddOn[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec): BusinessConfiguration {
+export function businessConfiguration(availability: BusinessAvailability, resources: ResourceDayAvailability[], services: Service[], addOns: AddOn[], timeslots: TimeslotSpec[], forms: Form[], startTimeSpec: StartTimeSpec): BusinessConfiguration {
     return {
         _type: 'business.configuration',
         availability,
@@ -396,7 +401,8 @@ export function businessConfiguration(availability: BusinessAvailability, resour
         services,
         timeslots,
         startTimeSpec,
-        addOns
+        addOns,
+        forms
     };
 }
 
@@ -524,4 +530,25 @@ export const timePeriodFns = {
             || period2.from.value <= period.from.value && period2.to.value >= period.to.value;
     }
 }
+
+export interface FormId extends ValueType<string> {
+    _type: 'form.id';
+}
+
+export function formId(value: string): FormId {
+    return {
+        _type: 'form.id',
+        value,
+    };
+}
+
+export interface JsonSchemaForm {
+    _type: 'json.schema.form';
+    id: FormId
+    name: string,
+    description?: string,
+    schema: unknown;
+}
+
+export type Form = JsonSchemaForm
 
