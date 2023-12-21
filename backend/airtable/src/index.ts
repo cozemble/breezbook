@@ -1,5 +1,6 @@
 import express from 'express';
-import {getServiceAvailability} from "./getServiceAvailability.js";
+import {getServiceAvailability} from "./express/getServiceAvailability.js";
+
 const DEFAULT_PORT = 3000;
 const app = express();
 const port = process.env.PORT ?? DEFAULT_PORT;
