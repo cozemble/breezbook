@@ -129,6 +129,7 @@ function calculateExactTimeAvailabilityForDate(config: BusinessConfiguration, bo
     const bookingsWithResources = assignResourcesToBookings(config, bookingsInDateRange);
     const availableTimes = config.startTimeSpec._type === 'periodic.start.time' ? calculatePeriodicStartTimes() : calculateDiscreteStartTimes(config.startTimeSpec, config, date, bookingsWithResources, service);
     return {
+        _type: 'bookable.times',
         date,
         bookableTimes: availableTimes
     };

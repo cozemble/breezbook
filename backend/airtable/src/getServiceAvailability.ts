@@ -1,32 +1,43 @@
 import {
     BookableTimeSlots,
+    Booking,
     businessAvailability,
     BusinessAvailability,
     businessConfiguration,
     BusinessConfiguration,
+    currency,
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
+    duration,
     FungibleResource,
     IsoDate,
     isoDate,
     isoDateFns,
+    periodicStartTime,
+    price,
     resource,
     resourceDayAvailability,
     ResourceDayAvailability,
+    resourceId,
     resourceType,
+    ResourceType,
+    Service as DomainService,
+    service,
+    serviceId,
     TenantId,
     tenantId,
     time24,
     timePeriod,
-    timeslotSpec, values,
-    Service as DomainService, service, ResourceType, price, currency, periodicStartTime, duration, resourceId, serviceId
+    timeslotSpec,
+    values
 } from "./types.js";
 import express from 'express';
-import {PricingRule} from "./calculatePrice.js";
+import {calculatePrice, PricingRule} from "./calculatePrice.js";
 import {withAdminPgClient} from "./infra/postgresPool.js";
 import {
     BlockedTime,
+    Bookings,
     BusinessHours,
     PricingRules,
     ResourceAvailability,
@@ -37,6 +48,8 @@ import {
     TimeSlots
 } from "./generated/dbtypes.js";
 import {mandatory} from "./utils.js";
+import {calculateAvailability} from "./calculateAvailability.js";
+import {emptyAvailabilityResponse, timeSlotAvailability} from "./apiTypes.js";
 
 const AVAILABILITY: BookableTimeSlots = {
     "date": isoDate("2023-05-24"),
@@ -49,13 +62,15 @@ export interface EverythingForTenant {
     _type: 'everything.for.tenant'
     businessConfiguration: BusinessConfiguration
     pricingRules: PricingRule[]
+    bookings: Booking[]
 }
 
-export function everythingForTenant(businessConfiguration: BusinessConfiguration, pricingRules: PricingRule[]): EverythingForTenant {
+export function everythingForTenant(businessConfiguration: BusinessConfiguration, pricingRules: PricingRule[], bookings: Booking[]): EverythingForTenant {
     return {
         _type: 'everything.for.tenant',
         businessConfiguration,
-        pricingRules
+        pricingRules,
+        bookings
     }
 }
 
@@ -129,9 +144,13 @@ export function makeResourceAvailability(mappedResourceTypes: ResourceType[], re
     }, [] as ResourceDayAvailability[])
 }
 
-function toDomainService(s: Services, resourceTypes:ResourceType[]): DomainService {
+function toDomainService(s: Services, resourceTypes: ResourceType[]): DomainService {
     const mappedResourceTypes = s.resource_types_required.map(rt => mandatory(resourceTypes.find(rtt => rtt.value === rt), `No resource type ${rt}`));
-    return service(s.name,mappedResourceTypes, s.duration_minutes, s.requires_time_slot,price(s.price, currency(s.price_currency)), serviceId(s.id))
+    return service(s.name, mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price, currency(s.price_currency)), serviceId(s.id))
+}
+
+function toDomainBooking(b: Bookings): Booking {
+    return b.definition as Booking;
 }
 
 async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toDate: IsoDate): Promise<EverythingForTenant> {
@@ -185,6 +204,12 @@ async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toD
                                                   from resource_types
                                                   where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as ResourceTypes[]
 
+        const bookings = await client.query(`select *
+                                             from bookings
+                                             where tenant_id = $1
+                                               and date >= $2
+                                               and date <= $3`, [tenantId.value, fromDate.value, toDate.value]).then(r => r.rows) as Bookings[]
+
 
         const dates = isoDateFns.listDays(fromDate, toDate);
         const mappedResourceTypes = resourceTypes.map(rt => resourceType(rt.id));
@@ -195,7 +220,7 @@ async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toD
             services.map(s => toDomainService(s, mappedResourceTypes)),
             timeSlots.map(ts => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description)),
             periodicStartTime(duration(30))
-        ), pricingRules.map(pr => pr.definition) as PricingRule[])
+        ), pricingRules.map(pr => pr.definition) as PricingRule[], bookings.map(b => toDomainBooking(b)))
     });
 
 }
@@ -211,5 +236,25 @@ export async function getServiceAvailability(req: express.Request, res: express.
         return;
     }
     const everythingForTenant = await getEverythingForTenant(tenantId(tenantIdValue), isoDate(fromDateValue), isoDate(toDateValue));
-    res.send([AVAILABILITY]);
+    const availability = calculateAvailability(everythingForTenant.businessConfiguration, everythingForTenant.bookings, serviceId(serviceIdValue), isoDate(fromDateValue), isoDate(toDateValue));
+    const priced = availability.map(a => {
+        if (a._type === 'bookable.times') {
+            return a;
+        }
+        return calculatePrice(a, everythingForTenant.pricingRules);
+    })
+    const response = priced.reduce((acc, curr) => {
+        if (curr._type === 'bookable.times') {
+            throw new Error('Not yet implemented')
+        }
+        const availabilityForDate = acc[curr.slot.date.value] ?? []
+        const currTimeslot = timeSlotAvailability(curr.slot.slot.slot.from.value, curr.slot.slot.slot.to.value, curr.slot.slot.description, curr.price.amount.value, curr.price.currency.value)
+        if (!availabilityForDate.some(a => a.label === currTimeslot.label)) {
+            availabilityForDate.push(currTimeslot)
+        }
+        acc[curr.slot.date.value] = availabilityForDate;
+        return acc;
+    }, emptyAvailabilityResponse())
+
+    res.send(response);
 }

@@ -385,12 +385,14 @@ export function bookableTimeSlot(date: IsoDate, slot: TimeslotSpec): BookableTim
 }
 
 export interface ResourcedTimeSlot extends BookableTimeSlot {
+    _type: 'resourced.time.slot';
     resources: FungibleResource[]
     service: Service
 }
 
 export function resourcedTimeSlot(slot: BookableTimeSlot, resources: FungibleResource[], service: Service): ResourcedTimeSlot {
     return {
+        _type: 'resourced.time.slot',
         ...slot,
         resources,
         service
@@ -398,6 +400,7 @@ export function resourcedTimeSlot(slot: BookableTimeSlot, resources: FungibleRes
 }
 
 export interface BookableTimes {
+    _type: 'bookable.times';
     date: IsoDate;
     bookableTimes: ExactTimeAvailability[];
 }
