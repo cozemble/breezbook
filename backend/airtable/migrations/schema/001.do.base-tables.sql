@@ -83,7 +83,7 @@ create table services
     tenant_id               text references tenants (tenant_id) not null,
     service_id              text                                not null,
     name                    text                                not null,
-    description             text,
+    description             text                                not null,
     duration_minutes        integer                             not null,
     price                   numeric                             not null,
     price_currency          text                                not null,

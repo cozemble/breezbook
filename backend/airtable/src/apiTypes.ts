@@ -50,6 +50,7 @@ export interface ServiceSummary {
     id: string
     name: string
     durationMinutes: number,
+    description: string,
     form?: Form,
     customerForm?: Form,
 }

@@ -16,7 +16,7 @@ import {
     FungibleResource,
     IsoDate,
     isoDate,
-    isoDateFns, JsonSchemaForm,
+    isoDateFns,
     periodicStartTime,
     price,
     resource,
@@ -145,7 +145,7 @@ export function makeResourceAvailability(mappedResourceTypes: ResourceType[], re
 function toDomainService(s: Services, resourceTypes: ResourceType[]): DomainService {
     const mappedResourceTypes = s.resource_types_required.map(rt => mandatory(resourceTypes.find(rtt => rtt.value === rt), `No resource type ${rt}`));
     const permittedAddOns = s.permitted_add_on_ids.map(id => addOnId(id));
-    const result = service(s.name, mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price, currency(s.price_currency)), permittedAddOns, serviceId(s.id))
+    const result = service(s.name, s.description,mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price, currency(s.price_currency)), permittedAddOns, serviceId(s.id))
     result.serviceFormId = s.form_id ? formId(s.form_id) : undefined;
     result.customerFormId = s.customer_form_id ? formId(s.customer_form_id) : undefined;
     return result
@@ -248,7 +248,7 @@ async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toD
 
 function getServiceSummary(services: DomainService[], serviceId: ServiceId, forms: Form[]): ServiceSummary {
     const service = mandatory(services.find(s => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
-    const result: ServiceSummary = {name: service.name, id: serviceId.value, durationMinutes: service.duration};
+    const result: ServiceSummary = {name: service.name, id: serviceId.value, durationMinutes: service.duration, description: service.description};
     const serviceFormId = service.serviceFormId;
     if (serviceFormId) {
         result.form = mandatory(forms.find(f => values.isEqual(f.id, serviceFormId)), `Form with id ${serviceFormId.value} not found`);

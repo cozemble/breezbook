@@ -283,6 +283,7 @@ export function price(amount: number, currency: Currency): Price {
 export interface Service {
     id: ServiceId;
     name: string;
+    description: string;
     duration: number;
     resourceTypes: ResourceType[];
     requiresTimeslot: boolean;
@@ -292,10 +293,11 @@ export interface Service {
     customerFormId?: FormId
 }
 
-export function service(name: string, resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price, permittedAddOns: AddOnId[], id = serviceId(uuidv4())): Service {
+export function service(name: string, description:string,resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price, permittedAddOns: AddOnId[], id = serviceId(uuidv4())): Service {
     return {
         id,
         name,
+        description,
         duration,
         resourceTypes,
         requiresTimeslot,

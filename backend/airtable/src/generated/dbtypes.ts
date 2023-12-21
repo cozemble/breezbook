@@ -357,7 +357,7 @@ export interface Services {
   tenant_id: string;
   service_id: string;
   name: string;
-  description: string | null;
+  description: string;
   duration_minutes: number;
   price: number;
   price_currency: string;
@@ -372,7 +372,7 @@ export interface ServicesInput {
   tenant_id: string;
   service_id: string;
   name: string;
-  description?: string | null;
+  description: string;
   duration_minutes: number;
   price: number;
   price_currency: string;
@@ -385,7 +385,7 @@ export interface ServicesInput {
 const services = {
   tableName: 'services',
   columns: ['id', 'tenant_id', 'service_id', 'name', 'description', 'duration_minutes', 'price', 'price_currency', 'permitted_add_on_ids', 'resource_types_required', 'requires_time_slot', 'form_id', 'customer_form_id'],
-  requiredForInsert: ['id', 'tenant_id', 'service_id', 'name', 'duration_minutes', 'price', 'price_currency', 'permitted_add_on_ids', 'resource_types_required', 'requires_time_slot'],
+  requiredForInsert: ['id', 'tenant_id', 'service_id', 'name', 'description', 'duration_minutes', 'price', 'price_currency', 'permitted_add_on_ids', 'resource_types_required', 'requires_time_slot'],
   primaryKey: 'id',
   foreignKeys: {
     tenant_id: { table: 'tenants', column: 'tenant_id', $type: null as unknown as Tenants },

@@ -50,10 +50,10 @@ const van1 = resource(van, "Van 1");
 const van2 = resource(van, "Van 2");
 const ourAdmin = resource(admin, "Admin");
 const resources = [van1, van2, ourAdmin];
-const smallCarWash = service('Small Car Wash', [van], 120, true, price(1000, GBP), []);
-const mediumCarWash = service('Medium Car Wash', [van], 120, true, price(1500, GBP), []);
-const largeCarWash = service('Large Car Wash', [van], 120, true, price(2000, GBP), []);
-const thirtyMinuteZoomCall = service('Sales Call on Zoom', [admin], 30, false, price(0, GBP), []);
+const smallCarWash = service('Small Car Wash','Small Car Wash', [van], 120, true, price(1000, GBP), []);
+const mediumCarWash = service('Medium Car Wash','Medium Car Wash', [van], 120, true, price(1500, GBP), []);
+const largeCarWash = service('Large Car Wash','Large Car Wash', [van], 120, true, price(2000, GBP), []);
+const thirtyMinuteZoomCall = service('Sales Call on Zoom','Sales Call on Zoom', [admin], 30, false, price(0, GBP), []);
 const services = [smallCarWash, mediumCarWash, largeCarWash, thirtyMinuteZoomCall];
 
 const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
