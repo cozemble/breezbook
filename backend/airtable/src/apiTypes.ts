@@ -42,10 +42,30 @@ export type Availability = TimeSlotAvailability
 
 // export type Availability = TimeSlotAvailability | ExactTimeAvailability
 
-export interface AvailabilityResponse {
+export interface Slots {
     [date: string]: Availability[]
 }
 
-export function emptyAvailabilityResponse(): AvailabilityResponse {
-    return {}
+export interface ServiceSummary {
+    id: string
+    name: string
+    durationMinutes: number
+}
+
+export interface AddOnSummary {
+    id: string
+    name: string
+    priceWithNoDecimalPlaces: number
+    priceCurrency: string
+    requiresQuantity: boolean
+}
+
+export interface AvailabilityResponse {
+    slots: Slots
+    serviceSummary: ServiceSummary
+    addOns: AddOnSummary[]
+}
+
+export function emptyAvailabilityResponse(serviceSummary: ServiceSummary, addOns: AddOnSummary[]): AvailabilityResponse {
+    return {serviceSummary, slots: {}, addOns}
 }

@@ -1,6 +1,6 @@
 import express, { Express, Router } from 'express'
 import cors from 'cors'
-import {logRequest} from "./infra/logRequest.js";
+import {logRequest} from "../infra/logRequest.js";
 import {getServiceAvailability} from "./getServiceAvailability.js";
 
 export function expressApp(): Express {

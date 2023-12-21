@@ -2,7 +2,7 @@ import { exec } from 'child-process-promise'
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql'
 import * as http from 'http'
 import {closePgPool, withAdminPgClient} from "./postgresPool.js";
-import {expressApp} from "../expressApp.js";
+import {expressApp} from "../express/expressApp.js";
 
 const testEnv = 'test'
 

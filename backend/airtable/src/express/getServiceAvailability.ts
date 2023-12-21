@@ -1,5 +1,7 @@
 import {
-    BookableTimeSlots,
+    AddOn as DomainAddOn,
+    addOn,
+    addOnId,
     Booking,
     businessAvailability,
     BusinessAvailability,
@@ -25,17 +27,19 @@ import {
     Service as DomainService,
     service,
     serviceId,
+    ServiceId,
     TenantId,
     tenantId,
     time24,
     timePeriod,
     timeslotSpec,
-    values
-} from "./types.js";
+    values,
+} from "../types.js";
 import express from 'express';
-import {calculatePrice, PricingRule} from "./calculatePrice.js";
-import {withAdminPgClient} from "./infra/postgresPool.js";
+import {calculatePrice, PricingRule} from "../calculatePrice.js";
+import {withAdminPgClient} from "../infra/postgresPool.js";
 import {
+    AddOn,
     BlockedTime,
     Bookings,
     BusinessHours,
@@ -46,17 +50,10 @@ import {
     ResourceTypes,
     Services,
     TimeSlots
-} from "./generated/dbtypes.js";
-import {mandatory} from "./utils.js";
-import {calculateAvailability} from "./calculateAvailability.js";
-import {emptyAvailabilityResponse, timeSlotAvailability} from "./apiTypes.js";
-
-const AVAILABILITY: BookableTimeSlots = {
-    "date": isoDate("2023-05-24"),
-    "bookableSlots": [
-        timeslotSpec(time24("09:00"), time24("13:00"), "09:00 - 13:00"),
-        timeslotSpec(time24("13:00"), time24("17:00"), "13:00 - 17:00")]
-};
+} from "../generated/dbtypes.js";
+import {mandatory} from "../utils.js";
+import {calculateAvailability} from "../calculateAvailability.js";
+import {AddOnSummary, emptyAvailabilityResponse, ServiceSummary, timeSlotAvailability} from "../apiTypes.js";
 
 export interface EverythingForTenant {
     _type: 'everything.for.tenant'
@@ -146,11 +143,16 @@ export function makeResourceAvailability(mappedResourceTypes: ResourceType[], re
 
 function toDomainService(s: Services, resourceTypes: ResourceType[]): DomainService {
     const mappedResourceTypes = s.resource_types_required.map(rt => mandatory(resourceTypes.find(rtt => rtt.value === rt), `No resource type ${rt}`));
-    return service(s.name, mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price, currency(s.price_currency)), serviceId(s.id))
+    const permittedAddOns = s.permitted_add_on_ids.map(id => addOnId(id));
+    return service(s.name, mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price, currency(s.price_currency)), permittedAddOns, serviceId(s.id))
 }
 
 function toDomainBooking(b: Bookings): Booking {
     return b.definition as Booking;
+}
+
+function toDomainAddOn(a: AddOn): DomainAddOn {
+    return addOn(a.name, price(a.price, currency(a.price_currency)), a.expect_quantity, addOnId(a.id));
 }
 
 async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toDate: IsoDate): Promise<EverythingForTenant> {
@@ -204,6 +206,10 @@ async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toD
                                                   from resource_types
                                                   where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as ResourceTypes[]
 
+        const addOns = await client.query(`select *
+                                           from add_on
+                                           where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as AddOn[];
+
         const bookings = await client.query(`select *
                                              from bookings
                                              where tenant_id = $1
@@ -213,16 +219,35 @@ async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toD
 
         const dates = isoDateFns.listDays(fromDate, toDate);
         const mappedResourceTypes = resourceTypes.map(rt => resourceType(rt.id));
+        const mappedAddOns = addOns.map(a => toDomainAddOn(a));
 
         return everythingForTenant(businessConfiguration(
             makeBusinessAvailability(businessHours, blockedTime, dates),
             makeResourceAvailability(mappedResourceTypes, resources, resourceAvailability, resourceOutage, dates),
             services.map(s => toDomainService(s, mappedResourceTypes)),
+            mappedAddOns,
             timeSlots.map(ts => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description)),
             periodicStartTime(duration(30))
         ), pricingRules.map(pr => pr.definition) as PricingRule[], bookings.map(b => toDomainBooking(b)))
     });
 
+}
+
+function getServiceSummary(services: DomainService[], serviceId: ServiceId): ServiceSummary {
+    const service = mandatory(services.find(s => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
+    return {name: service.name, id: serviceId.value, durationMinutes: service.duration};
+}
+
+function getAddOnSummaries(services: DomainService[], addOns: DomainAddOn[], serviceId: ServiceId): AddOnSummary[] {
+    const service = mandatory(services.find(s => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
+    const permittedAddOns = service.permittedAddOns.map(ao => mandatory(addOns.find(a => a.id.value === ao.value), `Add on with id ${ao.value} not found`));
+    return permittedAddOns.map(ao => ({
+        name: ao.name,
+        id: ao.id.value,
+        priceWithNoDecimalPlaces: ao.price.amount.value,
+        priceCurrency: ao.price.currency.value,
+        requiresQuantity: ao.requiresQuantity
+    }))
 }
 
 export async function getServiceAvailability(req: express.Request, res: express.Response) {
@@ -247,14 +272,16 @@ export async function getServiceAvailability(req: express.Request, res: express.
         if (curr._type === 'bookable.times') {
             throw new Error('Not yet implemented')
         }
-        const availabilityForDate = acc[curr.slot.date.value] ?? []
+        const slotsForDate = acc.slots[curr.slot.date.value] ?? []
         const currTimeslot = timeSlotAvailability(curr.slot.slot.slot.from.value, curr.slot.slot.slot.to.value, curr.slot.slot.description, curr.price.amount.value, curr.price.currency.value)
-        if (!availabilityForDate.some(a => a.label === currTimeslot.label)) {
-            availabilityForDate.push(currTimeslot)
+        if (!slotsForDate.some(a => a.label === currTimeslot.label)) {
+            slotsForDate.push(currTimeslot)
         }
-        acc[curr.slot.date.value] = availabilityForDate;
+        acc.slots[curr.slot.date.value] = slotsForDate;
         return acc;
-    }, emptyAvailabilityResponse())
+    }, emptyAvailabilityResponse(
+        getServiceSummary(everythingForTenant.businessConfiguration.services, serviceId(serviceIdValue)),
+        getAddOnSummaries(everythingForTenant.businessConfiguration.services, everythingForTenant.businessConfiguration.addOns, serviceId(serviceIdValue))))
 
     res.send(response);
 }

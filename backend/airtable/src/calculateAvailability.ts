@@ -133,7 +133,6 @@ function calculateExactTimeAvailabilityForDate(config: BusinessConfiguration, bo
         date,
         bookableTimes: availableTimes
     };
-
 }
 
 function calculateExactTimeAvailability(config: BusinessConfiguration, bookingsInDateRange: Booking[], service: Service, dates: IsoDate[]): BookableTimes[] {

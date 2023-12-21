@@ -23,11 +23,11 @@ describe('with a migrated database', () => {
         })
         const json = await fetched.json() as AvailabilityResponse
 
-        expect(json['2023-12-19']).toBeUndefined()
-        expect(json['2023-12-20']).toHaveLength(3)
-        expect(json['2023-12-21']).toHaveLength(3)
-        expect(json['2023-12-22']).toHaveLength(3)
-        expect(json['2023-12-23']).toHaveLength(3)
-        expect(json['2023-12-24']).toBeUndefined()
+        expect(json.slots['2023-12-19']).toBeUndefined()
+        expect(json.slots['2023-12-20']).toHaveLength(3)
+        expect(json.slots['2023-12-21']).toHaveLength(3)
+        expect(json.slots['2023-12-22']).toHaveLength(3)
+        expect(json.slots['2023-12-23']).toHaveLength(3)
+        expect(json.slots['2023-12-24']).toBeUndefined()
     })
 })

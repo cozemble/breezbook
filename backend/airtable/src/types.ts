@@ -285,16 +285,18 @@ export interface Service {
     resourceTypes: ResourceType[];
     requiresTimeslot: boolean;
     price: Price;
+    permittedAddOns: AddOnId[];
 }
 
-export function service(name: string, resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price, id = serviceId(uuidv4())): Service {
+export function service(name: string, resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price, permittedAddOns: AddOnId[], id = serviceId(uuidv4())): Service {
     return {
         id,
         name,
         duration,
         resourceTypes,
         requiresTimeslot,
-        price
+        price,
+        permittedAddOns
     };
 }
 
@@ -326,6 +328,7 @@ export interface BusinessConfiguration {
     availability: BusinessAvailability;
     resourceAvailability: ResourceDayAvailability[];
     services: Service[];
+    addOns: AddOn[];
     timeslots: TimeslotSpec[];
     startTimeSpec: StartTimeSpec
 }
@@ -356,7 +359,36 @@ export function discreteStartTimes(times: TwentyFourHourClockTime[]): DiscreteSt
 
 export type StartTimeSpec = PeriodicStartTime | DiscreteStartTimes;
 
-export function businessConfiguration(availability: BusinessAvailability, resources: ResourceDayAvailability[], services: Service[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec): BusinessConfiguration {
+export interface AddOnId extends ValueType<string> {
+    _type: 'add.on.id';
+}
+
+export function addOnId(value: string): AddOnId {
+    return {
+        _type: 'add.on.id',
+        value,
+    };
+}
+
+export interface AddOn {
+    _type: 'add.on';
+    id: AddOnId;
+    name: string;
+    price: Price;
+    requiresQuantity: boolean
+}
+
+export function addOn(name: string, price: Price,requiresQuantity: boolean, id = addOnId(uuidv4())): AddOn {
+    return {
+        _type: 'add.on',
+        id,
+        name,
+        price,
+        requiresQuantity
+    };
+}
+
+export function businessConfiguration(availability: BusinessAvailability, resources: ResourceDayAvailability[], services: Service[], addOns: AddOn[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec): BusinessConfiguration {
     return {
         _type: 'business.configuration',
         availability,
@@ -364,6 +396,7 @@ export function businessConfiguration(availability: BusinessAvailability, resour
         services,
         timeslots,
         startTimeSpec,
+        addOns
     };
 }
 
