@@ -1,3 +1,4 @@
+import pg from 'pg'
 import {
     AddOn as DomainAddOn,
     addOn,
@@ -12,7 +13,8 @@ import {
     DayAndTimePeriod,
     dayAndTimePeriodFns,
     duration,
-    Form, formId,
+    Form,
+    formId,
     FungibleResource,
     IsoDate,
     isoDate,
@@ -30,7 +32,6 @@ import {
     serviceId,
     ServiceId,
     TenantId,
-    tenantId,
     time24,
     timePeriod,
     timeslotSpec,
@@ -43,7 +44,8 @@ import {
     AddOn,
     BlockedTime,
     Bookings,
-    BusinessHours, Forms,
+    BusinessHours,
+    Forms,
     PricingRules,
     ResourceAvailability,
     ResourceBlockedTime,
@@ -55,6 +57,7 @@ import {
 import {mandatory} from "../utils.js";
 import {calculateAvailability} from "../calculateAvailability.js";
 import {AddOnSummary, emptyAvailabilityResponse, ServiceSummary, timeSlotAvailability} from "../apiTypes.js";
+import {date, query, serviceIdParam, tenantIdParam, withFourRequestParams} from "../infra/functionalExpress.js";
 
 export interface EverythingForTenant {
     _type: 'everything.for.tenant'
@@ -145,7 +148,7 @@ export function makeResourceAvailability(mappedResourceTypes: ResourceType[], re
 function toDomainService(s: Services, resourceTypes: ResourceType[]): DomainService {
     const mappedResourceTypes = s.resource_types_required.map(rt => mandatory(resourceTypes.find(rtt => rtt.value === rt), `No resource type ${rt}`));
     const permittedAddOns = s.permitted_add_on_ids.map(id => addOnId(id));
-    const result = service(s.name, s.description,mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price, currency(s.price_currency)), permittedAddOns, serviceId(s.id))
+    const result = service(s.name, s.description, mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price, currency(s.price_currency)), permittedAddOns, serviceId(s.id))
     result.serviceFormId = s.form_id ? formId(s.form_id) : undefined;
     result.customerFormId = s.customer_form_id ? formId(s.customer_form_id) : undefined;
     return result
@@ -159,96 +162,82 @@ function toDomainAddOn(a: AddOn): DomainAddOn {
     return addOn(a.name, price(a.price, currency(a.price_currency)), a.expect_quantity, addOnId(a.id));
 }
 
-function toDomainForm(f: Forms):Form {
+function toDomainForm(f: Forms): Form {
     return f.definition as Form;
 }
 
-async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toDate: IsoDate): Promise<EverythingForTenant> {
-    // availability: BusinessAvailability;
-    // resourceAvailability: ResourceDayAvailability[];
-    // services: Service[];
-    // timeslots: TimeslotSpec[];
-    // startTimeSpec: StartTimeSpec
+async function getEverythingForTenant(client: pg.PoolClient, tenantId: TenantId, fromDate: IsoDate, toDate: IsoDate): Promise<EverythingForTenant> {
+    const businessHours = await client.query(`select *
+                                              from business_hours
+                                              where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as BusinessHours[]
+    const blockedTime = await client.query(`select *
+                                            from blocked_time
+                                            where tenant_id = $1
+                                              and date >= $2
+                                              and date <= $3`, [tenantId.value, fromDate.value, toDate.value]).then(r => r.rows) as BlockedTime[]
+    const resources = await client.query(`select *
+                                          from resources
+                                          where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as Resources[]
+    const resourceAvailability = await client.query(`select *
+                                                     from resource_availability
+                                                     where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as ResourceAvailability[]
+    const resourceOutage = await client.query(`select *
+                                               from resource_blocked_time
+                                               where tenant_id = $1
+                                                 and date >= $2
+                                                 and date <= $3`, [tenantId.value, fromDate.value, toDate.value]).then(r => r.rows) as ResourceBlockedTime[]
+    const services = await client.query(`select *
+                                         from services
+                                         where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as Services[]
+    const timeSlots = await client.query(`select *
+                                          from time_slots
+                                          where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as TimeSlots[]
+    const pricingRules = await client.query(`select *
+                                             from pricing_rules
+                                             where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as PricingRules[]
+    const resourceTypes = await client.query(`select *
+                                              from resource_types
+                                              where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as ResourceTypes[]
 
-    /**
-     * For date range:
-     * Load normal business hours
-     * Load blocked off times
-     * Load resources
-     * Load resource availability
-     * Load resource outage times
-     * Load services
-     * Load time slots
-     * Load pricing rules
-     */
-    return withAdminPgClient(async (client) => {
-        const businessHours = await client.query(`select *
-                                                  from business_hours
-                                                  where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as BusinessHours[]
-        const blockedTime = await client.query(`select *
-                                                from blocked_time
-                                                where tenant_id = $1
-                                                  and date >= $2
-                                                  and date <= $3`, [tenantId.value, fromDate.value, toDate.value]).then(r => r.rows) as BlockedTime[]
-        const resources = await client.query(`select *
-                                              from resources
-                                              where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as Resources[]
-        const resourceAvailability = await client.query(`select *
-                                                         from resource_availability
-                                                         where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as ResourceAvailability[]
-        const resourceOutage = await client.query(`select *
-                                                   from resource_blocked_time
-                                                   where tenant_id = $1
-                                                     and date >= $2
-                                                     and date <= $3`, [tenantId.value, fromDate.value, toDate.value]).then(r => r.rows) as ResourceBlockedTime[]
-        const services = await client.query(`select *
-                                             from services
-                                             where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as Services[]
-        const timeSlots = await client.query(`select *
-                                              from time_slots
-                                              where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as TimeSlots[]
-        const pricingRules = await client.query(`select *
-                                                 from pricing_rules
-                                                 where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as PricingRules[]
-        const resourceTypes = await client.query(`select *
-                                                  from resource_types
-                                                  where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as ResourceTypes[]
+    const addOns = await client.query(`select *
+                                       from add_on
+                                       where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as AddOn[];
 
-        const addOns = await client.query(`select *
-                                           from add_on
-                                           where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as AddOn[];
+    const bookings = await client.query(`select *
+                                         from bookings
+                                         where tenant_id = $1
+                                           and date >= $2
+                                           and date <= $3`, [tenantId.value, fromDate.value, toDate.value]).then(r => r.rows) as Bookings[]
 
-        const bookings = await client.query(`select *
-                                             from bookings
-                                             where tenant_id = $1
-                                               and date >= $2
-                                               and date <= $3`, [tenantId.value, fromDate.value, toDate.value]).then(r => r.rows) as Bookings[]
-
-        const forms = await client.query(`select *
-                                          from forms
-                                          where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as Forms[]
+    const forms = await client.query(`select *
+                                      from forms
+                                      where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as Forms[]
 
 
-        const dates = isoDateFns.listDays(fromDate, toDate);
-        const mappedResourceTypes = resourceTypes.map(rt => resourceType(rt.id));
-        const mappedAddOns = addOns.map(a => toDomainAddOn(a));
-        const mappedForms = forms.map(f => toDomainForm(f));
+    const dates = isoDateFns.listDays(fromDate, toDate);
+    const mappedResourceTypes = resourceTypes.map(rt => resourceType(rt.id));
+    const mappedAddOns = addOns.map(a => toDomainAddOn(a));
+    const mappedForms = forms.map(f => toDomainForm(f));
 
-        return everythingForTenant(businessConfiguration(
-            makeBusinessAvailability(businessHours, blockedTime, dates),
-            makeResourceAvailability(mappedResourceTypes, resources, resourceAvailability, resourceOutage, dates),
-            services.map(s => toDomainService(s, mappedResourceTypes)),
-            mappedAddOns,
-            timeSlots.map(ts => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description)),
-            mappedForms,
-            periodicStartTime(duration(30))
-        ), pricingRules.map(pr => pr.definition) as PricingRule[], bookings.map(b => toDomainBooking(b)))
-    });
+    return everythingForTenant(businessConfiguration(
+        makeBusinessAvailability(businessHours, blockedTime, dates),
+        makeResourceAvailability(mappedResourceTypes, resources, resourceAvailability, resourceOutage, dates),
+        services.map(s => toDomainService(s, mappedResourceTypes)),
+        mappedAddOns,
+        timeSlots.map(ts => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description)),
+        mappedForms,
+        periodicStartTime(duration(30))
+    ), pricingRules.map(pr => pr.definition) as PricingRule[], bookings.map(b => toDomainBooking(b)))
 }
 
 function getServiceSummary(services: DomainService[], serviceId: ServiceId, forms: Form[]): ServiceSummary {
     const service = mandatory(services.find(s => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
-    const result: ServiceSummary = {name: service.name, id: serviceId.value, durationMinutes: service.duration, description: service.description};
+    const result: ServiceSummary = {
+        name: service.name,
+        id: serviceId.value,
+        durationMinutes: service.duration,
+        description: service.description
+    };
     const serviceFormId = service.serviceFormId;
     if (serviceFormId) {
         result.form = mandatory(forms.find(f => values.isEqual(f.id, serviceFormId)), `Form with id ${serviceFormId.value} not found`);
@@ -272,38 +261,34 @@ function getAddOnSummaries(services: DomainService[], addOns: DomainAddOn[], ser
     }))
 }
 
-export async function getServiceAvailability(req: express.Request, res: express.Response) {
-    const tenantIdValue = req.params.tenantId;
-    const serviceIdValue = req.params.serviceId;
-    const fromDateValue = req.query.fromDate as string;
-    const toDateValue = req.query.toDate as string;
-    console.log(`Getting availability for tenant ${tenantIdValue} and service ${serviceIdValue} from ${fromDateValue} to ${toDateValue}`);
-    if (!tenantIdValue || !serviceIdValue || !fromDateValue || !toDateValue) {
-        res.status(400).send('Missing required parameters');
-        return;
-    }
-    const everythingForTenant = await getEverythingForTenant(tenantId(tenantIdValue), isoDate(fromDateValue), isoDate(toDateValue));
-    const availability = calculateAvailability(everythingForTenant.businessConfiguration, everythingForTenant.bookings, serviceId(serviceIdValue), isoDate(fromDateValue), isoDate(toDateValue));
-    const priced = availability.map(a => {
-        if (a._type === 'bookable.times') {
-            return a;
-        }
-        return calculatePrice(a, everythingForTenant.pricingRules);
-    })
-    const response = priced.reduce((acc, curr) => {
-        if (curr._type === 'bookable.times') {
-            throw new Error('Not yet implemented')
-        }
-        const slotsForDate = acc.slots[curr.slot.date.value] ?? []
-        const currTimeslot = timeSlotAvailability(curr.slot.slot.slot.from.value, curr.slot.slot.slot.to.value, curr.slot.slot.description, curr.price.amount.value, curr.price.currency.value)
-        if (!slotsForDate.some(a => a.label === currTimeslot.label)) {
-            slotsForDate.push(currTimeslot)
-        }
-        acc.slots[curr.slot.date.value] = slotsForDate;
-        return acc;
-    }, emptyAvailabilityResponse(
-        getServiceSummary(everythingForTenant.businessConfiguration.services, serviceId(serviceIdValue), everythingForTenant.businessConfiguration.forms),
-        getAddOnSummaries(everythingForTenant.businessConfiguration.services, everythingForTenant.businessConfiguration.addOns, serviceId(serviceIdValue))))
 
-    res.send(response);
+export async function getServiceAvailability(req: express.Request, res: express.Response): Promise<void> {
+    await withFourRequestParams(req, res, tenantIdParam(), serviceIdParam(), date(query('fromDate')), date(query('toDate')), async (tenantId, serviceId, fromDate, toDate) => {
+        console.log(`Getting availability for tenant ${tenantId.value} and service ${serviceId.value} from ${fromDate.value} to ${toDate.value}`);
+
+        const everythingForTenant = await withAdminPgClient(async (client) => await getEverythingForTenant(client, tenantId, fromDate, toDate));
+        const availability = calculateAvailability(everythingForTenant.businessConfiguration, everythingForTenant.bookings, serviceId, fromDate, toDate);
+        const priced = availability.map(a => {
+            if (a._type === 'bookable.times') {
+                return a;
+            }
+            return calculatePrice(a, everythingForTenant.pricingRules);
+        })
+        const response = priced.reduce((acc, curr) => {
+            if (curr._type === 'bookable.times') {
+                throw new Error('Not yet implemented')
+            }
+            const slotsForDate = acc.slots[curr.slot.date.value] ?? []
+            const currTimeslot = timeSlotAvailability(curr.slot.slot.slot.from.value, curr.slot.slot.slot.to.value, curr.slot.slot.description, curr.price.amount.value, curr.price.currency.value)
+            if (!slotsForDate.some(a => a.label === currTimeslot.label)) {
+                slotsForDate.push(currTimeslot)
+            }
+            acc.slots[curr.slot.date.value] = slotsForDate;
+            return acc;
+        }, emptyAvailabilityResponse(
+            getServiceSummary(everythingForTenant.businessConfiguration.services, serviceId, everythingForTenant.businessConfiguration.forms),
+            getAddOnSummaries(everythingForTenant.businessConfiguration.services, everythingForTenant.businessConfiguration.addOns, serviceId)))
+
+        res.send(response);
+    })
 }
