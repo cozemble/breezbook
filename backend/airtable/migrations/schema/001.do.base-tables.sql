@@ -1,3 +1,5 @@
+create extension if not exists "uuid-ossp";
+
 create table tenants
 (
     tenant_id text primary key,
@@ -113,19 +115,42 @@ create table pricing_rules
 
 create table customers
 (
-    id        text primary key,
-    tenant_id text references tenants (tenant_id) not null,
-    name      text                                not null,
-    email     text                                not null,
-    form_data jsonb                               null default null
+    id         text primary key default uuid_generate_v4(),
+    tenant_id  text references tenants (tenant_id) not null,
+    first_name text                                not null,
+    last_name  text                                not null,
+    email      text                                not null check (email ~* '^.+@.+\..+$')
+);
+
+create table orders
+(
+    id                 text primary key                         default uuid_generate_v4(),
+    tenant_id          text references tenants (tenant_id) not null,
+    customer_id        text references customers (id)      not null,
+    customer_form_data jsonb                               null default null
+);
+
+create table order_lines
+(
+    id                text primary key                             default uuid_generate_v4(),
+    tenant_id         text references tenants (tenant_id) not null,
+    order_id          text                                not null,
+    service_id        text                                not null,
+    add_on_ids        text[]                              not null default '{}',
+    date              text                                not null,
+    time_slot_id      text                                null     default null,
+    start_time_24hr   varchar(10)                         not null,
+    end_time_24hr     varchar(10)                         not null,
+    service_form_data jsonb                               null     default null
 );
 
 create table bookings
 (
-    id              text primary key,
+    id              text primary key default uuid_generate_v4(),
     tenant_id       text references tenants (tenant_id) not null,
     customer_id     text references customers (id)      not null,
     service_id      text references services (id)       not null,
+    order_id        text                                not null,
     date            text                                not null,
     start_time_24hr text                                not null,
     end_time_24hr   text                                not null,

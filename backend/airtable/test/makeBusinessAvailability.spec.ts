@@ -1,7 +1,8 @@
 import {expect, test} from "vitest";
 import {businessAvailability, dayAndTimePeriod, isoDate, isoDateFns, time24, timePeriod} from "../src/types.js";
 import {BlockedTime} from "../src/generated/dbtypes.js";
-import {makeBusinessAvailability} from "../src/express/getServiceAvailability.js";
+
+import {makeBusinessAvailability} from "../src/express/getEverythingForTenant.js";
 
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 

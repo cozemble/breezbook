@@ -18,14 +18,22 @@ export const carwashForm: JsonSchemaForm = {
             },
             "colour": {
                 "type": "string",
-                "description": "The color of the car."
+                "description": "The colour of the car."
             },
             "year": {
                 "type": "integer",
-                "description": "The manufacturing year of the car."
+                "description": "The year of the car."
+            },
+            "firstLineOfAddress": {
+                "type": "string",
+                "description": "The first line of the address where the car will be."
+            },
+            "postcode": {
+                "type": "string",
+                "description": "The postcode where the car will be."
             }
         },
-        "required": ["make", "model", "colour", "year"],
+        "required": ["make", "model", "colour", "year", "firstLineOfAddress", "postcode"],
         "additionalProperties": false
     },
 }
@@ -41,16 +49,8 @@ const customerForm: JsonSchemaForm = {
                 "type": "string",
                 "description": "Your phone number.",
             },
-            "firstLineOfAddress": {
-                "type": "string",
-                "description": "The first line of your address."
-            },
-            "postcode": {
-                "type": "string",
-                "description": "Your postcode."
-            }
         },
-        "required": ["phone", "firstLineOfAddress", "postcode"],
+        "required": ["phone"],
         "additionalProperties": false
     },
 }

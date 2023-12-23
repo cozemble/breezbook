@@ -178,15 +178,29 @@ export function exactTimeAvailability(time: TwentyFourHourClockTime): ExactTimeA
     };
 }
 
+export interface Id extends ValueType<string> {
+    _type: 'id';
+}
+
+export function id(value: string): Id {
+    return {
+        _type: 'id',
+        value,
+    };
+
+}
+
 export interface TimeslotSpec {
     _type: 'timeslot.spec';
+    id: Id
     slot: TimePeriod
     description: string;
 }
 
-export function timeslotSpec(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime, description: string): TimeslotSpec {
+export function timeslotSpec(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime, description: string, idValue = id(uuidv4())): TimeslotSpec {
     return {
         _type: 'timeslot.spec',
+        id: idValue,
         description,
         slot: timePeriod(from, to),
     };
@@ -629,7 +643,7 @@ export interface Order {
     id: OrderId
     customer: Customer
     lines: OrderLine[]
-    coupon?: CouponId
+    couponId?: CouponId
 }
 
 export function order(customer: Customer, lines: OrderLine[], id = orderId(uuidv4())): Order {
@@ -639,4 +653,13 @@ export function order(customer: Customer, lines: OrderLine[], id = orderId(uuidv
         customer,
         lines,
     };
+}
+
+export const orderFns = {
+    getOrderDateRange(order: Order):{fromDate: IsoDate, toDate: IsoDate} {
+        const allDates = order.lines.map(line => line.date);
+        const fromDate = allDates.reduce((min, date) => isoDateFns.isEqual(date, min) || isoDateFns.isEqual(date, min) ? min : isoDateFns.isEqual(date, min) ? min : date, allDates[0]);
+        const toDate = allDates.reduce((max, date) => isoDateFns.isEqual(date, max) || isoDateFns.isEqual(date, max) ? max : isoDateFns.isEqual(date, max) ? max : date, allDates[0]);
+        return {fromDate, toDate};
+    }
 }

@@ -1,5 +1,5 @@
 import express from 'express';
-import {isoDate, IsoDate, serviceId, ServiceId, tenantId, TenantId} from "../types.js";
+import {isoDate, IsoDate, Order, serviceId, ServiceId, tenantId, TenantId} from "../types.js";
 
 export interface RequestValueExtractor {
     name: string;
@@ -46,6 +46,21 @@ export function date(requestValue: RequestValueExtractor): ParamExtractor<IsoDat
     }
 }
 
+export function orderBody(): ParamExtractor<Order | null> {
+    return (req: express.Request, res: express.Response) => {
+        const body = req.body as Order | null
+        if (!body) {
+            res.status(400).send(`Missing required body`);
+            return null;
+        }
+        if (body._type !== "order") {
+            res.status(400).send(`Posted body is not an order`);
+            return null;
+        }
+        return body
+    }
+}
+
 export function tenantIdParam(requestValue: RequestValueExtractor = path("tenantId")): ParamExtractor<TenantId | null> {
     return (req: express.Request, res: express.Response) => {
         const paramValue = requestValue.extractor(req);
@@ -68,13 +83,39 @@ export function serviceIdParam(requestValue: RequestValueExtractor = path("servi
     }
 }
 
+export async function withErrorHandling(res: express.Response, f: () => Promise<void>): Promise<void> {
+    try {
+        return await f();
+    } catch (e: unknown) {
+        console.error(e);
+        if (e instanceof Error) {
+            res.status(500).send(e.message);
+        } else {
+            res.status(500).send('An unknown error occurred.');
+        }
+    }
+}
+
 export async function withOneRequestParam<T>(req: express.Request, res: express.Response, aParam: ParamExtractor<T | null>, f: (t: T) => Promise<void>): Promise<void> {
     const a = aParam(req, res);
     if (a === null) {
         return;
     }
 
-    await f(a);
+    return await withErrorHandling(res, async () => await f(a));
+}
+
+export async function withTwoRequestParams<A, B>(req: express.Request, res: express.Response, aParam: ParamExtractor<A | null>, bParam: ParamExtractor<B | null>, f: (a: A, b: B) => Promise<void>): Promise<void> {
+    const a = aParam(req, res);
+    if (a === null) {
+        return;
+    }
+    const b = bParam(req, res);
+    if (b === null) {
+        return;
+    }
+
+    return await withErrorHandling(res, async () => await f(a, b));
 }
 
 export async function withFourRequestParams<A, B, C, D>(req: express.Request, res: express.Response, aParam: ParamExtractor<A | null>, bParam: ParamExtractor<B | null>, cParam: ParamExtractor<C | null>, dParam: ParamExtractor<D | null>, f: (a: A, b: B, c: C, d: D) => Promise<void>): Promise<void> {
@@ -94,6 +135,5 @@ export async function withFourRequestParams<A, B, C, D>(req: express.Request, re
     if (d === null) {
         return;
     }
-
-    await f(a, b, c, d);
+    return await withErrorHandling(res, async () => await f(a, b, c, d));
 }

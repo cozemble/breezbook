@@ -4,7 +4,7 @@ import {
     price,
     resource,
     resourceType,
-    service,
+    service, serviceId,
     tenantId,
     time24,
     timePeriod,
@@ -34,7 +34,7 @@ export const van = resourceType('van');
 export const van1 = resource(van, "Van 1");
 export const van2 = resource(van, "Van 2");
 export const resources = [van1, van2];
-export const smallCarWash = service('Small Car Wash', 'Small Car Wash', [van], 120, true, price(1000, GBP), [wax.id, polish.id])
-export const mediumCarWash = service('Medium Car Wash', 'Medium Car Wash', [van], 120, true, price(1500, GBP), [wax.id, polish.id]);
-export const largeCarWash = service('Large Car Wash', 'Large Car Wash', [van], 120, true, price(2000, GBP), addOns.map(a => a.id))
+export const smallCarWash = service('Small Car Wash', 'Small Car Wash', [van], 120, true, price(1000, GBP), [wax.id, polish.id], serviceId('smallCarWash'))
+export const mediumCarWash = service('Medium Car Wash', 'Medium Car Wash', [van], 120, true, price(1500, GBP), [wax.id, polish.id], serviceId('mediumCarWash'));
+export const largeCarWash = service('Large Car Wash', 'Large Car Wash', [van], 120, true, price(2000, GBP), addOns.map(a => a.id), serviceId('largeCarWash'))
 export const services = [smallCarWash, mediumCarWash, largeCarWash];
