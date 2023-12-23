@@ -72,3 +72,7 @@ export interface AvailabilityResponse {
 export function emptyAvailabilityResponse(serviceSummary: ServiceSummary, addOns: AddOnSummary[]): AvailabilityResponse {
     return {serviceSummary, slots: {}, addOns}
 }
+
+export interface OrderCreatedResponse {
+    orderId: string
+}

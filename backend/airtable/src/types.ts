@@ -26,7 +26,7 @@ export interface IsoDate extends ValueType<string> {
     _type: 'iso.date';
 }
 
-export function isoDate(value: string): IsoDate {
+export function isoDate(value: string = new Date().toISOString().split('T')[0]): IsoDate {
     if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) {
         throw new Error(`Invalid date format ${value}. Expected YYYY-MM-DD`);
     }
@@ -53,6 +53,11 @@ export const isoDateFns = {
             dates.push(isoDate(date.toISOString().split('T')[0]));
         }
         return dates;
+    },
+    addDays(date: IsoDate, days: number) {
+        const d = new Date(date.value);
+        d.setDate(d.getDate() + days);
+        return isoDate(d.toISOString().split('T')[0]);
     },
     dayOfWeek(date: IsoDate) {
         return new Date(date.value).toLocaleDateString('en-GB', {weekday: 'long'}) as DayOfWeek;
@@ -206,18 +211,16 @@ export interface Customer {
     firstName: string;
     lastName: string;
     email: string;
-    phone: string;
     formId?: FormId
     formData?: unknown
 }
 
-export function customer(firstName: string, lastName: string, email: string, phone: string, id = customerId(uuidv4())): Customer {
+export function customer(firstName: string, lastName: string, email: string, id = customerId(uuidv4())): Customer {
     return {
         id,
         firstName,
         lastName,
         email,
-        phone,
     };
 }
 
@@ -293,7 +296,7 @@ export interface Service {
     customerFormId?: FormId
 }
 
-export function service(name: string, description:string,resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price, permittedAddOns: AddOnId[], id = serviceId(uuidv4())): Service {
+export function service(name: string, description: string, resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price, permittedAddOns: AddOnId[], id = serviceId(uuidv4())): Service {
     return {
         id,
         name,
@@ -554,3 +557,86 @@ export interface JsonSchemaForm {
 
 export type Form = JsonSchemaForm
 
+export interface OrderLine {
+    _type: 'order.line';
+    serviceId: ServiceId
+    addOnIds: AddOnId[]
+    date: IsoDate
+    slot: BookableSlot
+    serviceFormData?: unknown
+}
+
+export interface LimitedUsages {
+    _type: 'limited.usages';
+    numberOfUses: number;
+}
+
+export interface Unlimited {
+    _type: 'unlimited';
+}
+
+export type CouponUsagePolicy = LimitedUsages | Unlimited
+
+export type CouponValue = AmountCoupon | PercentageCoupon
+
+export interface Coupon {
+    _type: 'coupon';
+    id: CouponId;
+    usagePolicy: CouponUsagePolicy;
+    value: CouponValue;
+    validFrom: IsoDate;
+    validTo: IsoDate;
+}
+
+export interface CouponId extends ValueType<string> {
+    _type: 'coupon.id';
+}
+
+export interface AmountCoupon {
+    _type: 'amount.coupon';
+    amount: Price;
+}
+
+export interface PercentageCoupon {
+    _type: 'percentage.coupon';
+    percentage: number;
+}
+
+export function orderLine(serviceId: ServiceId, addOnIds: AddOnId[], date: IsoDate, slot: BookableSlot,  serviceFormData?: unknown): OrderLine {
+    return {
+        _type: 'order.line',
+        serviceId,
+        addOnIds,
+        date,
+        slot,
+        serviceFormData
+    };
+}
+
+export interface OrderId extends ValueType<string> {
+    _type: 'order.id';
+}
+
+export function orderId(value: string): OrderId {
+    return {
+        _type: 'order.id',
+        value,
+    };
+}
+
+export interface Order {
+    _type: 'order';
+    id: OrderId
+    customer: Customer
+    lines: OrderLine[]
+    coupon?: CouponId
+}
+
+export function order(customer: Customer, lines: OrderLine[], id = orderId(uuidv4())): Order {
+    return {
+        _type: 'order',
+        id,
+        customer,
+        lines,
+    };
+}

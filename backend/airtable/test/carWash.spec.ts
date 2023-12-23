@@ -1,40 +1,38 @@
 import {expect, test} from 'vitest'
 
 import {
-    bookableTimeSlot, ResourcedTimeSlot,
-    resourcedTimeSlot,
+    bookableTimeSlot,
     booking,
     businessAvailability,
     businessConfiguration,
     customer,
     dayAndTimePeriod,
     duration,
-    GBP,
     isoDate,
     periodicStartTime,
-    price,
-    resource,
     resourceDayAvailability,
-    resourceType,
-    service,
-    time24,
+    ResourcedTimeSlot,
+    resourcedTimeSlot,
     timePeriod,
-    timeslotSpec,
     timezone
 } from "../src/types.js";
 import {calculateAvailability} from "../src/calculateAvailability.js";
-
-const nineAm = time24('09:00');
-const onePm = time24('13:00');
-const fourPm = time24('16:00');
-const sixPm = time24('18:00');
-
-const nineToOne = timeslotSpec(nineAm, onePm, '09:00 - 13:00');
-const oneToFour = timeslotSpec(onePm, fourPm, '13:00 - 16:00');
-const fourToSix = timeslotSpec(fourPm, sixPm, '16:00 - 18:00');
-const timeslots = [nineToOne, oneToFour, fourToSix];
-
-const nineToSix = timePeriod(nineAm, sixPm);
+import {
+    fourPm,
+    fourToSix,
+    largeCarWash,
+    mediumCarWash,
+    nineToOne,
+    nineToSix,
+    oneToFour,
+    resources,
+    services,
+    sixPm,
+    smallCarWash,
+    timeslots,
+    van1,
+    van2
+} from "./fixtures/carwash.js";
 
 const may23 = isoDate("2021-05-23");
 const availability = businessAvailability([
@@ -44,18 +42,6 @@ const availability = businessAvailability([
 ], timezone('Europe/London'));
 
 
-const van = resourceType('van');
-const admin = resourceType('admin');
-const van1 = resource(van, "Van 1");
-const van2 = resource(van, "Van 2");
-const ourAdmin = resource(admin, "Admin");
-const resources = [van1, van2, ourAdmin];
-const smallCarWash = service('Small Car Wash','Small Car Wash', [van], 120, true, price(1000, GBP), []);
-const mediumCarWash = service('Medium Car Wash','Medium Car Wash', [van], 120, true, price(1500, GBP), []);
-const largeCarWash = service('Large Car Wash','Large Car Wash', [van], 120, true, price(2000, GBP), []);
-const thirtyMinuteZoomCall = service('Sales Call on Zoom','Sales Call on Zoom', [admin], 30, false, price(0, GBP), []);
-const services = [smallCarWash, mediumCarWash, largeCarWash, thirtyMinuteZoomCall];
-
 const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(may23, nineToSix),
     dayAndTimePeriod(isoDate("2021-05-24"), nineToSix),
@@ -63,10 +49,10 @@ const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(isoDate("2021-05-26"), nineToSix),
 ]))
 
-const config = businessConfiguration(availability, resourceAvailability, services, [],timeslots, [],periodicStartTime(duration(30)));
+const config = businessConfiguration(availability, resourceAvailability, services, [], timeslots, [], periodicStartTime(duration(30)));
 
-const mike = customer('Mike', 'Hogan', 'mike@email.com', '555-555-555');
-const mete = customer('Mete', 'Bora', 'mete@email.com', '666-666-666');
+const mike = customer('Mike', 'Hogan', 'mike@email.com');
+const mete = customer('Mete', 'Bora', 'mete@email.com');
 
 const mikeOnMonday = booking(mike.id, smallCarWash.id, isoDate('2021-05-24'), nineToOne);
 const meteOnMonday = booking(mete.id, mediumCarWash.id, isoDate('2021-05-24'), nineToOne);
@@ -97,7 +83,7 @@ test("resource unavailability drops slots", () => {
         dayAndTimePeriod(isoDate("2021-05-25"), nineToSix),
         dayAndTimePeriod(isoDate("2021-05-26"), nineToSix),
     ]))
-    const config = businessConfiguration(availability, resourceAvailability, services, [],timeslots, [],periodicStartTime(duration(30)));
+    const config = businessConfiguration(availability, resourceAvailability, services, [], timeslots, [], periodicStartTime(duration(30)));
     const smallCarWashAvailability = calculateAvailability(config, existingBookings, smallCarWash.id, isoDate('2021-05-23'), isoDate('2021-05-26'));
     expect(smallCarWashAvailability[0]?.date).toEqual(isoDate('2021-05-24')); // only open from 4pm to 6pm, but resources only available from 9am to 1pm
 
