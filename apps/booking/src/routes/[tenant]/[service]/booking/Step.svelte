@@ -1,6 +1,5 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import type { U } from 'vitest/dist/types-198fd1d9.js';
 
 	export let open: boolean = false;
 	/** keep shorter than 15 for mobile */
@@ -28,6 +27,12 @@
 		  }
 		| undefined = undefined;
 </script>
+
+<!-- 
+	@component 
+	Display a booking step as an accordion item with a title, status indicator and summary. 
+	- On click, the accordion opens and displays the slot content.
+ -->
 
 <div class="collapse collapse-arrow border {open && 'collapse-open'}">
 	<button

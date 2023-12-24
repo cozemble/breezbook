@@ -4,28 +4,15 @@
 	import ExtrasStep from './ExtrasStep.svelte';
 	import PickTimeStep from './PickTimeStep.svelte';
 
-	// <!-- TODO clean this mess up -->
-
 	interface IStep {
 		name: 'time' | 'extras' | 'details';
 		label: string;
 		status: GenericStatus;
 		summary: string;
 		open: boolean;
-		dependencies?: IStep[];
 		onComplete: () => void;
 		onOpen: () => void;
 	}
-
-	const values: {
-		time: TimeSlot | null;
-		extras: Service.Extra[] | null;
-		details: Service.Details | null;
-	} = {
-		time: null,
-		extras: null,
-		details: null
-	};
 
 	const timeStep: IStep = {
 		name: 'time',
@@ -37,7 +24,6 @@
 			if (!values.time) return;
 
 			timeStep.status = 'success';
-			timeStep.summary = 'Wed, 11 Dec 14:00 - 17:00'; // <!-- TODO properly format the value -->
 			extrasStep.onOpen();
 		},
 		onOpen: () => {
@@ -53,16 +39,14 @@
 		status: 'default',
 		summary: '',
 		open: false,
-		dependencies: [timeStep],
 		onComplete: () => {
 			if (!values.extras) return;
 
 			extrasStep.status = 'success';
-			extrasStep.summary = `${values.extras?.length || 'no'} extras selected`;
 			detailsStep.onOpen();
 		},
 		onOpen: () => {
-			if (extrasStep.dependencies?.some((step) => step.status !== 'success')) return;
+			if (timeStep.status !== 'success') return;
 
 			extrasStep.open = true;
 			timeStep.open = false;
@@ -76,7 +60,6 @@
 		status: 'default',
 		summary: '',
 		open: false,
-		dependencies: [timeStep, extrasStep],
 		onComplete: () => {
 			if (!values.details) return;
 
@@ -84,19 +67,35 @@
 			detailsStep.status = 'success';
 		},
 		onOpen: () => {
-			if (detailsStep.dependencies?.some((step) => step.status !== 'success')) return;
+			if (extrasStep.status !== 'success') return;
 
 			detailsStep.open = true;
 			timeStep.open = false;
 			extrasStep.open = false;
 		}
 	};
+
+	//
+
+	const values: {
+		time: TimeSlot | null;
+		extras: Service.Extra[] | null;
+		details: Service.Details | null;
+	} = {
+		time: null,
+		extras: null,
+		details: null
+	};
+
+	// <!-- TODO properly format the value -->
+	$: timeStep.summary = values.time ? `${values.time.from} - ${values.time.to}` : '';
+	$: extrasStep.summary = `${values.extras?.length || 'no'} extras selected`;
 </script>
 
-<!-- TODO open the next step when the previous is done -->
-<!-- TODO the form logic -->
-<!-- TODO step data change based on other steps -->
-<!-- TODO if the user changes the value of a success state step and opens another step without hitting next, what happens? -->
+<!-- 
+	@component
+	Booking steps as an accordion.
+ -->
 
 <Step
 	label={timeStep.label}
