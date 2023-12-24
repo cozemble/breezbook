@@ -96,6 +96,7 @@
 <!-- TODO open the next step when the previous is done -->
 <!-- TODO the form logic -->
 <!-- TODO step data change based on other steps -->
+<!-- TODO if the user changes the value of a success state step and opens another step without hitting next, what happens? -->
 
 <Step
 	label={timeStep.label}
@@ -127,6 +128,12 @@
 			extrasStep.onComplete();
 		}
 	}}
+	back={{
+		label: 'Back',
+		handle: () => {
+			timeStep.onOpen();
+		}
+	}}
 >
 	<ExtrasStep bind:value={values.extras} />
 </Step>
@@ -142,6 +149,12 @@
 		disabled: !values.details,
 		handle: () => {
 			detailsStep.onComplete();
+		}
+	}}
+	back={{
+		label: 'Back',
+		handle: () => {
+			extrasStep.onOpen();
 		}
 	}}
 >

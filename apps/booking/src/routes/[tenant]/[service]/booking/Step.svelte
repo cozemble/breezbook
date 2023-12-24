@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import type { U } from 'vitest/dist/types-198fd1d9.js';
 
 	export let open: boolean = false;
 	/** keep shorter than 15 for mobile */
@@ -17,7 +18,15 @@
 				handle: () => void;
 				// loading?: boolean; // <!-- TODO if needed -->
 		  }
-		| undefined;
+		| undefined = undefined;
+
+	export let back:
+		| {
+				label: string;
+				handle: () => void;
+				disabled?: boolean;
+		  }
+		| undefined = undefined;
 </script>
 
 <div class="collapse collapse-arrow border {open && 'collapse-open'}">
@@ -58,7 +67,12 @@
 		<slot />
 
 		{#if action}
-			<div class="flex justify-end">
+			<div class="flex justify-end gap-3 mt-2">
+				{#if back}
+					<button class="btn btn-secondary" on:click={back.handle} disabled={back.disabled}>
+						{back.label}
+					</button>
+				{/if}
 				<button class="btn btn-primary" on:click={action.handle} disabled={action.disabled}>
 					{action.label}
 				</button>
