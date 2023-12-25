@@ -1,21 +1,14 @@
 <script lang="ts">
+	import backend from '$lib/common/backend';
 	import DayList from '$lib/components/time/DayList.svelte';
 
 	export let value: TimeSlot | null;
+
+	let days: DaySlot[] = [];
+
+	backend.timeSlot.getAll('test', 'test').then((res) => {
+		days = res;
+	});
 </script>
 
-<DayList />
-
-<button
-	on:click={() => {
-		value = {
-			from: '9:00',
-			to: '11:00',
-			price: 60,
-			selected: false,
-			onSelect: () => {}
-		};
-	}}
-	class="btn">Select</button
->
-<DayList bind:selectedSlot={value} />
+<DayList bind:selectedSlot={value} {days} />
