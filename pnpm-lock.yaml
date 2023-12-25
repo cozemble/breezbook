@@ -59,6 +59,9 @@ importers:
       eslint-plugin-svelte:
         specifier: ^2.30.0
         version: 2.35.1(eslint@8.54.0)(svelte@4.2.8)
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       postcss:
         specifier: ^8.4.32
         version: 8.4.32
