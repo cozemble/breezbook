@@ -2,17 +2,12 @@ declare interface TimeSlot {
 	from: string;
 	to: string;
 	price: number;
-	selected: boolean;
 	status?: 'available' | 'booked_by_someone' | 'booked_by_user' | 'unavailable';
-	onSelect: () => void;
+	/* to have access to the day in the value */
+	day: Date;
 }
 
 declare interface DaySlot {
-	date: number;
+	date: Date;
 	timeSlots: TimeSlot[];
-}
-
-declare interface MonthSlot {
-	name: string;
-	days: DaySlot[];
 }

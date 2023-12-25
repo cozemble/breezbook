@@ -1,9 +1,11 @@
 <script lang="ts">
-	import Slot from './Time.svelte';
+	import Time from './Time.svelte';
 
 	export let day: DaySlot;
 
-	const formattedDate = new Date(day.date).toLocaleDateString('en-GB', {
+	export let selectedSlot: TimeSlot | null;
+
+	const formattedDate = day.date.toLocaleDateString('en-GB', {
 		weekday: 'long',
 		day: 'numeric',
 		month: 'short'
@@ -22,7 +24,7 @@
 		<ul>
 			{#each day.timeSlots as time}
 				<li class="">
-					<Slot {time} />
+					<Time slot={time} bind:selectedSlot />
 				</li>
 			{/each}
 		</ul>

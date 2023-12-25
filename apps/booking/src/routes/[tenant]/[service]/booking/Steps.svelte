@@ -88,7 +88,13 @@
 	};
 
 	// <!-- TODO properly format the value -->
-	$: timeStep.summary = values.time ? `${values.time.from} - ${values.time.to}` : '';
+	$: timeStep.summary = values.time
+		? `${values.time.day.toLocaleDateString('en-GB', {
+				weekday: 'short',
+				day: 'numeric',
+				month: 'short'
+		  })} ${values.time.from} - ${values.time.to}`
+		: '';
 	$: extrasStep.summary = `${values.extras?.length || 'no'} extras selected`;
 </script>
 

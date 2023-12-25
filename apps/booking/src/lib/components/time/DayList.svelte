@@ -165,6 +165,7 @@
 			]
 		}
 	];
+	export let selectedSlot: TimeSlot | null;
 </script>
 
 <!-- TODO maybe weeks -->
@@ -172,7 +173,7 @@
 <ul class="">
 	{#each days as day, i (i)}
 		<li>
-			<Day {day} />
+			<Day {day} bind:selectedSlot />
 		</li>
 	{/each}
 </ul>

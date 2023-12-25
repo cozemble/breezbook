@@ -18,3 +18,4 @@
 	}}
 	class="btn">Select</button
 >
+<DayList bind:selectedSlot={value} />

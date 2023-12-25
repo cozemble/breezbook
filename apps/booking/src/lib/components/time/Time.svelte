@@ -1,21 +1,24 @@
 <script lang="ts">
-	export let time: TimeSlot;
+	export let slot: TimeSlot;
+	export let selectedSlot: TimeSlot | null;
 
-	const selected = time.selected;
+	$: isSelected = selectedSlot === slot;
 
-	const onSelect = time.onSelect;
+	function onSelect() {
+		selectedSlot = isSelected ? null : slot;
+	}
 </script>
 
 <button
 	class="btn w-full flex justify-between items-center
-	{!selected ? 'btn-ghost' : 'btn-active'}"
+	{!isSelected ? 'btn-ghost' : 'btn-active'}"
 	on:click={onSelect}
 >
 	<span>
-		{time.from}
+		{slot.from}
 		<span class="opacity-50 font-light px-2"> - </span>
-		{time.to}
+		{slot.to}
 	</span>
 
-	<span class="text-primary">£{time.price}</span>
+	<span class="text-primary">£{slot.price}</span>
 </button>

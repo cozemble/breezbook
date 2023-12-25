@@ -1,9 +1,5 @@
 <script lang="ts">
-	import DayList from '$lib/components/time/DayList.svelte';
 	import type { PageData } from './$types';
-	import DetailsStep from './DetailsStep.svelte';
-	import ExtrasStep from './ExtrasStep.svelte';
-	import PickTimeStep from './PickTimeStep.svelte';
 	import Steps from './Steps.svelte';
 
 	export let data: PageData;
