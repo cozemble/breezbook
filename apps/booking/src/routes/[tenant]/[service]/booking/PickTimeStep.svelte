@@ -1,6 +1,6 @@
 <script lang="ts">
 	import backend from '$lib/common/backend';
-	import DayList from '$lib/components/time/DayList.svelte';
+	import TimeSlotForm from '$lib/components/time/TimeSlotForm.svelte';
 
 	export let value: TimeSlot | null;
 
@@ -11,4 +11,4 @@
 	});
 </script>
 
-<DayList bind:selectedSlot={value} {days} />
+<TimeSlotForm bind:selectedSlot={value} {days} />

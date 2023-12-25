@@ -78,8 +78,8 @@ export const timeSlot = {
 		const adaptedDays: DaySlot[] = Object.entries(daysObject).reduce((prev, [key, value]) => {
 			const date = new Date(key);
 			const timeSlots: TimeSlot[] = value.map((slot) => ({
-				from: slot.startTime24hr,
-				to: slot.endTime24hr,
+				start: slot.startTime24hr,
+				end: slot.endTime24hr,
 				price: Number(slot.priceWithNoDecimalPlaces),
 				day: date
 			}));

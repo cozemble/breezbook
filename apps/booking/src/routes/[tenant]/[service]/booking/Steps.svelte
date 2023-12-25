@@ -93,7 +93,7 @@
 				weekday: 'short',
 				day: 'numeric',
 				month: 'short'
-		  })} ${values.time.from} - ${values.time.to}`
+		  })} ${values.time.start} - ${values.time.end}`
 		: '';
 	$: extrasStep.summary = `${values.extras?.length || 'no'} extras selected`;
 </script>

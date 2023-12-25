@@ -15,9 +15,9 @@
 	on:click={onSelect}
 >
 	<span>
-		{slot.from}
+		{slot.start}
 		<span class="opacity-50 font-light px-2"> - </span>
-		{slot.to}
+		{slot.end}
 	</span>
 
 	<span class="text-primary">£{slot.price}</span>

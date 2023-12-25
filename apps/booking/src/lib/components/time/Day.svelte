@@ -2,7 +2,6 @@
 	import Time from './Time.svelte';
 
 	export let day: DaySlot;
-
 	export let selectedSlot: TimeSlot | null;
 
 	const formattedDate = day.date.toLocaleDateString('en-GB', {
