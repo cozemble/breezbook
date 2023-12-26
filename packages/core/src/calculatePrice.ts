@@ -36,7 +36,6 @@ import {
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
-    IsoDate,
     price,
     Price,
     ResourcedTimeSlot

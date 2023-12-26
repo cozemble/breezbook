@@ -1,4 +1,4 @@
-import {Form} from "./types.js";
+import {Form} from "@breezbook/packages-core";
 
 export interface TimeSlotAvailability {
     _type: 'time.slot.availability'

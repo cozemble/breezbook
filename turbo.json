@@ -6,6 +6,11 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
+    "test": {
+      "dependsOn": ["build"],
+      "outputs": [],
+      "inputs": []
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },

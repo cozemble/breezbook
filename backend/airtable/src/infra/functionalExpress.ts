@@ -1,5 +1,5 @@
 import express from 'express';
-import {isoDate, IsoDate, Order, serviceId, ServiceId, tenantId, TenantId} from "../types.js";
+import {isoDate, IsoDate, Order, serviceId, ServiceId, tenantId, TenantId} from "@breezbook/packages-core";
 
 export interface RequestValueExtractor {
     name: string;

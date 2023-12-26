@@ -1,6 +1,5 @@
-import {test, describe, beforeAll, expect} from "vitest"
-import {customer, isoDate, isoDateFns, order, orderLine} from "../src/types.js";
-import {mediumCarWash, nineToOne, polish, smallCarWash, wax} from "./fixtures/carwash.js";
+import {beforeAll, describe, expect, test} from "vitest"
+import {carwash, customer, isoDate, isoDateFns, order, orderLine} from "@breezbook/packages-core";
 import {OrderCreatedResponse} from "../src/apiTypes.js";
 import {appWithTestContainer} from "../src/infra/appWithTestContainer.js";
 
@@ -20,7 +19,7 @@ describe('with a migrated database', () => {
         const mike = customer('Mike', 'Hogan', 'mike@email.com');
         const tomorrow = isoDateFns.addDays(isoDate(), 1);
         const dayAfterTomorrow = isoDateFns.addDays(isoDate(), 2);
-        const twoServices = order(mike, [orderLine(smallCarWash.id, [wax.id], tomorrow, nineToOne), orderLine(mediumCarWash.id, [wax.id, polish.id], dayAfterTomorrow, nineToOne)])
+        const twoServices = order(mike, [orderLine(carwash.smallCarWash.id, [carwash.wax.id], tomorrow, carwash.nineToOne), orderLine(carwash.mediumCarWash.id, [carwash.wax.id, carwash.polish.id], dayAfterTomorrow, carwash.nineToOne)])
 
         const fetched = await fetch(`http://localhost:${port}/api/tenant1/orders`, {
             method: 'POST',
@@ -29,7 +28,7 @@ describe('with a migrated database', () => {
             },
             body: JSON.stringify(twoServices)
         })
-        if(!fetched.ok) {
+        if (!fetched.ok) {
             console.error(await fetched.text())
             throw new Error(`Failed to add order`)
         }

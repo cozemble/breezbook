@@ -13,6 +13,9 @@
     "prettier": "^3.1.0",
     "turbo": "latest"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "packageManager": "pnpm@8.9.0",
   "engines": {
     "node": ">=18"

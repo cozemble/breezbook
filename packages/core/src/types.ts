@@ -37,6 +37,8 @@ export function isoDate(value: string = new Date().toISOString().split('T')[0]):
 }
 
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+export const daysOfWeek: DayOfWeek[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
 
 export const isoDateFns = {
     isEqual(date1: IsoDate, date2: IsoDate): boolean {
@@ -616,7 +618,7 @@ export interface PercentageCoupon {
     percentage: number;
 }
 
-export function orderLine(serviceId: ServiceId, addOnIds: AddOnId[], date: IsoDate, slot: BookableSlot,  serviceFormData?: unknown): OrderLine {
+export function orderLine(serviceId: ServiceId, addOnIds: AddOnId[], date: IsoDate, slot: BookableSlot, serviceFormData?: unknown): OrderLine {
     return {
         _type: 'order.line',
         serviceId,
@@ -656,10 +658,28 @@ export function order(customer: Customer, lines: OrderLine[], id = orderId(uuidv
 }
 
 export const orderFns = {
-    getOrderDateRange(order: Order):{fromDate: IsoDate, toDate: IsoDate} {
+    getOrderDateRange(order: Order): { fromDate: IsoDate, toDate: IsoDate } {
         const allDates = order.lines.map(line => line.date);
         const fromDate = allDates.reduce((min, date) => isoDateFns.isEqual(date, min) || isoDateFns.isEqual(date, min) ? min : isoDateFns.isEqual(date, min) ? min : date, allDates[0]);
         const toDate = allDates.reduce((max, date) => isoDateFns.isEqual(date, max) || isoDateFns.isEqual(date, max) ? max : isoDateFns.isEqual(date, max) ? max : date, allDates[0]);
         return {fromDate, toDate};
     }
+}
+
+export interface BlockedTime {
+    _type: 'blocked.time';
+    id: Id;
+    tenantId: TenantId;
+    date: IsoDate;
+    start_time_24hr: TwentyFourHourClockTime;
+    end_time_24hr: TwentyFourHourClockTime;
+}
+
+export interface BusinessHours {
+    _type: 'business.hours';
+    id: Id;
+    tenantId: TenantId;
+    day_of_week: DayOfWeek
+    start_time_24hr: TwentyFourHourClockTime;
+    end_time_24hr: TwentyFourHourClockTime;
 }

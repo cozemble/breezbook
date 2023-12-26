@@ -1,11 +1,11 @@
 import * as express from 'express';
 import {orderBody, tenantIdParam, withTwoRequestParams} from "../infra/functionalExpress.js";
 import {withAdminPgClient} from "../infra/postgresPool.js";
-import {booking, Customer, customerId, orderFns, TenantId} from "../types.js";
+import {booking, Customer, customerId, orderFns, TenantId} from "@breezbook/packages-core";
 import pg from "pg";
 import {getEverythingForTenant} from "./getEverythingForTenant.js";
-import {mandatory} from "../utils.js";
-import {calcSlotPeriod} from "../calculateAvailability.js";
+import {mandatory} from "@breezbook/packages-core";
+import {calcSlotPeriod} from "@breezbook/packages-core";
 
 async function upsertCustomer(client: pg.PoolClient, tenantId: TenantId, customer: Customer): Promise<string> {
     const maybeExistingCustomer = await client.query(`select *

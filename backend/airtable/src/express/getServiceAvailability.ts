@@ -1,9 +1,9 @@
-import {AddOn as DomainAddOn, Form, Service as DomainService, ServiceId, values,} from "../types.js";
+import {AddOn as DomainAddOn, Form, Service as DomainService, ServiceId, values,} from "@breezbook/packages-core";
 import express from 'express';
-import {calculatePrice} from "../calculatePrice.js";
+import {calculatePrice} from "@breezbook/packages-core";
 import {withAdminPgClient} from "../infra/postgresPool.js";
-import {mandatory} from "../utils.js";
-import {calculateAvailability} from "../calculateAvailability.js";
+import {mandatory} from "@breezbook/packages-core";
+import {calculateAvailability} from "@breezbook/packages-core";
 import {AddOnSummary, emptyAvailabilityResponse, ServiceSummary, timeSlotAvailability} from "../apiTypes.js";
 import {date, query, serviceIdParam, tenantIdParam, withFourRequestParams} from "../infra/functionalExpress.js";
 import {getEverythingForTenant} from "./getEverythingForTenant.js";
