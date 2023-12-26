@@ -9,23 +9,6 @@
 	export let summary: string = '';
 
 	export let onOpen: () => void;
-
-	export let action:
-		| {
-				label: string;
-				disabled?: boolean;
-				handle: () => void;
-				// loading?: boolean; // <!-- TODO if needed -->
-		  }
-		| undefined = undefined;
-
-	export let back:
-		| {
-				label: string;
-				handle: () => void;
-				disabled?: boolean;
-		  }
-		| undefined = undefined;
 </script>
 
 <!-- 
@@ -70,18 +53,5 @@
 
 	<div class="collapse-content">
 		<slot />
-
-		{#if action}
-			<div class="flex justify-end gap-3 mt-2">
-				{#if back}
-					<button class="btn btn-secondary" on:click={back.handle} disabled={back.disabled}>
-						{back.label}
-					</button>
-				{/if}
-				<button class="btn btn-primary" on:click={action.handle} disabled={action.disabled}>
-					{action.label}
-				</button>
-			</div>
-		{/if}
 	</div>
 </div>

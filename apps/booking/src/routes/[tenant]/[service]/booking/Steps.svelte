@@ -94,7 +94,7 @@
 				day: 'numeric',
 				month: 'short'
 		  })} ${values.time.start} - ${values.time.end}`
-		: '';
+		: 'no time selected';
 	$: extrasStep.summary = `${values.extras?.length || 'no'} extras selected`;
 </script>
 
@@ -109,15 +109,8 @@
 	summary={timeStep.summary}
 	open={timeStep.open}
 	onOpen={timeStep.onOpen}
-	action={{
-		label: 'Next',
-		disabled: !values.time,
-		handle: () => {
-			timeStep.onComplete();
-		}
-	}}
 >
-	<PickTimeStep bind:value={values.time} />
+	<PickTimeStep bind:value={values.time} onComplete={timeStep.onComplete} />
 </Step>
 
 <Step
@@ -126,21 +119,12 @@
 	summary={extrasStep.summary}
 	open={extrasStep.open}
 	onOpen={extrasStep.onOpen}
-	action={{
-		label: 'Next',
-		disabled: !values.extras,
-		handle: () => {
-			extrasStep.onComplete();
-		}
-	}}
-	back={{
-		label: 'Back',
-		handle: () => {
-			timeStep.onOpen();
-		}
-	}}
 >
-	<ExtrasStep bind:value={values.extras} />
+	<ExtrasStep
+		bind:value={values.extras}
+		back={timeStep.onOpen}
+		onComplete={extrasStep.onComplete}
+	/>
 </Step>
 
 <Step
@@ -149,19 +133,10 @@
 	summary={detailsStep.summary}
 	open={detailsStep.open}
 	onOpen={detailsStep.onOpen}
-	action={{
-		label: 'Complete',
-		disabled: !values.details,
-		handle: () => {
-			detailsStep.onComplete();
-		}
-	}}
-	back={{
-		label: 'Back',
-		handle: () => {
-			extrasStep.onOpen();
-		}
-	}}
 >
-	<DetailsStep bind:value={values.details} />
+	<DetailsStep
+		bind:value={values.details}
+		back={extrasStep.onOpen}
+		onComplete={extrasStep.onComplete}
+	/>
 </Step>

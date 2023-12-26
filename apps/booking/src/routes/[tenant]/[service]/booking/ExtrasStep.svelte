@@ -23,6 +23,8 @@
 	];
 
 	export let value: Service.Extra[] | null;
+	export let back: () => void;
+	export let onComplete: () => void;
 
 	$: value = extras.filter((extra) => extra.selected);
 </script>
@@ -42,3 +44,8 @@
 		</label>
 	</div>
 {/each}
+
+<div class="flex justify-end gap-3 mt-2">
+	<button class="btn btn-secondary" on:click={back}> Back </button>
+	<button class="btn btn-primary" on:click={onComplete}> Next </button>
+</div>
