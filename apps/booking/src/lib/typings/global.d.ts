@@ -68,3 +68,17 @@ declare namespace Service {
 		[key: string]: string;
 	}
 }
+
+// TODO move to a more appropriate file
+declare type BookingFormStep = {
+	name: 'time' | 'extras' | 'details';
+	status: GenericStatus;
+	open: boolean;
+	onComplete: () => void;
+	onOpen: () => void;
+	onGoBack?: () => void;
+} & (
+	| { value: TimeSlot | null; name: 'time' }
+	| { value: Service.Extra[] | null; name: 'extras' }
+	| { value: Service.Detail | null; name: 'details' }
+);

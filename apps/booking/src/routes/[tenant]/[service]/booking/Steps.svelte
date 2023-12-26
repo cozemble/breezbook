@@ -1,27 +1,15 @@
 <script lang="ts">
-	import Step from './Step.svelte';
 	import DetailsStep from './DetailsStep.svelte';
 	import ExtrasStep from './ExtrasStep.svelte';
 	import PickTimeStep from './PickTimeStep.svelte';
 
-	interface IStep {
-		name: 'time' | 'extras' | 'details';
-		label: string;
-		status: GenericStatus;
-		summary: string;
-		open: boolean;
-		onComplete: () => void;
-		onOpen: () => void;
-	}
-
-	const timeStep: IStep = {
+	let timeStep: BookingFormStep = {
 		name: 'time',
-		label: 'Pick a time',
 		status: 'default',
-		summary: '',
 		open: true,
+		value: null,
 		onComplete: () => {
-			if (!values.time) return;
+			if (!timeStep.value) return;
 
 			timeStep.status = 'success';
 			extrasStep.onOpen();
@@ -33,14 +21,13 @@
 		}
 	};
 
-	const extrasStep: IStep = {
+	let extrasStep: BookingFormStep = {
 		name: 'extras',
-		label: 'Extras',
 		status: 'default',
-		summary: '',
 		open: false,
+		value: null,
 		onComplete: () => {
-			if (!values.extras) return;
+			if (!extrasStep.value) return;
 
 			extrasStep.status = 'success';
 			detailsStep.onOpen();
@@ -51,17 +38,19 @@
 			extrasStep.open = true;
 			timeStep.open = false;
 			detailsStep.open = false;
+		},
+		onGoBack: () => {
+			timeStep.onOpen();
 		}
 	};
 
-	const detailsStep: IStep = {
+	let detailsStep: BookingFormStep = {
 		name: 'details',
-		label: 'Details',
 		status: 'default',
-		summary: '',
 		open: false,
+		value: null,
 		onComplete: () => {
-			if (!values.details) return;
+			if (!detailsStep.value) return;
 
 			detailsStep.open = false;
 			detailsStep.status = 'success';
@@ -72,30 +61,13 @@
 			detailsStep.open = true;
 			timeStep.open = false;
 			extrasStep.open = false;
+		},
+		onGoBack: () => {
+			extrasStep.onOpen();
 		}
 	};
 
 	//
-
-	const values: {
-		time: TimeSlot | null;
-		extras: Service.Extra[] | null;
-		details: Service.Details | null;
-	} = {
-		time: null,
-		extras: null,
-		details: null
-	};
-
-	// <!-- TODO properly format the value -->
-	$: timeStep.summary = values.time
-		? `${values.time.day.toLocaleDateString('en-GB', {
-				weekday: 'short',
-				day: 'numeric',
-				month: 'short'
-		  })} ${values.time.start} - ${values.time.end}`
-		: 'no time selected';
-	$: extrasStep.summary = `${values.extras?.length || 'no'} extras selected`;
 </script>
 
 <!-- 
@@ -103,40 +75,6 @@
 	Booking steps as an accordion.
  -->
 
-<Step
-	label={timeStep.label}
-	status={timeStep.status}
-	summary={timeStep.summary}
-	open={timeStep.open}
-	onOpen={timeStep.onOpen}
->
-	<PickTimeStep bind:value={values.time} onComplete={timeStep.onComplete} />
-</Step>
-
-<Step
-	label={extrasStep.label}
-	status={extrasStep.status}
-	summary={extrasStep.summary}
-	open={extrasStep.open}
-	onOpen={extrasStep.onOpen}
->
-	<ExtrasStep
-		bind:value={values.extras}
-		back={timeStep.onOpen}
-		onComplete={extrasStep.onComplete}
-	/>
-</Step>
-
-<Step
-	label={detailsStep.label}
-	status={detailsStep.status}
-	summary={detailsStep.summary}
-	open={detailsStep.open}
-	onOpen={detailsStep.onOpen}
->
-	<DetailsStep
-		bind:value={values.details}
-		back={extrasStep.onOpen}
-		onComplete={extrasStep.onComplete}
-	/>
-</Step>
+<PickTimeStep bind:step={timeStep} />
+<ExtrasStep bind:step={extrasStep} />
+<DetailsStep bind:step={detailsStep} />

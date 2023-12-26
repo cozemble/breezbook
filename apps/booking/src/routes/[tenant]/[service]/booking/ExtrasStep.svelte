@@ -1,4 +1,6 @@
 <script lang="ts">
+	import StepWrapper from './StepWrapper.svelte';
+
 	const extras: Service.Extra[] = [
 		{
 			name: '50% Off HD Carnauba Wax Coating (Lasts 6 Months, Gloss Finish!)',
@@ -22,30 +24,50 @@
 		}
 	];
 
-	export let value: Service.Extra[] | null;
-	export let back: () => void;
-	export let onComplete: () => void;
+	export let step: BookingFormStep;
+
+	let value: Service.Extra[] | null;
+
+	const onSubmit = () => {
+		if (!value) return;
+
+		step.value = value;
+		step.onComplete();
+	};
 
 	$: value = extras.filter((extra) => extra.selected);
+	$: summary = `${value?.length || 'no'} extras selected`;
 </script>
 
-{#each extras as extra, i (i)}
-	<div class="form-control">
-		<label class="cursor-pointer label">
-			<span class="label-text">
-				{extra.name}
-			</span>
+<StepWrapper
+	open={step.open}
+	label="Pick extras"
+	status={step.status}
+	onOpen={step.onOpen}
+	{summary}
+>
+	{#each extras as extra, i (i)}
+		<div class="form-control">
+			<label class="cursor-pointer label">
+				<span class="label-text">
+					{extra.name}
+				</span>
 
-			<span class="flex items-center">
-				<span class="label-text mr-4 text-primary">£{extra.price}</span>
+				<span class="flex items-center">
+					<span class="label-text mr-4 text-primary">£{extra.price}</span>
 
-				<input type="checkbox" bind:checked={extra.selected} class="checkbox checkbox-secondary" />
-			</span>
-		</label>
+					<input
+						type="checkbox"
+						bind:checked={extra.selected}
+						class="checkbox checkbox-secondary"
+					/>
+				</span>
+			</label>
+		</div>
+	{/each}
+
+	<div class="flex justify-end gap-3 mt-2">
+		<button class="btn btn-secondary" on:click={step.onGoBack}> Back </button>
+		<button class="btn btn-primary" on:click={onSubmit}> Next </button>
 	</div>
-{/each}
-
-<div class="flex justify-end gap-3 mt-2">
-	<button class="btn btn-secondary" on:click={back}> Back </button>
-	<button class="btn btn-primary" on:click={onComplete}> Next </button>
-</div>
+</StepWrapper>
