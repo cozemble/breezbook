@@ -7,7 +7,7 @@
     "dist/"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npx prisma generate && tsc -p tsconfig.json",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest watch",
     "start": "nodemon dist/esm/index.js",

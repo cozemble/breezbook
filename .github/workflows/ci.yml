@@ -38,7 +38,7 @@ jobs:
 
       - name: Build
         run: |
-          npx turbo --verbosity 10 build
+          npx turbo build
 
       - name: Test
         run: npx turbo test
