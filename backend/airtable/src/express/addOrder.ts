@@ -31,7 +31,7 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
         await withAdminPgClient(async (client) => {
             await inTxn(client, async () => {
                 const {fromDate, toDate} = orderFns.getOrderDateRange(order)
-                const everythingForTenant = await getEverythingForTenant(client, tenantId, fromDate, toDate);
+                const everythingForTenant = await getEverythingForTenant(tenantId, fromDate, toDate);
                 const customerIdValue = await upsertCustomer(client, tenantId, order.customer);
                 const newOrder = await client.query(`insert into orders (tenant_id, customer_id)
                                                      values ($1, $2)

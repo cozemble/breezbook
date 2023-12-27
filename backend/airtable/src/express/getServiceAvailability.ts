@@ -45,7 +45,7 @@ export async function getServiceAvailability(req: express.Request, res: express.
     await withFourRequestParams(req, res, tenantIdParam(), serviceIdParam(), date(query('fromDate')), date(query('toDate')), async (tenantId, serviceId, fromDate, toDate) => {
         console.log(`Getting availability for tenant ${tenantId.value} and service ${serviceId.value} from ${fromDate.value} to ${toDate.value}`);
 
-        const everythingForTenant = await withAdminPgClient(async (client) => await getEverythingForTenant(client, tenantId, fromDate, toDate));
+        const everythingForTenant = await withAdminPgClient(async (client) => await getEverythingForTenant(tenantId, fromDate, toDate));
         const availability = calculateAvailability(everythingForTenant.businessConfiguration, everythingForTenant.bookings, serviceId, fromDate, toDate);
         const priced = availability.map(a => {
             if (a._type === 'bookable.times') {
