@@ -22,7 +22,7 @@
     "compile": "npx tsc -p tsconfig.json",
     "server": "NODE_ENV=development node dist/esm/index.js",
     "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local && npm run make:schema-types && npm run db:migrate-carwash-local",
-    "make:schema-types": "pg-to-ts generate --conn postgresql://user:password@127.0.0.1:5432/postgres --schema public --output src/generated/dbtypes.ts"
+    "make:schema-types": "npx prisma introspect && npx prisma generate"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^10.4.0",
@@ -34,14 +34,15 @@
     "child-process-promise": "^2.2.1",
     "dotenv-cli": "^7.3.0",
     "eslint": "^8.28.0",
-    "pg-to-ts": "^4.1.1",
     "postgrator-cli": "^7.0.0",
+    "prisma": "^5.7.1",
     "typescript": "5.3.3",
     "vite": "5.0.7",
     "vitest": "0.33.0"
   },
   "dependencies": {
     "@breezbook/packages-core": "workspace:*",
+    "@prisma/client": "5.7.1",
     "@supabase/supabase-js": "^2.39.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model add_on {
+  id              String  @id
+  tenant_id       String
+  name            String
+  price           Decimal @db.Decimal
+  price_currency  String
+  expect_quantity Boolean
+  section         String?
+  tenants         tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model blocked_time {
+  id              String  @id
+  tenant_id       String
+  date            String
+  start_time_24hr String
+  end_time_24hr   String
+  tenants         tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model bookings {
+  id              String    @id @default(dbgenerated("uuid_generate_v4()"))
+  tenant_id       String
+  customer_id     String
+  service_id      String
+  order_id        String
+  date            String
+  start_time_24hr String
+  end_time_24hr   String
+  definition      Json
+  customers       customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services        services  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants         tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model business_hours {
+  id              String  @id
+  tenant_id       String
+  day_of_week     String  @db.VarChar(10)
+  start_time_24hr String  @db.VarChar(10)
+  end_time_24hr   String  @db.VarChar(10)
+  tenants         tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model customers {
+  id         String     @id @default(dbgenerated("uuid_generate_v4()"))
+  tenant_id  String
+  first_name String
+  last_name  String
+  email      String
+  bookings   bookings[]
+  tenants    tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  orders     orders[]
+}
+
+model forms {
+  id                                        String            @id
+  tenant_id                                 String
+  name                                      String
+  description                               String?
+  definition                                Json
+  tenants                                   tenants           @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  services_services_customer_form_idToforms services[]        @relation("services_customer_form_idToforms")
+  services_services_form_idToforms          services[]        @relation("services_form_idToforms")
+  tenant_settings                           tenant_settings[]
+}
+
+model order_lines {
+  id                String      @id @default(dbgenerated("uuid_generate_v4()"))
+  tenant_id         String
+  order_id          String
+  service_id        String
+  add_on_ids        String[]    @default([])
+  date              String
+  time_slot_id      String?
+  start_time_24hr   String      @db.VarChar(10)
+  end_time_24hr     String      @db.VarChar(10)
+  service_form_data Json?
+  tenants           tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  time_slots        time_slots? @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model orders {
+  id                 String    @id @default(dbgenerated("uuid_generate_v4()"))
+  tenant_id          String
+  customer_id        String
+  customer_form_data Json?
+  customers          customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants            tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model pricing_rules {
+  id         String  @id
+  tenant_id  String
+  definition Json
+  tenants    tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model resource_availability {
+  id              String     @id
+  tenant_id       String?
+  resource_id     String?
+  day_of_week     String     @db.VarChar(10)
+  start_time_24hr String     @db.VarChar(10)
+  end_time_24hr   String     @db.VarChar(10)
+  resources       resources? @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants         tenants?   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model resource_blocked_time {
+  id              String    @id
+  tenant_id       String
+  resource_id     String
+  date            String
+  start_time_24hr String
+  end_time_24hr   String
+  resources       resources @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants         tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model resource_types {
+  id        String      @id
+  tenant_id String
+  name      String
+  tenants   tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  resources resources[]
+}
+
+model resources {
+  id                    String                  @id
+  tenant_id             String
+  resource_type         String
+  name                  String
+  resource_availability resource_availability[]
+  resource_blocked_time resource_blocked_time[]
+  resource_types        resource_types          @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants               tenants                 @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model schemaversion {
+  version BigInt    @id
+  name    String?
+  md5     String?
+  run_at  DateTime? @db.Timestamptz(6)
+}
+
+model services {
+  id                                     String     @id
+  tenant_id                              String
+  service_id                             String
+  name                                   String
+  description                            String
+  duration_minutes                       Int
+  price                                  Decimal    @db.Decimal
+  price_currency                         String
+  permitted_add_on_ids                   String[]
+  resource_types_required                String[]
+  requires_time_slot                     Boolean
+  form_id                                String?
+  customer_form_id                       String?
+  bookings                               bookings[]
+  forms_services_customer_form_idToforms forms?     @relation("services_customer_form_idToforms", fields: [customer_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  forms_services_form_idToforms          forms?     @relation("services_form_idToforms", fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                                tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tenant_settings {
+  tenant_id        String  @id
+  customer_form_id String?
+  forms            forms?  @relation(fields: [customer_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants          tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tenants {
+  tenant_id             String                  @id
+  name                  String
+  add_on                add_on[]
+  blocked_time          blocked_time[]
+  bookings              bookings[]
+  business_hours        business_hours[]
+  customers             customers[]
+  forms                 forms[]
+  order_lines           order_lines[]
+  orders                orders[]
+  pricing_rules         pricing_rules[]
+  resource_availability resource_availability[]
+  resource_blocked_time resource_blocked_time[]
+  resource_types        resource_types[]
+  resources             resources[]
+  services              services[]
+  tenant_settings       tenant_settings?
+  time_slots            time_slots[]
+}
+
+model time_slots {
+  id              String        @id
+  tenant_id       String
+  description     String
+  start_time_24hr String        @db.VarChar(10)
+  end_time_24hr   String        @db.VarChar(10)
+  tag             String?
+  order_lines     order_lines[]
+  tenants         tenants       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}

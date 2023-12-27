@@ -40,6 +40,7 @@ export async function withMigratedDatabase(pgDetails?: PgDetails): Promise<void>
   process.env.PGDATABASE = pgDetails?.database ?? container.getDatabase()
   process.env.PG_ADMIN_USER = pgDetails?.username ?? container.getUsername()
   process.env.PG_ADMIN_PASSWORD = pgDetails?.password ?? container.getPassword()
+  process.env.DATABASE_URL = pgConnectString(container)
 
   if (!pgDetails) {
     console.log('Running migrations...')
