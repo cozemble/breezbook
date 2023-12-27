@@ -45,7 +45,7 @@ import {
     ResourceBlockedTime,
     Resources,
     ResourceTypes,
-    Services,
+    Services, TenantSettings,
     TimeSlots
 } from "../generated/dbtypes.js";
 import {mandatory} from "@breezbook/packages-core";
@@ -187,11 +187,18 @@ export async function getEverythingForTenant(client: pg.PoolClient, tenantId: Te
                                       from forms
                                       where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as Forms[]
 
+    const tenantSettingsRows = await client.query(`select * from tenant_settings where tenant_id = $1`, [tenantId.value]).then(r => r.rows) as TenantSettings[];
+    if(tenantSettingsRows.length !== 1) {
+        throw new Error(`No tenant settings for tenant ${tenantId.value}`);
+    }
+    const tenantSettings = tenantSettingsRows[0];
+
 
     const dates = isoDateFns.listDays(fromDate, toDate);
     const mappedResourceTypes = resourceTypes.map(rt => resourceType(rt.id));
     const mappedAddOns = addOns.map(a => toDomainAddOn(a));
     const mappedForms = forms.map(f => toDomainForm(f));
+    const customerForm = tenantSettings?.customer_form_id ? mandatory(mappedForms.find(f => values.isEqual(f.id, formId(tenantSettings?.customer_form_id ?? ""))), `No customer form ${tenantSettings.customer_form_id}`) : undefined;
 
     return everythingForTenant(businessConfiguration(
         makeBusinessAvailability(businessHours, blockedTime, dates),
@@ -200,6 +207,7 @@ export async function getEverythingForTenant(client: pg.PoolClient, tenantId: Te
         mappedAddOns,
         timeSlots.map(ts => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description)),
         mappedForms,
-        periodicStartTime(duration(30))
+        periodicStartTime(duration(30)),
+        customerForm ? customerForm.id : null,
     ), pricingRules.map(pr => pr.definition) as PricingRule[], bookings.map(b => toDomainBooking(b)))
 }

@@ -113,6 +113,12 @@ create table pricing_rules
     definition jsonb                               not null
 );
 
+create table tenant_settings
+(
+    tenant_id         text references tenants (tenant_id) not null primary key,
+    customer_form_id  text                                null default null references forms (id)
+);
+
 create table customers
 (
     id         text primary key default uuid_generate_v4(),

@@ -111,7 +111,10 @@ values ('contact-details-form',
         'Contact Details Form',
         '{
           "_type": "json.schema.form",
-          "id": {"_type": "form.id", "value": "contact-details-form"},
+          "id": {
+            "_type": "form.id",
+            "value": "contact-details-form"
+          },
           "name": "Customer Details Form",
           "schema": {
             "$schema": "http://json-schema.org/draft-07/schema#",
@@ -130,11 +133,16 @@ values ('contact-details-form',
                 "description": "Your postcode."
               }
             },
-            "required": ["phone", "firstLineOfAddress", "postcode"],
+            "required": [
+              "phone",
+              "firstLineOfAddress",
+              "postcode"
+            ],
             "additionalProperties": false
           }
         }');
 
+insert into tenant_settings(tenant_id, customer_form_id) values('tenant1', 'contact-details-form');
 
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot, form_id, customer_form_id)

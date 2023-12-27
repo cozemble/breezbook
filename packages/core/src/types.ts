@@ -357,6 +357,7 @@ export interface BusinessConfiguration {
     timeslots: TimeslotSpec[];
     forms: Form[]
     startTimeSpec: StartTimeSpec
+    customerFormId: FormId | null
 }
 
 export interface PeriodicStartTime {
@@ -414,7 +415,7 @@ export function addOn(name: string, price: Price, requiresQuantity: boolean, id 
     };
 }
 
-export function businessConfiguration(availability: BusinessAvailability, resources: ResourceDayAvailability[], services: Service[], addOns: AddOn[], timeslots: TimeslotSpec[], forms: Form[], startTimeSpec: StartTimeSpec): BusinessConfiguration {
+export function businessConfiguration(availability: BusinessAvailability, resources: ResourceDayAvailability[], services: Service[], addOns: AddOn[], timeslots: TimeslotSpec[], forms: Form[], startTimeSpec: StartTimeSpec, customerFormId: FormId | null): BusinessConfiguration {
     return {
         _type: 'business.configuration',
         availability,
@@ -423,7 +424,8 @@ export function businessConfiguration(availability: BusinessAvailability, resour
         timeslots,
         startTimeSpec,
         addOns,
-        forms
+        forms,
+        customerFormId
     };
 }
 

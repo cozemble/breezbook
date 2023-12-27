@@ -21,7 +21,7 @@
     "bounce:db": "node dist/cjs/devDb.js",
     "compile": "npx tsc -p tsconfig.json",
     "server": "NODE_ENV=development node dist/esm/index.js",
-    "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local",
+    "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local && npm run make:schema-types && npm run db:migrate-carwash-local",
     "make:schema-types": "pg-to-ts generate --conn postgresql://user:password@127.0.0.1:5432/postgres --schema public --output src/generated/dbtypes.ts"
   },
   "devDependencies": {
