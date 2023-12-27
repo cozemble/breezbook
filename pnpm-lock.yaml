@@ -97,6 +97,10 @@ importers:
         version: 0.32.4
 
   apps/playground:
+    dependencies:
+      '@breezbook/packages-core':
+        specifier: workspace:*
+        version: link:../../packages/core
     devDependencies:
       '@sveltejs/adapter-auto':
         specifier: ^3.0.0

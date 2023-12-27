@@ -74,7 +74,7 @@ export interface CustomerId extends ValueType<string> {
     _type: 'customer.id';
 }
 
-export function customerId(value: string): CustomerId {
+export function customerId(value: string = uuidv4()): CustomerId {
     return {
         _type: 'customer.id',
         value,

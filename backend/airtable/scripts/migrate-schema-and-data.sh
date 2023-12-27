@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 
-# get the port as the first argument, or default to 5432
-PORT=${1:-5432}
+cat .env-docker-compose | sed "s/PGHOST=db/PGHOST=127.0.0.1/" > /tmp/.env-docker-compose.tmp
+npx dotenv -e /tmp/.env-docker-compose.tmp -- bash -c 'npx postgrator --config=migrations/schema/postgratorrc.json'
+npx dotenv -e /tmp/.env-docker-compose.tmp -- bash -c 'npx postgrator --config=migrations/data/carwash/postgratorrc.json'
 
-echo "Migrating schema and data to port $PORT"
-
-cat migrations/schema/postgratorrc.json | sed "s/\"port\": 5432/\"port\": $PORT/" > /tmp/schema-postgratorrc.json
-npx postgrator --config=/tmp/schema-postgratorrc.json
-
-cat migrations/data/carwash/postgratorrc.json | sed "s/\"port\": 5432/\"port\": $PORT/" > /tmp/data-postgratorrc.json
-npx postgrator --config=/tmp/data-postgratorrc.json

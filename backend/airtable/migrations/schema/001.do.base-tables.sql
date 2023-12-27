@@ -138,7 +138,7 @@ create table order_lines
     service_id        text                                not null,
     add_on_ids        text[]                              not null default '{}',
     date              text                                not null,
-    time_slot_id      text                                null     default null,
+    time_slot_id      text                                null     default null references time_slots (id),
     start_time_24hr   varchar(10)                         not null,
     end_time_24hr     varchar(10)                         not null,
     service_form_data jsonb                               null     default null
