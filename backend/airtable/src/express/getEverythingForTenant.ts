@@ -28,7 +28,7 @@ import {
 } from '@breezbook/packages-core';
 import { makeBusinessAvailability } from './makeBusinessAvailability.js';
 import { DbResource, DbResourceAvailability, DbResourceBlockedTime } from '../prisma/dbtypes.js';
-import { prisma } from '../prisma/client.js';
+import { prismaClient } from '../prisma/client.js';
 import { toDomainAddOn, toDomainBooking, toDomainForm, toDomainService } from '../prisma/dbToDomain.js';
 
 export interface EverythingForTenant {
@@ -100,6 +100,7 @@ export function makeResourceAvailability(mappedResourceTypes: ResourceType[], re
 
 
 export async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toDate: IsoDate): Promise<EverythingForTenant> {
+	const prisma = prismaClient()
 	const businessHours = await prisma.business_hours.findMany({ where: { tenant_id: tenantId.value } });
 	const blockedTime = await prisma.blocked_time.findMany({
 		where: {
