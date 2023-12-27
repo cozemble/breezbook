@@ -66,5 +66,9 @@ describe('with a migrated database', () => {
         }
         const json = await fetched.json() as OrderCreatedResponse
         expect(json.orderId).toBeDefined()
+        expect(json.customerId).toBeDefined()
+        expect(json.bookingIds.length).toBe(2)
+        expect(json.orderLineIds.length).toBe(2)
+
     })
 })

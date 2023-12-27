@@ -76,6 +76,9 @@ export function emptyAvailabilityResponse(serviceSummary: ServiceSummary, addOns
 export interface OrderCreatedResponse {
     _type: 'order.created.response'
     orderId: string
+    customerId: string
+    bookingIds: string[]
+    orderLineIds: string[]
 }
 
 export interface ErrorResponse {

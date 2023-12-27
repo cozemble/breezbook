@@ -1,11 +1,11 @@
 import * as express from 'express';
 import { orderBody, tenantIdParam, withTwoRequestParams } from '../infra/functionalExpress.js';
-import { inTxn, withAdminPgClient } from '../infra/postgresPool.js';
 import { calcSlotPeriod, mandatory, orderFns } from '@breezbook/packages-core';
 import { getEverythingForTenant } from './getEverythingForTenant.js';
 import { prismaClient } from '../prisma/client.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Prisma } from '@prisma/client';
+import { DbBooking, DbOrderLine } from '../prisma/dbtypes.js';
 
 
 export async function addOrder(req: express.Request, res: express.Response): Promise<void> {
@@ -61,7 +61,7 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
 						connect: { tenant_id: tenantId.value }
 					},
 					services: {
-						connect: { id:  line.serviceId.value  }
+						connect: { id: line.serviceId.value }
 					},
 					orders: {
 						connect: { id: orderId }
@@ -76,11 +76,20 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
 				}
 			}));
 		}
-		await prisma.$transaction([customerUpsert,createOrder, ...lineInserts]);
+		const [customerOutcome, orderOutcome, ...remainingOutcomes] = await prisma.$transaction([customerUpsert, createOrder, ...lineInserts]);
+		const orderLineOutcomes: DbOrderLine[] = [];
+		const bookingOutcomes: DbBooking[] = [];
+
+		for (let i = 0; i < remainingOutcomes.length; i++) {
+			if (i % 2 == 0) {
+				orderLineOutcomes.push(remainingOutcomes[i] as DbOrderLine);
+			} else {
+				bookingOutcomes.push(remainingOutcomes[i] as DbBooking);
+			}
+		}
 
 
-		res.send({ orderId });
-;
+		res.send({ orderId: orderOutcome.id, customerId: customerOutcome.id, bookingIds: bookingOutcomes.map(b => b.id), orderLineIds: orderLineOutcomes.map(ol => ol.id) });
 	});
 }
 
