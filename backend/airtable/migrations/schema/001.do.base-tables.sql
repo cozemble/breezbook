@@ -115,8 +115,8 @@ create table pricing_rules
 
 create table tenant_settings
 (
-    tenant_id         text references tenants (tenant_id) not null primary key,
-    customer_form_id  text                                null default null references forms (id)
+    tenant_id        text references tenants (tenant_id) not null primary key,
+    customer_form_id text                                null default null references forms (id)
 );
 
 create table customers
@@ -127,6 +127,9 @@ create table customers
     last_name  text                                not null,
     email      text                                not null check (email ~* '^.+@.+\..+$')
 );
+
+alter table customers
+    add constraint customers_tenant_id_email_key unique (tenant_id, email);
 
 create table orders
 (
@@ -156,7 +159,7 @@ create table bookings
     tenant_id       text references tenants (tenant_id) not null,
     customer_id     text references customers (id)      not null,
     service_id      text references services (id)       not null,
-    order_id        text                                not null,
+    order_id        text references orders (id)         not null,
     date            text                                not null,
     start_time_24hr text                                not null,
     end_time_24hr   text                                not null,

@@ -38,6 +38,7 @@ model bookings {
   end_time_24hr   String
   definition      Json
   customers       customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders          orders    @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services        services  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants         tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -61,6 +62,8 @@ model customers {
   bookings   bookings[]
   tenants    tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   orders     orders[]
+
+  @@unique([tenant_id, email])
 }
 
 model forms {
@@ -91,12 +94,13 @@ model order_lines {
 }
 
 model orders {
-  id                 String    @id @default(dbgenerated("uuid_generate_v4()"))
+  id                 String     @id @default(dbgenerated("uuid_generate_v4()"))
   tenant_id          String
   customer_id        String
   customer_form_data Json?
-  customers          customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants            tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  bookings           bookings[]
+  customers          customers  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants            tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model pricing_rules {
