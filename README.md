@@ -21,11 +21,11 @@ Airtable/SmartSuite etc. to manage the remaining processes of the business.
        <!-- TODO Different services may share the same time slots -->
     - Accessories
     - Extra customer details specific to the service
-
-- Cart system for multiple bookings or services
-- Payment
-- Custom themes
-    - Automatic theme detection from the tenant's website
+    - Cart system for multiple bookings or services
+    - Payment
+    - Dynamic pricing
+    - Custom themes
+        - Automatic theme detection from the tenant's website
 
 ## Tech Stack
 
