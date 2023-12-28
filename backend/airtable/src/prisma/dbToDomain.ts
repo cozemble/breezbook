@@ -19,8 +19,7 @@ export function toDomainService(dbService: DbService, resourceTypes: ResourceTyp
 	const mappedResourceTypes = dbService.resource_types_required.map(rt => mandatory(resourceTypes.find(rtt => rtt.value === rt), `No resource type ${rt}`));
 	const permittedAddOns = dbService.permitted_add_on_ids.map(id => addOnId(id));
 	const forms = dbServiceForms.filter(sf => sf.s_id === dbService.id).map(sf => formId(sf.form_id));
-	const result = service(dbService.name, dbService.description, mappedResourceTypes, dbService.duration_minutes, dbService.requires_time_slot, price(dbService.price.toNumber(), currency(dbService.price_currency)), permittedAddOns, forms,serviceId(dbService.id));
-	return result;
+	return service(dbService.name, dbService.description, mappedResourceTypes, dbService.duration_minutes, dbService.requires_time_slot, price(dbService.price.toNumber(), currency(dbService.price_currency)), permittedAddOns, forms, serviceId(dbService.id));
 }
 
 export function toDomainBooking(b: DbBooking): Booking {

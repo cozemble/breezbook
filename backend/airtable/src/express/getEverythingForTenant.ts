@@ -19,7 +19,7 @@ import {
 	ResourceDayAvailability,
 	resourceId,
 	ResourceType,
-	resourceType, serviceId,
+	resourceType,
 	TenantId,
 	time24,
 	timePeriod,
@@ -27,7 +27,7 @@ import {
 	values
 } from '@breezbook/packages-core';
 import { makeBusinessAvailability } from './makeBusinessAvailability.js';
-import { DbResource, DbResourceAvailability, DbResourceBlockedTime } from '../prisma/dbtypes.js';
+import { DbResource, DbResourceAvailability, DbResourceBlockedTime, findManyForTenant } from '../prisma/dbtypes.js';
 import { prismaClient } from '../prisma/client.js';
 import { toDomainAddOn, toDomainBooking, toDomainForm, toDomainService } from '../prisma/dbToDomain.js';
 
@@ -100,46 +100,22 @@ export function makeResourceAvailability(mappedResourceTypes: ResourceType[], re
 
 
 export async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDate, toDate: IsoDate): Promise<EverythingForTenant> {
-	const prisma = prismaClient()
-	const businessHours = await prisma.business_hours.findMany({ where: { tenant_id: tenantId.value } });
-	const blockedTime = await prisma.blocked_time.findMany({
-		where: {
-			tenant_id: tenantId.value,
-			date: {
-				gte: fromDate.value,
-				lte: toDate.value
-			}
-		}
-	});
-	const resources = await prisma.resources.findMany({ where: { tenant_id: tenantId.value } });
-
-	const resourceAvailability = await prisma.resource_availability.findMany({ where: { tenant_id: tenantId.value } });
-	const resourceOutage = await prisma.resource_blocked_time.findMany({
-		where: {
-			tenant_id: tenantId.value,
-			date: {
-				gte: fromDate.value,
-				lte: toDate.value
-			}
-		}
-	});
-	const services = await prisma.services.findMany({ where: { tenant_id: tenantId.value } });
-	const timeSlots = await prisma.time_slots.findMany({ where: { tenant_id: tenantId.value } });
-	const pricingRules = await prisma.pricing_rules.findMany({ where: { tenant_id: tenantId.value } });
-	const resourceTypes = await prisma.resource_types.findMany({ where: { tenant_id: tenantId.value } });
-	const addOns = await prisma.add_on.findMany({ where: { tenant_id: tenantId.value } });
-	const serviceForms = await prisma.service_forms.findMany({ where: { tenant_id: tenantId.value } });
-	const bookings = await prisma.bookings.findMany({
-		where: {
-			tenant_id: tenantId.value,
-			date: {
-				gte: fromDate.value,
-				lte: toDate.value
-			}
-		}
-	});
-	const forms = await prisma.forms.findMany({ where: { tenant_id: tenantId.value } });
-
+	const prisma = prismaClient();
+	const findMany = findManyForTenant(tenantId);
+	const dateWhereOpts = { date: { gte: fromDate.value, lte: toDate.value } };
+	const businessHours = await findMany(prisma.business_hours, {});
+	const blockedTime = await findMany(prisma.blocked_time, dateWhereOpts);
+	const resources = await findMany(prisma.resources, {});
+	const resourceAvailability = await findMany(prisma.resource_availability, {});
+	const resourceOutage = await findMany(prisma.resource_blocked_time, dateWhereOpts);
+	const services = await findMany(prisma.services, {});
+	const timeSlots = await findMany(prisma.time_slots, {});
+	const pricingRules = await findMany(prisma.pricing_rules, {});
+	const resourceTypes = await findMany(prisma.resource_types, {});
+	const addOns = await findMany(prisma.add_on, {});
+	const serviceForms = await findMany(prisma.service_forms, {}, { rank: 'asc' });
+	const bookings = await findMany(prisma.bookings, dateWhereOpts);
+	const forms = await findMany(prisma.forms, {});
 	const tenantSettings = await prisma.tenant_settings.findFirstOrThrow({ where: { tenant_id: tenantId.value } });
 
 	const dates = isoDateFns.listDays(fromDate, toDate);

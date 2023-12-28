@@ -1,4 +1,5 @@
 import { resource_availability, resource_blocked_time, resource_types, resources, services, bookings, add_on, forms, business_hours, blocked_time, order_lines, orders, service_forms } from '@prisma/client';
+import { TenantId } from '@breezbook/packages-core';
 
 export {
 	resource_availability as DbResourceAvailability,
@@ -15,3 +16,27 @@ export {
 	orders as DbOrder,
 	service_forms as DbServiceForm
 };
+
+
+export function findManyForTenant(tenantId: TenantId) {
+	return async function queryEntity<T>(
+		entity: {
+			findMany: (opts: { where: object, orderBy?: object }) => Promise<T[]>
+		},
+		whereOpts: object = {},
+		orderByOpts?: object
+	): Promise<T[]> {
+
+		// Check if orderBy is available
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+		if ((entity as any)?.findMany?.prototype?.hasOwnProperty('orderBy')) {
+			return entity.findMany({
+				where: { tenant_id: tenantId.value, ...whereOpts },
+				orderBy: orderByOpts
+			});
+		} else {
+			return entity.findMany({
+				where: { tenant_id: tenantId.value, ...whereOpts }
+			});
+		}
+	};}
