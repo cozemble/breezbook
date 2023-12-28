@@ -117,7 +117,9 @@ create table pricing_rules
 (
     id         text primary key,
     tenant_id  text references tenants (tenant_id) not null,
-    definition jsonb                               not null
+    definition jsonb                               not null,
+    rank       integer                             not null,
+    active     boolean                             not null
 );
 
 create table tenant_settings

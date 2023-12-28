@@ -1,4 +1,4 @@
-import {JsonSchemaForm} from "../../../src/types.js";
+import { JsonSchemaForm } from '../src/index.js';
 
 export const carwashForm: JsonSchemaForm = {
     "_type": "json.schema.form",

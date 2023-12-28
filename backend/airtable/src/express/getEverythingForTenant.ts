@@ -32,7 +32,7 @@ import { prismaClient } from '../prisma/client.js';
 import {
 	toDomainAddOn,
 	toDomainBooking,
-	toDomainForm,
+	toDomainForm, toDomainPricingRule,
 	toDomainService,
 	toDomainTenantSettings
 } from '../prisma/dbToDomain.js';
@@ -143,5 +143,5 @@ export async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDa
 		mappedForms,
 		periodicStartTime(duration(30)),
 		customerForm ? customerForm.id : null
-	), pricingRules.map(pr => pr.definition as unknown) as PricingRule[], bookings.map(b => toDomainBooking(b, mappedTimeSlots)), toDomainTenantSettings(tenantSettings));
+	), pricingRules.map(pr => toDomainPricingRule(pr)), bookings.map(b => toDomainBooking(b, mappedTimeSlots)), toDomainTenantSettings(tenantSettings));
 }

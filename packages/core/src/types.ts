@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { PriceAdjustment } from './calculatePrice.js';
 
 export interface ValueType<T> {
 	_type: unknown;
@@ -257,7 +258,7 @@ export interface Customer {
 	firstName: string;
 	lastName: string;
 	email: string;
-	formData: unknown
+	formData: unknown;
 }
 
 export function customer(firstName: string, lastName: string, email: string, formData: unknown = null, id = customerId(uuidv4())): Customer {
@@ -701,7 +702,6 @@ export const orderFns = {
 export interface BlockedTime {
 	_type: 'blocked.time';
 	id: Id;
-	tenantId: TenantId;
 	date: IsoDate;
 	start_time_24hr: TwentyFourHourClockTime;
 	end_time_24hr: TwentyFourHourClockTime;
@@ -710,8 +710,41 @@ export interface BlockedTime {
 export interface BusinessHours {
 	_type: 'business.hours';
 	id: Id;
-	tenantId: TenantId;
 	day_of_week: DayOfWeek;
 	start_time_24hr: TwentyFourHourClockTime;
 	end_time_24hr: TwentyFourHourClockTime;
 }
+
+export interface DaysFromTimeSpec {
+	_type: 'days.from.time.spec';
+	relativeTo: 'today';
+	days: number;
+}
+
+export function daysFromToday(days: number): DaysFromTimeSpec {
+	return {
+		_type: 'days.from.time.spec',
+		relativeTo: 'today',
+		days
+	};
+}
+
+export type TimeSpec = DaysFromTimeSpec
+
+export interface TimeBasedPriceAdjustmentSpec {
+	_type: 'time.based.price.adjustment.spec';
+	id: Id;
+	timeSpec: TimeSpec;
+	adjustment: PriceAdjustment;
+}
+
+export function timeBasedPriceAdjustmentSpec(timeSpec: TimeSpec, adjustment: PriceAdjustment, idValue = id(uuidv4())): TimeBasedPriceAdjustmentSpec {
+	return {
+		_type: 'time.based.price.adjustment.spec',
+		id: idValue,
+		timeSpec,
+		adjustment
+	};
+}
+
+export type PricingRuleSpec = TimeBasedPriceAdjustmentSpec

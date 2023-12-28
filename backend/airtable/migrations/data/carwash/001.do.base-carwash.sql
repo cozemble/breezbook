@@ -174,3 +174,54 @@ insert into service_forms(tenant_id, s_id, form_id, rank)
 values ('tenant1', 'mediumCarWash', 'car-details-form', 0);
 insert into service_forms(tenant_id, s_id, form_id, rank)
 values ('tenant1', 'largeCarWash', 'car-details-form', 0);
+
+insert into pricing_rules(id, tenant_id, rank, active, definition) values ('40% more today', 'tenant1', 0, true, '{
+  "_type": "time.based.price.adjustment.spec",
+  "id": {
+    "_type": "id",
+    "value": "40% more today"
+  },
+  "timeSpec": {
+    "_type": "days.from.time.spec",
+    "relativeTo": "today",
+    "days": 0
+  },
+  "adjustment": {
+    "_type": "percentage.based.price.adjustment",
+    "percentage": 0.4
+  }
+}');
+
+insert into pricing_rules(id, tenant_id, rank, active, definition) values ('25% more tomorrow', 'tenant1', 1, true, '{
+  "_type": "time.based.price.adjustment.spec",
+  "id": {
+    "_type": "id",
+    "value": "25% more tomorrow"
+  },
+  "timeSpec": {
+    "_type": "days.from.time.spec",
+    "relativeTo": "today",
+    "days": 1
+  },
+  "adjustment": {
+    "_type": "percentage.based.price.adjustment",
+    "percentage": 0.25
+  }
+}');
+
+insert into pricing_rules(id, tenant_id, rank, active, definition) values ('10% more day after tomorrow', 'tenant1', 2, true, '{
+  "_type": "time.based.price.adjustment.spec",
+  "id": {
+    "_type": "id",
+    "value": "10% more day after tomorrow"
+  },
+  "timeSpec": {
+    "_type": "days.from.time.spec",
+    "relativeTo": "today",
+    "days": 2
+  },
+  "adjustment": {
+    "_type": "percentage.based.price.adjustment",
+    "percentage": 0.1
+  }
+}');

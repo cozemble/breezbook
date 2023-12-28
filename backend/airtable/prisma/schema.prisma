@@ -107,6 +107,8 @@ model pricing_rules {
   id         String  @id
   tenant_id  String
   definition Json
+  rank       Int
+  active     Boolean
   tenants    tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
