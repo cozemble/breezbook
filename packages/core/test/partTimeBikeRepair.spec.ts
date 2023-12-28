@@ -19,7 +19,7 @@ import {
     timePeriod,
     timezone
 } from "../src/types.js";
-import {calculateAvailability} from "../src/calculateAvailability.js";
+import {calculateAvailability} from '../src/index.js';
 
 const nineAm = time24('09:00');
 const nineTen = time24('09:10');
@@ -45,10 +45,10 @@ const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(isoDate("2021-05-26"), nineToTen),
 ]))
 
-const bicycleRepair = service('Bicycle Repair','Bicycle Repair', [staff], 5, false, price(3500, GBP), []);
+const bicycleRepair = service('Bicycle Repair','Bicycle Repair', [staff], 5, false, price(3500, GBP), [], []);
 const services = [bicycleRepair];
 
-const config = businessConfiguration(availability, resourceAvailability, services, [],[], [],discreteStartTimes(morningCheckInTimes));
+const config = businessConfiguration(availability, resourceAvailability, services, [],[], [],discreteStartTimes(morningCheckInTimes), null);
 
 const mike = customer('Mike', 'Hogan', 'mike@email.com');
 const mete = customer('Mete', 'Bora', 'mete@email.com');

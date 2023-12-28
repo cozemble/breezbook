@@ -67,15 +67,14 @@ model customers {
 }
 
 model forms {
-  id                                        String            @id
-  tenant_id                                 String
-  name                                      String
-  description                               String?
-  definition                                Json
-  tenants                                   tenants           @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  services_services_customer_form_idToforms services[]        @relation("services_customer_form_idToforms")
-  services_services_form_idToforms          services[]        @relation("services_form_idToforms")
-  tenant_settings                           tenant_settings[]
+  id              String            @id
+  tenant_id       String
+  name            String
+  description     String?
+  definition      Json
+  tenants         tenants           @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  service_forms   service_forms[]
+  tenant_settings tenant_settings[]
 }
 
 model order_lines {
@@ -159,23 +158,20 @@ model schemaversion {
 }
 
 model services {
-  id                                     String     @id
-  tenant_id                              String
-  service_id                             String
-  name                                   String
-  description                            String
-  duration_minutes                       Int
-  price                                  Decimal    @db.Decimal
-  price_currency                         String
-  permitted_add_on_ids                   String[]
-  resource_types_required                String[]
-  requires_time_slot                     Boolean
-  form_id                                String?
-  customer_form_id                       String?
-  bookings                               bookings[]
-  forms_services_customer_form_idToforms forms?     @relation("services_customer_form_idToforms", fields: [customer_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  forms_services_form_idToforms          forms?     @relation("services_form_idToforms", fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                                tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id                      String          @id
+  tenant_id               String
+  service_id              String
+  name                    String
+  description             String
+  duration_minutes        Int
+  price                   Decimal         @db.Decimal
+  price_currency          String
+  permitted_add_on_ids    String[]
+  resource_types_required String[]
+  requires_time_slot      Boolean
+  bookings                bookings[]
+  service_forms           service_forms[]
+  tenants                 tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tenant_settings {
@@ -201,6 +197,7 @@ model tenants {
   resource_blocked_time resource_blocked_time[]
   resource_types        resource_types[]
   resources             resources[]
+  service_forms         service_forms[]
   services              services[]
   tenant_settings       tenant_settings?
   time_slots            time_slots[]
@@ -215,4 +212,16 @@ model time_slots {
   tag             String?
   order_lines     order_lines[]
   tenants         tenants       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model service_forms {
+  tenant_id String
+  s_id      String
+  form_id   String
+  rank      Int?
+  forms     forms    @relation(fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services  services @relation(fields: [s_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants   tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, s_id, form_id])
 }

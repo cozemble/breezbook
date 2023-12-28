@@ -1,22 +1,25 @@
-import { DbAddOn, DbBooking, DbForm, DbService } from './dbtypes.js';
+import { DbAddOn, DbBooking, DbForm, DbService, DbServiceForm } from './dbtypes.js';
 import {
 	addOn,
 	AddOn as DomainAddOn,
-	addOnId, Booking,
-	currency, Form, formId,
+	addOnId,
+	Booking,
+	currency,
+	Form,
+	formId,
 	mandatory,
 	price,
 	ResourceType,
 	service,
-	Service as DomainService, serviceId
+	Service as DomainService,
+	serviceId
 } from '@breezbook/packages-core';
 
-export function toDomainService(s: DbService, resourceTypes: ResourceType[]): DomainService {
-	const mappedResourceTypes = s.resource_types_required.map(rt => mandatory(resourceTypes.find(rtt => rtt.value === rt), `No resource type ${rt}`));
-	const permittedAddOns = s.permitted_add_on_ids.map(id => addOnId(id));
-	const result = service(s.name, s.description, mappedResourceTypes, s.duration_minutes, s.requires_time_slot, price(s.price.toNumber(), currency(s.price_currency)), permittedAddOns, serviceId(s.id));
-	result.serviceFormId = s.form_id ? formId(s.form_id) : undefined;
-	result.customerFormId = s.customer_form_id ? formId(s.customer_form_id) : undefined;
+export function toDomainService(dbService: DbService, resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[]): DomainService {
+	const mappedResourceTypes = dbService.resource_types_required.map(rt => mandatory(resourceTypes.find(rtt => rtt.value === rt), `No resource type ${rt}`));
+	const permittedAddOns = dbService.permitted_add_on_ids.map(id => addOnId(id));
+	const forms = dbServiceForms.filter(sf => sf.s_id === dbService.id).map(sf => formId(sf.form_id));
+	const result = service(dbService.name, dbService.description, mappedResourceTypes, dbService.duration_minutes, dbService.requires_time_slot, price(dbService.price.toNumber(), currency(dbService.price_currency)), permittedAddOns, forms,serviceId(dbService.id));
 	return result;
 }
 

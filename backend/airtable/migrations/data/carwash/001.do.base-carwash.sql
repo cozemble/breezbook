@@ -75,7 +75,10 @@ values ('car-details-form',
         'Car details',
         '{
           "_type": "json.schema.form",
-          "id": {"_type": "form.id", "value": "car-details-form"},
+          "id": {
+            "_type": "form.id",
+            "value": "car-details-form"
+          },
           "name": "Car Details Form",
           "schema": {
             "$schema": "http://json-schema.org/draft-07/schema#",
@@ -98,7 +101,12 @@ values ('car-details-form',
                 "description": "The manufacturing year of the car."
               }
             },
-            "required": ["make", "model", "colour", "year"],
+            "required": [
+              "make",
+              "model",
+              "colour",
+              "year"
+            ],
             "additionalProperties": false
           }
         }
@@ -142,19 +150,27 @@ values ('contact-details-form',
           }
         }');
 
-insert into tenant_settings(tenant_id, customer_form_id) values('tenant1', 'contact-details-form');
+insert into tenant_settings(tenant_id, customer_form_id)
+values ('tenant1', 'contact-details-form');
 
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
-                     permitted_add_on_ids, resource_types_required, requires_time_slot, form_id, customer_form_id)
+                     permitted_add_on_ids, resource_types_required, requires_time_slot)
 values ('smallCarWash', 'tenant1', 'service#1', 'Small Car wash', 'Small Car wash', 30, 1000, 'GBP',
-        array ['addOn#1', 'addOn#2'], array ['vanResourceType'], true, 'car-details-form', 'contact-details-form');
+        array ['addOn#1', 'addOn#2'], array ['vanResourceType'], true);
 
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
-                     permitted_add_on_ids, resource_types_required, requires_time_slot,  form_id, customer_form_id)
+                     permitted_add_on_ids, resource_types_required, requires_time_slot)
 values ('mediumCarWash', 'tenant1', 'service#2', 'Medium Car wash', 'Medium Car wash', 45, 1500, 'GBP',
-        array ['addOn#1', 'addOn#2'], array ['vanResourceType'], true, 'car-details-form', 'contact-details-form');
+        array ['addOn#1', 'addOn#2'], array ['vanResourceType'], true);
 
 insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
-                     permitted_add_on_ids, resource_types_required, requires_time_slot, form_id, customer_form_id)
+                     permitted_add_on_ids, resource_types_required, requires_time_slot)
 values ('largeCarWash', 'tenant1', 'service#3', 'Large Car wash', 'Large Car wash', 60, 2000, 'GBP',
-        array ['addOn#1', 'addOn#2', 'addOn#3', 'addOn#4'], array ['vanResourceType'], true, 'car-details-form', 'contact-details-form');
+        array ['addOn#1', 'addOn#2', 'addOn#3', 'addOn#4'], array ['vanResourceType'], true);
+
+insert into service_forms(tenant_id, s_id, form_id, rank)
+values ('tenant1', 'smallCarWash', 'car-details-form', 0);
+insert into service_forms(tenant_id, s_id, form_id, rank)
+values ('tenant1', 'mediumCarWash', 'car-details-form', 0);
+insert into service_forms(tenant_id, s_id, form_id, rank)
+values ('tenant1', 'largeCarWash', 'car-details-form', 0);

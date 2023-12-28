@@ -46,15 +46,3 @@ export async function withAdminPgClient<T>(f: (client: pg.PoolClient) => Promise
     client.release()
   }
 }
-
-export async function inTxn<T>(client: pg.PoolClient, action: () => Promise<T>): Promise<T> {
-  await client.query('BEGIN')
-  try {
-    const t = await action()
-    await client.query('COMMIT')
-    return t
-  } catch (e) {
-    await client.query('ROLLBACK')
-    throw e
-  }
-}

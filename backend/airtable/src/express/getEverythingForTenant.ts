@@ -19,7 +19,7 @@ import {
 	ResourceDayAvailability,
 	resourceId,
 	ResourceType,
-	resourceType,
+	resourceType, serviceId,
 	TenantId,
 	time24,
 	timePeriod,
@@ -128,6 +128,7 @@ export async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDa
 	const pricingRules = await prisma.pricing_rules.findMany({ where: { tenant_id: tenantId.value } });
 	const resourceTypes = await prisma.resource_types.findMany({ where: { tenant_id: tenantId.value } });
 	const addOns = await prisma.add_on.findMany({ where: { tenant_id: tenantId.value } });
+	const serviceForms = await prisma.service_forms.findMany({ where: { tenant_id: tenantId.value } });
 	const bookings = await prisma.bookings.findMany({
 		where: {
 			tenant_id: tenantId.value,
@@ -151,7 +152,7 @@ export async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDa
 	return everythingForTenant(businessConfiguration(
 		makeBusinessAvailability(businessHours, blockedTime, dates),
 		makeResourceAvailability(mappedResourceTypes, resources, resourceAvailability, resourceOutage, dates),
-		services.map(s => toDomainService(s, mappedResourceTypes)),
+		services.map(s => toDomainService(s, mappedResourceTypes, serviceForms)),
 		mappedAddOns,
 		timeSlots.map(ts => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description)),
 		mappedForms,

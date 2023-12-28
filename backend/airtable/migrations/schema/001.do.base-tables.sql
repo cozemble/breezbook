@@ -91,9 +91,16 @@ create table services
     price_currency          text                                not null,
     permitted_add_on_ids    text[]                              not null,
     resource_types_required text[]                              not null,
-    requires_time_slot      boolean                             not null,
-    form_id                 text                                null default null references forms (id),
-    customer_form_id        text                                null default null references forms (id)
+    requires_time_slot      boolean                             not null
+);
+
+create table service_forms
+(
+    tenant_id text references tenants (tenant_id) not null,
+    s_id      text references services (id),
+    form_id   text references forms (id),
+    rank     integer,
+    primary key (tenant_id, s_id, form_id)
 );
 
 create table time_slots

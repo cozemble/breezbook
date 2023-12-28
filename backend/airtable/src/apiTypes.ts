@@ -51,8 +51,7 @@ export interface ServiceSummary {
     name: string
     durationMinutes: number,
     description: string,
-    form?: Form,
-    customerForm?: Form,
+    forms: Form[],
 }
 
 export interface AddOnSummary {
