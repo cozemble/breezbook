@@ -1,30 +1,42 @@
 # BreezBook
 
-BreezBook is a white-label booking app that can be used by customers to book appointments with the business.
+BreezBook is an open-source white-label booking app that can be used by customers to book appointments with a business.
+It will focus only on the booking experience, integrating with low-code tools like Airtable/SmartSuite etc to manage the
+remaining processes of the business.
+
+## Why BreezBook?
+
+Existing booking apps like Acuity offer pretty vanilla booking experiences. Their forums are full of people asking for
+features that would delight their customers during the booking process.
+
+BreezBook will focus hard on best-in-class booking experiences, and integrate with low-code tools like
+Airtable/SmartSuite etc. to manage the remaining processes of the business.
 
 ## Features
-  - White-label for multiple tenants
-  - Services for a tenant
+
+- White-label for multiple tenants
+- Services for a tenant
     - Multiple services for a tenant
     - Time slots
        <!-- TODO Different services may share the same time slots -->
     - Accessories
     - Extra customer details specific to the service
-    
-  - Cart system for multiple bookings or services
-  - Payment
-  - Custom themes
+
+- Cart system for multiple bookings or services
+- Payment
+- Custom themes
     - Automatic theme detection from the tenant's website
 
 ## Tech Stack
-  - Turborepo
-  - TypeScript
-  - SvelteKit
-  - TailwindCSS + DaisyUI
-  - Stripe
-  - Vercel
-  - Airtable
-  - AI
+
+- Turborepo
+- TypeScript
+- SvelteKit
+- TailwindCSS + DaisyUI
+- Stripe
+- Vercel
+- Airtable
+- AI
 
 ## What's inside?
 
@@ -64,16 +76,19 @@ pnpm dev
 
 ### Remote Caching
 
-Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+Turborepo can use a technique known as [Remote Caching](https://turbo.build/repo/docs/core-concepts/remote-caching) to
+share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup), then enter the following commands:
+By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't
+have an account you can [create one](https://vercel.com/signup), then enter the following commands:
 
 ```
 cd my-turborepo
 npx turbo login
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+This will authenticate the Turborepo CLI with
+your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
 
 Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
 
