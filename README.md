@@ -14,18 +14,18 @@ Airtable/SmartSuite etc. to manage the remaining processes of the business.
 
 ## Features
 
-    - White-label for multiple tenants
-    - Services for a tenant
-    - Multiple services for a tenant
-    - Time slots
-       <!-- TODO Different services may share the same time slots -->
-    - Accessories
-    - Extra customer details specific to the service
-    - Cart system for multiple bookings or services
-    - Payment
-    - Dynamic pricing
-    - Custom themes
-        - Automatic theme detection from the tenant's website
+  - White-label for multiple tenants
+  - Services for a tenant
+  - Multiple services for a tenant
+  - Time slots
+     <!-- TODO Different services may share the same time slots -->
+  - Accessories
+  - Extra customer details specific to the service
+  - Cart system for multiple bookings or services
+  - Payment
+  - Dynamic pricing
+  - Custom themes
+      - Automatic theme detection from the tenant's website
 
 ## Tech Stack
 
