@@ -20,7 +20,7 @@ import {
 	resourceId,
 	ResourceType,
 	resourceType,
-	TenantId,
+	TenantId, TenantSettings,
 	time24,
 	timePeriod,
 	timeslotSpec,
@@ -29,21 +29,29 @@ import {
 import { makeBusinessAvailability } from './makeBusinessAvailability.js';
 import { DbResource, DbResourceAvailability, DbResourceBlockedTime, findManyForTenant } from '../prisma/dbtypes.js';
 import { prismaClient } from '../prisma/client.js';
-import { toDomainAddOn, toDomainBooking, toDomainForm, toDomainService } from '../prisma/dbToDomain.js';
+import {
+	toDomainAddOn,
+	toDomainBooking,
+	toDomainForm,
+	toDomainService,
+	toDomainTenantSettings
+} from '../prisma/dbToDomain.js';
 
 export interface EverythingForTenant {
 	_type: 'everything.for.tenant';
 	businessConfiguration: BusinessConfiguration;
 	pricingRules: PricingRule[];
 	bookings: Booking[];
+	tenantSettings: TenantSettings
 }
 
-export function everythingForTenant(businessConfiguration: BusinessConfiguration, pricingRules: PricingRule[], bookings: Booking[]): EverythingForTenant {
+export function everythingForTenant(businessConfiguration: BusinessConfiguration, pricingRules: PricingRule[], bookings: Booking[], tenantSettings: TenantSettings): EverythingForTenant {
 	return {
 		_type: 'everything.for.tenant',
 		businessConfiguration,
 		pricingRules,
-		bookings
+		bookings,
+		tenantSettings: tenantSettings
 	};
 }
 
@@ -134,5 +142,5 @@ export async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDa
 		mappedForms,
 		periodicStartTime(duration(30)),
 		customerForm ? customerForm.id : null
-	), pricingRules.map(pr => pr.definition as unknown) as PricingRule[], bookings.map(b => toDomainBooking(b)));
+	), pricingRules.map(pr => pr.definition as unknown) as PricingRule[], bookings.map(b => toDomainBooking(b)), toDomainTenantSettings(tenantSettings));
 }

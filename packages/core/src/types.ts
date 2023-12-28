@@ -22,6 +22,18 @@ export function tenantId(value: string): TenantId {
 	};
 }
 
+export interface TenantSettings {
+	_type: 'tenant.settings';
+	customerFormId: FormId | null;
+}
+
+export function tenantSettings(customerFormId: FormId | null): TenantSettings {
+	return {
+		_type: 'tenant.settings',
+		customerFormId
+	};
+}
+
 export interface IsoDate extends ValueType<string> {
 	_type: 'iso.date';
 }
@@ -227,16 +239,16 @@ export interface Customer {
 	firstName: string;
 	lastName: string;
 	email: string;
-	formId?: FormId;
-	formData?: unknown;
+	formData: unknown
 }
 
-export function customer(firstName: string, lastName: string, email: string, id = customerId(uuidv4())): Customer {
+export function customer(firstName: string, lastName: string, email: string, formData: unknown = null, id = customerId(uuidv4())): Customer {
 	return {
 		id,
 		firstName,
 		lastName,
-		email
+		email,
+		formData
 	};
 }
 
@@ -581,7 +593,7 @@ export interface OrderLine {
 	addOnIds: AddOnId[];
 	date: IsoDate;
 	slot: BookableSlot;
-	serviceFormData?: unknown;
+	serviceFormData: unknown[];
 }
 
 export interface LimitedUsages {
@@ -620,7 +632,7 @@ export interface PercentageCoupon {
 	percentage: number;
 }
 
-export function orderLine(serviceId: ServiceId, addOnIds: AddOnId[], date: IsoDate, slot: BookableSlot, serviceFormData?: unknown): OrderLine {
+export function orderLine(serviceId: ServiceId, addOnIds: AddOnId[], date: IsoDate, slot: BookableSlot, serviceFormData: unknown[]): OrderLine {
 	return {
 		_type: 'order.line',
 		serviceId,

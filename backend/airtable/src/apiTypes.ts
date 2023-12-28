@@ -1,43 +1,43 @@
-import {Form} from "@breezbook/packages-core";
+import { Form } from '@breezbook/packages-core';
 
 export interface TimeSlotAvailability {
-    _type: 'time.slot.availability'
-    startTime24hr: string
-    endTime24hr: string
-    label: string
-    priceWithNoDecimalPlaces: number
-    priceCurrency: string
+	_type: 'time.slot.availability';
+	startTime24hr: string;
+	endTime24hr: string;
+	label: string;
+	priceWithNoDecimalPlaces: number;
+	priceCurrency: string;
 }
 
 export function timeSlotAvailability(startTime24hr: string, endTime24hr: string, label: string, priceWithNoDecimalPlaces: number,
-                                     priceCurrency: string
+																		 priceCurrency: string
 ): TimeSlotAvailability {
-    return {
-        _type: 'time.slot.availability',
-        startTime24hr,
-        endTime24hr,
-        label,
-        priceWithNoDecimalPlaces,
-        priceCurrency
-    }
+	return {
+		_type: 'time.slot.availability',
+		startTime24hr,
+		endTime24hr,
+		label,
+		priceWithNoDecimalPlaces,
+		priceCurrency
+	};
 }
 
 export interface ExactTimeAvailability {
-    _type: 'exact.time.availability'
-    time24hr: string
-    priceWithNoDecimalPlaces: number
-    priceCurrency: string
+	_type: 'exact.time.availability';
+	time24hr: string;
+	priceWithNoDecimalPlaces: number;
+	priceCurrency: string;
 }
 
 export function exactTimeAvailability(time24hr: string, priceWithNoDecimalPlaces: number,
-                                      priceCurrency: string
+																			priceCurrency: string
 ): ExactTimeAvailability {
-    return {
-        _type: 'exact.time.availability',
-        time24hr,
-        priceWithNoDecimalPlaces,
-        priceCurrency
-    }
+	return {
+		_type: 'exact.time.availability',
+		time24hr,
+		priceWithNoDecimalPlaces,
+		priceCurrency
+	};
 }
 
 export type Availability = TimeSlotAvailability
@@ -47,44 +47,45 @@ export type Availability = TimeSlotAvailability
 export type Slots = Record<string, Availability[]>;
 
 export interface ServiceSummary {
-    id: string
-    name: string
-    durationMinutes: number,
-    description: string,
-    forms: Form[],
+	id: string
+	name: string
+	durationMinutes: number,
+	description: string,
+	forms: Form[],
 }
 
 export interface AddOnSummary {
-    id: string
-    name: string
-    priceWithNoDecimalPlaces: number
-    priceCurrency: string
-    requiresQuantity: boolean
+	id: string;
+	name: string;
+	priceWithNoDecimalPlaces: number;
+	priceCurrency: string;
+	requiresQuantity: boolean;
 }
 
 export interface AvailabilityResponse {
-    slots: Slots
-    serviceSummary: ServiceSummary
-    addOns: AddOnSummary[]
+	slots: Slots;
+	serviceSummary: ServiceSummary;
+	addOns: AddOnSummary[];
 }
 
 export function emptyAvailabilityResponse(serviceSummary: ServiceSummary, addOns: AddOnSummary[]): AvailabilityResponse {
-    return {serviceSummary, slots: {}, addOns}
+	return { serviceSummary, slots: {}, addOns };
 }
 
 export interface OrderCreatedResponse {
-    _type: 'order.created.response'
-    orderId: string
-    customerId: string
-    bookingIds: string[]
-    orderLineIds: string[]
+	_type: 'order.created.response';
+	orderId: string;
+	customerId: string;
+	bookingIds: string[];
+	orderLineIds: string[];
 }
 
 export interface ErrorResponse {
-    _type: 'error.response'
-    error: string
+	_type: 'error.response';
+	errorCode: string;
+	errorMessage?: string;
 }
 
-export function errorResponse(error: string): ErrorResponse {
-    return {_type: 'error.response', error}
+export function errorResponse(errorCode: string, errorMessage?: string): ErrorResponse {
+	return { _type: 'error.response', errorCode, errorMessage };
 }

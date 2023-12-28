@@ -1,4 +1,4 @@
-import { DbAddOn, DbBooking, DbForm, DbService, DbServiceForm } from './dbtypes.js';
+import { DbAddOn, DbBooking, DbForm, DbService, DbServiceForm, DbTenantSettings } from './dbtypes.js';
 import {
 	addOn,
 	AddOn as DomainAddOn,
@@ -12,7 +12,7 @@ import {
 	ResourceType,
 	service,
 	Service as DomainService,
-	serviceId
+	serviceId, tenantSettings, TenantSettings
 } from '@breezbook/packages-core';
 
 export function toDomainService(dbService: DbService, resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[]): DomainService {
@@ -32,4 +32,8 @@ export function toDomainAddOn(a: DbAddOn): DomainAddOn {
 
 export function toDomainForm(f: DbForm): Form {
 	return f.definition as unknown as Form;
+}
+
+export function toDomainTenantSettings(settings:DbTenantSettings):TenantSettings{
+	return tenantSettings(settings.customer_form_id ? formId(settings.customer_form_id) : null);
 }
