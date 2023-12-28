@@ -99,7 +99,7 @@ create table service_forms
     tenant_id text references tenants (tenant_id) not null,
     s_id      text references services (id),
     form_id   text references forms (id),
-    rank     integer,
+    rank      integer,
     primary key (tenant_id, s_id, form_id)
 );
 
@@ -162,7 +162,7 @@ create table order_lines
 
 create table bookings
 (
-    id              text primary key default uuid_generate_v4(),
+    id              text primary key                         default uuid_generate_v4(),
     tenant_id       text references tenants (tenant_id) not null,
     customer_id     text references customers (id)      not null,
     service_id      text references services (id)       not null,
@@ -170,5 +170,5 @@ create table bookings
     date            text                                not null,
     start_time_24hr text                                not null,
     end_time_24hr   text                                not null,
-    definition      jsonb                               not null
+    time_slot_id    text                                null default null references time_slots (id)
 )

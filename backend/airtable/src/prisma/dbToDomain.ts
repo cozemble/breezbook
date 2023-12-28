@@ -1,18 +1,18 @@
-import { DbAddOn, DbBooking, DbForm, DbService, DbServiceForm, DbTenantSettings } from './dbtypes.js';
+import { DbAddOn, DbBooking, DbForm, DbService, DbServiceForm, DbTenantSettings, DbTimeSlot } from './dbtypes.js';
 import {
 	addOn,
 	AddOn as DomainAddOn,
-	addOnId,
+	addOnId, booking,
 	Booking,
-	currency,
+	currency, customerId, exactTimeAvailability,
 	Form,
-	formId,
+	formId, isoDate,
 	mandatory,
 	price,
 	ResourceType,
 	service,
 	Service as DomainService,
-	serviceId, tenantSettings, TenantSettings
+	serviceId, tenantSettings, TenantSettings, time24, TimeslotSpec
 } from '@breezbook/packages-core';
 
 export function toDomainService(dbService: DbService, resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[]): DomainService {
@@ -22,8 +22,9 @@ export function toDomainService(dbService: DbService, resourceTypes: ResourceTyp
 	return service(dbService.name, dbService.description, mappedResourceTypes, dbService.duration_minutes, dbService.requires_time_slot, price(dbService.price.toNumber(), currency(dbService.price_currency)), permittedAddOns, forms, serviceId(dbService.id));
 }
 
-export function toDomainBooking(b: DbBooking): Booking {
-	return b.definition as unknown as Booking;
+export function toDomainBooking(b: DbBooking, timeslots:TimeslotSpec[]): Booking {
+	const slot = b.time_slot_id ? mandatory(timeslots.find(ts => ts.id.value === b.time_slot_id), `No timeslot with id ${b.time_slot_id}`) : exactTimeAvailability(time24(b.start_time_24hr))
+	return booking(customerId(b.customer_id), serviceId(b.service_id), isoDate(b.date), slot)
 }
 
 export function toDomainAddOn(a: DbAddOn): DomainAddOn {

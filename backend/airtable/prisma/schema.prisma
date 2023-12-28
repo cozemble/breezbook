@@ -28,7 +28,7 @@ model blocked_time {
 }
 
 model bookings {
-  id              String    @id @default(dbgenerated("uuid_generate_v4()"))
+  id              String      @id @default(dbgenerated("uuid_generate_v4()"))
   tenant_id       String
   customer_id     String
   service_id      String
@@ -36,11 +36,12 @@ model bookings {
   date            String
   start_time_24hr String
   end_time_24hr   String
-  definition      Json
-  customers       customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  orders          orders    @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services        services  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants         tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  time_slot_id    String?
+  customers       customers   @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders          orders      @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services        services    @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants         tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  time_slots      time_slots? @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model business_hours {
@@ -210,6 +211,7 @@ model time_slots {
   start_time_24hr String        @db.VarChar(10)
   end_time_24hr   String        @db.VarChar(10)
   tag             String?
+  bookings        bookings[]
   order_lines     order_lines[]
   tenants         tenants       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }

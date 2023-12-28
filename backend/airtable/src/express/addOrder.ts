@@ -1,6 +1,17 @@
 import * as express from 'express';
 import { orderBody, tenantIdParam, withTwoRequestParams } from '../infra/functionalExpress.js';
-import { calcSlotPeriod, Form, FormId, mandatory, Order, orderFns, TenantId } from '@breezbook/packages-core';
+import {
+	booking,
+	Booking, bookingId,
+	calcSlotPeriod,
+	calculateAvailability, customerId, DayAndTimePeriod,
+	Form,
+	FormId,
+	mandatory,
+	Order,
+	orderFns,
+	TenantId
+} from '@breezbook/packages-core';
 import { EverythingForTenant, getEverythingForTenant } from './getEverythingForTenant.js';
 import { prismaClient } from '../prisma/client.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -8,6 +19,9 @@ import { Prisma } from '@prisma/client';
 import { DbBooking, DbOrderLine } from '../prisma/dbtypes.js';
 import { errorResponse } from '../apiTypes.js';
 import Ajv from 'ajv';
+import {
+	applyBookingsToResourceAvailability
+} from '@breezbook/packages-core/dist/applyBookingsToResourceAvailability.js';
 
 // @ts-ignore
 const ajv = new Ajv({ allErrors: true });
@@ -16,7 +30,8 @@ export const addOrderErrorCodes = {
 	customerFormMissing: 'addOrder.customer.form.missing',
 	customerFormInvalid: 'addOrder.customer.form.invalid',
 	serviceFormMissing: 'addOrder.service.form.missing',
-	serviceFormInvalid: 'addOrder.service.form.invalid'
+	serviceFormInvalid: 'addOrder.service.form.invalid',
+	noAvailability: 'addOrder.no.availability'
 };
 
 function validateForm(forms: Form[], formId: FormId, formData: unknown): string | null {
@@ -49,7 +64,7 @@ async function withValidationsPerformed(everythingForTenant: EverythingForTenant
 	for (let i = 0; i < order.lines.length; i++) {
 		const line = order.lines[i];
 		const service = mandatory(everythingForTenant.businessConfiguration.services.find(s => s.id.value === line.serviceId.value), `Service with id ${line.serviceId.value} not found`);
-		for(let serviceFormIndex = 0; serviceFormIndex < service.serviceFormIds.length; serviceFormIndex++) {
+		for (let serviceFormIndex = 0; serviceFormIndex < service.serviceFormIds.length; serviceFormIndex++) {
 			const serviceFormId = service.serviceFormIds[serviceFormIndex];
 			const formData = line.serviceFormData[serviceFormIndex] as unknown;
 			if (!formData) {
@@ -61,6 +76,18 @@ async function withValidationsPerformed(everythingForTenant: EverythingForTenant
 				res.status(400).send(errorResponse(addOrderErrorCodes.serviceFormInvalid, formValidationError + ` for service ${service.name} in order line ${i}`));
 				return;
 			}
+		}
+	}
+	const projectedBookings:Booking[] = [...everythingForTenant.bookings]
+	for (let i = 0; i < order.lines.length; i++) {
+		const line = order.lines[i];
+		const projectedBooking = booking(order.customer.id, line.serviceId, line.date, line.slot);
+		projectedBookings.push(projectedBooking);
+		try {
+			applyBookingsToResourceAvailability(everythingForTenant.businessConfiguration.resourceAvailability, projectedBookings, everythingForTenant.businessConfiguration.services);
+		} catch (e:unknown) {
+			res.status(400).send(errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.serviceId.value} in order line ${i}`));
+			return;
 		}
 	}
 
@@ -110,7 +137,6 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 				date: line.date.value
 			}
 		}));
-		const bookingDefinition = { 'to': 'do' };
 		lineInserts.push(prisma.bookings.create({
 			data: {
 				tenants: {
@@ -125,10 +151,12 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 				customers: {
 					connect: { tenant_id_email: { tenant_id, email } }
 				},
+				time_slots: {
+					connect: line.slot._type === 'timeslot.spec' ? { id: line.slot.id.value } : undefined,
+				},
 				date: line.date.value,
 				start_time_24hr: servicePeriod.from.value,
 				end_time_24hr: servicePeriod.to.value,
-				definition: bookingDefinition
 			}
 		}));
 	}

@@ -12,7 +12,6 @@ import {
     DiscreteStartTimes,
     exactTimeAvailability,
     ExactTimeAvailability,
-    isoDate,
     IsoDate,
     isoDateFns,
     FungibleResource,

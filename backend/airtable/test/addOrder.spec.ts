@@ -94,13 +94,7 @@ describe('with a migrated database', () => {
 			year: 2022
 		}])]);
 
-		const fetched = await fetch(`http://localhost:${port}/api/tenant1/orders`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(twoServices)
-		});
+		const fetched = await postOrder(twoServices);
 		if (!fetched.ok) {
 			console.error(await fetched.text());
 			throw new Error(`Failed to add order`);
@@ -110,6 +104,32 @@ describe('with a migrated database', () => {
 		expect(json.customerId).toBeDefined();
 		expect(json.bookingIds.length).toBe(2);
 		expect(json.orderLineIds.length).toBe(2);
+	});
 
+	test('error message when no availability', async () => {
+		const mike = customer('Mike', 'Hogan', 'mike@email.com', {
+			phone: '23678482376',
+			firstLineOfAddress: '1 Main Street',
+			'postcode': 'SW1'
+		});
+		const theOrder = order(mike, [orderLine(carwash.smallCarWash.id, [carwash.wax.id], tomorrow, carwash.fourToSix, [{
+			make: 'Ford',
+			model: 'Focus',
+			colour: 'Black',
+			year: 2021
+		}])]);
+
+		const response1 = await postOrder(theOrder);
+		expect(response1.status).toBe(200);
+
+		const response2 = await postOrder(theOrder);
+		expect(response2.status).toBe(200);
+
+		const response3 = await postOrder(theOrder);
+
+		expect(response3.status).toBe(400);
+		const json = await response3.json() as ErrorResponse;
+		expect(json.errorCode).toBe(addOrderErrorCodes.noAvailability);
+		expect(json.errorMessage).toBeDefined();
 	});
 });

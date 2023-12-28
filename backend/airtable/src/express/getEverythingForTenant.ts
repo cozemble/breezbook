@@ -7,7 +7,7 @@ import {
 	dayAndTimePeriodFns,
 	duration,
 	formId,
-	FungibleResource,
+	FungibleResource, id,
 	isoDate,
 	IsoDate,
 	isoDateFns,
@@ -132,15 +132,16 @@ export async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDa
 	const mappedForms = forms.map(f => toDomainForm(f));
 	const customerFormId = tenantSettings.customer_form_id;
 	const customerForm = customerFormId ? mandatory(mappedForms.find(f => values.isEqual(f.id, formId(customerFormId))), `No customer form ${tenantSettings.customer_form_id}`) : undefined;
+	const mappedTimeSlots = timeSlots.map(ts => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description, id(ts.id)));
 
 	return everythingForTenant(businessConfiguration(
 		makeBusinessAvailability(businessHours, blockedTime, dates),
 		makeResourceAvailability(mappedResourceTypes, resources, resourceAvailability, resourceOutage, dates),
 		services.map(s => toDomainService(s, mappedResourceTypes, serviceForms)),
 		mappedAddOns,
-		timeSlots.map(ts => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description)),
+		mappedTimeSlots,
 		mappedForms,
 		periodicStartTime(duration(30)),
 		customerForm ? customerForm.id : null
-	), pricingRules.map(pr => pr.definition as unknown) as PricingRule[], bookings.map(b => toDomainBooking(b)), toDomainTenantSettings(tenantSettings));
+	), pricingRules.map(pr => pr.definition as unknown) as PricingRule[], bookings.map(b => toDomainBooking(b, mappedTimeSlots)), toDomainTenantSettings(tenantSettings));
 }

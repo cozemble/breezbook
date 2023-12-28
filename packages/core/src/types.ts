@@ -75,6 +75,24 @@ export const isoDateFns = {
 	},
 	dayOfWeek(date: IsoDate) {
 		return new Date(date.value).toLocaleDateString('en-GB', { weekday: 'long' }) as DayOfWeek;
+	},
+	gte(date1: IsoDate, date2: IsoDate) {
+		return date1.value >= date2.value;
+	},
+	lte(date1: IsoDate, date2: IsoDate) {
+		return date1.value <= date2.value;
+	},
+	gt(date1: IsoDate, date2: IsoDate) {
+		return date1.value > date2.value;
+	},
+	lt(date1: IsoDate, date2: IsoDate) {
+		return date1.value < date2.value;
+	},
+	max(...dates: IsoDate[]) {
+		return dates.reduce((max, date) => this.gte(date, max) ? date : max, dates[0]);
+	},
+	min(...dates: IsoDate[]) {
+		return dates.reduce((min, date) => this.lte(date, min) ? date : min, dates[0]);
 	}
 };
 
@@ -674,8 +692,8 @@ export function order(customer: Customer, lines: OrderLine[], id = orderId(uuidv
 export const orderFns = {
 	getOrderDateRange(order: Order): { fromDate: IsoDate, toDate: IsoDate } {
 		const allDates = order.lines.map(line => line.date);
-		const fromDate = allDates.reduce((min, date) => isoDateFns.isEqual(date, min) || isoDateFns.isEqual(date, min) ? min : isoDateFns.isEqual(date, min) ? min : date, allDates[0]);
-		const toDate = allDates.reduce((max, date) => isoDateFns.isEqual(date, max) || isoDateFns.isEqual(date, max) ? max : isoDateFns.isEqual(date, max) ? max : date, allDates[0]);
+		const fromDate = isoDateFns.min(...allDates);
+		const toDate = isoDateFns.max(...allDates);
 		return { fromDate, toDate };
 	}
 };
