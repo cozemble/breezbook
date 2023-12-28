@@ -14,8 +14,8 @@ Airtable/SmartSuite etc. to manage the remaining processes of the business.
 
 ## Features
 
-- White-label for multiple tenants
-- Services for a tenant
+    - White-label for multiple tenants
+    - Services for a tenant
     - Multiple services for a tenant
     - Time slots
        <!-- TODO Different services may share the same time slots -->
