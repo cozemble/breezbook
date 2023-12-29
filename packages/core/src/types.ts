@@ -322,6 +322,12 @@ export const priceFns = {
 	},
 	multiply(thePrice: Price, quantity: number) {
 		return price(thePrice.amount.value * quantity, thePrice.currency);
+	},
+	subtract(price1: Price, price2: Price) {
+		if (price1.currency.value !== price2.currency.value) {
+			throw new Error(`Cannot substract prices with different currencies: ${price1.currency.value} and ${price2.currency.value}`);
+		}
+		return price(price1.amount.value - price2.amount.value, price1.currency);
 	}
 };
 
@@ -648,6 +654,12 @@ export interface Unlimited {
 	_type: 'unlimited';
 }
 
+export function unlimited(): Unlimited {
+	return {
+		_type: 'unlimited'
+	};
+}
+
 export type CouponUsagePolicy = LimitedUsages | Unlimited
 
 export type CouponValue = AmountCoupon | PercentageCoupon
@@ -661,8 +673,26 @@ export interface Coupon {
 	validTo: IsoDate;
 }
 
+export function coupon(usagePolicy: CouponUsagePolicy, value: CouponValue, validFrom: IsoDate, validTo: IsoDate, id: CouponId = couponId(uuidv4())): Coupon {
+	return {
+		_type: 'coupon',
+		id,
+		usagePolicy,
+		value,
+		validFrom,
+		validTo
+	};
+}
+
 export interface CouponId extends ValueType<string> {
 	_type: 'coupon.id';
+}
+
+export function couponId(value: string): CouponId {
+	return {
+		_type: 'coupon.id',
+		value
+	};
 }
 
 export interface AmountCoupon {
@@ -670,9 +700,37 @@ export interface AmountCoupon {
 	amount: Price;
 }
 
+export interface PercentageAsRatio extends ValueType<number> {
+	_type: 'percentage.as.ratio';
+}
+
+export function percentageAsRatio(value: number): PercentageAsRatio {
+	if(value < 0 || value > 1) {
+		throw new Error(`Percentage as ratio must be between 0 and 1. Got ${value}`);
+	}
+	return {
+		_type: 'percentage.as.ratio',
+		value
+	};
+}
+
 export interface PercentageCoupon {
 	_type: 'percentage.coupon';
-	percentage: number;
+	percentage: PercentageAsRatio;
+}
+
+export function amountCoupon(amount: Price): AmountCoupon {
+	return {
+		_type: 'amount.coupon',
+		amount
+	};
+}
+
+export function percentageCoupon(percentage: PercentageAsRatio): PercentageCoupon {
+	return {
+		_type: 'percentage.coupon',
+		percentage
+	};
 }
 
 export function orderLine(serviceId: ServiceId, addOns: AddOnOrder[], date: IsoDate, slot: BookableSlot, serviceFormData: unknown[]): OrderLine {
@@ -720,6 +778,13 @@ export const orderFns = {
 		const fromDate = isoDateFns.min(...allDates);
 		const toDate = isoDateFns.max(...allDates);
 		return { fromDate, toDate };
+	},
+	addCoupon(order: Order, coupon: Coupon | CouponId): Order {
+		const couponId = coupon._type === 'coupon' ? coupon.id : coupon;
+		return {
+			...order,
+			couponId
+		};
 	}
 };
 
