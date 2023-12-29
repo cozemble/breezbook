@@ -2,9 +2,8 @@ import * as express from 'express';
 import { orderBody, tenantIdParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import {
 	booking,
-	Booking, bookingId,
+	Booking,
 	calcSlotPeriod,
-	calculateAvailability, customerId, DayAndTimePeriod,
 	Form,
 	FormId,
 	mandatory,
@@ -78,14 +77,14 @@ async function withValidationsPerformed(everythingForTenant: EverythingForTenant
 			}
 		}
 	}
-	const projectedBookings:Booking[] = [...everythingForTenant.bookings]
+	const projectedBookings: Booking[] = [...everythingForTenant.bookings];
 	for (let i = 0; i < order.lines.length; i++) {
 		const line = order.lines[i];
 		const projectedBooking = booking(order.customer.id, line.serviceId, line.date, line.slot);
 		projectedBookings.push(projectedBooking);
 		try {
 			applyBookingsToResourceAvailability(everythingForTenant.businessConfiguration.resourceAvailability, projectedBookings, everythingForTenant.businessConfiguration.services);
-		} catch (e:unknown) {
+		} catch (e: unknown) {
 			res.status(400).send(errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.serviceId.value} in order line ${i}`));
 			return;
 		}
@@ -133,7 +132,7 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 				time_slot_id: time_slot_id,
 				start_time_24hr: servicePeriod.from.value,
 				end_time_24hr: servicePeriod.to.value,
-				add_on_ids: line.addOnIds.map(a => a.value),
+				add_on_ids: line.addOns.map(a => a.addOnId.value),
 				date: line.date.value
 			}
 		}));
@@ -152,11 +151,11 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 					connect: { tenant_id_email: { tenant_id, email } }
 				},
 				time_slots: {
-					connect: line.slot._type === 'timeslot.spec' ? { id: line.slot.id.value } : undefined,
+					connect: line.slot._type === 'timeslot.spec' ? { id: line.slot.id.value } : undefined
 				},
 				date: line.date.value,
 				start_time_24hr: servicePeriod.from.value,
-				end_time_24hr: servicePeriod.to.value,
+				end_time_24hr: servicePeriod.to.value
 			}
 		}));
 	}

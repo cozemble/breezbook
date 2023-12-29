@@ -313,6 +313,18 @@ export interface Price {
 	currency: Currency;
 }
 
+export const priceFns = {
+	add(price1: Price, price2: Price): Price {
+		if (price1.currency.value !== price2.currency.value) {
+			throw new Error(`Cannot add prices with different currencies: ${price1.currency.value} and ${price2.currency.value}`);
+		}
+		return price(price1.amount.value + price2.amount.value, price1.currency);
+	},
+	multiply(thePrice: Price, quantity: number) {
+		return price(thePrice.amount.value * quantity, thePrice.currency);
+	}
+};
+
 export function currency(value: string): Currency {
 	return {
 		_type: 'currency',
@@ -606,10 +618,22 @@ export interface JsonSchemaForm {
 
 export type Form = JsonSchemaForm
 
+export interface AddOnOrder {
+	addOnId: AddOnId;
+	quantity: number;
+}
+
+export function addOnOrder(addOnId: AddOnId, quantity = 1): AddOnOrder {
+	return {
+		addOnId,
+		quantity
+	};
+}
+
 export interface OrderLine {
 	_type: 'order.line';
 	serviceId: ServiceId;
-	addOnIds: AddOnId[];
+	addOns: AddOnOrder[];
 	date: IsoDate;
 	slot: BookableSlot;
 	serviceFormData: unknown[];
@@ -651,11 +675,11 @@ export interface PercentageCoupon {
 	percentage: number;
 }
 
-export function orderLine(serviceId: ServiceId, addOnIds: AddOnId[], date: IsoDate, slot: BookableSlot, serviceFormData: unknown[]): OrderLine {
+export function orderLine(serviceId: ServiceId, addOns: AddOnOrder[], date: IsoDate, slot: BookableSlot, serviceFormData: unknown[]): OrderLine {
 	return {
 		_type: 'order.line',
 		serviceId,
-		addOnIds,
+		addOns,
 		date,
 		slot,
 		serviceFormData
@@ -748,3 +772,56 @@ export function timeBasedPriceAdjustmentSpec(timeSpec: TimeSpec, adjustment: Pri
 }
 
 export type PricingRuleSpec = TimeBasedPriceAdjustmentSpec
+
+export interface AddOnWithTotal {
+	_type: 'add.on.with.total';
+	addOn: AddOn;
+	quantity: number;
+	addOnTotal: Price;
+}
+
+export function addOnWithTotal(addOn: AddOn, quantity: number): AddOnWithTotal {
+	return {
+		_type: 'add.on.with.total',
+		addOn,
+		quantity,
+		addOnTotal: priceFns.multiply(addOn.price, quantity)
+	};
+}
+
+export interface OrderLineWithTotal {
+	_type: 'order.line.with.total';
+	service: Service;
+	addOn: AddOnWithTotal[];
+	lineTotal: Price;
+}
+
+export function orderLineWithTotal(service: Service, addOns: AddOnWithTotal[]): OrderLineWithTotal {
+	const lineTotal = priceFns.add(service.price, addOns.reduce((total, addOn) => priceFns.add(total, addOn.addOnTotal), price(0, service.price.currency)));
+	return {
+		_type: 'order.line.with.total',
+		service,
+		addOn: addOns,
+		lineTotal
+	};
+}
+
+
+export interface OrderWithTotal {
+	_type: 'order.with.total';
+	order: Order;
+	lineTotals: OrderLineWithTotal[];
+	couponDiscount?: Price;
+	orderTotal: Price;
+}
+
+
+export function orderWithTotal(order: Order, lineTotals: OrderLineWithTotal[], couponDiscount?: Price): OrderWithTotal {
+	return {
+		_type: 'order.with.total',
+		order,
+		lineTotals,
+		couponDiscount,
+		orderTotal: lineTotals.length === 0 ? price(0, currency('N/A')) : lineTotals.reduce((total, line) => priceFns.add(total, line.lineTotal), price(0, lineTotals[0].service.price.currency))
+	};
+}
