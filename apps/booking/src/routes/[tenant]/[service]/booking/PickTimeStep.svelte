@@ -1,5 +1,5 @@
 <script lang="ts">
-	import backend from '$lib/common/backend';
+	import api from '$lib/common/api';
 	import TimeSlotForm from '$lib/components/time/TimeSlotForm.svelte';
 	import StepWrapper from './StepWrapper.svelte';
 
@@ -9,7 +9,7 @@
 
 	let days: DaySlot[] = [];
 
-	backend.timeSlot.getAll('test', 'test').then((res) => {
+	api.timeSlot.getAll('test', 'test').then((res) => {
 		days = res;
 	});
 

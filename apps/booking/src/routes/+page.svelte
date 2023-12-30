@@ -1,9 +1,9 @@
 <script lang="ts">
-	import backend from '$lib/common/backend';
+	import api from '$lib/common/api';
 
 	let tenants: Tenant[] = [];
 
-	backend.tenant.getAll().then((res) => {
+	api.tenant.getAll().then((res) => {
 		tenants = res;
 	});
 </script>

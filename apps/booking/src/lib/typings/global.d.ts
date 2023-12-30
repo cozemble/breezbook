@@ -1,3 +1,5 @@
+declare type GenericStatus = 'success' | 'error' | 'warning' | 'info' | 'default';
+
 declare interface Tenant {
 	id: string;
 	slug: string;
@@ -52,8 +54,6 @@ declare interface Service {
 	// createdAt: string;
 	// updatedAt: string;
 }
-
-declare type GenericStatus = 'success' | 'error' | 'warning' | 'info' | 'default';
 
 declare namespace Service {
 	interface Extra {
