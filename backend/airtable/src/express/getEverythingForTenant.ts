@@ -2,12 +2,14 @@ import {
 	Booking,
 	businessConfiguration,
 	BusinessConfiguration,
+	Coupon,
 	DayAndTimePeriod,
 	dayAndTimePeriod,
 	dayAndTimePeriodFns,
 	duration,
 	formId,
-	FungibleResource, id,
+	FungibleResource,
+	id,
 	isoDate,
 	IsoDate,
 	isoDateFns,
@@ -20,7 +22,8 @@ import {
 	resourceId,
 	ResourceType,
 	resourceType,
-	TenantId, TenantSettings,
+	TenantId,
+	TenantSettings,
 	time24,
 	timePeriod,
 	timeslotSpec,
@@ -32,7 +35,8 @@ import { prismaClient } from '../prisma/client.js';
 import {
 	toDomainAddOn,
 	toDomainBooking,
-	toDomainForm, toDomainPricingRule,
+	toDomainForm,
+	toDomainPricingRule,
 	toDomainService,
 	toDomainTenantSettings
 } from '../prisma/dbToDomain.js';
@@ -42,15 +46,17 @@ export interface EverythingForTenant {
 	businessConfiguration: BusinessConfiguration;
 	pricingRules: PricingRule[];
 	bookings: Booking[];
-	tenantSettings: TenantSettings
+	coupons: Coupon[];
+	tenantSettings: TenantSettings;
 }
 
-export function everythingForTenant(businessConfiguration: BusinessConfiguration, pricingRules: PricingRule[], bookings: Booking[], tenantSettings: TenantSettings): EverythingForTenant {
+export function everythingForTenant(businessConfiguration: BusinessConfiguration, pricingRules: PricingRule[], bookings: Booking[], coupons: Coupon[], tenantSettings: TenantSettings): EverythingForTenant {
 	return {
 		_type: 'everything.for.tenant',
 		businessConfiguration,
 		pricingRules,
 		bookings,
+		coupons,
 		tenantSettings: tenantSettings
 	};
 }
@@ -125,6 +131,8 @@ export async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDa
 	const bookings = await findMany(prisma.bookings, dateWhereOpts);
 	const forms = await findMany(prisma.forms, {});
 	const tenantSettings = await prisma.tenant_settings.findFirstOrThrow({ where: { tenant_id: tenantId.value } });
+	const couponRows = await findMany(prisma.coupons, {});
+	const coupons = couponRows.map(c => c.definition as unknown as Coupon);
 
 	const dates = isoDateFns.listDays(fromDate, toDate);
 	const mappedResourceTypes = resourceTypes.map(rt => resourceType(rt.id));
@@ -143,5 +151,5 @@ export async function getEverythingForTenant(tenantId: TenantId, fromDate: IsoDa
 		mappedForms,
 		periodicStartTime(duration(30)),
 		customerForm ? customerForm.id : null
-	), pricingRules.map(pr => toDomainPricingRule(pr)), bookings.map(b => toDomainBooking(b, mappedTimeSlots)), toDomainTenantSettings(tenantSettings));
+	), pricingRules.map(pr => toDomainPricingRule(pr)), bookings.map(b => toDomainBooking(b, mappedTimeSlots)), coupons, toDomainTenantSettings(tenantSettings));
 }

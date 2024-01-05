@@ -37,9 +37,9 @@ export function calculateOrderTotal(order: Order, services: Service[], addOns: A
 			return addOnWithTotal(addOn, addOnOrder.quantity);
 		}));
 	}));
-	const couponId = order.couponId;
-	if (couponId) {
-		const coupon = mandatory(coupons.find(c => c.id.value === couponId.value), `Coupon with id ${couponId.value} not found`);
+	const couponCode = order.couponCode;
+	if (couponCode) {
+		const coupon = mandatory(coupons.find(c => c.code.value === couponCode.value), `Coupon with code ${couponCode.value} not found`);
 		result = applyCoupon(coupon, result);
 	}
 	return result

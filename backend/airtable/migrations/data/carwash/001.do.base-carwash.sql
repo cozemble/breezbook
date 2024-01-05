@@ -225,3 +225,33 @@ insert into pricing_rules(id, tenant_id, rank, active, definition) values ('10% 
     "percentage": 0.1
   }
 }');
+
+insert into coupons(id, tenant_id, code, start_date, end_date, definition) values ('fd85db7b-4762-42fb-9a5d-6652e1a05682', 'tenant1', 'expired-20-percent-off', '2020-01-01', '2020-12-31', '{
+  "_type": "coupon",
+  "id": {
+    "_type": "coupon.id",
+    "value": "fd85db7b-4762-42fb-9a5d-6652e1a05682"
+  },
+  "code": {
+    "_type": "coupon.code",
+    "value": "expired-20-percent-off"
+  },
+  "usagePolicy": {
+    "_type": "unlimited"
+  },
+  "value": {
+    "_type": "percentage.coupon",
+    "percentage": {
+      "_type": "percentage.as.ratio",
+      "value": 0.2
+    }
+  },
+  "validFrom": {
+    "_type": "iso.date",
+    "value": "2021-05-23"
+  },
+  "validTo": {
+    "_type": "iso.date",
+    "value": "2021-05-26"
+  }
+}');

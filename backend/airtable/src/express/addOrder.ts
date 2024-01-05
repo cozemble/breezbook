@@ -5,7 +5,7 @@ import {
 	Booking,
 	calcSlotPeriod,
 	Form,
-	FormId,
+	FormId, isoDateFns,
 	mandatory,
 	Order,
 	orderFns,
@@ -30,7 +30,9 @@ export const addOrderErrorCodes = {
 	customerFormInvalid: 'addOrder.customer.form.invalid',
 	serviceFormMissing: 'addOrder.service.form.missing',
 	serviceFormInvalid: 'addOrder.service.form.invalid',
-	noAvailability: 'addOrder.no.availability'
+	noAvailability: 'addOrder.no.availability',
+	noSuchCoupon: 'addOrder.no.such.coupon',
+	expiredCoupon: 'addOrder.expired.coupon',
 };
 
 function validateForm(forms: Form[], formId: FormId, formData: unknown): string | null {
@@ -87,6 +89,21 @@ async function withValidationsPerformed(everythingForTenant: EverythingForTenant
 		} catch (e: unknown) {
 			res.status(400).send(errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.serviceId.value} in order line ${i}`));
 			return;
+		}
+	}
+
+	const couponCode = order.couponCode;
+	if(couponCode) {
+		const coupon = everythingForTenant.coupons.find(c => c.code.value === couponCode.value);
+		if(!coupon) {
+			res.status(400).send(errorResponse(addOrderErrorCodes.noSuchCoupon, `Coupon ${couponCode.value} not found`));
+			return;
+		}
+		if(coupon) {
+			if(!(isoDateFns.gte(isoDateFns.today(),coupon.validFrom) && isoDateFns.lte(isoDateFns.today(),coupon.validTo ?? isoDateFns.today()))) {
+				res.status(400).send(errorResponse(addOrderErrorCodes.expiredCoupon, `Coupon ${coupon.code.value} expired`));
+				return;
+			}
 		}
 	}
 

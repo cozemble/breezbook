@@ -191,6 +191,7 @@ model tenants {
   blocked_time          blocked_time[]
   bookings              bookings[]
   business_hours        business_hours[]
+  coupons               coupons[]
   customers             customers[]
   forms                 forms[]
   order_lines           order_lines[]
@@ -228,4 +229,14 @@ model service_forms {
   tenants   tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, s_id, form_id])
+}
+
+model coupons {
+  id         String  @id @default(dbgenerated("uuid_generate_v4()"))
+  tenant_id  String
+  code       String
+  definition Json
+  start_date String
+  end_date   String?
+  tenants    tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }

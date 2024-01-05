@@ -57,6 +57,9 @@ export const isoDateFns = {
 	isEqual(date1: IsoDate, date2: IsoDate): boolean {
 		return date1.value === date2.value;
 	},
+	today(): IsoDate {
+		return isoDate();
+	},
 	sameDay(date1: IsoDate, date2: IsoDate) {
 		return this.isEqual(date1, date2);
 	},
@@ -664,19 +667,32 @@ export type CouponUsagePolicy = LimitedUsages | Unlimited
 
 export type CouponValue = AmountCoupon | PercentageCoupon
 
+export interface CouponCode extends ValueType<string> {
+	_type: 'coupon.code';
+}
+
+export function couponCode(value: string): CouponCode {
+	return {
+		_type: 'coupon.code',
+		value
+	};
+}
+
 export interface Coupon {
 	_type: 'coupon';
 	id: CouponId;
+	code: CouponCode;
 	usagePolicy: CouponUsagePolicy;
 	value: CouponValue;
 	validFrom: IsoDate;
-	validTo: IsoDate;
+	validTo?: IsoDate;
 }
 
-export function coupon(usagePolicy: CouponUsagePolicy, value: CouponValue, validFrom: IsoDate, validTo: IsoDate, id: CouponId = couponId(uuidv4())): Coupon {
+export function coupon(code: CouponCode, usagePolicy: CouponUsagePolicy, value: CouponValue, validFrom: IsoDate, validTo?: IsoDate, id: CouponId = couponId(uuidv4())): Coupon {
 	return {
 		_type: 'coupon',
 		id,
+		code,
 		usagePolicy,
 		value,
 		validFrom,
@@ -705,7 +721,7 @@ export interface PercentageAsRatio extends ValueType<number> {
 }
 
 export function percentageAsRatio(value: number): PercentageAsRatio {
-	if(value < 0 || value > 1) {
+	if (value < 0 || value > 1) {
 		throw new Error(`Percentage as ratio must be between 0 and 1. Got ${value}`);
 	}
 	return {
@@ -760,7 +776,7 @@ export interface Order {
 	id: OrderId;
 	customer: Customer;
 	lines: OrderLine[];
-	couponId?: CouponId;
+	couponCode?: CouponCode;
 }
 
 export function order(customer: Customer, lines: OrderLine[], id = orderId(uuidv4())): Order {
@@ -779,11 +795,10 @@ export const orderFns = {
 		const toDate = isoDateFns.max(...allDates);
 		return { fromDate, toDate };
 	},
-	addCoupon(order: Order, coupon: Coupon | CouponId): Order {
-		const couponId = coupon._type === 'coupon' ? coupon.id : coupon;
+	addCoupon(order: Order, couponCode: CouponCode): Order {
 		return {
 			...order,
-			couponId
+			couponCode
 		};
 	}
 };

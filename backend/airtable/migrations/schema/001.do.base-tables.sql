@@ -173,4 +173,14 @@ create table bookings
     start_time_24hr text                                not null,
     end_time_24hr   text                                not null,
     time_slot_id    text                                null default null references time_slots (id)
-)
+);
+
+create table coupons
+(
+    id         text primary key default uuid_generate_v4(),
+    tenant_id  text references tenants (tenant_id) not null,
+    code       text                                not null,
+    definition jsonb                               not null,
+    start_date text                                not null,
+    end_date   text                                null default null
+);

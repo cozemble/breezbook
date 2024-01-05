@@ -1,5 +1,15 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import { addOnOrder, carwash, customer, isoDate, isoDateFns, Order, order, orderLine } from '@breezbook/packages-core';
+import {
+	addOnOrder,
+	carwash, couponCode,
+	customer,
+	isoDate,
+	isoDateFns,
+	Order,
+	order,
+	orderFns,
+	orderLine
+} from '@breezbook/packages-core';
 import { ErrorResponse, OrderCreatedResponse } from '../src/apiTypes.js';
 import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
 import { addOrderErrorCodes } from '../src/express/addOrder.js';
@@ -17,6 +27,13 @@ async function postOrder(order: Order) {
 		body: JSON.stringify(order)
 	});
 }
+
+const goodCustomer = customer('Mike', 'Hogan', 'mike@email.com', {
+	phone: '23678482376',
+	firstLineOfAddress: '1 Main Street',
+	'postcode': 'SW1'
+});
+
 
 describe('with a migrated database', () => {
 	beforeAll(async () => {
@@ -49,12 +66,7 @@ describe('with a migrated database', () => {
 	});
 
 	test('service has a service form, and the service does not have a form response', async () => {
-		const mike = customer('Mike', 'Hogan', 'mike@email.com', {
-			phone: '23678482376',
-			firstLineOfAddress: '1 Main Street',
-			'postcode': 'SW1'
-		});
-		const theOrder = order(mike, [orderLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [])]);
+		const theOrder = order(goodCustomer, [orderLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [])]);
 		const response = await postOrder(theOrder);
 		expect(response.status).toBe(400);
 		const json = await response.json() as ErrorResponse;
@@ -63,12 +75,7 @@ describe('with a migrated database', () => {
 	});
 
 	test('service has a service form, and the service form is invalid', async () => {
-		const mike = customer('Mike', 'Hogan', 'mike@email.com', {
-			phone: '23678482376',
-			firstLineOfAddress: '1 Main Street',
-			'postcode': 'SW1'
-		});
-		const theOrder = order(mike, [orderLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [{}])]);
+		const theOrder = order(goodCustomer, [orderLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [{}])]);
 		const response = await postOrder(theOrder);
 		expect(response.status).toBe(400);
 		const json = await response.json() as ErrorResponse;
@@ -77,12 +84,7 @@ describe('with a migrated database', () => {
 	});
 
 	test('can add an order for two car washes, each with different add-ons', async () => {
-		const mike = customer('Mike', 'Hogan', 'mike@email.com', {
-			phone: '23678482376',
-			firstLineOfAddress: '1 Main Street',
-			'postcode': 'SW1'
-		});
-		const twoServices = order(mike, [orderLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [{
+		const twoServices = order(goodCustomer, [orderLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [{
 			make: 'Ford',
 			model: 'Focus',
 			colour: 'Black',
@@ -107,12 +109,7 @@ describe('with a migrated database', () => {
 	});
 
 	test('error message when no availability', async () => {
-		const mike = customer('Mike', 'Hogan', 'mike@email.com', {
-			phone: '23678482376',
-			firstLineOfAddress: '1 Main Street',
-			'postcode': 'SW1'
-		});
-		const theOrder = order(mike, [orderLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], tomorrow, carwash.fourToSix, [{
+		const theOrder = order(goodCustomer, [orderLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], tomorrow, carwash.fourToSix, [{
 			make: 'Ford',
 			model: 'Focus',
 			colour: 'Black',
@@ -132,4 +129,36 @@ describe('with a migrated database', () => {
 		expect(json.errorCode).toBe(addOrderErrorCodes.noAvailability);
 		expect(json.errorMessage).toBeDefined();
 	});
+
+	test("an order with an non-existant coupon code should fail with an error code", async () => {
+		let theOrder = order(goodCustomer, [orderLine(carwash.smallCarWash.id, [], tomorrow, carwash.oneToFour, [{
+			make: 'Ford',
+			model: 'Focus',
+			colour: 'Black',
+			year: 2021
+		}])]);
+		theOrder = orderFns.addCoupon(theOrder, couponCode("this-does-not-exist"));
+		const response = await postOrder(theOrder);
+
+		expect(response.status).toBe(400);
+		const json = await response.json() as ErrorResponse;
+		expect(json.errorCode).toBe(addOrderErrorCodes.noSuchCoupon);
+		expect(json.errorMessage).toBeDefined();
+	})
+
+	test("an order with an expired coupon should fail with an error code", async () => {
+		let theOrder = order(goodCustomer, [orderLine(carwash.smallCarWash.id, [], tomorrow, carwash.oneToFour, [{
+			make: 'Ford',
+			model: 'Focus',
+			colour: 'Black',
+			year: 2021
+		}])]);
+		theOrder = orderFns.addCoupon(theOrder, couponCode("expired-20-percent-off"));
+		const response = await postOrder(theOrder);
+
+		expect(response.status).toBe(400);
+		const json = await response.json() as ErrorResponse;
+		expect(json.errorCode).toBe(addOrderErrorCodes.expiredCoupon);
+		expect(json.errorMessage).toBeDefined();
+	})
 });
