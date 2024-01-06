@@ -317,11 +317,12 @@ export interface Price {
 }
 
 export const priceFns = {
-	add(price1: Price, price2: Price): Price {
-		if (price1.currency.value !== price2.currency.value) {
-			throw new Error(`Cannot add prices with different currencies: ${price1.currency.value} and ${price2.currency.value}`);
+	add(...prices: Price[]): Price {
+		const currencies = prices.map(p => p.currency.value);
+		if (currencies.some(c => c !== currencies[0])) {
+			throw new Error(`Cannot add prices with different currencies: ${currencies.join(', ')}`);
 		}
-		return price(price1.amount.value + price2.amount.value, price1.currency);
+		return prices.reduce((total, aPrice) => price(total.amount.value + aPrice.amount.value, total.currency), price(0, prices[0].currency));
 	},
 	multiply(thePrice: Price, quantity: number) {
 		return price(thePrice.amount.value * quantity, thePrice.currency);
@@ -903,5 +904,19 @@ export function orderWithTotal(order: Order, lineTotals: OrderLineWithTotal[], c
 		lineTotals,
 		couponDiscount,
 		orderTotal: lineTotals.length === 0 ? price(0, currency('N/A')) : lineTotals.reduce((total, line) => priceFns.add(total, line.lineTotal), price(0, lineTotals[0].service.price.currency))
+	};
+}
+
+export interface OrderAndTotal {
+	_type: 'order.and.total';
+	order: Order;
+	total: Price;
+}
+
+export function orderAndTotal(order: Order, total: Price): OrderAndTotal {
+	return {
+		_type: 'order.and.total',
+		order,
+		total
 	};
 }

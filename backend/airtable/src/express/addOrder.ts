@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { orderBody, tenantIdParam, withTwoRequestParams } from '../infra/functionalExpress.js';
+import { orderAndTotalBody, tenantIdParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import {
 	booking,
 	Booking,
@@ -198,11 +198,11 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 }
 
 export async function addOrder(req: express.Request, res: express.Response): Promise<void> {
-	await withTwoRequestParams(req, res, tenantIdParam(), orderBody(), async (tenantId, order) => {
-		const { fromDate, toDate } = orderFns.getOrderDateRange(order);
+	await withTwoRequestParams(req, res, tenantIdParam(), orderAndTotalBody(), async (tenantId, orderAndTotal) => {
+		const { fromDate, toDate } = orderFns.getOrderDateRange(orderAndTotal.order);
 		const everythingForTenant = await getEverythingForTenant(tenantId, fromDate, toDate);
-		await withValidationsPerformed(everythingForTenant, order, res, async () => {
-			await insertOrder(tenantId, order, everythingForTenant, res);
+		await withValidationsPerformed(everythingForTenant, orderAndTotal.order, res, async () => {
+			await insertOrder(tenantId, orderAndTotal.order, everythingForTenant, res);
 		});
 	});
 }

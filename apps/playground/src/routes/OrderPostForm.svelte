@@ -18,7 +18,7 @@
                 return null;
             }
         }).filter(line => line !== null) as OrderLine[];
-        const theOrder = order(toCustomer(customerInput), acceptableLines);
+        const theOrder = order(toCustomer(customerInput), acceptableLines, );
         const response = await fetch(`${$endpoint}/api/tenant1/orders`, {
             method: 'POST',
             headers: {

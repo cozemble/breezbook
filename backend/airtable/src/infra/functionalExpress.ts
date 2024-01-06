@@ -1,5 +1,13 @@
 import express from 'express';
-import {isoDate, IsoDate, Order, serviceId, ServiceId, tenantId, TenantId} from "@breezbook/packages-core";
+import {
+    isoDate,
+    IsoDate,
+    OrderAndTotal,
+    serviceId,
+    ServiceId,
+    tenantId,
+    TenantId
+} from '@breezbook/packages-core';
 
 export interface RequestValueExtractor {
     name: string;
@@ -46,14 +54,14 @@ export function date(requestValue: RequestValueExtractor): ParamExtractor<IsoDat
     }
 }
 
-export function orderBody(): ParamExtractor<Order | null> {
+export function orderAndTotalBody(): ParamExtractor<OrderAndTotal | null> {
     return (req: express.Request, res: express.Response) => {
-        const body = req.body as Order | null
+        const body = req.body as OrderAndTotal | null
         if (!body) {
             res.status(400).send(`Missing required body`);
             return null;
         }
-        if (body._type !== "order") {
+        if (body._type !== "order.and.total") {
             res.status(400).send(`Posted body is not an order`);
             return null;
         }
@@ -94,15 +102,6 @@ export async function withErrorHandling(res: express.Response, f: () => Promise<
             res.status(500).send('An unknown error occurred.');
         }
     }
-}
-
-export async function withOneRequestParam<T>(req: express.Request, res: express.Response, aParam: ParamExtractor<T | null>, f: (t: T) => Promise<void>): Promise<void> {
-    const a = aParam(req, res);
-    if (a === null) {
-        return;
-    }
-
-    return await withErrorHandling(res, async () => await f(a));
 }
 
 export async function withTwoRequestParams<A, B>(req: express.Request, res: express.Response, aParam: ParamExtractor<A | null>, bParam: ParamExtractor<B | null>, f: (a: A, b: B) => Promise<void>): Promise<void> {
