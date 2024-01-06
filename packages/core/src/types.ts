@@ -52,7 +52,6 @@ export function isoDate(value: string = new Date().toISOString().split('T')[0]):
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 export const daysOfWeek: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-
 export const isoDateFns = {
 	isEqual(date1: IsoDate, date2: IsoDate): boolean {
 		return date1.value === date2.value;
@@ -93,10 +92,10 @@ export const isoDateFns = {
 		return date1.value < date2.value;
 	},
 	max(...dates: IsoDate[]) {
-		return dates.reduce((max, date) => this.gte(date, max) ? date : max, dates[0]);
+		return dates.reduce((max, date) => (this.gte(date, max) ? date : max), dates[0]);
 	},
 	min(...dates: IsoDate[]) {
-		return dates.reduce((min, date) => this.lte(date, min) ? date : min, dates[0]);
+		return dates.reduce((min, date) => (this.lte(date, min) ? date : min), dates[0]);
 	}
 };
 
@@ -223,7 +222,6 @@ export function id(value: string): Id {
 		_type: 'id',
 		value
 	};
-
 }
 
 export interface TimeslotSpec {
@@ -318,8 +316,8 @@ export interface Price {
 
 export const priceFns = {
 	add(...prices: Price[]): Price {
-		const currencies = prices.map(p => p.currency.value);
-		if (currencies.some(c => c !== currencies[0])) {
+		const currencies = prices.map((p) => p.currency.value);
+		if (currencies.some((c) => c !== currencies[0])) {
 			throw new Error(`Cannot add prices with different currencies: ${currencies.join(', ')}`);
 		}
 		return prices.reduce((total, aPrice) => price(total.amount.value + aPrice.amount.value, total.currency), price(0, prices[0].currency));
@@ -332,6 +330,9 @@ export const priceFns = {
 			throw new Error(`Cannot substract prices with different currencies: ${price1.currency.value} and ${price2.currency.value}`);
 		}
 		return price(price1.amount.value - price2.amount.value, price1.currency);
+	},
+	isEqual(price1: Price, price2: Price) {
+		return price1.amount.value === price2.amount.value && price1.currency.value === price2.currency.value;
 	}
 };
 
@@ -364,7 +365,17 @@ export interface Service {
 	serviceFormIds: FormId[];
 }
 
-export function service(name: string, description: string, resourceTypes: ResourceType[], duration: number, requiresTimeslot: boolean, price: Price, permittedAddOns: AddOnId[], serviceFormIds: FormId[], id = serviceId(uuidv4())): Service {
+export function service(
+	name: string,
+	description: string,
+	resourceTypes: ResourceType[],
+	duration: number,
+	requiresTimeslot: boolean,
+	price: Price,
+	permittedAddOns: AddOnId[],
+	serviceFormIds: FormId[],
+	id = serviceId(uuidv4())
+): Service {
 	return {
 		id,
 		name,
@@ -468,7 +479,16 @@ export function addOn(name: string, price: Price, requiresQuantity: boolean, id 
 	};
 }
 
-export function businessConfiguration(availability: BusinessAvailability, resources: ResourceDayAvailability[], services: Service[], addOns: AddOn[], timeslots: TimeslotSpec[], forms: Form[], startTimeSpec: StartTimeSpec, customerFormId: FormId | null): BusinessConfiguration {
+export function businessConfiguration(
+	availability: BusinessAvailability,
+	resources: ResourceDayAvailability[],
+	services: Service[],
+	addOns: AddOn[],
+	timeslots: TimeslotSpec[],
+	forms: Form[],
+	startTimeSpec: StartTimeSpec,
+	customerFormId: FormId | null
+): BusinessConfiguration {
 	return {
 		_type: 'business.configuration',
 		availability,
@@ -567,13 +587,16 @@ export const dayAndTimePeriodFns = {
 		if (timePeriodFns.endsLater(da.period, bookingPeriod.period)) {
 			remainingTimePeriods.push(timePeriod(bookingPeriod.period.to, da.period.to));
 		}
-		return remainingTimePeriods.map(tp => dayAndTimePeriod(da.day, tp));
+		return remainingTimePeriods.map((tp) => dayAndTimePeriod(da.day, tp));
 	},
 	intersection(period1: DayAndTimePeriod, period2: DayAndTimePeriod) {
-		return dayAndTimePeriod(period1.day, timePeriod(
-			timePeriodFns.startsEarlier(period1.period, period2.period) ? period2.period.from : period1.period.from,
-			timePeriodFns.endsLater(period1.period, period2.period) ? period2.period.to : period1.period.to
-		));
+		return dayAndTimePeriod(
+			period1.day,
+			timePeriod(
+				timePeriodFns.startsEarlier(period1.period, period2.period) ? period2.period.from : period1.period.from,
+				timePeriodFns.endsLater(period1.period, period2.period) ? period2.period.to : period1.period.to
+			)
+		);
 	},
 	intersects(period1: DayAndTimePeriod, period2: DayAndTimePeriod) {
 		return isoDateFns.sameDay(period1.day, period2.day) && timePeriodFns.intersects(period1.period, period2.period);
@@ -601,9 +624,11 @@ export const timePeriodFns = {
 	},
 	intersects(period: TimePeriod, period2: TimePeriod) {
 		// return true if period2 has any time inside period
-		return period2.from.value >= period.from.value && period2.from.value <= period.to.value
-			|| period2.to.value >= period.from.value && period2.to.value <= period.to.value
-			|| period2.from.value <= period.from.value && period2.to.value >= period.to.value;
+		return (
+			(period2.from.value >= period.from.value && period2.from.value <= period.to.value) ||
+			(period2.to.value >= period.from.value && period2.to.value <= period.to.value) ||
+			(period2.from.value <= period.from.value && period2.to.value >= period.to.value)
+		);
 	}
 };
 
@@ -620,13 +645,13 @@ export function formId(value: string): FormId {
 
 export interface JsonSchemaForm {
 	_type: 'json.schema.form';
-	id: FormId
-	name: string,
-	description?: string,
+	id: FormId;
+	name: string;
+	description?: string;
 	schema: unknown;
 }
 
-export type Form = JsonSchemaForm
+export type Form = JsonSchemaForm;
 
 export interface AddOnOrder {
 	addOnId: AddOnId;
@@ -643,6 +668,8 @@ export function addOnOrder(addOnId: AddOnId, quantity = 1): AddOnOrder {
 export interface OrderLine {
 	_type: 'order.line';
 	serviceId: ServiceId;
+	servicePrice: number;
+	servicePriceCurrency: string;
 	addOns: AddOnOrder[];
 	date: IsoDate;
 	slot: BookableSlot;
@@ -664,9 +691,9 @@ export function unlimited(): Unlimited {
 	};
 }
 
-export type CouponUsagePolicy = LimitedUsages | Unlimited
+export type CouponUsagePolicy = LimitedUsages | Unlimited;
 
-export type CouponValue = AmountCoupon | PercentageCoupon
+export type CouponValue = AmountCoupon | PercentageCoupon;
 
 export interface CouponCode extends ValueType<string> {
 	_type: 'coupon.code';
@@ -689,7 +716,14 @@ export interface Coupon {
 	validTo?: IsoDate;
 }
 
-export function coupon(code: CouponCode, usagePolicy: CouponUsagePolicy, value: CouponValue, validFrom: IsoDate, validTo?: IsoDate, id: CouponId = couponId(uuidv4())): Coupon {
+export function coupon(
+	code: CouponCode,
+	usagePolicy: CouponUsagePolicy,
+	value: CouponValue,
+	validFrom: IsoDate,
+	validTo?: IsoDate,
+	id: CouponId = couponId(uuidv4())
+): Coupon {
 	return {
 		_type: 'coupon',
 		id,
@@ -750,10 +784,19 @@ export function percentageCoupon(percentage: PercentageAsRatio): PercentageCoupo
 	};
 }
 
-export function orderLine(serviceId: ServiceId, addOns: AddOnOrder[], date: IsoDate, slot: BookableSlot, serviceFormData: unknown[]): OrderLine {
+export function orderLine(
+	serviceId: ServiceId,
+	servicePrice: Price,
+	addOns: AddOnOrder[],
+	date: IsoDate,
+	slot: BookableSlot,
+	serviceFormData: unknown[]
+): OrderLine {
 	return {
 		_type: 'order.line',
 		serviceId,
+		servicePrice: servicePrice.amount.value,
+		servicePriceCurrency: servicePrice.currency.value,
 		addOns,
 		date,
 		slot,
@@ -790,8 +833,8 @@ export function order(customer: Customer, lines: OrderLine[], id = orderId(uuidv
 }
 
 export const orderFns = {
-	getOrderDateRange(order: Order): { fromDate: IsoDate, toDate: IsoDate } {
-		const allDates = order.lines.map(line => line.date);
+	getOrderDateRange(order: Order): { fromDate: IsoDate; toDate: IsoDate } {
+		const allDates = order.lines.map((line) => line.date);
 		const fromDate = isoDateFns.min(...allDates);
 		const toDate = isoDateFns.max(...allDates);
 		return { fromDate, toDate };
@@ -834,7 +877,7 @@ export function daysFromToday(days: number): DaysFromTimeSpec {
 	};
 }
 
-export type TimeSpec = DaysFromTimeSpec
+export type TimeSpec = DaysFromTimeSpec;
 
 export interface TimeBasedPriceAdjustmentSpec {
 	_type: 'time.based.price.adjustment.spec';
@@ -852,7 +895,7 @@ export function timeBasedPriceAdjustmentSpec(timeSpec: TimeSpec, adjustment: Pri
 	};
 }
 
-export type PricingRuleSpec = TimeBasedPriceAdjustmentSpec
+export type PricingRuleSpec = TimeBasedPriceAdjustmentSpec;
 
 export interface AddOnWithTotal {
 	_type: 'add.on.with.total';
@@ -877,8 +920,11 @@ export interface OrderLineWithTotal {
 	lineTotal: Price;
 }
 
-export function orderLineWithTotal(service: Service, addOns: AddOnWithTotal[]): OrderLineWithTotal {
-	const lineTotal = priceFns.add(service.price, addOns.reduce((total, addOn) => priceFns.add(total, addOn.addOnTotal), price(0, service.price.currency)));
+export function orderLineWithTotal(service: Service, servicePrice: Price, addOns: AddOnWithTotal[]): OrderLineWithTotal {
+	const lineTotal = priceFns.add(
+		servicePrice,
+		addOns.reduce((total, addOn) => priceFns.add(total, addOn.addOnTotal), price(0, service.price.currency))
+	);
 	return {
 		_type: 'order.line.with.total',
 		service,
@@ -886,7 +932,6 @@ export function orderLineWithTotal(service: Service, addOns: AddOnWithTotal[]): 
 		lineTotal
 	};
 }
-
 
 export interface OrderWithTotal {
 	_type: 'order.with.total';
@@ -896,14 +941,16 @@ export interface OrderWithTotal {
 	orderTotal: Price;
 }
 
-
 export function orderWithTotal(order: Order, lineTotals: OrderLineWithTotal[], couponDiscount?: Price): OrderWithTotal {
 	return {
 		_type: 'order.with.total',
 		order,
 		lineTotals,
 		couponDiscount,
-		orderTotal: lineTotals.length === 0 ? price(0, currency('N/A')) : lineTotals.reduce((total, line) => priceFns.add(total, line.lineTotal), price(0, lineTotals[0].service.price.currency))
+		orderTotal:
+			lineTotals.length === 0
+				? price(0, currency('N/A'))
+				: lineTotals.reduce((total, line) => priceFns.add(total, line.lineTotal), price(0, lineTotals[0].service.price.currency))
 	};
 }
 

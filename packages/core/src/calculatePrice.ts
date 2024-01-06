@@ -114,11 +114,11 @@ function applyTimeBasedPriceAdjustment(slot: PricedSlot, pricingRule: TimeBasedP
     return slot;
 }
 
-function applyPricingRule(pricedSlot: PricedSlot, pricingRule: PricingRule,): PricedSlot {
+function applyPricingRule(givenPricedSlot: PricedSlot, pricingRule: PricingRule,): PricedSlot {
     if (pricingRule._type === 'time.based.price.adjustment') {
-        return applyTimeBasedPriceAdjustment(pricedSlot, pricingRule);
+        return applyTimeBasedPriceAdjustment(givenPricedSlot, pricingRule);
     }
-    return pricedSlot
+    return givenPricedSlot
 }
 
 export function calculatePrice(slot: ResourcedTimeSlot, pricingRules: PricingRule[]): PricedSlot {

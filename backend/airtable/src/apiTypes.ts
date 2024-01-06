@@ -2,6 +2,7 @@ import { Form } from '@breezbook/packages-core';
 
 export interface TimeSlotAvailability {
 	_type: 'time.slot.availability';
+	timeslotId: string;
 	startTime24hr: string;
 	endTime24hr: string;
 	label: string;
@@ -9,11 +10,17 @@ export interface TimeSlotAvailability {
 	priceCurrency: string;
 }
 
-export function timeSlotAvailability(startTime24hr: string, endTime24hr: string, label: string, priceWithNoDecimalPlaces: number,
-																		 priceCurrency: string
+export function timeSlotAvailability(
+	timeslotId: string,
+	startTime24hr: string,
+	endTime24hr: string,
+	label: string,
+	priceWithNoDecimalPlaces: number,
+	priceCurrency: string
 ): TimeSlotAvailability {
 	return {
 		_type: 'time.slot.availability',
+		timeslotId,
 		startTime24hr,
 		endTime24hr,
 		label,
@@ -22,36 +29,36 @@ export function timeSlotAvailability(startTime24hr: string, endTime24hr: string,
 	};
 }
 
-export interface ExactTimeAvailability {
-	_type: 'exact.time.availability';
-	time24hr: string;
-	priceWithNoDecimalPlaces: number;
-	priceCurrency: string;
-}
+// export interface ExactTimeAvailability {
+// 	_type: 'exact.time.availability';
+// 	time24hr: string;
+// 	priceWithNoDecimalPlaces: number;
+// 	priceCurrency: string;
+// }
 
-export function exactTimeAvailability(time24hr: string, priceWithNoDecimalPlaces: number,
-																			priceCurrency: string
-): ExactTimeAvailability {
-	return {
-		_type: 'exact.time.availability',
-		time24hr,
-		priceWithNoDecimalPlaces,
-		priceCurrency
-	};
-}
+// export function exactTimeAvailability(time24hr: string, priceWithNoDecimalPlaces: number,
+// 																			priceCurrency: string
+// ): ExactTimeAvailability {
+// 	return {
+// 		_type: 'exact.time.availability',
+// 		time24hr,
+// 		priceWithNoDecimalPlaces,
+// 		priceCurrency
+// 	};
+// }
 
-export type Availability = TimeSlotAvailability
+export type Availability = TimeSlotAvailability;
 
 // export type Availability = TimeSlotAvailability | ExactTimeAvailability
 
 export type Slots = Record<string, Availability[]>;
 
 export interface ServiceSummary {
-	id: string
-	name: string
-	durationMinutes: number,
-	description: string,
-	forms: Form[],
+	id: string;
+	name: string;
+	durationMinutes: number;
+	description: string;
+	forms: Form[];
 }
 
 export interface AddOnSummary {
