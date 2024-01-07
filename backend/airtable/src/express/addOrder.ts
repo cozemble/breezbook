@@ -1,6 +1,6 @@
 import * as express from 'express';
-import { orderAndTotalBody, tenantIdParam, withTwoRequestParams } from '../infra/functionalExpress.js';
-import { calcSlotPeriod, mandatory, Order, orderFns, Price, TenantId } from '@breezbook/packages-core';
+import { orderAndTotalBody, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
+import { calcSlotPeriod, mandatory, Order, orderFns, Price, TenantEnvironment } from '@breezbook/packages-core';
 import { EverythingForTenant, getEverythingForTenant } from './getEverythingForTenant.js';
 import { prismaClient } from '../prisma/client.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -45,19 +45,21 @@ async function withValidationsPerformed(
 	await fn();
 }
 
-async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant: EverythingForTenant, res: express.Response) {
+async function insertOrder(tenantEnvironment: TenantEnvironment, order: Order, everythingForTenant: EverythingForTenant, res: express.Response) {
 	const prisma = prismaClient();
-	const tenant_id = tenantId.value;
+	const tenant_id = tenantEnvironment.tenantId.value;
+	const environment_id = tenantEnvironment.environmentId.value;
 	const email = order.customer.email;
 	const customerUpsert = prisma.customers.upsert({
-		where: { tenant_id_email: { tenant_id: tenantId.value, email } },
+		where: { tenant_id_environment_id_email: { tenant_id, environment_id, email } },
 		update: { first_name: order.customer.firstName, last_name: order.customer.lastName, tenant_id },
 		create: {
 			email,
 			first_name: order.customer.firstName,
 			last_name: order.customer.lastName,
+			environment_id,
 			tenants: {
-				connect: { tenant_id: tenantId.value }
+				connect: { tenant_id }
 			}
 		}
 	});
@@ -65,11 +67,12 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 	const createOrder = prisma.orders.create({
 		data: {
 			id: orderId,
+			environment_id,
 			customers: {
-				connect: { tenant_id_email: { tenant_id, email } }
+				connect: { tenant_id_environment_id_email: { tenant_id, environment_id, email } }
 			},
 			tenants: {
-				connect: { tenant_id: tenantId.value }
+				connect: { tenant_id }
 			}
 		}
 	});
@@ -84,7 +87,8 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 		lineInserts.push(
 			prisma.order_lines.create({
 				data: {
-					tenant_id: tenantId.value,
+					tenant_id,
+					environment_id,
 					order_id: orderId,
 					service_id: line.serviceId.value,
 					time_slot_id: time_slot_id,
@@ -98,8 +102,9 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 		lineInserts.push(
 			prisma.bookings.create({
 				data: {
+					environment_id,
 					tenants: {
-						connect: { tenant_id: tenantId.value }
+						connect: { tenant_id }
 					},
 					services: {
 						connect: { id: line.serviceId.value }
@@ -108,7 +113,7 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 						connect: { id: orderId }
 					},
 					customers: {
-						connect: { tenant_id_email: { tenant_id, email } }
+						connect: { tenant_id_environment_id_email: { tenant_id, environment_id, email } }
 					},
 					time_slots: {
 						connect: line.slot._type === 'timeslot.spec' ? { id: line.slot.id.value } : undefined
@@ -141,11 +146,11 @@ async function insertOrder(tenantId: TenantId, order: Order, everythingForTenant
 }
 
 export async function addOrder(req: express.Request, res: express.Response): Promise<void> {
-	await withTwoRequestParams(req, res, tenantIdParam(), orderAndTotalBody(), async (tenantId, orderAndTotal) => {
+	await withTwoRequestParams(req, res, tenantEnvironmentParam(), orderAndTotalBody(), async (tenantEnvironment, orderAndTotal) => {
 		const { fromDate, toDate } = orderFns.getOrderDateRange(orderAndTotal.order);
-		const everythingForTenant = await getEverythingForTenant(tenantId, fromDate, toDate);
+		const everythingForTenant = await getEverythingForTenant(tenantEnvironment, fromDate, toDate);
 		await withValidationsPerformed(everythingForTenant, orderAndTotal.order, orderAndTotal.total, res, async () => {
-			await insertOrder(tenantId, orderAndTotal.order, everythingForTenant, res);
+			await insertOrder(tenantEnvironment, orderAndTotal.order, everythingForTenant, res);
 		});
 	});
 }

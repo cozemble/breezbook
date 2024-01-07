@@ -12,6 +12,17 @@ export const values = {
 	}
 };
 
+export interface EnvironmentId extends ValueType<string> {
+	_type: 'environment.id';
+}
+
+export function environmentId(value: string): EnvironmentId {
+	return {
+		_type: 'environment.id',
+		value
+	};
+}
+
 export interface TenantId extends ValueType<string> {
 	_type: 'tenant.id';
 }
@@ -20,6 +31,20 @@ export function tenantId(value: string): TenantId {
 	return {
 		_type: 'tenant.id',
 		value
+	};
+}
+
+export interface TenantEnvironment {
+	_type: 'tenant.environment';
+	environmentId: EnvironmentId;
+	tenantId: TenantId;
+}
+
+export function tenantEnvironment(environmentId: EnvironmentId, tenantId: TenantId): TenantEnvironment {
+	return {
+		_type: 'tenant.environment',
+		environmentId,
+		tenantId
 	};
 }
 

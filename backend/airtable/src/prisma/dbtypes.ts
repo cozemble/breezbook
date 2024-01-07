@@ -16,7 +16,7 @@ import {
 	time_slots,
 	pricing_rules
 } from '@prisma/client';
-import { TenantId } from '@breezbook/packages-core';
+import { TenantEnvironment } from '@breezbook/packages-core';
 
 export {
 	resource_availability as DbResourceAvailability,
@@ -37,26 +37,26 @@ export {
 	pricing_rules as DbPricingRule
 };
 
-
-export function findManyForTenant(tenantId: TenantId) {
+export function findManyForTenant(tenantEnvironment: TenantEnvironment) {
 	return async function queryEntity<T>(
 		entity: {
-			findMany: (opts: { where: object, orderBy?: object }) => Promise<T[]>
+			findMany: (opts: { where: object; orderBy?: object }) => Promise<T[]>;
 		},
 		whereOpts: object = {},
 		orderByOpts?: object
 	): Promise<T[]> {
-
+		const tenant_id = tenantEnvironment.tenantId.value;
+		const environment_id = tenantEnvironment.environmentId.value;
 		// Check if orderBy is available
 		// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 		if ((entity as any)?.findMany?.prototype?.hasOwnProperty('orderBy')) {
 			return entity.findMany({
-				where: { tenant_id: tenantId.value, ...whereOpts },
+				where: { tenant_id, environment_id, ...whereOpts },
 				orderBy: orderByOpts
 			});
 		} else {
 			return entity.findMany({
-				where: { tenant_id: tenantId.value, ...whereOpts }
+				where: { tenant_id, environment_id, ...whereOpts }
 			});
 		}
 	};

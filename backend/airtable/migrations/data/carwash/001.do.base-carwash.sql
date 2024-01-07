@@ -1,76 +1,91 @@
 insert into tenants (tenant_id, name)
 values ('tenant1', 'carwash');
 
-insert into business_hours(id, tenant_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('businessHours#1', 'tenant1', 'Monday', '09:00', '18:00');
-insert into business_hours(id, tenant_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('businessHours#2', 'tenant1', 'Tuesday', '09:00', '18:00');
-insert into business_hours(id, tenant_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('businessHours#3', 'tenant1', 'Wednesday', '09:00', '18:00');
-insert into business_hours(id, tenant_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('businessHours#4', 'tenant1', 'Thursday', '09:00', '18:00');
-insert into business_hours(id, tenant_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('businessHours#5', 'tenant1', 'Friday', '09:00', '18:00');
-insert into business_hours(id, tenant_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('businessHours#6', 'tenant1', 'Saturday', '09:00', '18:00');
-insert into business_hours(id, tenant_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('businessHours#7', 'tenant1', 'Sunday', '09:00', '18:00');
+insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
+values ('businessHours#1', 'tenant1', 'dev', 'Monday', '09:00', '18:00');
+insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
+values ('businessHours#2', 'tenant1', 'dev', 'Tuesday', '09:00', '18:00');
+insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
+values ('businessHours#3', 'tenant1', 'dev', 'Wednesday', '09:00', '18:00');
+insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
+values ('businessHours#4', 'tenant1', 'dev', 'Thursday', '09:00', '18:00');
+insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
+values ('businessHours#5', 'tenant1', 'dev', 'Friday', '09:00', '18:00');
+insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
+values ('businessHours#6', 'tenant1', 'dev', 'Saturday', '09:00', '18:00');
+insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
+values ('businessHours#7', 'tenant1', 'dev', 'Sunday', '09:00', '18:00');
 
-insert into time_slots(id, tenant_id, description, start_time_24hr, end_time_24hr)
-values ('timeSlot#1', 'tenant1', '09:00 to 13:00', '09:00', '13:00');
-insert into time_slots(id, tenant_id, description, start_time_24hr, end_time_24hr)
-values ('timeSlot#2', 'tenant1', '13:00 to 16:00', '13:00', '16:00');
-insert into time_slots(id, tenant_id, description, start_time_24hr, end_time_24hr)
-values ('timeSlot#3', 'tenant1', '16:00 to 18:00', '16:00', '18:00');
+insert into time_slots(id, tenant_id, environment_id, description, start_time_24hr, end_time_24hr)
+values ('timeSlot#1', 'tenant1', 'dev', '09:00 to 13:00', '09:00', '13:00');
+insert into time_slots(id, tenant_id, environment_id, description, start_time_24hr, end_time_24hr)
+values ('timeSlot#2', 'tenant1', 'dev', '13:00 to 16:00', '13:00', '16:00');
+insert into time_slots(id, tenant_id, environment_id, description, start_time_24hr, end_time_24hr)
+values ('timeSlot#3', 'tenant1', 'dev', '16:00 to 18:00', '16:00', '18:00');
 
-insert into resource_types (id, tenant_id, name)
-values ('vanResourceType', 'tenant1', 'van');
-insert into resources(id, tenant_id, resource_type, name)
-values ('resource#1', 'tenant1', 'vanResourceType', 'Van 1');
-insert into resources(id, tenant_id, resource_type, name)
-values ('resource#2', 'tenant1', 'vanResourceType', 'Van 2');
+insert into resource_types (id, tenant_id, environment_id, name)
+values ('vanResourceType', 'tenant1', 'dev', 'van');
+insert into resources(id, tenant_id, environment_id, resource_type, name)
+values ('resource#1', 'tenant1', 'dev', 'vanResourceType', 'Van 1');
+insert into resources(id, tenant_id, environment_id, resource_type, name)
+values ('resource#2', 'tenant1', 'dev', 'vanResourceType', 'Van 2');
 
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#1', 'tenant1', 'resource#1', 'Monday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#2', 'tenant1', 'resource#1', 'Tuesday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#3', 'tenant1', 'resource#1', 'Wednesday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#4', 'tenant1', 'resource#1', 'Thursday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#5', 'tenant1', 'resource#1', 'Friday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#6', 'tenant1', 'resource#1', 'Saturday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#7', 'tenant1', 'resource#1', 'Sunday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#8', 'tenant1', 'resource#2', 'Monday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#9', 'tenant1', 'resource#2', 'Tuesday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#10', 'tenant1', 'resource#2', 'Wednesday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#11', 'tenant1', 'resource#2', 'Thursday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#12', 'tenant1', 'resource#2', 'Friday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#13', 'tenant1', 'resource#2', 'Saturday', '09:00', '18:00');
-insert into resource_availability(id, tenant_id, resource_id, day_of_week, start_time_24hr, end_time_24hr)
-values ('resourceAvailability#14', 'tenant1', 'resource#2', 'Sunday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#1', 'tenant1', 'dev', 'resource#1', 'Monday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#2', 'tenant1', 'dev', 'resource#1', 'Tuesday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#3', 'tenant1', 'dev', 'resource#1', 'Wednesday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#4', 'tenant1', 'dev', 'resource#1', 'Thursday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#5', 'tenant1', 'dev', 'resource#1', 'Friday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#6', 'tenant1', 'dev', 'resource#1', 'Saturday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#7', 'tenant1', 'dev', 'resource#1', 'Sunday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#8', 'tenant1', 'dev', 'resource#2', 'Monday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#9', 'tenant1', 'dev', 'resource#2', 'Tuesday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#10', 'tenant1', 'dev', 'resource#2', 'Wednesday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#11', 'tenant1', 'dev', 'resource#2', 'Thursday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#12', 'tenant1', 'dev', 'resource#2', 'Friday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#13', 'tenant1', 'dev', 'resource#2', 'Saturday', '09:00', '18:00');
+insert into resource_availability(id, tenant_id, environment_id, resource_id, day_of_week, start_time_24hr,
+                                  end_time_24hr)
+values ('resourceAvailability#14', 'tenant1', 'dev', 'resource#2', 'Sunday', '09:00', '18:00');
 
-insert into add_on(id, tenant_id, name, price, price_currency, expect_quantity)
-values ('addOn-wax', 'tenant1', 'Wax', 1000, 'GBP', false);
-insert into add_on(id, tenant_id, name, price, price_currency, expect_quantity)
-values ('addOn-polish', 'tenant1', 'Polish', 500, 'GBP', false);
-insert into add_on(id, tenant_id, name, price, price_currency, expect_quantity)
-values ('addOn-clean-seats', 'tenant1', 'Clean seats', 2000, 'GBP', true);
-insert into add_on(id, tenant_id, name, price, price_currency, expect_quantity)
-values ('addOn-clean-carpets', 'tenant1', 'Clean carpets', 2000, 'GBP', false);
+insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity)
+values ('addOn-wax', 'tenant1', 'dev', 'Wax', 1000, 'GBP', false);
+insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity)
+values ('addOn-polish', 'tenant1', 'dev', 'Polish', 500, 'GBP', false);
+insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity)
+values ('addOn-clean-seats', 'tenant1', 'dev', 'Clean seats', 2000, 'GBP', true);
+insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity)
+values ('addOn-clean-carpets', 'tenant1', 'dev', 'Clean carpets', 2000, 'GBP', false);
 
-insert into forms (id, tenant_id, name, description, definition)
+insert into forms (id, tenant_id, environment_id, name, description, definition)
 values ('car-details-form',
         'tenant1',
+        'dev',
         'Car details',
         'Car details',
         '{
@@ -112,9 +127,10 @@ values ('car-details-form',
         }
         ');
 
-insert into forms (id, tenant_id, name, description, definition)
+insert into forms (id, tenant_id, environment_id, name, description, definition)
 values ('contact-details-form',
         'tenant1',
+        'dev',
         'Contact Details',
         'Contact Details Form',
         '{
@@ -150,32 +166,37 @@ values ('contact-details-form',
           }
         }');
 
-insert into tenant_settings(tenant_id, customer_form_id)
-values ('tenant1', 'contact-details-form');
+insert into tenant_settings(tenant_id, environment_id, customer_form_id)
+values ('tenant1', 'dev', 'contact-details-form');
 
-insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
+insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
+                     price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot)
-values ('smallCarWash', 'tenant1', 'service#1', 'Small Car wash', 'Small Car wash', 30, 1000, 'GBP',
+values ('smallCarWash', 'tenant1', 'dev', 'service#1', 'Small Car wash', 'Small Car wash', 30, 1000, 'GBP',
         array ['addOn-wax', 'addOn-polish'], array ['vanResourceType'], true);
 
-insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
+insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
+                     price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot)
-values ('mediumCarWash', 'tenant1', 'service#2', 'Medium Car wash', 'Medium Car wash', 45, 1500, 'GBP',
+values ('mediumCarWash', 'tenant1', 'dev', 'service#2', 'Medium Car wash', 'Medium Car wash', 45, 1500, 'GBP',
         array ['addOn-wax', 'addOn-polish'], array ['vanResourceType'], true);
 
-insert into services(id, tenant_id, service_id, name, description, duration_minutes, price, price_currency,
+insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
+                     price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot)
-values ('largeCarWash', 'tenant1', 'service#3', 'Large Car wash', 'Large Car wash', 60, 2000, 'GBP',
-        array ['addOn-wax', 'addOn-polish', 'addOn-clean-seats', 'addOn-clean-carpets'], array ['vanResourceType'], true);
+values ('largeCarWash', 'tenant1', 'dev', 'service#3', 'Large Car wash', 'Large Car wash', 60, 2000, 'GBP',
+        array ['addOn-wax', 'addOn-polish', 'addOn-clean-seats', 'addOn-clean-carpets'], array ['vanResourceType'],
+        true);
 
-insert into service_forms(tenant_id, s_id, form_id, rank)
-values ('tenant1', 'smallCarWash', 'car-details-form', 0);
-insert into service_forms(tenant_id, s_id, form_id, rank)
-values ('tenant1', 'mediumCarWash', 'car-details-form', 0);
-insert into service_forms(tenant_id, s_id, form_id, rank)
-values ('tenant1', 'largeCarWash', 'car-details-form', 0);
+insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
+values ('tenant1','dev', 'smallCarWash', 'car-details-form', 0);
+insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
+values ('tenant1','dev', 'mediumCarWash', 'car-details-form', 0);
+insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
+values ('tenant1','dev', 'largeCarWash', 'car-details-form', 0);
 
-insert into pricing_rules(id, tenant_id, rank, active, definition) values ('40% more today', 'tenant1', 0, true, '{
+insert into pricing_rules(id, tenant_id, environment_id, rank, active, definition)
+values ('40% more today', 'tenant1','dev', 0, true, '{
   "_type": "time.based.price.adjustment.spec",
   "id": {
     "_type": "id",
@@ -192,7 +213,8 @@ insert into pricing_rules(id, tenant_id, rank, active, definition) values ('40% 
   }
 }');
 
-insert into pricing_rules(id, tenant_id, rank, active, definition) values ('25% more tomorrow', 'tenant1', 1, true, '{
+insert into pricing_rules(id, tenant_id, environment_id, rank, active, definition)
+values ('25% more tomorrow', 'tenant1','dev', 1, true, '{
   "_type": "time.based.price.adjustment.spec",
   "id": {
     "_type": "id",
@@ -209,7 +231,8 @@ insert into pricing_rules(id, tenant_id, rank, active, definition) values ('25% 
   }
 }');
 
-insert into pricing_rules(id, tenant_id, rank, active, definition) values ('10% more day after tomorrow', 'tenant1', 2, true, '{
+insert into pricing_rules(id, tenant_id, environment_id, rank, active, definition)
+values ('10% more day after tomorrow', 'tenant1', 'dev',2, true, '{
   "_type": "time.based.price.adjustment.spec",
   "id": {
     "_type": "id",
@@ -226,7 +249,8 @@ insert into pricing_rules(id, tenant_id, rank, active, definition) values ('10% 
   }
 }');
 
-insert into coupons(id, tenant_id, code, start_date, end_date, definition) values ('fd85db7b-4762-42fb-9a5d-6652e1a05682', 'tenant1', 'expired-20-percent-off', '2020-01-01', '2020-12-31', '{
+insert into coupons(id, tenant_id, environment_id, code, start_date, end_date, definition)
+values ('fd85db7b-4762-42fb-9a5d-6652e1a05682', 'tenant1','dev', 'expired-20-percent-off', '2020-01-01', '2020-12-31', '{
   "_type": "coupon",
   "id": {
     "_type": "coupon.id",

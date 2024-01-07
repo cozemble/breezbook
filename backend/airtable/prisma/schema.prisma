@@ -10,6 +10,7 @@ datasource db {
 model add_on {
   id              String  @id
   tenant_id       String
+  environment_id  String
   name            String
   price           Decimal @db.Decimal
   price_currency  String
@@ -21,6 +22,7 @@ model add_on {
 model blocked_time {
   id              String  @id
   tenant_id       String
+  environment_id  String
   date            String
   start_time_24hr String
   end_time_24hr   String
@@ -30,6 +32,7 @@ model blocked_time {
 model bookings {
   id              String      @id @default(dbgenerated("uuid_generate_v4()"))
   tenant_id       String
+  environment_id  String
   customer_id     String
   service_id      String
   order_id        String
@@ -47,6 +50,7 @@ model bookings {
 model business_hours {
   id              String  @id
   tenant_id       String
+  environment_id  String
   day_of_week     String  @db.VarChar(10)
   start_time_24hr String  @db.VarChar(10)
   end_time_24hr   String  @db.VarChar(10)
@@ -55,21 +59,23 @@ model business_hours {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model customers {
-  id         String     @id @default(dbgenerated("uuid_generate_v4()"))
-  tenant_id  String
-  first_name String
-  last_name  String
-  email      String
-  bookings   bookings[]
-  tenants    tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  orders     orders[]
+  id             String     @id @default(dbgenerated("uuid_generate_v4()"))
+  tenant_id      String
+  environment_id String
+  first_name     String
+  last_name      String
+  email          String
+  bookings       bookings[]
+  tenants        tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  orders         orders[]
 
-  @@unique([tenant_id, email])
+  @@unique([tenant_id, environment_id, email], map: "customers_tenant_id_email_key")
 }
 
 model forms {
   id              String            @id
   tenant_id       String
+  environment_id  String
   name            String
   description     String?
   definition      Json
@@ -81,6 +87,7 @@ model forms {
 model order_lines {
   id                String      @id @default(dbgenerated("uuid_generate_v4()"))
   tenant_id         String
+  environment_id    String
   order_id          String
   service_id        String
   add_on_ids        String[]    @default([])
@@ -96,6 +103,7 @@ model order_lines {
 model orders {
   id                 String     @id @default(dbgenerated("uuid_generate_v4()"))
   tenant_id          String
+  environment_id     String
   customer_id        String
   customer_form_data Json?
   bookings           bookings[]
@@ -104,17 +112,19 @@ model orders {
 }
 
 model pricing_rules {
-  id         String  @id
-  tenant_id  String
-  definition Json
-  rank       Int
-  active     Boolean
-  tenants    tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id             String  @id
+  environment_id String
+  tenant_id      String
+  definition     Json
+  rank           Int
+  active         Boolean
+  tenants        tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model resource_availability {
   id              String     @id
   tenant_id       String?
+  environment_id  String
   resource_id     String?
   day_of_week     String     @db.VarChar(10)
   start_time_24hr String     @db.VarChar(10)
@@ -126,6 +136,7 @@ model resource_availability {
 model resource_blocked_time {
   id              String    @id
   tenant_id       String
+  environment_id  String
   resource_id     String
   date            String
   start_time_24hr String
@@ -135,16 +146,18 @@ model resource_blocked_time {
 }
 
 model resource_types {
-  id        String      @id
-  tenant_id String
-  name      String
-  tenants   tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  resources resources[]
+  id             String      @id
+  tenant_id      String
+  environment_id String
+  name           String
+  tenants        tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  resources      resources[]
 }
 
 model resources {
   id                    String                  @id
   tenant_id             String
+  environment_id        String
   resource_type         String
   name                  String
   resource_availability resource_availability[]
@@ -163,6 +176,7 @@ model schemaversion {
 model services {
   id                      String          @id
   tenant_id               String
+  environment_id          String
   service_id              String
   name                    String
   description             String
@@ -179,6 +193,7 @@ model services {
 
 model tenant_settings {
   tenant_id        String  @id
+  environment_id   String
   customer_form_id String?
   forms            forms?  @relation(fields: [customer_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants          tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
@@ -210,6 +225,7 @@ model tenants {
 model time_slots {
   id              String        @id
   tenant_id       String
+  environment_id  String
   description     String
   start_time_24hr String        @db.VarChar(10)
   end_time_24hr   String        @db.VarChar(10)
@@ -220,23 +236,25 @@ model time_slots {
 }
 
 model service_forms {
-  tenant_id String
-  s_id      String
-  form_id   String
-  rank      Int?
-  forms     forms    @relation(fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services  services @relation(fields: [s_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants   tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  tenant_id      String
+  environment_id String
+  s_id           String
+  form_id        String
+  rank           Int?
+  forms          forms    @relation(fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services       services @relation(fields: [s_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, s_id, form_id])
 }
 
 model coupons {
-  id         String  @id @default(dbgenerated("uuid_generate_v4()"))
-  tenant_id  String
-  code       String
-  definition Json
-  start_date String
-  end_date   String?
-  tenants    tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id             String  @id @default(dbgenerated("uuid_generate_v4()"))
+  tenant_id      String
+  environment_id String
+  code           String
+  definition     Json
+  start_date     String
+  end_date       String?
+  tenants        tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }

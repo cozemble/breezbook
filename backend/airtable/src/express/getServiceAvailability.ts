@@ -11,7 +11,7 @@ import {
 } from '@breezbook/packages-core';
 import express from 'express';
 import { AddOnSummary, AvailabilityResponse, emptyAvailabilityResponse, ServiceSummary, timeSlotAvailability } from '../apiTypes.js';
-import { date, query, serviceIdParam, tenantIdParam, withFourRequestParams } from '../infra/functionalExpress.js';
+import { date, query, serviceIdParam, tenantEnvironmentParam, withFourRequestParams } from '../infra/functionalExpress.js';
 import { EverythingForTenant, getEverythingForTenant } from './getEverythingForTenant.js';
 
 function getServiceSummary(services: DomainService[], serviceId: ServiceId, forms: Form[]): ServiceSummary {
@@ -97,13 +97,15 @@ export async function getServiceAvailability(req: express.Request, res: express.
 	await withFourRequestParams(
 		req,
 		res,
-		tenantIdParam(),
+		tenantEnvironmentParam(),
 		serviceIdParam(),
 		date(query('fromDate')),
 		date(query('toDate')),
-		async (tenantId, serviceId, fromDate, toDate) => {
-			console.log(`Getting availability for tenant ${tenantId.value} and service ${serviceId.value} from ${fromDate.value} to ${toDate.value}`);
-			const everythingForTenant = await getEverythingForTenant(tenantId, fromDate, toDate);
+		async (tenantEnvironment, serviceId, fromDate, toDate) => {
+			console.log(
+				`Getting availability for tenant ${tenantEnvironment.tenantId.value} and service ${serviceId.value} from ${fromDate.value} to ${toDate.value} in environment ${tenantEnvironment.environmentId.value}`
+			);
+			const everythingForTenant = await getEverythingForTenant(tenantEnvironment, fromDate, toDate);
 			res.send(getAvailabilityForService(everythingForTenant, serviceId, fromDate, toDate));
 		}
 	);

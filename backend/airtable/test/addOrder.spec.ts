@@ -27,7 +27,7 @@ const threeDaysFromNow = isoDateFns.addDays(isoDate(), 3);
 const fourDaysFromNow = isoDateFns.addDays(isoDate(), 4);
 
 async function postOrder(order: Order, total: Price) {
-	return await fetch(`http://localhost:${port}/api/tenant1/orders`, {
+	return await fetch(`http://localhost:${port}/api/dev/tenant1/orders`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'

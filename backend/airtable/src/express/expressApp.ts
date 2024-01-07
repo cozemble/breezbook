@@ -1,23 +1,23 @@
-import express, { Express } from 'express'
-import cors from 'cors'
-import {logRequest} from "../infra/logRequest.js";
-import {getServiceAvailability} from "./getServiceAvailability.js";
-import {addOrder} from "./addOrder.js";
+import express, { Express } from 'express';
+import cors from 'cors';
+import { logRequest } from '../infra/logRequest.js';
+import { getServiceAvailability } from './getServiceAvailability.js';
+import { addOrder } from './addOrder.js';
 
 export function expressApp(): Express {
-    const app: Express = express()
+	const app: Express = express();
 
-    const corsOptions = {}
+	const corsOptions = {};
 
-    app.use(cors(corsOptions))
-    app.use(express.json())
+	app.use(cors(corsOptions));
+	app.use(express.json());
 
-    app.use((req, res, next) => {
-        logRequest(req)
-        next()
-    })
-    app.post('/api/:tenantId/service/:serviceId/availability/', getServiceAvailability);
-    app.post('/api/:tenantId/orders', addOrder);
+	app.use((req, res, next) => {
+		logRequest(req);
+		next();
+	});
+	app.post('/api/:envId/:tenantId/service/:serviceId/availability/', getServiceAvailability);
+	app.post('/api/:envId/:tenantId/orders', addOrder);
 
-    return app
+	return app;
 }
