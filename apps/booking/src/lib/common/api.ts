@@ -33,15 +33,30 @@ export const service = {
 };
 
 export const timeSlot = {
-	getAll: async (tenantSlug: string, serviceSlug: string) => {
-		// TODO use tenantSlug
-		// TODO use serviceSlug
+	getAll: async (
+		tenantSlug: string,
+		serviceSlug: string,
+		filters: {
+			fromDate: Date;
+			toDate: Date;
+		}
+	) => {
+		// TODO this is just for testing, remove it later
+		tenantSlug = 'tenant1';
+		serviceSlug = 'smallCarWash';
+
 		// TODO filter with fromDate and toDate
 		// TODO set the api url as an env variable
 		// TODO handle errors properly
 
+		// format: YYYY-MM-DD
+		const filtersAsUrlParams = new URLSearchParams({
+			fromDate: filters.fromDate.toISOString().split('T')[0],
+			toDate: filters.toDate.toISOString().split('T')[0]
+		}).toString();
+
 		const response = await fetch(
-			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/tenant1/service/smallCarWash/availability?fromDate=2023-12-20&toDate=2023-12-29`,
+			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/${tenantSlug}/service/${serviceSlug}/availability?${filtersAsUrlParams}`,
 			{
 				method: 'POST',
 				headers: {

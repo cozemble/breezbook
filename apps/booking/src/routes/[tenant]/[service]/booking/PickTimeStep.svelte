@@ -1,6 +1,7 @@
 <script lang="ts">
 	import api from '$lib/common/api';
 	import TimeSlotForm from '$lib/components/time/TimeSlotForm.svelte';
+	import { onMount } from 'svelte';
 	import StepWrapper from './StepWrapper.svelte';
 
 	export let step: BookingFormStep;
@@ -9,11 +10,16 @@
 
 	let days: DaySlot[] = [];
 
-	api.timeSlot.getAll('test', 'test').then((res) => {
-		days = res;
+	onMount(async () => {
+		await api.timeSlot
+			.getAll('test', 'test', {
+				fromDate: new Date(),
+				toDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
+			})
+			.then((res) => {
+				days = res;
+			});
 	});
-
-	// <!-- TODO properly format the value -->
 
 	const onSubmit = () => {
 		if (!value) return;
@@ -28,7 +34,7 @@
 				day: 'numeric',
 				month: 'short'
 		  })} ${value.start} - ${value.end}`
-		: 'no time selected';
+		: 'no time slot selected';
 </script>
 
 <!-- TODO date range filter -->
