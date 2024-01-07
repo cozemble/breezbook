@@ -59,7 +59,7 @@ function validateForm(forms: Form[], formId: FormId, formData: unknown): string 
 	}
 }
 
-function checkOrderTotal(everythingForTenant: EverythingForTenant, givenOrder: Order, postedOrderTotal: Price): ErrorResponse | null {
+function validateOrderTotal(everythingForTenant: EverythingForTenant, givenOrder: Order, postedOrderTotal: Price): ErrorResponse | null {
 	const recalcedOrderLines = givenOrder.lines.map((line) => {
 		const orderedSlot = line.slot;
 		if (orderedSlot._type === 'exact.time.availability') {
@@ -88,17 +88,10 @@ function checkOrderTotal(everythingForTenant: EverythingForTenant, givenOrder: O
 	return null;
 }
 
-async function withValidationsPerformed(
-	everythingForTenant: EverythingForTenant,
-	order: Order,
-	orderTotal: Price,
-	res: express.Response,
-	fn: () => Promise<void>
-) {
+function validateCustomerForm(everythingForTenant: EverythingForTenant, order: Order): ErrorResponse | null {
 	if (everythingForTenant.tenantSettings.customerFormId) {
 		if (!order.customer.formData) {
-			res.status(400).send(errorResponse(addOrderErrorCodes.customerFormMissing));
-			return;
+			return errorResponse(addOrderErrorCodes.customerFormMissing);
 		} else {
 			const formValidationError = validateForm(
 				everythingForTenant.businessConfiguration.forms,
@@ -106,11 +99,14 @@ async function withValidationsPerformed(
 				order.customer.formData
 			);
 			if (formValidationError) {
-				res.status(400).send(errorResponse(addOrderErrorCodes.customerFormInvalid, formValidationError));
-				return;
+				return errorResponse(addOrderErrorCodes.customerFormInvalid, formValidationError);
 			}
 		}
 	}
+	return null;
+}
+
+function validateServiceForms(everythingForTenant: EverythingForTenant, order: Order): ErrorResponse | null {
 	for (let i = 0; i < order.lines.length; i++) {
 		const line = order.lines[i];
 		const service = mandatory(
@@ -121,16 +117,18 @@ async function withValidationsPerformed(
 			const serviceFormId = service.serviceFormIds[serviceFormIndex];
 			const formData = line.serviceFormData[serviceFormIndex] as unknown;
 			if (!formData) {
-				res.status(400).send(errorResponse(addOrderErrorCodes.serviceFormMissing, `Service form ${serviceFormId.value} missing in order line ${i}`));
-				return;
+				return errorResponse(addOrderErrorCodes.serviceFormMissing, `Service form ${serviceFormId.value} missing in order line ${i}`);
 			}
 			const formValidationError = validateForm(everythingForTenant.businessConfiguration.forms, serviceFormId, formData);
 			if (formValidationError) {
-				res.status(400).send(errorResponse(addOrderErrorCodes.serviceFormInvalid, formValidationError + ` for service ${service.name} in order line ${i}`));
-				return;
+				return errorResponse(addOrderErrorCodes.serviceFormInvalid, formValidationError + ` for service ${service.name} in order line ${i}`);
 			}
 		}
 	}
+	return null;
+}
+
+function validateAvailability(everythingForTenant: EverythingForTenant, order: Order) {
 	const projectedBookings: Booking[] = [...everythingForTenant.bookings];
 	for (let i = 0; i < order.lines.length; i++) {
 		const line = order.lines[i];
@@ -143,29 +141,49 @@ async function withValidationsPerformed(
 				everythingForTenant.businessConfiguration.services
 			);
 		} catch (e: unknown) {
-			res.status(400).send(errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.serviceId.value} in order line ${i}`));
-			return;
+			return errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.serviceId.value} in order line ${i}`);
 		}
 	}
+	return null;
+}
 
+function validateCoupon(everythingForTenant: EverythingForTenant, order: Order) {
 	const couponCode = order.couponCode;
 	if (couponCode) {
 		const coupon = everythingForTenant.coupons.find((c) => c.code.value === couponCode.value);
 		if (!coupon) {
-			res.status(400).send(errorResponse(addOrderErrorCodes.noSuchCoupon, `Coupon ${couponCode.value} not found`));
-			return;
+			return errorResponse(addOrderErrorCodes.noSuchCoupon, `Coupon ${couponCode.value} not found`);
 		}
 		if (coupon) {
 			if (!(isoDateFns.gte(isoDateFns.today(), coupon.validFrom) && isoDateFns.lte(isoDateFns.today(), coupon.validTo ?? isoDateFns.today()))) {
-				res.status(400).send(errorResponse(addOrderErrorCodes.expiredCoupon, `Coupon ${coupon.code.value} expired`));
-				return;
+				return errorResponse(addOrderErrorCodes.expiredCoupon, `Coupon ${coupon.code.value} expired`);
 			}
 		}
 	}
-	const orderTotalError = checkOrderTotal(everythingForTenant, order, orderTotal);
-	if (orderTotalError) {
-		res.status(400).send(orderTotalError);
-		return;
+	return null;
+}
+
+async function withValidationsPerformed(
+	everythingForTenant: EverythingForTenant,
+	order: Order,
+	orderTotal: Price,
+	res: express.Response,
+	fn: () => Promise<void>
+) {
+	const validationFns = [
+		() => validateCustomerForm(everythingForTenant, order),
+		() => validateServiceForms(everythingForTenant, order),
+		() => validateAvailability(everythingForTenant, order),
+		() => validateCoupon(everythingForTenant, order),
+		() => validateOrderTotal(everythingForTenant, order, orderTotal)
+	];
+
+	for (const validationFn of validationFns) {
+		const validationError = validationFn();
+		if (validationError) {
+			res.status(400).send(validationError);
+			return;
+		}
 	}
 
 	await fn();
