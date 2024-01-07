@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { formatPrice } from '$lib/utils';
+
 	export let slot: TimeSlot;
 	export let selectedSlot: TimeSlot | null;
 
@@ -20,5 +22,5 @@
 		{slot.end}
 	</span>
 
-	<span class="text-primary">£{slot.price}</span>
+	<span class="text-primary">£{formatPrice(slot.price)}</span>
 </button>

@@ -40,3 +40,17 @@ export const removeEmptyValues = (value: AnyValue): AnyValue => {
 	const emptyValues = ['', null, undefined, NaN];
 	if (!_.includes(emptyValues, value)) return value;
 };
+
+/** Format a price that consists of an integer and a decimal
+ * @example
+ * formatPrice(1000) // 10.00
+ */
+export const formatPrice = (price: number) => {
+	const priceStr = price.toString();
+
+	const priceInteger = priceStr.substring(0, priceStr.length - 2);
+	const priceDecimal = priceStr.substring(priceStr.length - 2);
+
+	const formattedPrice = `${priceInteger}.${priceDecimal}`;
+	return formattedPrice;
+};
