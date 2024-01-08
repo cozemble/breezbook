@@ -64,7 +64,18 @@ export interface OrderCreatedResponse {
 	orderId: string;
 	customerId: string;
 	bookingIds: string[];
+	reservationIds: string[];
 	orderLineIds: string[];
+}
+
+export function orderCreatedResponse(
+	orderId: string,
+	customerId: string,
+	bookingIds: string[],
+	reservationIds: string[],
+	orderLineIds: string[]
+): OrderCreatedResponse {
+	return { _type: 'order.created.response', orderId, customerId, bookingIds, reservationIds, orderLineIds };
 }
 
 export interface ErrorResponse {

@@ -30,7 +30,7 @@ model blocked_time {
 }
 
 model bookings {
-  id              String      @id @default(dbgenerated("uuid_generate_v4()"))
+  id              String         @id @default(dbgenerated("uuid_generate_v4()"))
   tenant_id       String
   environment_id  String
   customer_id     String
@@ -40,11 +40,12 @@ model bookings {
   start_time_24hr String
   end_time_24hr   String
   time_slot_id    String?
-  customers       customers   @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  orders          orders      @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services        services    @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants         tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  time_slots      time_slots? @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customers       customers      @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders          orders         @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services        services       @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants         tenants        @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  time_slots      time_slots?    @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reservations    reservations[]
 }
 
 model business_hours {
@@ -257,4 +258,13 @@ model coupons {
   start_date     String
   end_date       String?
   tenants        tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model reservations {
+  id               String   @id @default(dbgenerated("uuid_generate_v4()"))
+  booking_id       String
+  reservation_time DateTime @db.Timestamp(6)
+  expiry_time      DateTime @db.Timestamp(6)
+  reservation_type String
+  bookings         bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

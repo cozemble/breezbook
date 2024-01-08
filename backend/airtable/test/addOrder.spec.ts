@@ -10,7 +10,6 @@ import {
 	isoDateFns,
 	Order,
 	order,
-	orderAndTotal,
 	orderFns,
 	orderLine,
 	price,
@@ -23,7 +22,6 @@ import { addOrderErrorCodes } from '../src/express/addOrder.js';
 
 const port = 3003;
 const tomorrow = isoDateFns.addDays(isoDate(), 1);
-const dayAfterTomorrow = isoDateFns.addDays(isoDate(), 2);
 const threeDaysFromNow = isoDateFns.addDays(isoDate(), 3);
 const fourDaysFromNow = isoDateFns.addDays(isoDate(), 4);
 
@@ -188,5 +186,20 @@ describe('with a migrated database', () => {
 		const json = (await response.json()) as ErrorResponse;
 		expect(json.errorCode).toBe(addOrderErrorCodes.expiredCoupon);
 		expect(json.errorMessage).toBeDefined();
+	});
+
+	test('an order intending full payment on checkout should reserve the booking', async () => {
+		const theOrder = order(goodCustomer, [
+			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], fourDaysFromNow, carwash.oneToFour, [goodServiceFormData])
+		]);
+		const response = await postOrder(theOrder, carwash.smallCarWash.price);
+
+		expect(response.status).toBe(200);
+		const json = (await response.json()) as OrderCreatedResponse;
+		expect(json.orderId).toBeDefined();
+		expect(json.customerId).toBeDefined();
+		expect(json.bookingIds.length).toBe(1);
+		expect(json.orderLineIds.length).toBe(1);
+		expect(json.reservationIds.length).toBe(1);
 	});
 });

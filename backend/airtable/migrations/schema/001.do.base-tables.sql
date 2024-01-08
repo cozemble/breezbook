@@ -202,3 +202,12 @@ create table coupons
     start_date     text                                not null,
     end_date       text                                null default null
 );
+
+create table reservations
+(
+    id               text primary key default uuid_generate_v4(),
+    booking_id       text references bookings (id) not null,
+    reservation_time timestamp                     not null,
+    expiry_time      timestamp                     not null,
+    reservation_type text                          not null
+);

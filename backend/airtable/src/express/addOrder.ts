@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Prisma } from '@prisma/client';
 import { DbBooking, DbOrderLine } from '../prisma/dbtypes.js';
 import { validateAvailability, validateCoupon, validateCustomerForm, validateOrderTotal, validateServiceForms } from './addOrderValidations.js';
+import { CreateOrderRequest, orderCreatedResponse } from '@breezbook/backend-api-types';
 
 export const addOrderErrorCodes = {
 	customerFormMissing: 'addOrder.customer.form.missing',
@@ -45,7 +46,13 @@ async function withValidationsPerformed(
 	await fn();
 }
 
-async function insertOrder(tenantEnvironment: TenantEnvironment, order: Order, everythingForTenant: EverythingForTenant, res: express.Response) {
+async function insertOrder(
+	tenantEnvironment: TenantEnvironment,
+	createOrderRequest: CreateOrderRequest,
+	everythingForTenant: EverythingForTenant,
+	res: express.Response
+) {
+	const order = createOrderRequest.order;
 	const prisma = prismaClient();
 	const tenant_id = tenantEnvironment.tenantId.value;
 	const environment_id = tenantEnvironment.environmentId.value;
@@ -77,6 +84,11 @@ async function insertOrder(tenantEnvironment: TenantEnvironment, order: Order, e
 		}
 	});
 	const lineInserts: Prisma.PrismaPromise<unknown>[] = [];
+	const shouldMakeReservations =
+		createOrderRequest.paymentIntent._type === 'full.payment.on.checkout' || createOrderRequest.paymentIntent._type === 'deposit.and.balance';
+	const orderLineIds = [] as string[];
+	const reservationIds = [] as string[];
+	const bookingIds = [] as string[];
 	for (const line of order.lines) {
 		const service = mandatory(
 			everythingForTenant.businessConfiguration.services.find((s) => s.id.value === line.serviceId.value),
@@ -84,9 +96,13 @@ async function insertOrder(tenantEnvironment: TenantEnvironment, order: Order, e
 		);
 		const servicePeriod = calcSlotPeriod(line.slot, service.duration);
 		const time_slot_id = line.slot._type === 'timeslot.spec' ? line.slot.id.value : null;
+		const orderLineId = uuidv4();
+		orderLineIds.push(orderLineId);
+
 		lineInserts.push(
 			prisma.order_lines.create({
 				data: {
+					id: orderLineId,
 					tenant_id,
 					environment_id,
 					order_id: orderId,
@@ -99,9 +115,12 @@ async function insertOrder(tenantEnvironment: TenantEnvironment, order: Order, e
 				}
 			})
 		);
+		const bookingId = uuidv4();
+		bookingIds.push(bookingId);
 		lineInserts.push(
 			prisma.bookings.create({
 				data: {
+					id: bookingId,
 					environment_id,
 					tenants: {
 						connect: { tenant_id }
@@ -124,25 +143,27 @@ async function insertOrder(tenantEnvironment: TenantEnvironment, order: Order, e
 				}
 			})
 		);
-	}
-	const [customerOutcome, orderOutcome, ...remainingOutcomes] = await prisma.$transaction([customerUpsert, createOrder, ...lineInserts]);
-	const orderLineOutcomes: DbOrderLine[] = [];
-	const bookingOutcomes: DbBooking[] = [];
-
-	for (let i = 0; i < remainingOutcomes.length; i++) {
-		if (i % 2 == 0) {
-			orderLineOutcomes.push(remainingOutcomes[i] as DbOrderLine);
-		} else {
-			bookingOutcomes.push(remainingOutcomes[i] as DbBooking);
+		if (shouldMakeReservations) {
+			const reservationId = uuidv4();
+			reservationIds.push(reservationId);
+			lineInserts.push(
+				prisma.reservations.create({
+					data: {
+						id: reservationId,
+						bookings: {
+							connect: { id: bookingId }
+						},
+						reservation_time: new Date(),
+						expiry_time: new Date(new Date().getTime() + 1000 * 60 * 30),
+						reservation_type: 'awaiting payment'
+					}
+				})
+			);
 		}
 	}
+	const [customerOutcome, orderOutcome, ...remainingOutcomes] = await prisma.$transaction([customerUpsert, createOrder, ...lineInserts]);
 
-	res.send({
-		orderId: orderOutcome.id,
-		customerId: customerOutcome.id,
-		bookingIds: bookingOutcomes.map((b) => b.id),
-		orderLineIds: orderLineOutcomes.map((ol) => ol.id)
-	});
+	res.send(orderCreatedResponse(orderOutcome.id, customerOutcome.id, bookingIds, reservationIds, orderLineIds));
 }
 
 export async function addOrder(req: express.Request, res: express.Response): Promise<void> {
@@ -150,7 +171,7 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
 		const { fromDate, toDate } = orderFns.getOrderDateRange(createOrderRequest.order);
 		const everythingForTenant = await getEverythingForTenant(tenantEnvironment, fromDate, toDate);
 		await withValidationsPerformed(everythingForTenant, createOrderRequest.order, createOrderRequest.orderTotal, res, async () => {
-			await insertOrder(tenantEnvironment, createOrderRequest.order, everythingForTenant, res);
+			await insertOrder(tenantEnvironment, createOrderRequest, everythingForTenant, res);
 		});
 	});
 }
