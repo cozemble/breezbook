@@ -1,4 +1,4 @@
-import { Form } from '@breezbook/packages-core';
+import { Form, Order, PaymentIntent, Price } from '@breezbook/packages-core';
 
 export interface TimeSlotAvailability {
 	_type: 'time.slot.availability';
@@ -29,27 +29,7 @@ export function timeSlotAvailability(
 	};
 }
 
-// export interface ExactTimeAvailability {
-// 	_type: 'exact.time.availability';
-// 	time24hr: string;
-// 	priceWithNoDecimalPlaces: number;
-// 	priceCurrency: string;
-// }
-
-// export function exactTimeAvailability(time24hr: string, priceWithNoDecimalPlaces: number,
-// 																			priceCurrency: string
-// ): ExactTimeAvailability {
-// 	return {
-// 		_type: 'exact.time.availability',
-// 		time24hr,
-// 		priceWithNoDecimalPlaces,
-// 		priceCurrency
-// 	};
-// }
-
 export type Availability = TimeSlotAvailability;
-
-// export type Availability = TimeSlotAvailability | ExactTimeAvailability
 
 export type Slots = Record<string, Availability[]>;
 
@@ -95,4 +75,15 @@ export interface ErrorResponse {
 
 export function errorResponse(errorCode: string, errorMessage?: string): ErrorResponse {
 	return { _type: 'error.response', errorCode, errorMessage };
+}
+
+export interface CreateOrderRequest {
+	_type: 'create.order.request';
+	order: Order;
+	orderTotal: Price;
+	paymentIntent: PaymentIntent;
+}
+
+export function createOrderRequest(order: Order, orderTotal: Price, paymentIntent: PaymentIntent): CreateOrderRequest {
+	return { _type: 'create.order.request', order, orderTotal, paymentIntent };
 }

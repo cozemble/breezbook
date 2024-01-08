@@ -5,6 +5,7 @@ import {
 	couponCode,
 	currency,
 	customer,
+	fullPaymentOnCheckout,
 	isoDate,
 	isoDateFns,
 	Order,
@@ -16,7 +17,7 @@ import {
 	Price,
 	priceFns
 } from '@breezbook/packages-core';
-import { ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
+import { createOrderRequest, ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
 import { addOrderErrorCodes } from '../src/express/addOrder.js';
 
@@ -27,12 +28,13 @@ const threeDaysFromNow = isoDateFns.addDays(isoDate(), 3);
 const fourDaysFromNow = isoDateFns.addDays(isoDate(), 4);
 
 async function postOrder(order: Order, total: Price) {
+	const body = createOrderRequest(order, total, fullPaymentOnCheckout());
 	return await fetch(`http://localhost:${port}/api/dev/tenant1/orders`, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
 		},
-		body: JSON.stringify(orderAndTotal(order, total))
+		body: JSON.stringify(body)
 	});
 }
 

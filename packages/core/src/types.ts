@@ -979,16 +979,23 @@ export function orderWithTotal(order: Order, lineTotals: OrderLineWithTotal[], c
 	};
 }
 
-export interface OrderAndTotal {
-	_type: 'order.and.total';
-	order: Order;
-	total: Price;
+export interface FullPaymentOnCheckout {
+	_type: 'full.payment.on.checkout';
 }
 
-export function orderAndTotal(order: Order, total: Price): OrderAndTotal {
+export function fullPaymentOnCheckout(): FullPaymentOnCheckout {
 	return {
-		_type: 'order.and.total',
-		order,
-		total
+		_type: 'full.payment.on.checkout'
 	};
 }
+
+export interface DepositAndBalance {
+	_type: 'deposit.and.balance';
+	depositAmount: Price;
+}
+
+export interface PaymentOnServiceDelivery {
+	_type: 'payment.on.service.delivery';
+}
+
+export type PaymentIntent = FullPaymentOnCheckout | DepositAndBalance | PaymentOnServiceDelivery;

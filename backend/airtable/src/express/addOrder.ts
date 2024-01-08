@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { orderAndTotalBody, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
+import { createOrderRequest, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { calcSlotPeriod, mandatory, Order, orderFns, Price, TenantEnvironment } from '@breezbook/packages-core';
 import { EverythingForTenant, getEverythingForTenant } from './getEverythingForTenant.js';
 import { prismaClient } from '../prisma/client.js';
@@ -146,11 +146,11 @@ async function insertOrder(tenantEnvironment: TenantEnvironment, order: Order, e
 }
 
 export async function addOrder(req: express.Request, res: express.Response): Promise<void> {
-	await withTwoRequestParams(req, res, tenantEnvironmentParam(), orderAndTotalBody(), async (tenantEnvironment, orderAndTotal) => {
-		const { fromDate, toDate } = orderFns.getOrderDateRange(orderAndTotal.order);
+	await withTwoRequestParams(req, res, tenantEnvironmentParam(), createOrderRequest(), async (tenantEnvironment, createOrderRequest) => {
+		const { fromDate, toDate } = orderFns.getOrderDateRange(createOrderRequest.order);
 		const everythingForTenant = await getEverythingForTenant(tenantEnvironment, fromDate, toDate);
-		await withValidationsPerformed(everythingForTenant, orderAndTotal.order, orderAndTotal.total, res, async () => {
-			await insertOrder(tenantEnvironment, orderAndTotal.order, everythingForTenant, res);
+		await withValidationsPerformed(everythingForTenant, createOrderRequest.order, createOrderRequest.orderTotal, res, async () => {
+			await insertOrder(tenantEnvironment, createOrderRequest.order, everythingForTenant, res);
 		});
 	});
 }

@@ -4,7 +4,6 @@ import {
 	environmentId,
 	isoDate,
 	IsoDate,
-	OrderAndTotal,
 	serviceId,
 	ServiceId,
 	tenantEnvironment,
@@ -12,6 +11,7 @@ import {
 	tenantId,
 	TenantId
 } from '@breezbook/packages-core';
+import { CreateOrderRequest } from '@breezbook/backend-api-types';
 
 export interface RequestValueExtractor {
 	name: string;
@@ -58,15 +58,15 @@ export function date(requestValue: RequestValueExtractor): ParamExtractor<IsoDat
 	};
 }
 
-export function orderAndTotalBody(): ParamExtractor<OrderAndTotal | null> {
+export function createOrderRequest(): ParamExtractor<CreateOrderRequest | null> {
 	return (req: express.Request, res: express.Response) => {
-		const body = req.body as OrderAndTotal | null;
+		const body = req.body as CreateOrderRequest | null;
 		if (!body) {
 			res.status(400).send(`Missing required body`);
 			return null;
 		}
-		if (body._type !== 'order.and.total') {
-			res.status(400).send(`Posted body is not an order`);
+		if (body._type !== 'create.order.request') {
+			res.status(400).send(`Posted body is not a create order request`);
 			return null;
 		}
 		return body;
