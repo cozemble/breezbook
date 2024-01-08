@@ -1,6 +1,6 @@
 import { booking, Booking, currency, Form, FormId, isoDateFns, mandatory, Order, orderLine, price, Price, priceFns } from '@breezbook/packages-core';
 import { EverythingForTenant } from './getEverythingForTenant.js';
-import { Availability, errorResponse, ErrorResponse } from '../apiTypes.js';
+import { Availability, errorResponse, ErrorResponse } from '@breezbook/backend-api-types';
 import { getAvailabilityForService } from './getServiceAvailability.js';
 import { calculateOrderTotal } from '@breezbook/packages-core/dist/calculateOrderTotal.js';
 import { applyBookingsToResourceAvailability } from '@breezbook/packages-core/dist/applyBookingsToResourceAvailability.js';

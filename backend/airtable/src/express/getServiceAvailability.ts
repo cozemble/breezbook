@@ -10,7 +10,7 @@ import {
 	values
 } from '@breezbook/packages-core';
 import express from 'express';
-import { AddOnSummary, AvailabilityResponse, emptyAvailabilityResponse, ServiceSummary, timeSlotAvailability } from '../apiTypes.js';
+import { AddOnSummary, AvailabilityResponse, emptyAvailabilityResponse, ServiceSummary, timeSlotAvailability } from '@breezbook/backend-api-types';
 import { date, query, serviceIdParam, tenantEnvironmentParam, withFourRequestParams } from '../infra/functionalExpress.js';
 import { EverythingForTenant, getEverythingForTenant } from './getEverythingForTenant.js';
 

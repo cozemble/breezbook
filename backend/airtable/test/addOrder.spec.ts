@@ -16,7 +16,7 @@ import {
 	Price,
 	priceFns
 } from '@breezbook/packages-core';
-import { ErrorResponse, OrderCreatedResponse } from '../src/apiTypes.js';
+import { ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
 import { addOrderErrorCodes } from '../src/express/addOrder.js';
 

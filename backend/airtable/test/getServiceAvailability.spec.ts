@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
-import { AvailabilityResponse } from '../src/apiTypes.js';
+import { AvailabilityResponse } from '@breezbook/backend-api-types';
 import { isoDate, isoDateFns } from '@breezbook/packages-core';
 
 const port = 3002;
