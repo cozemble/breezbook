@@ -23,6 +23,9 @@ importers:
 
   apps/booking:
     devDependencies:
+      '@breezbook/backend-api-types':
+        specifier: workspace:*
+        version: link:../../backend/api-types
       '@iconify/svelte':
         specifier: ^3.1.6
         version: 3.1.6(svelte@4.2.8)

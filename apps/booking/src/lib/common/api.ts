@@ -1,4 +1,5 @@
 import mock, { services } from '$lib/mock';
+import type { AvailabilityResponse } from '@breezbook/backend-api-types';
 
 // TODO: replace with real fetch
 
@@ -56,7 +57,7 @@ export const timeSlot = {
 		}).toString();
 
 		const response = await fetch(
-			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/${tenantSlug}/service/${serviceSlug}/availability?${filtersAsUrlParams}`,
+			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/service/${serviceSlug}/availability?${filtersAsUrlParams}`,
 			{
 				method: 'POST',
 				headers: {
@@ -77,7 +78,7 @@ export const timeSlot = {
 			return [];
 		}
 
-		const data = await response.json();
+		const data = (await response.json()) as AvailabilityResponse;
 
 		const daysObject = data.slots as {
 			[key: string]: {
@@ -85,7 +86,7 @@ export const timeSlot = {
 				startTime24hr: string;
 				endTime24hr: string;
 				label: string;
-				priceWithNoDecimalPlaces: string;
+				priceWithNoDecimalPlaces: number;
 				priceCurrency: string;
 			}[];
 		};

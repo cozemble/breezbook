@@ -1,9 +1,12 @@
 create extension if not exists "uuid-ossp";
+create extension if not exists pgcrypto;
 
 create table tenants
 (
-    tenant_id text primary key,
-    name      text not null
+    tenant_id  text primary key,
+    name       text                     not null,
+    created_at timestamp with time zone not null default current_timestamp,
+    updated_at timestamp with time zone not null default current_timestamp
 );
 
 create table business_hours
@@ -13,7 +16,9 @@ create table business_hours
     environment_id  text                                not null,
     day_of_week     varchar(10)                         not null,
     start_time_24hr varchar(10)                         not null,
-    end_time_24hr   varchar(10)                         not null
+    end_time_24hr   varchar(10)                         not null,
+    created_at      timestamp with time zone            not null default current_timestamp,
+    updated_at      timestamp with time zone            not null default current_timestamp
 );
 
 create table blocked_time
@@ -23,7 +28,9 @@ create table blocked_time
     environment_id  text                                not null,
     date            text                                not null,
     start_time_24hr text                                not null,
-    end_time_24hr   text                                not null
+    end_time_24hr   text                                not null,
+    created_at      timestamp with time zone            not null default current_timestamp,
+    updated_at      timestamp with time zone            not null default current_timestamp
 );
 
 create table resource_types
@@ -31,7 +38,9 @@ create table resource_types
     id             text primary key,
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
-    name           text                                not null
+    name           text                                not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
 );
 
 create table resources
@@ -40,18 +49,22 @@ create table resources
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
     resource_type  text references resource_types (id) not null,
-    name           text                                not null
+    name           text                                not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
 );
 
 create table resource_availability
 (
     id              text primary key,
     tenant_id       text references tenants (tenant_id),
-    environment_id  text        not null,
+    environment_id  text                     not null,
     resource_id     text references resources (id),
-    day_of_week     varchar(10) not null,
-    start_time_24hr varchar(10) not null,
-    end_time_24hr   varchar(10) not null
+    day_of_week     varchar(10)              not null,
+    start_time_24hr varchar(10)              not null,
+    end_time_24hr   varchar(10)              not null,
+    created_at      timestamp with time zone not null default current_timestamp,
+    updated_at      timestamp with time zone not null default current_timestamp
 );
 
 create table resource_blocked_time
@@ -62,7 +75,9 @@ create table resource_blocked_time
     resource_id     text references resources (id)      not null,
     date            text                                not null,
     start_time_24hr text                                not null,
-    end_time_24hr   text                                not null
+    end_time_24hr   text                                not null,
+    created_at      timestamp with time zone            not null default current_timestamp,
+    updated_at      timestamp with time zone            not null default current_timestamp
 );
 
 create table add_on
@@ -74,7 +89,10 @@ create table add_on
     price           numeric                             not null,
     price_currency  text                                not null,
     expect_quantity boolean                             not null,
-    section         text                                null default null
+    section         text                                null     default null,
+    created_at      timestamp with time zone            not null default current_timestamp,
+    updated_at      timestamp with time zone            not null default current_timestamp
+
 );
 
 create table forms
@@ -83,8 +101,11 @@ create table forms
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
     name           text                                not null,
-    description    text                                null default null,
-    definition     jsonb                               not null
+    description    text                                null     default null,
+    definition     jsonb                               not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
+
 );
 
 create table services
@@ -100,7 +121,9 @@ create table services
     price_currency          text                                not null,
     permitted_add_on_ids    text[]                              not null,
     resource_types_required text[]                              not null,
-    requires_time_slot      boolean                             not null
+    requires_time_slot      boolean                             not null,
+    created_at              timestamp with time zone            not null default current_timestamp,
+    updated_at              timestamp with time zone            not null default current_timestamp
 );
 
 create table service_forms
@@ -110,6 +133,8 @@ create table service_forms
     s_id           text references services (id),
     form_id        text references forms (id),
     rank           integer,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
     primary key (tenant_id, s_id, form_id)
 );
 
@@ -121,7 +146,9 @@ create table time_slots
     description     text                                not null,
     start_time_24hr varchar(10)                         not null,
     end_time_24hr   varchar(10)                         not null,
-    tag             text                                null default null
+    tag             text                                null     default null,
+    created_at      timestamp with time zone            not null default current_timestamp,
+    updated_at      timestamp with time zone            not null default current_timestamp
 );
 
 create table pricing_rules
@@ -131,24 +158,30 @@ create table pricing_rules
     tenant_id      text references tenants (tenant_id) not null,
     definition     jsonb                               not null,
     rank           integer                             not null,
-    active         boolean                             not null
+    active         boolean                             not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
 );
 
 create table tenant_settings
 (
     tenant_id        text references tenants (tenant_id) not null primary key,
     environment_id   text                                not null,
-    customer_form_id text                                null default null references forms (id)
+    customer_form_id text                                null     default null references forms (id),
+    created_at       timestamp with time zone            not null default current_timestamp,
+    updated_at       timestamp with time zone            not null default current_timestamp
 );
 
 create table customers
 (
-    id             text primary key default uuid_generate_v4(),
+    id             text primary key                             default uuid_generate_v4(),
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
     first_name     text                                not null,
     last_name      text                                not null,
-    email          text                                not null check (email ~* '^.+@.+\..+$')
+    email          text                                not null check (email ~* '^.+@.+\..+$'),
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
 );
 
 alter table customers
@@ -156,11 +189,13 @@ alter table customers
 
 create table orders
 (
-    id                 text primary key                         default uuid_generate_v4(),
+    id                 text primary key                             default uuid_generate_v4(),
     tenant_id          text references tenants (tenant_id) not null,
     environment_id     text                                not null,
     customer_id        text references customers (id)      not null,
-    customer_form_data jsonb                               null default null
+    customer_form_data jsonb                               null     default null,
+    created_at         timestamp with time zone            not null default current_timestamp,
+    updated_at         timestamp with time zone            not null default current_timestamp
 );
 
 create table order_lines
@@ -175,12 +210,14 @@ create table order_lines
     time_slot_id      text                                null     default null references time_slots (id),
     start_time_24hr   varchar(10)                         not null,
     end_time_24hr     varchar(10)                         not null,
-    service_form_data jsonb                               null     default null
+    service_form_data jsonb                               null     default null,
+    created_at        timestamp with time zone            not null default current_timestamp,
+    updated_at        timestamp with time zone            not null default current_timestamp
 );
 
 create table bookings
 (
-    id              text primary key                         default uuid_generate_v4(),
+    id              text primary key                             default uuid_generate_v4(),
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
     customer_id     text references customers (id)      not null,
@@ -189,25 +226,97 @@ create table bookings
     date            text                                not null,
     start_time_24hr text                                not null,
     end_time_24hr   text                                not null,
-    time_slot_id    text                                null default null references time_slots (id)
+    time_slot_id    text                                null     default null references time_slots (id),
+    created_at      timestamp with time zone            not null default current_timestamp,
+    updated_at      timestamp with time zone            not null default current_timestamp
 );
 
 create table coupons
 (
-    id             text primary key                         default uuid_generate_v4(),
+    id             text primary key                             default uuid_generate_v4(),
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
     code           text                                not null,
     definition     jsonb                               not null,
     start_date     text                                not null,
-    end_date       text                                null default null
+    end_date       text                                null     default null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
 );
 
 create table reservations
 (
-    id               text primary key default uuid_generate_v4(),
+    id               text primary key                       default uuid_generate_v4(),
     booking_id       text references bookings (id) not null,
     reservation_time timestamp                     not null,
     expiry_time      timestamp                     not null,
-    reservation_type text                          not null
+    reservation_type text                          not null,
+    created_at       timestamp with time zone      not null default current_timestamp,
+    updated_at       timestamp with time zone      not null default current_timestamp
 );
+
+create table tenant_secrets
+(
+    tenant_id          text references tenants (tenant_id) not null,
+    environment_id     text                                not null,
+    secret_short_name  varchar(255)                        not null,
+    secret_description text                                not null,
+    encrypted_secret   bytea                               not null,
+    created_at         timestamp with time zone default current_timestamp,
+    updated_at         timestamp with time zone default current_timestamp,
+    primary key (tenant_id, secret_short_name, environment_id)
+);
+
+create or replace function bb_upsert_tenant_secret(
+    p_tenant_id text,
+    p_environment_id text,
+    p_secret_short_name varchar,
+    p_secret_description text,
+    p_secret text,
+    p_encryption_key text
+) returns void as
+$$
+declare
+    encrypted_secret bytea;
+begin
+    -- encrypt the secret
+    encrypted_secret := pgp_sym_encrypt(p_secret, p_encryption_key);
+
+    -- upsert the encrypted secret
+    insert into tenant_secrets (tenant_id, environment_id, secret_short_name, secret_description, encrypted_secret)
+    values (p_tenant_id, p_environment_id, p_secret_short_name, p_secret_description, encrypted_secret)
+    on conflict (tenant_id, secret_short_name, environment_id)
+        do update set secret_description = excluded.secret_description,
+                      encrypted_secret   = excluded.encrypted_secret;
+end;
+$$ language plpgsql;
+
+
+create or replace function bb_get_tenant_secret(
+    p_tenant_id text,
+    p_environment_id text,
+    p_secret_short_name varchar,
+    p_encryption_key text
+) returns text as
+$$
+declare
+    retrieved_secret bytea;
+    decrypted_secret text;
+begin
+    -- retrieve the encrypted secret
+    select encrypted_secret
+    into retrieved_secret
+    from tenant_secrets
+    where tenant_id = p_tenant_id
+      and environment_id = p_environment_id
+      and secret_short_name = p_secret_short_name;
+
+    -- decrypt the secret
+    if retrieved_secret is not null then
+        decrypted_secret := pgp_sym_decrypt(retrieved_secret, p_encryption_key);
+        return decrypted_secret;
+    else
+        return null; -- or handle the case where the secret is not found
+    end if;
+end;
+$$ language plpgsql;
