@@ -1,16 +1,44 @@
 <script lang="ts">
-	const details: Service.Details = {
-		name: '',
-		email: '',
-		phone: '',
-		address: '',
-		notes: ''
-	};
+	import SchemaForm from '$lib/components/schemaForm/SchemaForm.svelte';
 	import StepWrapper from './StepWrapper.svelte';
 
 	export let step: BookingFormStep;
 
-	let value: Service.Details | null;
+	let value: Service.Details;
+
+	// <!-- TODO get schema from service -->
+	const mockJsonSchema = `
+		{
+			"type": "object",
+			"$schema": "http://json-schema.org/draft-07/schema#",
+			"required": [
+				"make",
+				"model",
+				"colour",
+				"year"
+			],
+			"properties": {
+				"make": {
+					"type": "string",
+					"description": "The manufacturer of the car."
+				},
+				"year": {
+					"type": "integer",
+					"description": "The manufacturing year of the car."
+				},
+				"model": {
+					"type": "string",
+					"description": "The model of the car."
+				},
+				"colour": {
+					"type": "string",
+					"description": "The color of the car."
+				}
+			},
+			"additionalProperties": false
+		}`;
+
+	const schema = JSON.parse(mockJsonSchema);
 
 	// <!-- TODO validation -->
 	const onSubmit = () => {
@@ -22,21 +50,12 @@
 </script>
 
 <StepWrapper open={step.open} label="Details" status={step.status} onOpen={step.onOpen}>
-	<label class="form-control w-full max-w-xs">
-		<div class="label">
-			<span class="label-text">Bank Name</span>
-		</div>
-		<input type="text" placeholder="Example Bank" class="input input-bordered w-full max-w-xs" />
-	</label>
+	<div class="max-w-md mx-auto">
+		<SchemaForm {schema} bind:value errors={{}} />
+	</div>
 
-	<label class="form-control w-full max-w-xs">
-		<div class="label">
-			<span class="label-text">Bank Number</span>
-			<div class="flex justify-end gap-3 mt-2">
-				<button class="btn btn-secondary" on:click={step.onGoBack}> Back </button>
-				<button class="btn btn-primary" on:click={onSubmit}> Finish Booking </button>
-			</div>
-			<input type="text" placeholder="12345678" class="input input-bordered w-full max-w-xs" />
-		</div>
-	</label>
+	<div class="flex justify-end gap-3 mt-2">
+		<button class="btn btn-secondary" on:click={step.onGoBack}> Back </button>
+		<button class="btn btn-primary" on:click={onSubmit}> Finish Booking </button>
+	</div>
 </StepWrapper>

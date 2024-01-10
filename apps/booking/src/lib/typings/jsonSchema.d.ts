@@ -39,6 +39,8 @@ declare type JSONObject<S extends JSONSchema> = S extends { type: 'object' }
 	            ? null
 	            : unknown;
 
+//
+
 // value.d.ts file in the original repo
 
 declare type SimpleValue = string | number | boolean | null | undefined;
@@ -50,3 +52,22 @@ declare interface ObjectValue {
 }
 
 declare type AnyValue = SimpleValue | ObjectValue | ArrayValue;
+
+//
+
+// errors.d.ts file in the original repo
+
+declare interface ArrayError {
+	self?: string;
+	items?: (string | ArrayError | ObjectError)[];
+}
+
+declare type ObjectError = Record<string, string | ArrayError | ObjectError>;
+
+declare type ErrorObject =
+	| {
+			[key: string]: string | ArrayError | ObjectError;
+	  }
+	| Record<string, never>;
+
+declare type AnyError = string | ArrayError | ObjectError;
