@@ -1,24 +1,23 @@
 {
-  "name": "@breezbook/repo",
-  "private": true,
-  "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
-  },
-  "devDependencies": {
-    "@breezbook/eslint-config": "workspace:*",
-    "@breezbook/typescript-config": "workspace:*",
-    "prettier": "^3.1.0",
-    "turbo": "latest",
-    "vitest": "^1.1.3"
-  },
-  "workspaces": [
-    "packages/*"
-  ],
-  "packageManager": "pnpm@8.9.0",
-  "engines": {
-    "node": ">=18"
-  }
+	"name": "@breezbook/repo",
+	"private": true,
+	"scripts": {
+		"build": "turbo build",
+		"dev": "turbo dev",
+		"lint": "turbo lint",
+		"format": "prettier --write \"**/*.{ts,tsx,md}\""
+	},
+	"devDependencies": {
+		"@breezbook/eslint-config": "workspace:*",
+		"@breezbook/typescript-config": "workspace:*",
+		"prettier": "^3.1.0",
+		"turbo": "latest"
+	},
+	"workspaces": [
+		"packages/*"
+	],
+	"packageManager": "pnpm@8.9.0",
+	"engines": {
+		"node": ">=18"
+	}
 }
