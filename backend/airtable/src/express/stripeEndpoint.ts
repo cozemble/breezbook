@@ -1,4 +1,4 @@
-import express, { NextFunction } from 'express';
+import express from 'express';
 import { orderIdParam, tenantEnvironmentParam, withOneRequestParams, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { prismaClient } from '../prisma/client.js';
 import { StripeCustomerInput, stripeErrorCodes } from '../stripe.js';
@@ -24,7 +24,7 @@ function toStripeCustomerInput(customers: DbCustomer): StripeCustomerInput {
 	};
 }
 
-export async function onStripeWebhook(req: express.Request, res: express.Response, _next: NextFunction): Promise<void> {
+export async function onStripeWebhook(req: express.Request, res: express.Response): Promise<void> {
 	await withOneRequestParams(req, res, tenantEnvironmentParam(), async (tenantEnvironment) => {
 		const stripeApiKey = await getSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME);
 		const stripeClient = getStripeClient(stripeApiKey, tenantEnvironment.environmentId.value);

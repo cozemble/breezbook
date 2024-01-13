@@ -137,9 +137,12 @@ export class RealStripeClient implements StripeClient {
 				lastName: customerInput.lastName,
 				metadata: customerInput.metadata
 			};
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error('Error in upserting customer:', error);
-			return errorResponse(stripeErrorCodes.failedToUpsertCustomer, error.message);
+			if (error instanceof Error) {
+				return errorResponse(stripeErrorCodes.failedToUpsertCustomer, error.message);
+			}
+			throw error;
 		}
 	}
 
