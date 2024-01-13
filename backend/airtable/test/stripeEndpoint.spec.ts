@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 import { carwash, environmentId, fullPaymentOnCheckout, order, orderLine, tenantEnvironment, tenantId } from '@breezbook/packages-core';
 import { goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow } from './helper.js';
-import { OrderCreatedResponse } from '@breezbook/backend-api-types';
+import { OrderCreatedResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
 import { storeSecret } from '../src/infra/secretsInPostgres.js';
 import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME } from '../src/express/stripeEndpoint.js';
 import { appWithTestContainer, setTestSecretsEncryptionKey } from '../src/infra/appWithTestContainer.js';
@@ -22,8 +22,8 @@ describe('Given an order', () => {
 		}
 
 		setTestSecretsEncryptionKey();
-		await storeSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME, 'stripe api key', 'sk_test_4eC39HqLyjWDarjtT1zdp7dc');
-		await storeSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME, 'stripe public key', 'pk_test_TYooMQauvdEDq54NiTphI7jx');
+		await storeSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME, 'stripe api key', 'sk_test_something');
+		await storeSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME, 'stripe public key', 'pk_test_something');
 		const theOrder = order(goodCustomer, [
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], threeDaysFromNow, carwash.fourToSix, [goodServiceFormData])
 		]);
@@ -33,7 +33,7 @@ describe('Given an order', () => {
 		orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
 	}, 1000 * 90);
 
-	test('x', async () => {
+	test('can create a payment intend and get client_secret and public api key', async () => {
 		const paymentIntentResponse = await fetch(`http://localhost:${port}/api/dev/tenant1/orders/${orderCreatedResponse.orderId}/paymentIntent`, {
 			method: 'POST',
 			headers: {
@@ -42,6 +42,8 @@ describe('Given an order', () => {
 			body: JSON.stringify(fullPaymentOnCheckout())
 		});
 		expect(paymentIntentResponse.status).toBe(200);
-		// const json = (await paymentIntentResponse.json()) as PaymentIntentResponse;
+		const json = (await paymentIntentResponse.json()) as PaymentIntentResponse;
+		expect(json.clientSecret).toBeDefined();
+		expect(json.stripePublicKey).toBe('pk_test_something');
 	});
 });

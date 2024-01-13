@@ -32,6 +32,7 @@ export interface StripeCustomerInput {
 }
 
 export interface StripeCustomer extends StripeCustomerInput {
+	_type: 'stripe.customer';
 	id: string;
 }
 
@@ -79,6 +80,7 @@ export class RealStripeClient implements StripeClient {
 			}
 
 			return {
+				_type: 'stripe.customer',
 				id: customer.id,
 				email: customerInput.email,
 				firstName: customerInput.firstName,
@@ -93,7 +95,7 @@ export class RealStripeClient implements StripeClient {
 
 	public async createPaymentIntent(customerInput: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<PaymentIntent | ErrorResponse> {
 		const customer = await this.upsertCustomer(customerInput);
-		if ('errorCode' in customer) {
+		if (customer._type === 'error.response') {
 			return customer;
 		}
 		const stripeResponse = await this.stripe.paymentIntents.create({
@@ -129,6 +131,7 @@ export class StubStripeClient implements StripeClient {
 
 	public async upsertCustomer(customerInput: StripeCustomerInput): Promise<StripeCustomer | ErrorResponse> {
 		return {
+			_type: 'stripe.customer',
 			id: 'stub-customer-id',
 			email: customerInput.email,
 			firstName: customerInput.firstName,

@@ -8,7 +8,7 @@ import { currency, price } from '@breezbook/packages-core';
 import { errorResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
 
 function getStripeClient(stripeApiKey: string, environmentId: string): StripeClient {
-	if (environmentId === 'synthetic') {
+	if (environmentId === 'dev' || environmentId === 'synthetic') {
 		return new StubStripeClient();
 	}
 	return new RealStripeClient(stripeApiKey);
