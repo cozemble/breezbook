@@ -1,53 +1,11 @@
 import { beforeAll, describe, expect, test } from 'vitest';
-import {
-	addOnOrder,
-	carwash,
-	couponCode,
-	currency,
-	customer,
-	fullPaymentOnCheckout,
-	isoDate,
-	isoDateFns,
-	Order,
-	order,
-	orderFns,
-	orderLine,
-	price,
-	Price,
-	priceFns
-} from '@breezbook/packages-core';
-import { createOrderRequest, ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
+import { addOnOrder, carwash, couponCode, currency, customer, order, orderFns, orderLine, price, priceFns } from '@breezbook/packages-core';
+import { ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
 import { addOrderErrorCodes } from '../src/express/addOrder.js';
+import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow, tomorrow } from './helper.js';
 
 const port = 3003;
-const tomorrow = isoDateFns.addDays(isoDate(), 1);
-const threeDaysFromNow = isoDateFns.addDays(isoDate(), 3);
-const fourDaysFromNow = isoDateFns.addDays(isoDate(), 4);
-
-async function postOrder(order: Order, total: Price) {
-	const body = createOrderRequest(order, total, fullPaymentOnCheckout());
-	return await fetch(`http://localhost:${port}/api/dev/tenant1/orders`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(body)
-	});
-}
-
-const goodCustomer = customer('Mike', 'Hogan', 'mike@email.com', {
-	phone: '23678482376',
-	firstLineOfAddress: '1 Main Street',
-	postcode: 'SW1'
-});
-
-const goodServiceFormData = {
-	make: 'Ford',
-	model: 'Focus',
-	colour: 'Black',
-	year: 2021
-};
 
 describe('with a migrated database', () => {
 	beforeAll(async () => {
@@ -64,7 +22,7 @@ describe('with a migrated database', () => {
 		const theOrder = order(mike, [
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [])
 		]);
-		const response = await postOrder(theOrder, priceFns.add(carwash.smallCarWash.price, carwash.wax.price));
+		const response = await postOrder(theOrder, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), port);
 		expect(response.status).toBe(400);
 		const json = (await response.json()) as ErrorResponse;
 		expect(json.errorCode).toBe(addOrderErrorCodes.customerFormMissing);
@@ -75,7 +33,7 @@ describe('with a migrated database', () => {
 		const theOrder = order(mike, [
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [])
 		]);
-		const response = await postOrder(theOrder, priceFns.add(carwash.smallCarWash.price, carwash.wax.price));
+		const response = await postOrder(theOrder, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), port);
 		expect(response.status).toBe(400);
 		const json = (await response.json()) as ErrorResponse;
 		expect(json.errorCode).toBe(addOrderErrorCodes.customerFormInvalid);
@@ -86,7 +44,7 @@ describe('with a migrated database', () => {
 		const theOrder = order(goodCustomer, [
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [])
 		]);
-		const response = await postOrder(theOrder, priceFns.add(carwash.smallCarWash.price, carwash.wax.price));
+		const response = await postOrder(theOrder, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), port);
 		expect(response.status).toBe(400);
 		const json = (await response.json()) as ErrorResponse;
 		expect(json.errorCode).toBe(addOrderErrorCodes.serviceFormMissing);
@@ -97,7 +55,7 @@ describe('with a migrated database', () => {
 		const theOrder = order(goodCustomer, [
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [{}])
 		]);
-		const response = await postOrder(theOrder, priceFns.add(carwash.smallCarWash.price, carwash.wax.price));
+		const response = await postOrder(theOrder, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), port);
 		expect(response.status).toBe(400);
 		const json = (await response.json()) as ErrorResponse;
 		expect(json.errorCode).toBe(addOrderErrorCodes.serviceFormInvalid);
@@ -119,7 +77,8 @@ describe('with a migrated database', () => {
 
 		const fetched = await postOrder(
 			twoServices,
-			priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price)
+			priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price),
+			port
 		);
 		if (!fetched.ok) {
 			console.error(await fetched.text());
@@ -136,7 +95,7 @@ describe('with a migrated database', () => {
 		const theOrder = order(goodCustomer, [
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [goodServiceFormData])
 		]);
-		const response = await postOrder(theOrder, price(100, currency('GBP')));
+		const response = await postOrder(theOrder, price(100, currency('GBP')), port);
 		expect(response.status).toBe(400);
 		const json = (await response.json()) as ErrorResponse;
 		expect(json.errorCode).toBe(addOrderErrorCodes.wrongTotalPrice);
@@ -148,13 +107,13 @@ describe('with a migrated database', () => {
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], threeDaysFromNow, carwash.fourToSix, [goodServiceFormData])
 		]);
 
-		const response1 = await postOrder(theOrder, carwash.smallCarWash.price);
+		const response1 = await postOrder(theOrder, carwash.smallCarWash.price, port);
 		expect(response1.status).toBe(200);
 
-		const response2 = await postOrder(theOrder, carwash.smallCarWash.price);
+		const response2 = await postOrder(theOrder, carwash.smallCarWash.price, port);
 		expect(response2.status).toBe(200);
 
-		const response3 = await postOrder(theOrder, carwash.smallCarWash.price);
+		const response3 = await postOrder(theOrder, carwash.smallCarWash.price, port);
 
 		expect(response3.status).toBe(400);
 		const json = (await response3.json()) as ErrorResponse;
@@ -167,7 +126,7 @@ describe('with a migrated database', () => {
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], tomorrow, carwash.oneToFour, [goodServiceFormData])
 		]);
 		theOrder = orderFns.addCoupon(theOrder, couponCode('this-does-not-exist'));
-		const response = await postOrder(theOrder, carwash.smallCarWash.price);
+		const response = await postOrder(theOrder, carwash.smallCarWash.price, port);
 
 		expect(response.status).toBe(400);
 		const json = (await response.json()) as ErrorResponse;
@@ -180,7 +139,7 @@ describe('with a migrated database', () => {
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], tomorrow, carwash.oneToFour, [goodServiceFormData])
 		]);
 		theOrder = orderFns.addCoupon(theOrder, couponCode('expired-20-percent-off'));
-		const response = await postOrder(theOrder, carwash.smallCarWash.price);
+		const response = await postOrder(theOrder, carwash.smallCarWash.price, port);
 
 		expect(response.status).toBe(400);
 		const json = (await response.json()) as ErrorResponse;
@@ -192,7 +151,7 @@ describe('with a migrated database', () => {
 		const theOrder = order(goodCustomer, [
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], fourDaysFromNow, carwash.oneToFour, [goodServiceFormData])
 		]);
-		const response = await postOrder(theOrder, carwash.smallCarWash.price);
+		const response = await postOrder(theOrder, carwash.smallCarWash.price, port);
 
 		expect(response.status).toBe(200);
 		const json = (await response.json()) as OrderCreatedResponse;

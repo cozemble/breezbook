@@ -5,7 +5,6 @@ import { EverythingForTenant, getEverythingForTenant } from './getEverythingForT
 import { prismaClient } from '../prisma/client.js';
 import { v4 as uuidv4 } from 'uuid';
 import { Prisma } from '@prisma/client';
-import { DbBooking, DbOrderLine } from '../prisma/dbtypes.js';
 import { validateAvailability, validateCoupon, validateCustomerForm, validateOrderTotal, validateServiceForms } from './addOrderValidations.js';
 import { CreateOrderRequest, orderCreatedResponse } from '@breezbook/backend-api-types';
 
@@ -56,7 +55,7 @@ async function insertOrder(
 	const prisma = prismaClient();
 	const tenant_id = tenantEnvironment.tenantId.value;
 	const environment_id = tenantEnvironment.environmentId.value;
-	const email = order.customer.email;
+	const email = order.customer.email.value;
 	const customerUpsert = prisma.customers.upsert({
 		where: { tenant_id_environment_id_email: { tenant_id, environment_id, email } },
 		update: { first_name: order.customer.firstName, last_name: order.customer.lastName, tenant_id },
@@ -75,6 +74,8 @@ async function insertOrder(
 		data: {
 			id: orderId,
 			environment_id,
+			total_price_in_minor_units: createOrderRequest.orderTotal.amount.value,
+			total_price_currency: createOrderRequest.orderTotal.currency.value,
 			customers: {
 				connect: { tenant_id_environment_id_email: { tenant_id, environment_id, email } }
 			},

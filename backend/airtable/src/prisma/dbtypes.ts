@@ -15,7 +15,8 @@ import {
 	tenant_settings,
 	time_slots,
 	pricing_rules,
-	reservations
+	reservations,
+	customers
 } from '@prisma/client';
 import { TenantEnvironment } from '@breezbook/packages-core';
 
@@ -36,7 +37,8 @@ export {
 	tenant_settings as DbTenantSettings,
 	time_slots as DbTimeSlot,
 	pricing_rules as DbPricingRule,
-	reservations as DbReservation
+	reservations as DbReservation,
+	customers as DbCustomer
 };
 
 export function findManyForTenant(tenantEnvironment: TenantEnvironment) {

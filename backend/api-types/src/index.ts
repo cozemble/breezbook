@@ -98,3 +98,8 @@ export interface CreateOrderRequest {
 export function createOrderRequest(order: Order, orderTotal: Price, paymentIntent: PaymentIntent): CreateOrderRequest {
 	return { _type: 'create.order.request', order, orderTotal, paymentIntent };
 }
+
+export interface PaymentIntentResponse {
+	stripePublicKey: string;
+	clientSecret: string;
+}

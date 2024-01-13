@@ -189,13 +189,15 @@ alter table customers
 
 create table orders
 (
-    id                 text primary key                             default uuid_generate_v4(),
-    tenant_id          text references tenants (tenant_id) not null,
-    environment_id     text                                not null,
-    customer_id        text references customers (id)      not null,
-    customer_form_data jsonb                               null     default null,
-    created_at         timestamp with time zone            not null default current_timestamp,
-    updated_at         timestamp with time zone            not null default current_timestamp
+    id                         text primary key                             default uuid_generate_v4(),
+    tenant_id                  text references tenants (tenant_id) not null,
+    environment_id             text                                not null,
+    customer_id                text references customers (id)      not null,
+    customer_form_data         jsonb                               null     default null,
+    total_price_in_minor_units integer                             not null,
+    total_price_currency       text                                not null,
+    created_at                 timestamp with time zone            not null default current_timestamp,
+    updated_at                 timestamp with time zone            not null default current_timestamp
 );
 
 create table order_lines

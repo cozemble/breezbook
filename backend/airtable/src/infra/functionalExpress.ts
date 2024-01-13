@@ -4,6 +4,8 @@ import {
 	environmentId,
 	isoDate,
 	IsoDate,
+	OrderId,
+	orderId,
 	serviceId,
 	ServiceId,
 	tenantEnvironment,
@@ -123,6 +125,17 @@ export function serviceIdParam(requestValue: RequestValueExtractor = path('servi
 	};
 }
 
+export function orderIdParam(requestValue: RequestValueExtractor = path('orderId')): ParamExtractor<OrderId | null> {
+	return (req: express.Request, res: express.Response) => {
+		const paramValue = requestValue.extractor(req);
+		if (!paramValue) {
+			res.status(400).send(`Missing required parameter orderId`);
+			return null;
+		}
+		return orderId(paramValue);
+	};
+}
+
 export async function withErrorHandling(res: express.Response, f: () => Promise<void>): Promise<void> {
 	try {
 		return await f();
@@ -158,6 +171,16 @@ export async function withThreeRequestParams<A, B, C>(
 	}
 
 	return await withErrorHandling(res, async () => await f(a, b, c));
+}
+
+export async function withEnviromentVariable(res: express.Response, environmentVariableName: string, f: (value: string) => Promise<void>): Promise<void> {
+	const value = process.env[environmentVariableName];
+	if (!value) {
+		console.error(`Missing environment variable ${environmentVariableName}`);
+		res.status(500).send();
+		return;
+	}
+	return await f(value);
 }
 
 export async function withTwoRequestParams<A, B>(

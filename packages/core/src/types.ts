@@ -279,20 +279,31 @@ export function businessAvailability(availability: DayAndTimePeriod[], timezone?
 	};
 }
 
+export interface Email extends ValueType<string> {
+	_type: 'email';
+}
+
+export function email(value: string): Email {
+	return {
+		_type: 'email',
+		value
+	};
+}
+
 export interface Customer {
 	id: CustomerId;
 	firstName: string;
 	lastName: string;
-	email: string;
+	email: Email;
 	formData: unknown;
 }
 
-export function customer(firstName: string, lastName: string, email: string, formData: unknown = null, id = customerId(uuidv4())): Customer {
+export function customer(firstName: string, lastName: string, emailStr: string, formData: unknown = null, id = customerId(uuidv4())): Customer {
 	return {
 		id,
 		firstName,
 		lastName,
-		email,
+		email: email(emailStr),
 		formData
 	};
 }
@@ -318,16 +329,27 @@ export function booking(customerId: CustomerId, serviceId: ServiceId, date: IsoD
 	};
 }
 
-export interface NumberWithoutDecimalPlaces extends ValueType<number> {
-	_type: 'number.without.decimal.places';
+export interface MoneyInMinorUnits extends ValueType<number> {
+	_type: 'money.in.minor.units';
 }
 
-export function numberWithoutDecimalPlaces(value: number): NumberWithoutDecimalPlaces {
+export function moneyInMinorUnits(value: number): MoneyInMinorUnits {
 	return {
-		_type: 'number.without.decimal.places',
+		_type: 'money.in.minor.units',
 		value
 	};
 }
+
+// export interface NumberWithoutDecimalPlaces extends ValueType<number> {
+// 	_type: 'number.without.decimal.places';
+// }
+//
+// export function numberWithoutDecimalPlaces(value: number): NumberWithoutDecimalPlaces {
+// 	return {
+// 		_type: 'number.without.decimal.places',
+// 		value
+// 	};
+// }
 
 export interface Currency extends ValueType<string> {
 	_type: 'currency';
@@ -335,7 +357,7 @@ export interface Currency extends ValueType<string> {
 
 export interface Price {
 	_type: 'price';
-	amount: NumberWithoutDecimalPlaces;
+	amount: MoneyInMinorUnits;
 	currency: Currency;
 }
 
@@ -373,7 +395,7 @@ export const GBP = currency('GBP');
 export function price(amount: number, currency: Currency): Price {
 	return {
 		_type: 'price',
-		amount: numberWithoutDecimalPlaces(amount),
+		amount: moneyInMinorUnits(amount),
 		currency
 	};
 }

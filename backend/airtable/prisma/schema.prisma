@@ -8,25 +8,29 @@ datasource db {
 }
 
 model add_on {
-  id              String  @id
+  id              String   @id
   tenant_id       String
   environment_id  String
   name            String
-  price           Decimal @db.Decimal
+  price           Decimal  @db.Decimal
   price_currency  String
   expect_quantity Boolean
   section         String?
-  tenants         tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  tenants         tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model blocked_time {
-  id              String  @id
+  id              String   @id
   tenant_id       String
   environment_id  String
   date            String
   start_time_24hr String
   end_time_24hr   String
-  tenants         tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  tenants         tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model bookings {
@@ -40,6 +44,8 @@ model bookings {
   start_time_24hr String
   end_time_24hr   String
   time_slot_id    String?
+  created_at      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime       @default(now()) @db.Timestamptz(6)
   customers       customers      @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   orders          orders         @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services        services       @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -49,13 +55,15 @@ model bookings {
 }
 
 model business_hours {
-  id              String  @id
+  id              String   @id
   tenant_id       String
   environment_id  String
-  day_of_week     String  @db.VarChar(10)
-  start_time_24hr String  @db.VarChar(10)
-  end_time_24hr   String  @db.VarChar(10)
-  tenants         tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  day_of_week     String   @db.VarChar(10)
+  start_time_24hr String   @db.VarChar(10)
+  end_time_24hr   String   @db.VarChar(10)
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  tenants         tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -66,6 +74,8 @@ model customers {
   first_name     String
   last_name      String
   email          String
+  created_at     DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime   @default(now()) @db.Timestamptz(6)
   bookings       bookings[]
   tenants        tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   orders         orders[]
@@ -80,6 +90,8 @@ model forms {
   name            String
   description     String?
   definition      Json
+  created_at      DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime          @default(now()) @db.Timestamptz(6)
   tenants         tenants           @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   service_forms   service_forms[]
   tenant_settings tenant_settings[]
@@ -97,29 +109,37 @@ model order_lines {
   start_time_24hr   String      @db.VarChar(10)
   end_time_24hr     String      @db.VarChar(10)
   service_form_data Json?
+  created_at        DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime    @default(now()) @db.Timestamptz(6)
   tenants           tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   time_slots        time_slots? @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model orders {
-  id                 String     @id @default(dbgenerated("uuid_generate_v4()"))
-  tenant_id          String
-  environment_id     String
-  customer_id        String
-  customer_form_data Json?
-  bookings           bookings[]
-  customers          customers  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants            tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id                         String     @id @default(dbgenerated("uuid_generate_v4()"))
+  tenant_id                  String
+  environment_id             String
+  customer_id                String
+  customer_form_data         Json?
+  total_price_in_minor_units Int
+  total_price_currency       String
+  created_at                 DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime   @default(now()) @db.Timestamptz(6)
+  bookings                   bookings[]
+  customers                  customers  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                    tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model pricing_rules {
-  id             String  @id
+  id             String   @id
   environment_id String
   tenant_id      String
   definition     Json
   rank           Int
   active         Boolean
-  tenants        tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model resource_availability {
@@ -130,6 +150,8 @@ model resource_availability {
   day_of_week     String     @db.VarChar(10)
   start_time_24hr String     @db.VarChar(10)
   end_time_24hr   String     @db.VarChar(10)
+  created_at      DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime   @default(now()) @db.Timestamptz(6)
   resources       resources? @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants         tenants?   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -142,6 +164,8 @@ model resource_blocked_time {
   date            String
   start_time_24hr String
   end_time_24hr   String
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime  @default(now()) @db.Timestamptz(6)
   resources       resources @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants         tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -151,6 +175,8 @@ model resource_types {
   tenant_id      String
   environment_id String
   name           String
+  created_at     DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime    @default(now()) @db.Timestamptz(6)
   tenants        tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   resources      resources[]
 }
@@ -161,6 +187,8 @@ model resources {
   environment_id        String
   resource_type         String
   name                  String
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
   resource_availability resource_availability[]
   resource_blocked_time resource_blocked_time[]
   resource_types        resource_types          @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -187,22 +215,28 @@ model services {
   permitted_add_on_ids    String[]
   resource_types_required String[]
   requires_time_slot      Boolean
+  created_at              DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime        @default(now()) @db.Timestamptz(6)
   bookings                bookings[]
   service_forms           service_forms[]
   tenants                 tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tenant_settings {
-  tenant_id        String  @id
+  tenant_id        String   @id
   environment_id   String
   customer_form_id String?
-  forms            forms?  @relation(fields: [customer_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants          tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+  forms            forms?   @relation(fields: [customer_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tenants {
   tenant_id             String                  @id
   name                  String
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
   add_on                add_on[]
   blocked_time          blocked_time[]
   bookings              bookings[]
@@ -219,6 +253,7 @@ model tenants {
   resources             resources[]
   service_forms         service_forms[]
   services              services[]
+  tenant_secrets        tenant_secrets[]
   tenant_settings       tenant_settings?
   time_slots            time_slots[]
 }
@@ -231,6 +266,8 @@ model time_slots {
   start_time_24hr String        @db.VarChar(10)
   end_time_24hr   String        @db.VarChar(10)
   tag             String?
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
   bookings        bookings[]
   order_lines     order_lines[]
   tenants         tenants       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
@@ -242,6 +279,8 @@ model service_forms {
   s_id           String
   form_id        String
   rank           Int?
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
   forms          forms    @relation(fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services       services @relation(fields: [s_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
@@ -250,14 +289,16 @@ model service_forms {
 }
 
 model coupons {
-  id             String  @id @default(dbgenerated("uuid_generate_v4()"))
+  id             String   @id @default(dbgenerated("uuid_generate_v4()"))
   tenant_id      String
   environment_id String
   code           String
   definition     Json
   start_date     String
   end_date       String?
-  tenants        tenants @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model reservations {
@@ -266,5 +307,20 @@ model reservations {
   reservation_time DateTime @db.Timestamp(6)
   expiry_time      DateTime @db.Timestamp(6)
   reservation_type String
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
   bookings         bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tenant_secrets {
+  tenant_id          String
+  environment_id     String
+  secret_short_name  String    @db.VarChar(255)
+  secret_description String
+  encrypted_secret   Bytes
+  created_at         DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime? @default(now()) @db.Timestamptz(6)
+  tenants            tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, secret_short_name, environment_id])
 }

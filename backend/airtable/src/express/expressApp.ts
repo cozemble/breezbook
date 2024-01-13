@@ -3,6 +3,7 @@ import cors from 'cors';
 import { logRequest } from '../infra/logRequest.js';
 import { getServiceAvailability } from './getServiceAvailability.js';
 import { addOrder } from './addOrder.js';
+import { createStripePaymentIntent } from './stripeEndpoint.js';
 
 export function expressApp(): Express {
 	const app: Express = express();
@@ -18,6 +19,7 @@ export function expressApp(): Express {
 	});
 	app.post('/api/:envId/:tenantId/service/:serviceId/availability/', getServiceAvailability);
 	app.post('/api/:envId/:tenantId/orders', addOrder);
+	app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
 
 	return app;
 }
