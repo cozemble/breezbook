@@ -1,18 +1,12 @@
-import express from 'express';
-import { orderIdParam, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
+import express, { NextFunction } from 'express';
+import { orderIdParam, tenantEnvironmentParam, withOneRequestParams, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { prismaClient } from '../prisma/client.js';
-import { RealStripeClient, StripeClient, StripeCustomerInput, stripeErrorCodes, StubStripeClient } from '../stripe.js';
+import { StripeCustomerInput, stripeErrorCodes } from '../stripe.js';
 import { getSecret } from '../infra/secretsInPostgres.js';
 import { DbCustomer } from '../prisma/dbtypes.js';
 import { currency, price } from '@breezbook/packages-core';
 import { errorResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
-
-function getStripeClient(stripeApiKey: string, environmentId: string): StripeClient {
-	if (environmentId === 'dev' || environmentId === 'synthetic') {
-		return new StubStripeClient();
-	}
-	return new RealStripeClient(stripeApiKey);
-}
+import { getStripeClient } from './getStripeClient.js';
 
 export const STRIPE_API_KEY_SECRET_NAME = 'stripe-api-key';
 export const STRIPE_PUBLIC_KEY_SECRET_NAME = 'stripe-public-key';
@@ -28,6 +22,20 @@ function toStripeCustomerInput(customers: DbCustomer): StripeCustomerInput {
 			lastName: customers.last_name
 		}
 	};
+}
+
+export async function onStripeWebhook(req: express.Request, res: express.Response, _next: NextFunction): Promise<void> {
+	await withOneRequestParams(req, res, tenantEnvironmentParam(), async (tenantEnvironment) => {
+		const stripeApiKey = await getSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME);
+		const stripeClient = getStripeClient(stripeApiKey, tenantEnvironment.environmentId.value);
+		const event = stripeClient.onWebhook(req.rawBody, req.headers['stripe-signature'] as string);
+		if (event._type === 'error.response') {
+			res.status(500).send(event);
+			return;
+		}
+		console.log({ event });
+		res.status(200).send();
+	});
 }
 
 export async function createStripePaymentIntent(req: express.Request, res: express.Response): Promise<void> {

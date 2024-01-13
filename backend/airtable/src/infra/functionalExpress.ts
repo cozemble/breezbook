@@ -173,14 +173,17 @@ export async function withThreeRequestParams<A, B, C>(
 	return await withErrorHandling(res, async () => await f(a, b, c));
 }
 
-export async function withEnviromentVariable(res: express.Response, environmentVariableName: string, f: (value: string) => Promise<void>): Promise<void> {
-	const value = process.env[environmentVariableName];
-	if (!value) {
-		console.error(`Missing environment variable ${environmentVariableName}`);
-		res.status(500).send();
+export async function withOneRequestParams<A>(
+	req: express.Request,
+	res: express.Response,
+	aParam: ParamExtractor<A | null>,
+	f: (a: A) => Promise<void>
+): Promise<void> {
+	const a = aParam(req, res);
+	if (a === null) {
 		return;
 	}
-	return await f(value);
+	return await withErrorHandling(res, async () => await f(a));
 }
 
 export async function withTwoRequestParams<A, B>(

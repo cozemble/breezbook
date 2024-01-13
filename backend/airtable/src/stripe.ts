@@ -1,9 +1,9 @@
 import Stripe from 'stripe';
-import { Price } from '@breezbook/packages-core';
+import { mandatory, Price } from '@breezbook/packages-core';
 import { errorResponse, ErrorResponse } from '@breezbook/backend-api-types';
 
-export interface PaymentIntent {
-	_type: 'payment.intent';
+export interface NewPaymentIntent {
+	_type: 'new.payment.intent';
 	id: string;
 	amount: number;
 	client_secret: string | null;
@@ -41,10 +41,28 @@ export const stripeErrorCodes = {
 	failedToUpsertCustomer: 'stripe.failed.to.upsert.customer'
 };
 
+export interface PaymentIntentWebhookBody {
+	_type: 'payment.intent.webhook.body';
+	id: string;
+	amount: number;
+	currency: string;
+	status: Stripe.PaymentIntent.Status;
+}
+
+export interface OrderMetadata {
+	orderId: string;
+	tenantId: string;
+	environmentId: string;
+}
+
+export type StripeWebhookBody = PaymentIntentWebhookBody;
+
 export interface StripeClient {
-	createPaymentIntent(customer: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<PaymentIntent | ErrorResponse>;
+	createPaymentIntent(customer: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<NewPaymentIntent | ErrorResponse>;
 
 	upsertCustomer(customer: StripeCustomerInput): Promise<StripeCustomer | ErrorResponse>;
+
+	onWebhook(webhookBody: string, signatureValue: string): StripeWebhookBody | ErrorResponse;
 }
 
 type MetadataParam = Record<string, string | number | null>;
@@ -54,6 +72,38 @@ export class RealStripeClient implements StripeClient {
 
 	constructor(secretKey: string) {
 		this.stripe = new Stripe(secretKey);
+	}
+
+	public onWebhook(webhookBody: string, signatureValue: string): StripeWebhookBody | ErrorResponse {
+		try {
+			const event = this.stripe.webhooks.constructEvent(
+				webhookBody,
+				signatureValue,
+				mandatory(process.env.STRIPE_WEBHOOK_SECRET, `Missing env var STRIPE_WEBHOOK_SECRET`)
+			);
+			switch (event.type) {
+				case 'payment_intent.succeeded':
+					return this.handlePaymentIntentSucceeded(event.data.object);
+				default:
+					return errorResponse('stripe.webhook.unknown.event.type', `Unknown event type ${event.type}`);
+			}
+		} catch (e: unknown) {
+			console.error('Error in onWebhook:', e);
+			if (e instanceof Error) {
+				return errorResponse('stripe.webhook.error', e.message);
+			}
+			throw e;
+		}
+	}
+
+	private handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent): StripeWebhookBody | ErrorResponse {
+		return {
+			_type: 'payment.intent.webhook.body',
+			id: intent.id,
+			amount: intent.amount,
+			currency: intent.currency,
+			status: intent.status
+		};
 	}
 
 	public async upsertCustomer(customerInput: StripeCustomerInput): Promise<StripeCustomer | ErrorResponse> {
@@ -93,7 +143,7 @@ export class RealStripeClient implements StripeClient {
 		}
 	}
 
-	public async createPaymentIntent(customerInput: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<PaymentIntent | ErrorResponse> {
+	public async createPaymentIntent(customerInput: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<NewPaymentIntent | ErrorResponse> {
 		const customer = await this.upsertCustomer(customerInput);
 		if (customer._type === 'error.response') {
 			return customer;
@@ -109,7 +159,7 @@ export class RealStripeClient implements StripeClient {
 			return errorResponse(stripeErrorCodes.missingClientSecret);
 		}
 		return {
-			_type: 'payment.intent',
+			_type: 'new.payment.intent',
 			id: stripeResponse.id,
 			amount: stripeResponse.amount,
 			client_secret: stripeResponse.client_secret,
@@ -119,9 +169,9 @@ export class RealStripeClient implements StripeClient {
 }
 
 export class StubStripeClient implements StripeClient {
-	public async createPaymentIntent(customerInput: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<PaymentIntent | ErrorResponse> {
+	public async createPaymentIntent(customerInput: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<NewPaymentIntent | ErrorResponse> {
 		return {
-			_type: 'payment.intent',
+			_type: 'new.payment.intent',
 			id: 'stub-payment-intent-id',
 			amount: amount.amount.value,
 			client_secret: 'stub-client-secret',
@@ -138,5 +188,9 @@ export class StubStripeClient implements StripeClient {
 			lastName: customerInput.lastName,
 			metadata: customerInput.metadata
 		};
+	}
+
+	public onWebhook(_webhookBody: string, _signatureValue: string): StripeWebhookBody {
+		throw new Error('Method not implemented.');
 	}
 }
