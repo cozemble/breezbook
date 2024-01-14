@@ -1,5 +1,7 @@
 create extension if not exists "uuid-ossp";
 create extension if not exists pgcrypto;
+create extension if not exists pg_net;
+
 
 create table tenants
 (
@@ -323,3 +325,18 @@ begin
     end if;
 end;
 $$ language plpgsql;
+
+create table order_payments
+(
+    id                      text primary key                             default uuid_generate_v4(),
+    tenant_id               text references tenants (tenant_id) not null,
+    environment_id          text                                not null,
+    order_id                text references orders (id)         not null,
+    status                  text                                not null,
+    amount_in_minor_units   integer                             not null,
+    amount_currency         text                                not null,
+    provider                text                                not null,
+    provider_transaction_id text                                not null,
+    created_at              timestamp with time zone            not null default current_timestamp,
+    updated_at              timestamp with time zone            not null default current_timestamp
+);

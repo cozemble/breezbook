@@ -1,75 +1,62 @@
 import { exec } from 'child-process-promise';
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import * as http from 'http';
-import { closePgPool, withAdminPgClient } from './postgresPool.js';
+import { closePgPool } from './postgresPool.js';
 import { expressApp } from '../express/expressApp.js';
-
-const testEnv = 'test';
-
-function pgConnectString(container: StartedPostgreSqlContainer) {
-	return `postgres://${container.getUsername()}:${container.getPassword()}@${container.getHost()}:${container.getPort()}/${container.getDatabase()}`;
-}
-
-export interface PgDetails {
-	host: string;
-	port: string;
-	database: string;
-	username: string;
-	password: string;
-}
-
-async function createAppUser() {
-	try {
-		return withAdminPgClient(async (client) => {
-			await client.query(`
-        CREATE USER app_user WITH PASSWORD 'password';
-        GRANT ALL PRIVILEGES ON DATABASE postgres TO app_user;
-        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO app_user;
-        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO app_user;
-      `);
-		});
-	} catch (e) {
-		console.error('Failed to create app_user', e);
-	}
-}
+import { DockerComposeEnvironment, Wait } from 'testcontainers';
+import { v4 as uuidv4 } from 'uuid';
 
 export function setTestSecretsEncryptionKey(): void {
 	process.env.SECRETS_ENCRYPTION_KEY = 'test-encryption-key';
 }
 
-export async function withMigratedDatabase(pgDetails?: PgDetails): Promise<void> {
-	const container = await new PostgreSqlContainer().start();
-	process.env.PGHOST = pgDetails?.host ?? container.getHost();
-	process.env.PGPORT = pgDetails?.port ?? container.getPort().toString();
-	process.env.PGDATABASE = pgDetails?.database ?? container.getDatabase();
-	process.env.PG_ADMIN_USER = pgDetails?.username ?? container.getUsername();
-	process.env.PG_ADMIN_PASSWORD = pgDetails?.password ?? container.getPassword();
-	process.env.DATABASE_URL = pgConnectString(container);
+export async function withMigratedDatabase(postgresPort: number): Promise<void> {
+	const composeAndFileName = 'supabase-min-docker-compose.yml';
+	const composeFilePath = '../supabase';
+	const testEnvironmentName = uuidv4();
+
+	const environment = {
+		TEST_ENVIRONMENT_NAME: testEnvironmentName,
+		POSTGRES_PORT: postgresPort.toString(),
+		POSTGRES_PASSWORD: 'your-super-secret-and-long-postgres-password',
+		POSTGRES_DB: 'postgres',
+		JWT_SECRET: 'secret',
+		JWT_EXPIRY: '3600'
+	};
+	const dockerComposeEnvironment = new DockerComposeEnvironment(composeFilePath, composeAndFileName)
+		.withWaitStrategy(`${testEnvironmentName}-supabase-db`, Wait.forHealthCheck())
+		.withEnvironment(environment);
+	const startedEnvironment = await dockerComposeEnvironment.up();
+	startedEnvironment.getContainer(`${testEnvironmentName}-supabase-db`);
+
+	// Set environment variables
+	process.env.PGHOST = 'localhost';
+	process.env.PGPORT = postgresPort.toString();
+	process.env.PGDATABASE = environment.POSTGRES_DB;
+	process.env.PG_ADMIN_USER = 'postgres';
+	process.env.PG_ADMIN_PASSWORD = environment.POSTGRES_PASSWORD;
+
+	process.env.DATABASE_URL = `postgres://${process.env.PG_ADMIN_USER}:${process.env.PG_ADMIN_PASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`;
+
 	setTestSecretsEncryptionKey();
 
-	if (!pgDetails) {
-		console.log('Running migrations...');
-		const outcome = await exec(
-			`npx postgrator --host 127.0.0.1 --database ${container.getDatabase()} --username ${container.getUsername()} --password ${container.getPassword()} -m 'migrations/schema/*'` +
-				` && npx postgrator --host 127.0.0.1 --database ${container.getDatabase()} --username ${container.getUsername()} --password ${container.getPassword()} -m 'migrations/data/carwash/*' -t dataversion`
-		);
-		console.log(outcome.stdout);
-		console.error('STDERR:' + outcome.stderr);
+	console.log('Running migrations...');
+	const outcome = await exec(
+		`npx postgrator --host localhost --port ${process.env.PGPORT} --database ${process.env.PGDATABASE} --username ${process.env.PG_ADMIN_USER} --password ${process.env.PG_ADMIN_PASSWORD} -m 'migrations/schema/*'` +
+			` && npx postgrator --host localhost --port ${process.env.PGPORT} --database ${process.env.PGDATABASE} --username ${process.env.PG_ADMIN_USER} --password ${process.env.PG_ADMIN_PASSWORD} -m 'migrations/data/carwash/*' -t dataversion`
+	);
+	console.log(outcome.stdout);
+	console.error('STDERR:' + outcome.stderr);
 
-		await createAppUser();
-		await closePgPool();
-		// process.env.PG_ADMIN_USER = 'app_user'
-		// process.env.PG_ADMIN_PASSWORD = 'password'
-		console.log('Migrations complete.');
+	await closePgPool();
+	console.log('Migrations complete.');
 
-		console.log(`psql connect string = ${pgConnectString(container)}`);
-	}
+	console.log(`psql connect string = ${process.env.DATABASE_URL}`);
 }
 
-export async function appWithTestContainer(port = 3000, pgDetails?: PgDetails): Promise<http.Server> {
-	await withMigratedDatabase(pgDetails);
+export async function appWithTestContainer(expressPort: number, postgresPort: number): Promise<http.Server> {
+	await withMigratedDatabase(postgresPort);
 	const app = expressApp();
-	return app.listen(port, () => {
-		console.log(`Listening on port ${port}`);
+	return app.listen(expressPort, () => {
+		console.log(`Listening on port ${expressPort}`);
 	});
 }

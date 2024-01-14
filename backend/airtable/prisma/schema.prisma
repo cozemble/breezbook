@@ -117,18 +117,19 @@ model order_lines {
 }
 
 model orders {
-  id                         String     @id @default(dbgenerated("uuid_generate_v4()"))
+  id                         String           @id @default(dbgenerated("uuid_generate_v4()"))
   tenant_id                  String
   environment_id             String
   customer_id                String
   customer_form_data         Json?
   total_price_in_minor_units Int
   total_price_currency       String
-  created_at                 DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at                 DateTime   @default(now()) @db.Timestamptz(6)
+  created_at                 DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime         @default(now()) @db.Timestamptz(6)
   bookings                   bookings[]
-  customers                  customers  @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                    tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  order_payments             order_payments[]
+  customers                  customers        @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                    tenants          @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model pricing_rules {
@@ -246,6 +247,7 @@ model tenants {
   customers             customers[]
   forms                 forms[]
   order_lines           order_lines[]
+  order_payments        order_payments[]
   orders                orders[]
   pricing_rules         pricing_rules[]
   resource_availability resource_availability[]
@@ -324,4 +326,20 @@ model tenant_secrets {
   tenants            tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, secret_short_name, environment_id])
+}
+
+model order_payments {
+  id                      String   @id @default(dbgenerated("uuid_generate_v4()"))
+  tenant_id               String
+  environment_id          String
+  order_id                String
+  status                  String
+  amount_in_minor_units   Int
+  amount_currency         String
+  provider                String
+  provider_transaction_id String
+  created_at              DateTime @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime @default(now()) @db.Timestamptz(6)
+  orders                  orders   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                 tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }

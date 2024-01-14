@@ -3,12 +3,13 @@ import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
 import { AvailabilityResponse } from '@breezbook/backend-api-types';
 import { isoDate, isoDateFns } from '@breezbook/packages-core';
 
-const port = 3002;
+const expressPort = 3002;
+const postgresPort = 54332;
 
 describe('with a migrated database', () => {
 	beforeAll(async () => {
 		try {
-			await appWithTestContainer(port);
+			await appWithTestContainer(expressPort, postgresPort);
 		} catch (e) {
 			console.error(e);
 			throw e;
@@ -16,7 +17,7 @@ describe('with a migrated database', () => {
 	}, 1000 * 90);
 
 	test('should be able to get service availability', async () => {
-		const fetched = await fetch(`http://localhost:${port}/api/dev/tenant1/service/smallCarWash/availability?fromDate=2023-12-20&toDate=2023-12-23`, {
+		const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/service/smallCarWash/availability?fromDate=2023-12-20&toDate=2023-12-23`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -40,7 +41,7 @@ describe('with a migrated database', () => {
 		const fourDaysFromNow = isoDateFns.addDays(today, 4);
 
 		const fetched = await fetch(
-			`http://localhost:${port}/api/dev/tenant1/service/smallCarWash/availability?fromDate=${today.value}&toDate=${fourDaysFromNow.value}`,
+			`http://localhost:${expressPort}/api/dev/tenant1/service/smallCarWash/availability?fromDate=${today.value}&toDate=${fourDaysFromNow.value}`,
 			{
 				method: 'POST',
 				headers: {
