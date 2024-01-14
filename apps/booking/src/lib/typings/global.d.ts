@@ -70,15 +70,19 @@ declare namespace Service {
 }
 
 // TODO move to a more appropriate file
-declare type BookingFormStep = {
-	name: 'time' | 'extras' | 'details';
-	status: GenericStatus;
-	open: boolean;
-	onComplete: () => void;
-	onOpen: () => void;
-	onGoBack?: () => void;
-} & (
-	| { value: TimeSlot | null; name: 'time' }
-	| { value: Service.Extra[] | null; name: 'extras' }
-	| { value: Service.Detail | null; name: 'details' }
-);
+
+// type BookingFormStepName = 'time' | 'extras' | 'details';
+
+// declare type BookingFormStep<TName extends BookingFormStepName> = {
+// 	name: TName;
+// 	status: import('svelte/store').Writable<GenericStatus>;
+// 	open: import('svelte/store').Writable<boolean>;
+// 	summary: import('svelte/store').Writable<string>;
+// 	onComplete: () => void;
+// 	onOpen: () => void;
+// 	onGoBack?: () => void;
+// } & (
+// 	| { value: import('svelte/store').Writable<TimeSlot | null>; name: 'time' }
+// 	| { value: import('svelte/store').Writable<Service.Extra[] | null>; name: 'extras' }
+// 	| { value: import('svelte/store').Writable<Service.Details | null>; name: 'details' }
+// );

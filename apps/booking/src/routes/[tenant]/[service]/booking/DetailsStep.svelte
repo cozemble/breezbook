@@ -2,9 +2,9 @@
 	import SchemaForm from '$lib/components/schemaForm/SchemaForm.svelte';
 	import StepWrapper from './StepWrapper.svelte';
 
-	export let step: BookingFormStep;
+	export let step: BookingStep<'details', Service.Details>;
 
-	let value: Service.Details;
+	const { value, open, status } = step;
 
 	// <!-- TODO get schema from service -->
 	const mockJsonSchema = `
@@ -49,9 +49,9 @@
 	};
 </script>
 
-<StepWrapper open={step.open} label="Details" status={step.status} onOpen={step.onOpen}>
+<StepWrapper open={$open} label="Details" status={$status} onOpen={step.onOpen}>
 	<div class="max-w-md mx-auto">
-		<SchemaForm {schema} bind:value errors={{}} />
+		<SchemaForm {schema} bind:value={$value} errors={{}} />
 	</div>
 
 	<div class="flex justify-end gap-3 mt-2">

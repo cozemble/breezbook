@@ -33,5 +33,5 @@
 
 <!-- Steps as accordion -->
 <section>
-	<Steps />
+	<Steps {service} />
 </section>

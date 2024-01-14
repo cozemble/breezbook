@@ -24,9 +24,9 @@
 		}
 	];
 
-	export let step: BookingFormStep;
+	export let step: BookingStep<'extras', Service.Extra[]>;
 
-	let value: Service.Extra[] | null;
+	const { summary, value, open, status } = step;
 
 	const onSubmit = () => {
 		if (!value) return;
@@ -35,16 +35,16 @@
 		step.onComplete();
 	};
 
-	$: value = extras.filter((extra) => extra.selected);
-	$: summary = `${value?.length || 'no'} extras selected`;
+	$: $value = extras.filter((extra) => extra.selected);
+	$: $summary = `${$value?.length || 'no'} extras selected`;
 </script>
 
 <StepWrapper
-	open={step.open}
+	open={$open}
 	label="Pick extras"
-	status={step.status}
+	status={$status}
 	onOpen={step.onOpen}
-	{summary}
+	summary={$summary}
 >
 	{#each extras as extra, i (i)}
 		<div class="form-control">

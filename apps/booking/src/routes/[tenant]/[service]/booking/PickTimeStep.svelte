@@ -4,9 +4,9 @@
 	import { onMount } from 'svelte';
 	import StepWrapper from './StepWrapper.svelte';
 
-	export let step: BookingFormStep;
+	export let step: BookingStep<'time', TimeSlot>;
 
-	let value: TimeSlot | null;
+	const { summary, value, open, status } = step;
 
 	let days: DaySlot[] = [];
 
@@ -22,31 +22,30 @@
 	});
 
 	const onSubmit = () => {
-		if (!value) return;
+		if (!$value) return;
 
-		step.value = value;
 		step.onComplete();
 	};
 
-	$: summary = value
-		? `${value.day.toLocaleDateString('en-GB', {
+	$: $summary = $value
+		? `${$value.day.toLocaleDateString('en-GB', {
 				weekday: 'short',
 				day: 'numeric',
 				month: 'short'
-		  })} ${value.start} - ${value.end}`
+		  })} ${$value.start} - ${$value.end}`
 		: 'no time slot selected';
 </script>
 
 <!-- TODO date range filter -->
 
 <StepWrapper
-	open={step.open}
+	open={$open}
 	label="Pick a time"
-	status={step.status}
+	status={$status}
 	onOpen={step.onOpen}
-	{summary}
+	summary={$summary}
 >
-	<TimeSlotForm bind:selectedSlot={value} {days} />
+	<TimeSlotForm bind:selectedSlot={$value} {days} />
 
 	<div class="flex justify-end gap-3 mt-2">
 		<button class="btn btn-primary" on:click={onSubmit} disabled={!value}> Next </button>
