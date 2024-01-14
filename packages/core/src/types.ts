@@ -512,17 +512,19 @@ export interface AddOn {
 	_type: 'add.on';
 	id: AddOnId;
 	name: string;
+	description: string | null;
 	price: Price;
 	requiresQuantity: boolean;
 }
 
-export function addOn(name: string, price: Price, requiresQuantity: boolean, id = addOnId(uuidv4())): AddOn {
+export function addOn(name: string, price: Price, requiresQuantity: boolean, description: string | null, id = addOnId(uuidv4())): AddOn {
 	return {
 		_type: 'add.on',
 		id,
 		name,
 		price,
-		requiresQuantity
+		requiresQuantity,
+		description
 	};
 }
 

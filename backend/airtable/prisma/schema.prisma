@@ -12,6 +12,7 @@ model add_on {
   tenant_id       String
   environment_id  String
   name            String
+  description     String?
   price           Decimal  @db.Decimal
   price_currency  String
   expect_quantity Boolean

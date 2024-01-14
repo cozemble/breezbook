@@ -47,6 +47,7 @@ function getAddOnSummaries(services: DomainService[], addOns: DomainAddOn[], ser
 	return permittedAddOns.map((ao) => ({
 		name: ao.name,
 		id: ao.id.value,
+		description: ao.description,
 		priceWithNoDecimalPlaces: ao.price.amount.value,
 		priceCurrency: ao.price.currency.value,
 		requiresQuantity: ao.requiresQuantity

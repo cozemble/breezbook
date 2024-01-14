@@ -44,6 +44,7 @@ export interface ServiceSummary {
 export interface AddOnSummary {
 	id: string;
 	name: string;
+	description: string | null;
 	priceWithNoDecimalPlaces: number;
 	priceCurrency: string;
 	requiresQuantity: boolean;
@@ -82,6 +83,10 @@ export interface ErrorResponse {
 	_type: 'error.response';
 	errorCode: string;
 	errorMessage?: string;
+}
+
+export function isErrorResponse(response: unknown): response is ErrorResponse {
+	return (response as ErrorResponse)._type === 'error.response';
 }
 
 export function errorResponse(errorCode: string, errorMessage?: string): ErrorResponse {

@@ -73,14 +73,14 @@ insert into resource_availability(id, tenant_id, environment_id, resource_id, da
                                   end_time_24hr)
 values ('resourceAvailability#14', 'tenant1', 'dev', 'resource#2', 'Sunday', '09:00', '18:00');
 
-insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity)
-values ('addOn-wax', 'tenant1', 'dev', 'Wax', 1000, 'GBP', false);
-insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity)
-values ('addOn-polish', 'tenant1', 'dev', 'Polish', 500, 'GBP', false);
-insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity)
-values ('addOn-clean-seats', 'tenant1', 'dev', 'Clean seats', 2000, 'GBP', true);
-insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity)
-values ('addOn-clean-carpets', 'tenant1', 'dev', 'Clean carpets', 2000, 'GBP', false);
+insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity, description)
+values ('addOn-wax', 'tenant1', 'dev', 'Wax', 1000, 'GBP', false, 'Wax the car');
+insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity, description)
+values ('addOn-polish', 'tenant1', 'dev', 'Polish', 500, 'GBP', false, 'Polish the car');
+insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity, description)
+values ('addOn-clean-seats', 'tenant1', 'dev', 'Clean seats', 2000, 'GBP', true, 'Clean the seats');
+insert into add_on(id, tenant_id, environment_id, name, price, price_currency, expect_quantity, description)
+values ('addOn-clean-carpets', 'tenant1', 'dev', 'Clean carpets', 2000, 'GBP', false, 'Clean the carpets');
 
 insert into forms (id, tenant_id, environment_id, name, description, definition)
 values ('car-details-form',
@@ -189,14 +189,14 @@ values ('largeCarWash', 'tenant1', 'dev', 'service#3', 'Large Car wash', 'Large 
         true);
 
 insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
-values ('tenant1','dev', 'smallCarWash', 'car-details-form', 0);
+values ('tenant1', 'dev', 'smallCarWash', 'car-details-form', 0);
 insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
-values ('tenant1','dev', 'mediumCarWash', 'car-details-form', 0);
+values ('tenant1', 'dev', 'mediumCarWash', 'car-details-form', 0);
 insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
-values ('tenant1','dev', 'largeCarWash', 'car-details-form', 0);
+values ('tenant1', 'dev', 'largeCarWash', 'car-details-form', 0);
 
 insert into pricing_rules(id, tenant_id, environment_id, rank, active, definition)
-values ('40% more today', 'tenant1','dev', 0, true, '{
+values ('40% more today', 'tenant1', 'dev', 0, true, '{
   "_type": "time.based.price.adjustment.spec",
   "id": {
     "_type": "id",
@@ -214,7 +214,7 @@ values ('40% more today', 'tenant1','dev', 0, true, '{
 }');
 
 insert into pricing_rules(id, tenant_id, environment_id, rank, active, definition)
-values ('25% more tomorrow', 'tenant1','dev', 1, true, '{
+values ('25% more tomorrow', 'tenant1', 'dev', 1, true, '{
   "_type": "time.based.price.adjustment.spec",
   "id": {
     "_type": "id",
@@ -232,7 +232,7 @@ values ('25% more tomorrow', 'tenant1','dev', 1, true, '{
 }');
 
 insert into pricing_rules(id, tenant_id, environment_id, rank, active, definition)
-values ('10% more day after tomorrow', 'tenant1', 'dev',2, true, '{
+values ('10% more day after tomorrow', 'tenant1', 'dev', 2, true, '{
   "_type": "time.based.price.adjustment.spec",
   "id": {
     "_type": "id",
@@ -250,32 +250,33 @@ values ('10% more day after tomorrow', 'tenant1', 'dev',2, true, '{
 }');
 
 insert into coupons(id, tenant_id, environment_id, code, start_date, end_date, definition)
-values ('fd85db7b-4762-42fb-9a5d-6652e1a05682', 'tenant1','dev', 'expired-20-percent-off', '2020-01-01', '2020-12-31', '{
-  "_type": "coupon",
-  "id": {
-    "_type": "coupon.id",
-    "value": "fd85db7b-4762-42fb-9a5d-6652e1a05682"
-  },
-  "code": {
-    "_type": "coupon.code",
-    "value": "expired-20-percent-off"
-  },
-  "usagePolicy": {
-    "_type": "unlimited"
-  },
-  "value": {
-    "_type": "percentage.coupon",
-    "percentage": {
-      "_type": "percentage.as.ratio",
-      "value": 0.2
-    }
-  },
-  "validFrom": {
-    "_type": "iso.date",
-    "value": "2021-05-23"
-  },
-  "validTo": {
-    "_type": "iso.date",
-    "value": "2021-05-26"
-  }
-}');
+values ('fd85db7b-4762-42fb-9a5d-6652e1a05682', 'tenant1', 'dev', 'expired-20-percent-off', '2020-01-01', '2020-12-31',
+        '{
+          "_type": "coupon",
+          "id": {
+            "_type": "coupon.id",
+            "value": "fd85db7b-4762-42fb-9a5d-6652e1a05682"
+          },
+          "code": {
+            "_type": "coupon.code",
+            "value": "expired-20-percent-off"
+          },
+          "usagePolicy": {
+            "_type": "unlimited"
+          },
+          "value": {
+            "_type": "percentage.coupon",
+            "percentage": {
+              "_type": "percentage.as.ratio",
+              "value": 0.2
+            }
+          },
+          "validFrom": {
+            "_type": "iso.date",
+            "value": "2021-05-23"
+          },
+          "validTo": {
+            "_type": "iso.date",
+            "value": "2021-05-26"
+          }
+        }');

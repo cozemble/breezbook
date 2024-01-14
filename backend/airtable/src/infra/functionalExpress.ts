@@ -13,7 +13,7 @@ import {
 	tenantId,
 	TenantId
 } from '@breezbook/packages-core';
-import { CreateOrderRequest } from '@breezbook/backend-api-types';
+import { CreateOrderRequest, ErrorResponse, isErrorResponse } from '@breezbook/backend-api-types';
 
 export interface RequestValueExtractor {
 	name: string;

@@ -86,6 +86,7 @@ create table add_on
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
     name            text                                not null,
+    description     text                                null     default null,
     price           numeric                             not null,
     price_currency  text                                not null,
     expect_quantity boolean                             not null,
