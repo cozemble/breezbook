@@ -4,7 +4,7 @@ import { logRequest } from '../infra/logRequest.js';
 import { getServiceAvailability } from './getServiceAvailability.js';
 import { addOrder } from './addOrder.js';
 import { createStripePaymentIntent, onStripeWebhook } from './stripeEndpoint.js';
-import * as bodyParser from 'body-parser';
+import bodyParser from 'body-parser';
 import { IncomingMessage } from 'http';
 
 interface IncomingMessageWithBody extends IncomingMessage {

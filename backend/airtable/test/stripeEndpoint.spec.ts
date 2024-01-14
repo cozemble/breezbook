@@ -33,7 +33,7 @@ describe('Given an order', () => {
 		orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
 	}, 1000 * 90);
 
-	test('can create a payment intent and get client_secret and public api key', async () => {
+	test('can create a payment intent, get client_secret and public api key', async () => {
 		const paymentIntentResponse = await fetch(`http://localhost:${port}/api/dev/tenant1/orders/${orderCreatedResponse.orderId}/paymentIntent`, {
 			method: 'POST',
 			headers: {
