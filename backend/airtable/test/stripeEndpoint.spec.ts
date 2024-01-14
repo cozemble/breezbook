@@ -30,11 +30,6 @@ describe('Given an order', () => {
 		]);
 
 		const response = await postOrder(theOrder, carwash.smallCarWash.price, expressPort);
-		if (response.status !== 200) {
-			const json = (await response.json()) as ErrorResponse;
-			console.error({ json });
-			throw new Error(`Failed to create order: ${response.status}`);
-		}
 		expect(response.status).toBe(200);
 		orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
 	}, 1000 * 90);
