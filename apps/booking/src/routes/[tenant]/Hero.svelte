@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	export let tenant: Tenant;
+	import { tenantStore } from '$lib/stores/tenant';
+
+	const tenant = tenantStore.get();
 </script>
 
 <div class="hero">

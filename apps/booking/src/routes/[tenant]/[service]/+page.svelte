@@ -1,10 +1,12 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { PageData } from './$types';
+	import { tenantStore } from '$lib/stores/tenant';
 
 	export let data: PageData;
-	const tenant = data.tenant;
 	const service = data.service;
+
+	const tenant = tenantStore.get();
 </script>
 
 <svelte:head>

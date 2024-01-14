@@ -1,5 +1,7 @@
 <script lang="ts">
-	export let tenant: Tenant;
+	import { tenantStore } from '$lib/stores/tenant';
+
+	const tenant = tenantStore.get();
 </script>
 
 <footer class="footer px-3 md:px-6 py-4 justify-between bg-neutral text-neutral-content">

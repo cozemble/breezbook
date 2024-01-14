@@ -12,5 +12,5 @@
 	<title>{tenant.name}</title>
 </svelte:head>
 
-<Hero {tenant} />
-<Services {services} {tenant} />
+<Hero />
+<Services {services} />

@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import Steps from './Steps.svelte';
+	import { tenantStore } from '$lib/stores/tenant';
 
 	export let data: PageData;
-	const tenant = data.tenant;
 	const service = data.service;
+
+	const tenant = tenantStore.get();
 </script>
 
 <svelte:head>

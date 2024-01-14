@@ -1,5 +1,7 @@
 <script lang="ts">
-	export let tenant: Tenant;
+	import { tenantStore } from '$lib/stores/tenant';
+
+	const tenant = tenantStore.get();
 </script>
 
 <header class="navbar px-3 md:px-6 flex border-b sticky top-0 left-0 right-0 z-50">

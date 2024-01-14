@@ -1,8 +1,10 @@
 <script lang="ts">
 	import ServiceCard from '$lib/components/ServiceCard.svelte';
+	import { tenantStore } from '$lib/stores/tenant';
 
 	export let services: Service[] | null;
-	export let tenant: Tenant;
+
+	const tenant = tenantStore.get();
 </script>
 
 <section id="services" class="pt-16 flex flex-col items-center">
