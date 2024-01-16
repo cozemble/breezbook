@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "npx prisma generate && tsc -p tsconfig.json",
-    "test": "npx vitest run --passWithNoTests --fileParallelism false",
+    "test": "./scripts/run-tests-one-by-one.sh",
     "test:watch": "vitest watch",
     "start": "nodemon dist/esm/index.js",
     "db:migrate": "dotenv -e .env.production.local -- bash -c 'npx postgrator --config=migrations/schema/postgratorrc.json'",
