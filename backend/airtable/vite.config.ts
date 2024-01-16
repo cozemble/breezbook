@@ -5,5 +5,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-	test: {}
+	test: {
+		workers: 1
+	}
 });
