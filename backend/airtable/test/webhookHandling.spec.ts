@@ -13,7 +13,7 @@ describe('Given a configured webhook', () => {
 	beforeAll(async () => {
 		try {
 			await appWithTestContainer(expressPort, postgresPort);
-			await setSystemConfig(tenantEnv, 'webhook_handler_url', `http://localhost:8001/stashWebhook`);
+			await setSystemConfig(tenantEnv, 'webhook_handler_url', `https://google.com`);
 			await setSystemConfig(tenantEnv, 'webhook_handler_api_key', ``);
 		} catch (e) {
 			console.error(e);
