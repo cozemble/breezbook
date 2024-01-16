@@ -193,7 +193,7 @@ export class StubStripeClient implements StripeClient {
 		};
 	}
 
-	public onWebhook(_webhookBody: string, _signatureValue: string): StripeWebhookBody {
-		throw new Error('Method not implemented.');
+	public onWebhook(webhookBody: string): StripeWebhookBody | ErrorResponse {
+		return JSON.parse(webhookBody);
 	}
 }

@@ -340,3 +340,75 @@ create table order_payments
     created_at              timestamp with time zone            not null default current_timestamp,
     updated_at              timestamp with time zone            not null default current_timestamp
 );
+
+create table system_config
+(
+    environment_id text not null,
+    config_key     text not null,
+    config_value   text not null,
+    primary key (environment_id, config_key)
+);
+
+create table posted_webhooks
+(
+    id             text primary key                             default uuid_generate_v4(),
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    webhook_id     text                                not null,
+    payload        jsonb                               not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
+);
+
+create or replace function call_webhook_handler()
+    returns trigger as
+$$
+declare
+    v_url        text;
+    v_auth_token text;
+    v_payload    jsonb;
+    v_headers    jsonb;
+begin
+    -- fetch url and auth token from system_config
+    select into v_url config_value
+    from system_config
+    where config_key = 'webhook_handler_url'
+      and environment_id = new.environment_id;
+    select into v_auth_token config_value
+    from system_config
+    where config_key = 'webhook_handler_api_key'
+      and environment_id = new.environment_id;
+
+    -- construct the json payload with webhook_id and payload
+    v_payload := jsonb_build_object(
+            'webhook_id', new.webhook_id,
+            'payload', new.payload
+                 );
+    v_headers = jsonb_build_object(
+            'Content-Type', 'application/json',
+            'Authorization', v_auth_token
+                );
+
+    -- check if url and auth token are not null
+    if v_url is not null and v_auth_token is not null then
+        -- call the endpoint with pg_net
+        perform net.http_post(
+                v_url,
+                v_payload,
+                '{}'::jsonb,
+                v_headers
+                );
+    else
+        raise exception 'Url or Auth token is missing in system_config for environment %', new.environment_id;
+    end if;
+
+    return new;
+end;
+$$ language plpgsql;
+
+-- trigger on posted_webhooks table
+create trigger trigger_posted_webhook
+    after insert
+    on posted_webhooks
+    for each row
+execute function call_webhook_handler();

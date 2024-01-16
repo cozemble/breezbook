@@ -35,7 +35,7 @@ model blocked_time {
 }
 
 model bookings {
-  id              String         @id @default(dbgenerated("uuid_generate_v4()"))
+  id              String         @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id       String
   environment_id  String
   customer_id     String
@@ -69,7 +69,7 @@ model business_hours {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model customers {
-  id             String     @id @default(dbgenerated("uuid_generate_v4()"))
+  id             String     @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id      String
   environment_id String
   first_name     String
@@ -99,7 +99,7 @@ model forms {
 }
 
 model order_lines {
-  id                String      @id @default(dbgenerated("uuid_generate_v4()"))
+  id                String      @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id         String
   environment_id    String
   order_id          String
@@ -117,7 +117,7 @@ model order_lines {
 }
 
 model orders {
-  id                         String           @id @default(dbgenerated("uuid_generate_v4()"))
+  id                         String           @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id                  String
   environment_id             String
   customer_id                String
@@ -249,6 +249,7 @@ model tenants {
   order_lines           order_lines[]
   order_payments        order_payments[]
   orders                orders[]
+  posted_webhooks       posted_webhooks[]
   pricing_rules         pricing_rules[]
   resource_availability resource_availability[]
   resource_blocked_time resource_blocked_time[]
@@ -292,7 +293,7 @@ model service_forms {
 }
 
 model coupons {
-  id             String   @id @default(dbgenerated("uuid_generate_v4()"))
+  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id      String
   environment_id String
   code           String
@@ -305,7 +306,7 @@ model coupons {
 }
 
 model reservations {
-  id               String   @id @default(dbgenerated("uuid_generate_v4()"))
+  id               String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   booking_id       String
   reservation_time DateTime @db.Timestamp(6)
   expiry_time      DateTime @db.Timestamp(6)
@@ -329,7 +330,7 @@ model tenant_secrets {
 }
 
 model order_payments {
-  id                      String   @id @default(dbgenerated("uuid_generate_v4()"))
+  id                      String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id               String
   environment_id          String
   order_id                String
@@ -342,4 +343,23 @@ model order_payments {
   updated_at              DateTime @default(now()) @db.Timestamptz(6)
   orders                  orders   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants                 tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model posted_webhooks {
+  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  tenant_id      String
+  environment_id String
+  webhook_id     String
+  payload        Json
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model system_config {
+  environment_id String
+  config_key     String
+  config_value   String
+
+  @@id([environment_id, config_key])
 }

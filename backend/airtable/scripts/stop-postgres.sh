@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
-docker stop postgresql
-docker rm postgresql
+docker-compose -f ../supabase/supabase-min-docker-compose.yml --env-file ../supabase/local-supabase.env down
+#docker stop postgresql
+#docker rm postgresql

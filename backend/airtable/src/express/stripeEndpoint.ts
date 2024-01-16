@@ -7,6 +7,8 @@ import { DbCustomer } from '../prisma/dbtypes.js';
 import { currency, price } from '@breezbook/packages-core';
 import { errorResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
 import { getStripeClient } from './getStripeClient.js';
+import { v4 as uuidv4 } from 'uuid';
+import { Prisma } from '@prisma/client';
 
 export const STRIPE_API_KEY_SECRET_NAME = 'stripe-api-key';
 export const STRIPE_PUBLIC_KEY_SECRET_NAME = 'stripe-public-key';
@@ -33,8 +35,22 @@ export async function onStripeWebhook(req: express.Request, res: express.Respons
 			res.status(500).send(event);
 			return;
 		}
-		console.log({ event });
-		res.status(200).send();
+		const prisma = prismaClient();
+		const postedWebhookId = uuidv4();
+		await prisma.posted_webhooks.create({
+			data: {
+				id: postedWebhookId,
+				payload: event as any,
+				environment_id: tenantEnvironment.environmentId.value,
+				webhook_id: 'stripe',
+				tenants: {
+					connect: {
+						tenant_id: tenantEnvironment.tenantId.value
+					}
+				}
+			}
+		});
+		res.status(202).send({ id: postedWebhookId });
 	});
 }
 
