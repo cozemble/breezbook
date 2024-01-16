@@ -1,10 +1,11 @@
-import { beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { carwash, environmentId, fullPaymentOnCheckout, order, orderLine, tenantEnvironment, tenantId } from '@breezbook/packages-core';
 import { goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow } from './helper.js';
-import { ErrorResponse, OrderCreatedResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
+import { OrderCreatedResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
 import { storeSecret } from '../src/infra/secretsInPostgres.js';
 import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME } from '../src/express/stripeEndpoint.js';
 import { appWithTestContainer, setTestSecretsEncryptionKey } from '../src/infra/appWithTestContainer.js';
+import { StartedDockerComposeEnvironment } from 'testcontainers';
 
 const expressPort = 3004;
 const postgresPort = 54334;
@@ -13,10 +14,11 @@ const tenantEnv = tenantEnvironment(environmentId('dev'), tenantId('tenant1'));
 
 describe('Given an order', () => {
 	let orderCreatedResponse: OrderCreatedResponse;
+	let dockerComposeEnv: StartedDockerComposeEnvironment;
 
 	beforeAll(async () => {
 		try {
-			await appWithTestContainer(expressPort, postgresPort);
+			dockerComposeEnv = await appWithTestContainer(expressPort, postgresPort);
 		} catch (e) {
 			console.error(e);
 			throw e;
@@ -33,6 +35,10 @@ describe('Given an order', () => {
 		expect(response.status).toBe(200);
 		orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
 	}, 1000 * 90);
+
+	afterAll(async () => {
+		await dockerComposeEnv.down();
+	});
 
 	test('can create a payment intent and get client_secret and public api key', async () => {
 		const paymentIntentResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/orders/${orderCreatedResponse.orderId}/paymentIntent`, {

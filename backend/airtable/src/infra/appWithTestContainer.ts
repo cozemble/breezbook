@@ -2,14 +2,14 @@ import { exec } from 'child-process-promise';
 import * as http from 'http';
 import { closePgPool } from './postgresPool.js';
 import { expressApp } from '../express/expressApp.js';
-import { DockerComposeEnvironment, Wait } from 'testcontainers';
+import { DockerComposeEnvironment, Wait, StartedDockerComposeEnvironment } from 'testcontainers';
 import { v4 as uuidv4 } from 'uuid';
 
 export function setTestSecretsEncryptionKey(): void {
 	process.env.SECRETS_ENCRYPTION_KEY = 'test-encryption-key';
 }
 
-export async function withMigratedDatabase(postgresPort: number): Promise<void> {
+export async function withMigratedDatabase(postgresPort: number): Promise<StartedDockerComposeEnvironment> {
 	const composeAndFileName = 'supabase-min-docker-compose.yml';
 	const composeFilePath = '../supabase';
 	const testEnvironmentName = uuidv4();
@@ -51,12 +51,14 @@ export async function withMigratedDatabase(postgresPort: number): Promise<void> 
 	console.log('Migrations complete.');
 
 	console.log(`psql connect string = ${process.env.DATABASE_URL}`);
+	return startedEnvironment;
 }
 
-export async function appWithTestContainer(expressPort: number, postgresPort: number): Promise<http.Server> {
-	await withMigratedDatabase(postgresPort);
+export async function appWithTestContainer(expressPort: number, postgresPort: number): Promise<StartedDockerComposeEnvironment> {
+	const dockerComposeEnv = await withMigratedDatabase(postgresPort);
 	const app = expressApp();
-	return app.listen(expressPort, () => {
+	app.listen(expressPort, () => {
 		console.log(`Listening on port ${expressPort}`);
 	});
+	return dockerComposeEnv;
 }
