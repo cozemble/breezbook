@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "build": "npx prisma generate && tsc -p tsconfig.json",
-    "test": "vitest run --passWithNoTests",
+    "test": "npx vitest run --passWithNoTests --fileParallelism false",
     "test:watch": "vitest watch",
     "start": "nodemon dist/esm/index.js",
     "db:migrate": "dotenv -e .env.production.local -- bash -c 'npx postgrator --config=migrations/schema/postgratorrc.json'",
@@ -40,7 +40,7 @@
     "prisma": "^5.7.1",
     "typescript": "5.3.3",
     "vite": "5.0.7",
-    "vitest": "0.33.0"
+    "vitest": "1.2.0"
   },
   "dependencies": {
     "@breezbook/backend-api-types": "workspace:*",
