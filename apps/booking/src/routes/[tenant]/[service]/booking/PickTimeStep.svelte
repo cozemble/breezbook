@@ -34,6 +34,8 @@
 				month: 'short'
 		  })} ${$value.start} - ${$value.end}`
 		: 'no time slot selected';
+
+	$: if ($value) onSubmit();
 </script>
 
 <!-- TODO date range filter -->
@@ -46,8 +48,4 @@
 	summary={$summary}
 >
 	<TimeSlotForm bind:selectedSlot={$value} {days} />
-
-	<div class="flex justify-end gap-3 mt-2">
-		<button class="btn btn-primary" on:click={onSubmit} disabled={!value}> Next </button>
-	</div>
 </StepWrapper>
