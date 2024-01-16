@@ -10,16 +10,16 @@ const postgresPort = 54335;
 const tenantEnv = tenantEnvironment(environmentId('dev'), tenantId('tenant1'));
 
 describe('Given a configured webhook', () => {
-	// beforeAll(async () => {
-	// 	try {
-	// 		await appWithTestContainer(expressPort, postgresPort);
-	// 		await setSystemConfig(tenantEnv, 'webhook_handler_url', `http://localhost:8001/stashWebhook`);
-	// 		await setSystemConfig(tenantEnv, 'webhook_handler_api_key', ``);
-	// 	} catch (e) {
-	// 		console.error(e);
-	// 		throw e;
-	// 	}
-	// }, 1000 * 90);
+	beforeAll(async () => {
+		try {
+			await appWithTestContainer(expressPort, postgresPort);
+			// await setSystemConfig(tenantEnv, 'webhook_handler_url', `http://localhost:8001/stashWebhook`);
+			// await setSystemConfig(tenantEnv, 'webhook_handler_api_key', ``);
+		} catch (e) {
+			console.error(e);
+			throw e;
+		}
+	}, 1000 * 90);
 
 	test('incoming webhooks are stashed and the webhook handler is called', async () => {
 		// const webhookPayload = {
