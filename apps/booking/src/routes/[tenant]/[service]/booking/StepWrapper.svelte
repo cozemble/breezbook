@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Loading from '$lib/components/Loading.svelte';
 	import Icon from '@iconify/svelte';
 
 	export let open: boolean = false;
@@ -9,6 +10,9 @@
 	export let summary: string = '';
 
 	export let onOpen: () => void;
+
+	/** Displays a loading indicator */
+	export let loading: boolean = false;
 </script>
 
 <!-- 
@@ -52,6 +56,11 @@
 	</button>
 
 	<div class="collapse-content">
-		<slot />
+		<!-- loading indicator -->
+		{#if loading}
+			<Loading />
+		{:else}
+			<slot />
+		{/if}
 	</div>
 </div>

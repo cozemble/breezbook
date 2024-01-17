@@ -59,6 +59,7 @@ export function initTimeStores(service: Service) {
 	return {
 		daySlots,
 		timeSlotFilters,
-		selectedSlot
+		selectedSlot,
+		loading
 	};
 }
