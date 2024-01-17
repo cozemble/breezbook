@@ -1,8 +1,7 @@
 import { exec } from 'child-process-promise';
-import * as http from 'http';
 import { closePgPool } from './postgresPool.js';
 import { expressApp } from '../express/expressApp.js';
-import { DockerComposeEnvironment, Wait, StartedDockerComposeEnvironment } from 'testcontainers';
+import { DockerComposeEnvironment, StartedDockerComposeEnvironment, Wait } from 'testcontainers';
 import { v4 as uuidv4 } from 'uuid';
 
 export function setTestSecretsEncryptionKey(): void {

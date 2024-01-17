@@ -8,7 +8,6 @@ import { currency, price } from '@breezbook/packages-core';
 import { errorResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
 import { getStripeClient } from './getStripeClient.js';
 import { v4 as uuidv4 } from 'uuid';
-import { Prisma } from '@prisma/client';
 
 export const STRIPE_API_KEY_SECRET_NAME = 'stripe-api-key';
 export const STRIPE_PUBLIC_KEY_SECRET_NAME = 'stripe-public-key';
