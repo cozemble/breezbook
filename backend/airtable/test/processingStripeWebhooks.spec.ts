@@ -1,11 +1,13 @@
-import { afterAll, beforeAll, describe, test } from 'vitest';
+import { afterAll, beforeAll, describe, test, expect } from 'vitest';
 import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
 import { insertOrder } from '../src/express/insertOrder.js';
-import { currency, customer, environmentId, fullPaymentOnCheckout, order, price, tenantEnvironment, tenantId } from '@breezbook/packages-core';
+import { currency, customer, environmentId, fullPaymentOnCheckout, order, price, randomInteger, tenantEnvironment, tenantId } from '@breezbook/packages-core';
 import { createOrderRequest } from '@breezbook/backend-api-types';
 import { PaymentIntentWebhookBody } from '../src/stripe.js';
 import { STRIPE_WEBHOOK_ID } from '../src/express/stripeEndpoint.js';
+import { OrderPaymentCreatedResponse } from '../src/express/handlePostedWebhook.js';
+import { prismaClient } from '../src/prisma/client.js';
 
 const expressPort = 3007;
 const postgresPort = 54337;
@@ -28,15 +30,16 @@ describe('Given a migrated database', async () => {
 	});
 
 	test('on receipt of a successful payment for an order, a payment record for the order is created', async () => {
+		const costInPence = randomInteger(5000);
 		const createOrderResponse = await insertOrder(
 			tenantEnv,
-			createOrderRequest(order(customer('Mike', 'Hogan', 'mike@email.com'), []), price(1000, currency('GBP')), fullPaymentOnCheckout()),
+			createOrderRequest(order(customer('Mike', 'Hogan', 'mike@email.com'), []), price(costInPence, currency('GBP')), fullPaymentOnCheckout()),
 			[]
 		);
 		const paymentIntentWebhook: PaymentIntentWebhookBody = {
 			_type: 'stripe.payment.intent.webhook.body',
 			id: 'pi_3OYX8wFTtlkGavGx0RSugobm',
-			amount: 1000,
+			amount: costInPence,
 			currency: 'gbp',
 			status: 'succeeded',
 			metadata: {
@@ -57,5 +60,18 @@ describe('Given a migrated database', async () => {
 		if (!postResponse.ok) {
 			throw new Error(`Failed to post webhook: ${await postResponse.text()}`);
 		}
+		const orderPaymentCreatedResponse = (await postResponse.json()) as OrderPaymentCreatedResponse;
+		expect(orderPaymentCreatedResponse._type).toBe('order.payment.created.response');
+		expect(orderPaymentCreatedResponse.orderId).toBe(createOrderResponse.orderId);
+		expect(orderPaymentCreatedResponse.paymentId).toBeDefined();
+		const prisma = prismaClient();
+		const payment = await prisma.order_payments.findUnique({ where: { id: orderPaymentCreatedResponse.paymentId } });
+		expect(payment).toBeDefined();
+		expect(payment?.order_id).toBe(createOrderResponse.orderId);
+		expect(payment?.amount_in_minor_units).toBe(costInPence);
+		expect(payment?.amount_currency).toBe('gbp');
+		expect(payment?.provider).toBe('Stripe');
+		expect(payment?.provider_transaction_id).toBe(paymentIntentWebhook.id);
+		expect(payment?.status).toBe(paymentIntentWebhook.status);
 	});
 });
