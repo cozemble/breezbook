@@ -2,13 +2,14 @@ import { get } from 'svelte/store';
 import { initSteps } from './steps';
 import { initTimeStores } from './time';
 import { getContext, setContext } from 'svelte';
+import { initExtras } from './extras';
 
 const BOOKING_STORE_CONTEXT_KEY = Symbol('booking_store');
 
 function createBookingStore(service: Service) {
 	const steps = initSteps();
-
 	const timeStores = initTimeStores(service);
+	const extrasStores = initExtras(service);
 
 	// TODO this is horrible, find a better way
 	// sync time step value with selected slot
@@ -33,7 +34,8 @@ function createBookingStore(service: Service) {
 
 	return {
 		steps,
-		timeStores
+		timeStores,
+		extrasStores
 	};
 }
 

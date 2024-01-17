@@ -57,8 +57,12 @@ declare interface Service {
 
 declare namespace Service {
 	interface Extra {
+		id: string;
 		name: string;
+		description?: string;
+		/** in GBP */
 		price: number;
+		// TODO currency option
 		selected: boolean;
 		// <!-- TODO detail inputs -->
 	}

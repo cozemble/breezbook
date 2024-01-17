@@ -17,7 +17,7 @@ export const tenant = {
 
 export const service = {
 	getOne: async (tenantSlug: string, serviceSlug: string) => {
-		const tenant = await backend.tenant.getOne(tenantSlug);
+		const tenant = await api.tenant.getOne(tenantSlug);
 		if (!tenant) return null;
 
 		const service = services.find((service) => service.slug === serviceSlug);
@@ -25,7 +25,7 @@ export const service = {
 	},
 
 	getAll: async (tenantSlug: string) => {
-		const tenant = await backend.tenant.getOne(tenantSlug);
+		const tenant = await api.tenant.getOne(tenantSlug);
 		if (!tenant) return null;
 
 		const tenantServices = services.filter((service) => service.tenantId === tenant.id);
@@ -97,10 +97,56 @@ export const timeSlot = {
 	}
 };
 
-const backend = {
-	tenant,
-	service,
-	timeSlot
+const extras = {
+	getAll: async (tenantSlug: string, serviceSlug: string) => {
+		// TODO this is just for testing, remove it later
+		tenantSlug = 'tenant1';
+		serviceSlug = 'smallCarWash';
+
+		// TODO set the api url as an env variable
+		// TODO handle errors properly
+
+		const response = await fetch(
+			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/service/${serviceSlug}/availability?fromDate=2024-01-17&toDate=2024-01-24`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		if (!response.ok) {
+			console.error('Network response was not ok');
+			return [];
+		}
+
+		const contentType = response.headers.get('content-type');
+		const isJson = contentType && contentType.includes('application/json');
+		if (!isJson) {
+			console.error('Response was not valid JSON');
+			return [];
+		}
+
+		const data = (await response.json()) as AvailabilityResponse;
+
+		return data.addOns.map(
+			(addOn): Service.Extra => ({
+				id: addOn.id,
+				name: addOn.name,
+				price: Number(addOn.priceWithNoDecimalPlaces),
+				description: addOn?.description || undefined,
+				selected: false
+			})
+		);
+	}
 };
 
-export default backend;
+const api = {
+	tenant,
+	service,
+	timeSlot,
+	extras
+};
+
+export default api;
