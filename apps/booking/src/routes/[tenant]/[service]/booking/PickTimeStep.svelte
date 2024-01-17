@@ -1,8 +1,7 @@
 <script lang="ts">
-	import api from '$lib/common/api';
 	import TimeSlotForm from '$lib/components/time/TimeSlotForm.svelte';
-	import { onMount } from 'svelte';
 	import StepWrapper from './StepWrapper.svelte';
+	import { getBookingStore } from '$lib/stores/booking';
 
 	export let step: BookingStep<'time', TimeSlot>;
 
@@ -10,16 +9,11 @@
 
 	let days: DaySlot[] = [];
 
-	onMount(async () => {
-		await api.timeSlot
-			.getAll('test', 'test', {
-				fromDate: new Date(),
-				toDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
-			})
-			.then((res) => {
-				days = res;
-			});
-	});
+	const {
+		timeStores: { daySlots }
+	} = getBookingStore();
+
+	$: days = $daySlots;
 
 	const onSubmit = () => {
 		if (!$value) return;

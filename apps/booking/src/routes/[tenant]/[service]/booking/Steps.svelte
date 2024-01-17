@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createBookingStore } from '$lib/stores/booking';
+	import { initBookingStore } from '$lib/stores/booking';
 
 	import DetailsStep from './DetailsStep.svelte';
 	import ExtrasStep from './ExtrasStep.svelte';
@@ -7,7 +7,7 @@
 
 	export let service: Service;
 
-	const bookingStore = createBookingStore(service);
+	const bookingStore = initBookingStore(service);
 
 	//
 </script>
