@@ -3,13 +3,12 @@
 	import { formatPrice } from '$lib/utils';
 	import StepWrapper from './StepWrapper.svelte';
 
-	export let step: BookingStep<'extras', Service.Extra[]>;
+	const {
+		extrasStores: { extras, loading },
+		steps: { extrasStep: step }
+	} = getBookingStore();
 
 	const { summary, value, open, status } = step;
-
-	const {
-		extrasStores: { extras, loading }
-	} = getBookingStore();
 
 	const onSubmit = () => {
 		if (!value) return;
@@ -17,6 +16,8 @@
 		step.value = value;
 		step.onComplete();
 	};
+
+	$: console.log($extras);
 
 	$: $value = $extras.filter((extra) => extra.selected);
 </script>
@@ -29,6 +30,10 @@
 	summary={$summary}
 	loading={$loading}
 >
+	{#if !$extras.length}
+		<p class="text-center">No extras available.</p>
+	{/if}
+
 	{#each $extras as extra, i (i)}
 		<div class="form-control">
 			<label class="cursor-pointer label">

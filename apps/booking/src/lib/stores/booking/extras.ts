@@ -7,6 +7,7 @@ import api from '$lib/common/api';
 export function initExtras(service: Service) {
 	const extras = writable<Service.Extra[]>([]);
 	const loading = writable(false);
+	const value = writable<Service.Extra[]>([]);
 
 	const fetchExtras = async () => {
 		loading.set(true);
@@ -22,6 +23,7 @@ export function initExtras(service: Service) {
 
 	return {
 		extras,
-		loading
+		loading,
+		value
 	};
 }

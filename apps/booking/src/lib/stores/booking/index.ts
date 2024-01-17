@@ -1,5 +1,5 @@
-import { get } from 'svelte/store';
-import { initSteps } from './steps';
+import { get, writable } from 'svelte/store';
+import { defineStep } from './steps';
 import { initTimeStores } from './time';
 import { getContext, setContext } from 'svelte';
 import { initExtras } from './extras';
@@ -7,30 +7,52 @@ import { initExtras } from './extras';
 const BOOKING_STORE_CONTEXT_KEY = Symbol('booking_store');
 
 function createBookingStore(service: Service) {
-	const steps = initSteps();
 	const timeStores = initTimeStores(service);
 	const extrasStores = initExtras(service);
 
-	// TODO this is horrible, find a better way
-	// sync time step value with selected slot
-	timeStores.selectedSlot.subscribe((slot) => {
-		const stepValue = get(steps.timeStep.value);
+	// TODO details based on service
 
-		console.log('selected slot', slot);
+	// needed to initialize the steps // TODO find a better way
+	const stepsStore = writable<BookingStep[]>([]);
 
-		if (stepValue !== slot) steps.timeStep.value.set(slot);
-	});
+	const steps = {
+		timeStep: defineStep<TimeSlot, 'time'>(
+			{
+				name: 'time',
+				valueStore: timeStores.value,
+				summaryFunction: (value) =>
+					value
+						? `${value.day.toLocaleDateString('en-GB', {
+								weekday: 'short',
+								day: 'numeric',
+								month: 'short'
+						  })} ${value.start} - ${value.end}`
+						: 'no time slot selected'
+			},
+			stepsStore
+		),
 
-	steps.timeStep.value.subscribe((slot) => {
-		const timeStoreValue = get(timeStores.selectedSlot);
+		extrasStep: defineStep<Service.Extra[], 'extras'>(
+			{
+				name: 'extras',
+				valueStore: extrasStores.value,
+				summaryFunction: (value) => `${value?.length || 'no'} extras selected`
+			},
+			stepsStore
+		),
 
-		console.log('time step value', slot);
+		detailsStep: defineStep<Service.Details, 'details'>(
+			{
+				name: 'details',
+				valueStore: writable(null) // TODO proper value store
+			},
+			stepsStore
+		)
+		// TODO custom steps
+	};
 
-		if (timeStoreValue !== slot) timeStores.selectedSlot.set(slot);
-	});
-
-	// TODO get extras based on service
-	// TODO get customer details based on service
+	// Open the first step
+	get(stepsStore)?.[0].onOpen();
 
 	return {
 		steps,
@@ -39,6 +61,7 @@ function createBookingStore(service: Service) {
 	};
 }
 
+/** Initializes the booking store and sets it in the context */
 export function initBookingStore(service: Service) {
 	const bookingStore = createBookingStore(service);
 
@@ -47,6 +70,9 @@ export function initBookingStore(service: Service) {
 	return bookingStore;
 }
 
+/** Gets the booking store from the context
+ * @throws if the store is not initialized
+ */
 export function getBookingStore() {
 	type BookingStore = ReturnType<typeof createBookingStore>;
 

@@ -14,7 +14,7 @@ type BookingStep<TName extends string = string, TValue = any> = {
 
 type BookingStepOptions<TName extends string, TValue> = {
 	name: TName;
-	initialValue?: TValue;
+	valueStore: import('svelte/store').Writable<TValue | null>;
 	/** Function that sets the summary when value changes */
 	summaryFunction?: (value: TValue | null) => string;
 };

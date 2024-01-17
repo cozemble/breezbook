@@ -17,6 +17,6 @@
 	Booking steps as an accordion.
  -->
 
-<PickTimeStep step={bookingStore.steps.timeStep} />
-<ExtrasStep step={bookingStore.steps.extrasStep} />
+<PickTimeStep />
+<ExtrasStep />
 <DetailsStep step={bookingStore.steps.detailsStep} />
