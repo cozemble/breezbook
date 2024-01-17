@@ -33,6 +33,7 @@ export async function withMigratedDatabase(postgresPort: number): Promise<Starte
 	process.env.PGDATABASE = environment.POSTGRES_DB;
 	process.env.PG_ADMIN_USER = 'postgres';
 	process.env.PG_ADMIN_PASSWORD = environment.POSTGRES_PASSWORD;
+	process.env.INTERNAL_API_KEY = 'test-api-key';
 
 	process.env.DATABASE_URL = `postgres://${process.env.PG_ADMIN_USER}:${process.env.PG_ADMIN_PASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`;
 

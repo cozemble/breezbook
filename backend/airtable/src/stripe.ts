@@ -2,6 +2,8 @@ import Stripe from 'stripe';
 import { mandatory, Price } from '@breezbook/packages-core';
 import { errorResponse, ErrorResponse } from '@breezbook/backend-api-types';
 
+type MetadataParam = Record<string, string | number | null>;
+
 export interface NewPaymentIntent {
 	_type: 'new.payment.intent';
 	id: string;
@@ -42,14 +44,16 @@ export const stripeErrorCodes = {
 };
 
 export interface PaymentIntentWebhookBody {
-	_type: 'payment.intent.webhook.body';
+	_type: 'stripe.payment.intent.webhook.body';
 	id: string;
 	amount: number;
 	currency: string;
 	status: Stripe.PaymentIntent.Status;
+	metadata: MetadataParam;
 }
 
 export interface OrderMetadata {
+	_type: 'order.metadata';
 	orderId: string;
 	tenantId: string;
 	environmentId: string;
@@ -58,14 +62,21 @@ export interface OrderMetadata {
 export type StripeWebhookBody = PaymentIntentWebhookBody;
 
 export interface StripeClient {
-	createPaymentIntent(customer: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<NewPaymentIntent | ErrorResponse>;
+	createPaymentIntent(customer: StripeCustomerInput, amount: Price, metadata: OrderMetadata): Promise<NewPaymentIntent | ErrorResponse>;
 
 	upsertCustomer(customer: StripeCustomerInput): Promise<StripeCustomer | ErrorResponse>;
 
 	onWebhook(webhookBody: string, signatureValue: string): StripeWebhookBody | ErrorResponse;
 }
 
-type MetadataParam = Record<string, string | number | null>;
+function toStripeMetadata(metadata: OrderMetadata): Stripe.MetadataParam {
+	return {
+		_type: metadata._type,
+		orderId: metadata.orderId,
+		tenantId: metadata.tenantId,
+		environmentId: metadata.environmentId
+	};
+}
 
 export class RealStripeClient implements StripeClient {
 	private readonly stripe: Stripe;
@@ -98,11 +109,12 @@ export class RealStripeClient implements StripeClient {
 
 	private handlePaymentIntentSucceeded(intent: Stripe.PaymentIntent): StripeWebhookBody | ErrorResponse {
 		return {
-			_type: 'payment.intent.webhook.body',
+			_type: 'stripe.payment.intent.webhook.body',
 			id: intent.id,
 			amount: intent.amount,
 			currency: intent.currency,
-			status: intent.status
+			status: intent.status,
+			metadata: intent.metadata
 		};
 	}
 
@@ -146,7 +158,7 @@ export class RealStripeClient implements StripeClient {
 		}
 	}
 
-	public async createPaymentIntent(customerInput: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<NewPaymentIntent | ErrorResponse> {
+	public async createPaymentIntent(customerInput: StripeCustomerInput, amount: Price, metadata: OrderMetadata): Promise<NewPaymentIntent | ErrorResponse> {
 		const customer = await this.upsertCustomer(customerInput);
 		if (customer._type === 'error.response') {
 			return customer;
@@ -154,7 +166,7 @@ export class RealStripeClient implements StripeClient {
 		const stripeResponse = await this.stripe.paymentIntents.create({
 			amount: amount.amount.value,
 			currency: amount.currency.value,
-			metadata,
+			metadata: toStripeMetadata(metadata),
 			payment_method_types: ['card'],
 			customer: customer.id
 		});
@@ -172,7 +184,7 @@ export class RealStripeClient implements StripeClient {
 }
 
 export class StubStripeClient implements StripeClient {
-	public async createPaymentIntent(customerInput: StripeCustomerInput, amount: Price, metadata: MetadataParam): Promise<NewPaymentIntent | ErrorResponse> {
+	public async createPaymentIntent(customerInput: StripeCustomerInput, amount: Price, metadata: OrderMetadata): Promise<NewPaymentIntent | ErrorResponse> {
 		return {
 			_type: 'new.payment.intent',
 			id: 'stub-payment-intent-id',

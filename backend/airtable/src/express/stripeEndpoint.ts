@@ -74,9 +74,10 @@ export async function createStripePaymentIntent(req: express.Request, res: expre
 
 		const stripeClient = getStripeClient(stripeApiKey, environment_id);
 		const paymentIntent = await stripeClient.createPaymentIntent(toStripeCustomerInput(order.customers), orderTotal, {
-			tenant_id,
-			environment_id,
-			order_id: orderId.value
+			_type: 'order.metadata',
+			tenantId: tenant_id,
+			environmentId: environment_id,
+			orderId: orderId.value
 		});
 		if (paymentIntent._type === 'error.response') {
 			res.status(500).send(paymentIntent);
