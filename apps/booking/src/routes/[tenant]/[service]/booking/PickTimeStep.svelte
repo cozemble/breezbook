@@ -27,14 +27,6 @@
 		step.onComplete();
 	};
 
-	$: $summary = $value
-		? `${$value.day.toLocaleDateString('en-GB', {
-				weekday: 'short',
-				day: 'numeric',
-				month: 'short'
-		  })} ${$value.start} - ${$value.end}`
-		: 'no time slot selected';
-
 	$: if ($value) onSubmit();
 </script>
 

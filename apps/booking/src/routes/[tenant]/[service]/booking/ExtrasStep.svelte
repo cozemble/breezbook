@@ -36,7 +36,6 @@
 	};
 
 	$: $value = extras.filter((extra) => extra.selected);
-	$: $summary = `${$value?.length || 'no'} extras selected`;
 </script>
 
 <StepWrapper
