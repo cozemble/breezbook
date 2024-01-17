@@ -25,6 +25,8 @@ function toStripeCustomerInput(customers: DbCustomer): StripeCustomerInput {
 	};
 }
 
+export const STRIPE_WEBHOOK_ID = 'stripe';
+
 export async function onStripeWebhook(req: express.Request, res: express.Response): Promise<void> {
 	await withOneRequestParams(req, res, tenantEnvironmentParam(), async (tenantEnvironment) => {
 		const stripeApiKey = await getSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME);
@@ -41,7 +43,7 @@ export async function onStripeWebhook(req: express.Request, res: express.Respons
 				id: postedWebhookId,
 				payload: event as any,
 				environment_id: tenantEnvironment.environmentId.value,
-				webhook_id: 'stripe',
+				webhook_id: STRIPE_WEBHOOK_ID,
 				tenants: {
 					connect: {
 						tenant_id: tenantEnvironment.tenantId.value
