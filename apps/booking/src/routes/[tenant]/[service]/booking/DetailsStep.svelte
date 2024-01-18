@@ -6,16 +6,13 @@
 
 	const {
 		steps: { detailsStep: step },
-		detailsStore: { schema, errors, value }
+		detailsStore: { schema, errors, value, onSubmit: submitDetails }
 	} = getBookingStore();
 
 	const { open, status } = step;
 
-	// <!-- TODO validation -->
 	const onSubmit = () => {
-		if (!value) return;
-
-		step.value = value;
+		submitDetails();
 		step.onComplete();
 	};
 

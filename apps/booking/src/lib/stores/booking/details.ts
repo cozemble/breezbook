@@ -1,16 +1,19 @@
-import { writable } from 'svelte/store';
+import type { ErrorObject as AjvErrorObject } from 'ajv';
+import { writable, get } from 'svelte/store';
+import Ajv from 'ajv';
+import _ from 'lodash';
+
 import api from '$lib/common/api';
-import { initValues } from '$lib/utils';
+import { initValues, removeEmptyValues } from '$lib/utils';
+
+import * as ajvUtils from '$lib/utils/ajv';
 
 /** Setup stores to manage details */
 export function createDetailsStore(service: Service) {
 	const schema = writable<JSONSchema>({});
 	const value = writable<Service.Details>({}); // TODO proper typing
 	const loading = writable(false);
-	const errors = writable<ObjectError>({
-		make: 'Oops! Your car make is so weird we cannot wash it'
-	});
-	// TODO validation
+	const errors = writable<ObjectError>({});
 
 	const initValue = (schema: JSONSchema) => {
 		const newVal = initValues(schema) as Service.Details;
@@ -33,10 +36,51 @@ export function createDetailsStore(service: Service) {
 	// fetch time slots initially
 	fetchSchema();
 
+	/** Add errors to the store */
+	const addErrors = (errorObjects?: AjvErrorObject[] | null) => {
+		errors.update((prev) => {
+			if (!errorObjects) return {};
+
+			// convert error to error objects and merge them
+			return _.merge({}, ...errorObjects.map(ajvUtils.convertToErrorObject));
+		});
+	};
+
+	/** Validate the current value against the schema and add errors to the store */
+	const validate = () => {
+		errors.set({});
+
+		const ajv = new Ajv({
+			allErrors: true
+		});
+		ajv.addVocabulary([]); // TODO add specific words later if needed
+
+		const validate = ajv.compile(get(schema));
+		const valid = validate(removeEmptyValues(get(value)));
+
+		addErrors(validate.errors);
+
+		return valid;
+	};
+
+	const onSubmit = async () => {
+		const valid = validate();
+		if (!valid) {
+			// dynamically validate when the form submitted incorrectly once (so the user knows what to fix)
+			value.subscribe(() => validate());
+			return;
+		}
+
+		alert('You have finished your booking! ');
+
+		// TODO save booking to cart
+	};
+
 	return {
 		schema,
 		value,
 		loading,
-		errors
+		errors,
+		onSubmit
 	};
 }
