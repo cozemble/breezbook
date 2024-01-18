@@ -360,7 +360,7 @@ create table received_webhooks
     updated_at     timestamp with time zone            not null default current_timestamp
 );
 
-create or replace function call_webhook_handler()
+create or replace function call_received_webhook_handler()
     returns trigger as
 $$
 declare
@@ -372,11 +372,11 @@ begin
     -- fetch url and auth token from system_config
     select into v_url config_value
     from system_config
-    where config_key = 'webhook_handler_url'
+    where config_key = 'received_webhook_handler_url'
       and environment_id = new.environment_id;
     select into v_auth_token config_value
     from system_config
-    where config_key = 'webhook_handler_api_key'
+    where config_key = 'received_webhook_handler_api_key'
       and environment_id = new.environment_id;
 
     -- construct the json payload with webhook_id and payload
@@ -407,8 +407,8 @@ end;
 $$ language plpgsql;
 
 -- trigger on received_webhooks table
-create trigger trigger_posted_webhook
+create trigger trigger_received_webhook
     after insert
     on received_webhooks
     for each row
-execute function call_webhook_handler();
+execute function call_received_webhook_handler();

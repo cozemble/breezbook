@@ -16,8 +16,8 @@ describe('Given a configured webhook', () => {
 	beforeAll(async () => {
 		try {
 			dockerComposeEnv = await appWithTestContainer(expressPort, postgresPort);
-			await setSystemConfig(tenantEnv, 'webhook_handler_url', `http://localhost:8001/stashWebhook`);
-			await setSystemConfig(tenantEnv, 'webhook_handler_api_key', ``);
+			await setSystemConfig(tenantEnv, 'received_webhook_handler_url', `http://localhost:8001/stashWebhook`);
+			await setSystemConfig(tenantEnv, 'received_webhook_handler_api_key', ``);
 		} catch (e) {
 			console.error(e);
 			throw e;
