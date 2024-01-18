@@ -1,14 +1,11 @@
 import { getContext, setContext } from 'svelte';
-import { get, writable, type Writable } from 'svelte/store';
+import { derived, get, writable, type Writable } from 'svelte/store';
 
 const STEPS_CONTEXT_KEY = Symbol('booking_steps');
 
 /** Create a store to manage the booking steps (internal to the steps) */
 const stepsStoreCtx = () => {
-	type StepsArray = Writable<BookingStep[]>;
-
-	const existing = getContext<StepsArray | null>(STEPS_CONTEXT_KEY);
-
+	const existing = getContext<Writable<BookingStep[]> | null>(STEPS_CONTEXT_KEY);
 	if (existing) return existing;
 
 	const store = writable<BookingStep[]>([]);
@@ -16,51 +13,42 @@ const stepsStoreCtx = () => {
 	return store;
 };
 
+/** Define a booking step */
 export function defineStep<TValue, TName extends string>(
 	options: BookingStepOptions<TName, TValue>
 ): BookingStep<TName, TValue> {
 	const stepsStore = stepsStoreCtx();
 
-	const open = writable<boolean>(false);
-	const status = writable<GenericStatus>('default');
-	const summary = writable<string>('');
-
 	const getStepIdx = () => get(stepsStore).findIndex((s) => s.name === options.name);
-
-	// Update the summary when the value changes
-	if (options.summaryFunction) {
-		options.valueStore.subscribe((v) => {
-			const s = options.summaryFunction?.(v) || '';
-			summary.set(s);
-		});
-	}
+	const getNextStep = () => get(stepsStore)[getStepIdx() + 1] as BookingStep | undefined;
+	const getPreviousStep = () => get(stepsStore)[getStepIdx() - 1] as BookingStep | undefined;
 
 	const step: BookingStep<TName, TValue> = {
 		name: options.name,
-		status,
-		open,
+		status: writable<GenericStatus>('default'),
+		open: writable<boolean>(false),
 		value: options.valueStore,
-		summary,
+		summary: derived(options.valueStore, (v) => options.summaryFunction?.(v) || ''),
+
 		onComplete: () => {
 			if (!get(step.value)) return;
 
-			status.set('success');
-			get(stepsStore)?.[getStepIdx() + 1].onOpen();
+			step.status.set('success');
+			getNextStep()?.onOpen();
 		},
+
 		onOpen: () => {
-			const previousStep = get(stepsStore)?.[getStepIdx() - 1];
-			const previousStepSuccess = previousStep ? get(previousStep.status) === 'success' : true;
-			if (!previousStepSuccess) return;
+			const prevStep = getPreviousStep();
+			const prevStepSuccess = prevStep ? get(prevStep.status) === 'success' : true;
+			if (!prevStepSuccess) return;
 
 			get(stepsStore).forEach((s) => {
-				if (s.name === options.name) s.open.set(true);
-				else s.open.set(false);
+				if (s.name !== options.name) s.open.set(false);
 			});
+			step.open.set(true);
 		},
-		onGoBack: () =>
-			get(stepsStore).forEach((s, i) => {
-				if (i === getStepIdx() - 1) s.onOpen();
-			})
+
+		onGoBack: () => getPreviousStep()?.onOpen()
 	};
 
 	stepsStore.update((steps) => [...steps, step]);

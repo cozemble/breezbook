@@ -27,15 +27,18 @@ function createBookingStore(service: Service) {
 					  })} ${value.start} - ${value.end}`
 					: 'no time slot selected'
 		}),
+
 		extrasStep: defineStep<Service.Extra[], 'extras'>({
 			name: 'extras',
 			valueStore: extrasStore.value,
 			summaryFunction: (value) => `${value?.length || 'no'} extras selected`
 		}),
+
 		detailsStep: defineStep<Service.Details, 'details'>({
 			name: 'details',
 			valueStore: writable(null) // TODO proper value store
 		})
+
 		// TODO custom steps
 	};
 
