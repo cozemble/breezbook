@@ -4,7 +4,7 @@
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {
-		extrasStores: { extras, loading },
+		extrasStore: { extras, loading },
 		steps: { extrasStep: step }
 	} = getBookingStore();
 

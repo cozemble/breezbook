@@ -4,7 +4,7 @@
 	import { getBookingStore } from '$lib/stores/booking';
 
 	const {
-		timeStores: { daySlots, loading },
+		timeStore: { daySlots, loading },
 		steps: { timeStep: step }
 	} = getBookingStore();
 

@@ -1,9 +1,26 @@
+import { getContext, setContext } from 'svelte';
 import { get, writable, type Writable } from 'svelte/store';
 
+const STEPS_CONTEXT_KEY = Symbol('booking_steps');
+
+/** Create a store to manage the booking steps (internal to the steps) */
+const stepsStoreCtx = () => {
+	type StepsArray = Writable<BookingStep[]>;
+
+	const existing = getContext<StepsArray | null>(STEPS_CONTEXT_KEY);
+
+	if (existing) return existing;
+
+	const store = writable<BookingStep[]>([]);
+	setContext(STEPS_CONTEXT_KEY, store);
+	return store;
+};
+
 export function defineStep<TValue, TName extends string>(
-	options: BookingStepOptions<TName, TValue>,
-	stepsStore: Writable<BookingStep[]>
+	options: BookingStepOptions<TName, TValue>
 ): BookingStep<TName, TValue> {
+	const stepsStore = stepsStoreCtx();
+
 	const open = writable<boolean>(false);
 	const status = writable<GenericStatus>('default');
 	const summary = writable<string>('');

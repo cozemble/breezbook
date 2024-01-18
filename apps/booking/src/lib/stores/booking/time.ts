@@ -24,17 +24,16 @@ const isSlotWithinFilters = (slot: TimeSlot, filter: TimeSlotFilter) => {
  * - re-fetch time slots when filters change
  * - manage selected time slot
  */
-export function initTimeStores(service: Service) {
+export function createTimeStore(service: Service) {
 	const daySlots = writable<DaySlot[]>([]);
-	const timeSlotFilters = writable<TimeSlotFilter>(DEFAULT_TIME_SLOT_FILTER);
+	const filters = writable<TimeSlotFilter>(DEFAULT_TIME_SLOT_FILTER);
 	const value = writable<TimeSlot | null>(null);
 	const loading = writable(false);
 
 	const fetchTimeSlots = async () => {
 		loading.set(true);
 
-		const filters = get(timeSlotFilters);
-		const res = await api.timeSlot.getAll('', '', filters); // TODO proper params
+		const res = await api.timeSlot.getAll('', '', get(filters)); // TODO proper params
 		daySlots.set(res);
 
 		loading.set(false);
@@ -44,7 +43,7 @@ export function initTimeStores(service: Service) {
 	fetchTimeSlots();
 
 	// re-fetch time slots when filters change
-	timeSlotFilters.subscribe((filters) => {
+	filters.subscribe((filters) => {
 		fetchTimeSlots();
 
 		// if the selected slot is not within the filters, clear it
@@ -54,7 +53,7 @@ export function initTimeStores(service: Service) {
 
 	return {
 		daySlots,
-		timeSlotFilters,
+		filters,
 		value,
 		loading
 	};

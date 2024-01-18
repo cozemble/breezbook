@@ -1,63 +1,51 @@
 import { get, writable } from 'svelte/store';
 import { defineStep } from './steps';
-import { initTimeStores } from './time';
+import { createTimeStore } from './time';
 import { getContext, setContext } from 'svelte';
 import { initExtras } from './extras';
 
 const BOOKING_STORE_CONTEXT_KEY = Symbol('booking_store');
 
 function createBookingStore(service: Service) {
-	const timeStores = initTimeStores(service);
-	const extrasStores = initExtras(service);
+	const timeStore = createTimeStore(service);
+	const extrasStore = initExtras(service);
 
 	// TODO details based on service
 
 	// needed to initialize the steps // TODO find a better way
-	const stepsStore = writable<BookingStep[]>([]);
 
 	const steps = {
-		timeStep: defineStep<TimeSlot, 'time'>(
-			{
-				name: 'time',
-				valueStore: timeStores.value,
-				summaryFunction: (value) =>
-					value
-						? `${value.day.toLocaleDateString('en-GB', {
-								weekday: 'short',
-								day: 'numeric',
-								month: 'short'
-						  })} ${value.start} - ${value.end}`
-						: 'no time slot selected'
-			},
-			stepsStore
-		),
-
-		extrasStep: defineStep<Service.Extra[], 'extras'>(
-			{
-				name: 'extras',
-				valueStore: extrasStores.value,
-				summaryFunction: (value) => `${value?.length || 'no'} extras selected`
-			},
-			stepsStore
-		),
-
-		detailsStep: defineStep<Service.Details, 'details'>(
-			{
-				name: 'details',
-				valueStore: writable(null) // TODO proper value store
-			},
-			stepsStore
-		)
+		timeStep: defineStep<TimeSlot, 'time'>({
+			name: 'time',
+			valueStore: timeStore.value,
+			summaryFunction: (value) =>
+				value
+					? `${value.day.toLocaleDateString('en-GB', {
+							weekday: 'short',
+							day: 'numeric',
+							month: 'short'
+					  })} ${value.start} - ${value.end}`
+					: 'no time slot selected'
+		}),
+		extrasStep: defineStep<Service.Extra[], 'extras'>({
+			name: 'extras',
+			valueStore: extrasStore.value,
+			summaryFunction: (value) => `${value?.length || 'no'} extras selected`
+		}),
+		detailsStep: defineStep<Service.Details, 'details'>({
+			name: 'details',
+			valueStore: writable(null) // TODO proper value store
+		})
 		// TODO custom steps
 	};
 
 	// Open the first step
-	get(stepsStore)?.[0].onOpen();
+	steps.timeStep.onOpen();
 
 	return {
 		steps,
-		timeStores,
-		extrasStores
+		timeStore,
+		extrasStore
 	};
 }
 
