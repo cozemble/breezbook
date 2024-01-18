@@ -349,7 +349,7 @@ create table system_config
     primary key (environment_id, config_key)
 );
 
-create table posted_webhooks
+create table received_webhooks
 (
     id             text primary key                             default uuid_generate_v4(),
     tenant_id      text references tenants (tenant_id) not null,
@@ -406,9 +406,9 @@ begin
 end;
 $$ language plpgsql;
 
--- trigger on posted_webhooks table
+-- trigger on received_webhooks table
 create trigger trigger_posted_webhook
     after insert
-    on posted_webhooks
+    on received_webhooks
     for each row
 execute function call_webhook_handler();

@@ -38,7 +38,7 @@ export async function onStripeWebhook(req: express.Request, res: express.Respons
 		}
 		const prisma = prismaClient();
 		const postedWebhookId = uuidv4();
-		await prisma.posted_webhooks.create({
+		await prisma.received_webhooks.create({
 			data: {
 				id: postedWebhookId,
 				payload: event as any,

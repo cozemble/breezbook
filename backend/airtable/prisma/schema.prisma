@@ -249,8 +249,8 @@ model tenants {
   order_lines           order_lines[]
   order_payments        order_payments[]
   orders                orders[]
-  posted_webhooks       posted_webhooks[]
   pricing_rules         pricing_rules[]
+  received_webhooks     received_webhooks[]
   resource_availability resource_availability[]
   resource_blocked_time resource_blocked_time[]
   resource_types        resource_types[]
@@ -345,7 +345,7 @@ model order_payments {
   tenants                 tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model posted_webhooks {
+model received_webhooks {
   id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id      String
   environment_id String

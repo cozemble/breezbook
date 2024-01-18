@@ -44,7 +44,7 @@ describe('Given a configured webhook', () => {
 		const postedWebhookId = json.id;
 		expect(postedWebhookId).toBeDefined();
 		const prisma = prismaClient();
-		const postedWebhook = await prisma.posted_webhooks.findUnique({
+		const postedWebhook = await prisma.received_webhooks.findUnique({
 			where: {
 				id: postedWebhookId
 			}
