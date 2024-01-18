@@ -2,13 +2,15 @@ import { get, writable } from 'svelte/store';
 import { defineStep } from './steps';
 import { createTimeStore } from './time';
 import { getContext, setContext } from 'svelte';
-import { initExtras } from './extras';
+import { createExtrasStore } from './extras';
+import { createDetailsStore } from './details';
 
 const BOOKING_STORE_CONTEXT_KEY = Symbol('booking_store');
 
 function createBookingStore(service: Service) {
 	const timeStore = createTimeStore(service);
-	const extrasStore = initExtras(service);
+	const extrasStore = createExtrasStore(service);
+	const detailsStore = createDetailsStore(service);
 
 	// TODO details based on service
 
@@ -36,7 +38,7 @@ function createBookingStore(service: Service) {
 
 		detailsStep: defineStep<Service.Details, 'details'>({
 			name: 'details',
-			valueStore: writable(null) // TODO proper value store
+			valueStore: detailsStore.value // TODO proper value store
 		})
 
 		// TODO custom steps
@@ -48,7 +50,8 @@ function createBookingStore(service: Service) {
 	return {
 		steps,
 		timeStore,
-		extrasStore
+		extrasStore,
+		detailsStore
 	};
 }
 

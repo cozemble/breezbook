@@ -294,9 +294,41 @@ const extras: Service.Extra[] = [
 	}
 ];
 
+const jsonSchema = `
+{
+	"type": "object",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"required": [
+		"make",
+		"model",
+		"colour",
+		"year"
+	],
+	"properties": {
+		"make": {
+			"type": "string",
+			"description": "The manufacturer of the car."
+		},
+		"year": {
+			"type": "integer",
+			"description": "The manufacturing year of the car."
+		},
+		"model": {
+			"type": "string",
+			"description": "The model of the car."
+		},
+		"colour": {
+			"type": "string",
+			"description": "The color of the car."
+		}
+	},
+	"additionalProperties": false
+}`;
+
 export default {
 	tenants,
 	services,
 	daySlots,
-	extras
+	extras,
+	jsonSchema
 };

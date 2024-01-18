@@ -30,6 +30,35 @@ export const service = {
 
 		const tenantServices = services.filter((service) => service.tenantId === tenant.id);
 		return tenantServices || null;
+	},
+
+	getDetails: async (tenantSlug: string, serviceSlug: string) => {
+		// TODO this is just for testing, remove it later
+		tenantSlug = 'tenant1';
+		serviceSlug = 'smallCarWash';
+
+		// TODO set the api url as an env variable
+		// TODO handle errors properly
+
+		const response = await fetch(
+			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/service/${serviceSlug}/availability?fromDate=2024-01-17&toDate=2024-01-24`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		if (!response.ok) throw new Error('Network response was not ok');
+
+		const contentType = response.headers.get('content-type');
+		const isJson = contentType && contentType.includes('application/json');
+		if (!isJson) throw new Error('Response was not valid JSON');
+
+		const data = (await response.json()) as AvailabilityResponse;
+
+		return data;
 	}
 };
 
@@ -97,56 +126,10 @@ export const timeSlot = {
 	}
 };
 
-const extras = {
-	getAll: async (tenantSlug: string, serviceSlug: string) => {
-		// TODO this is just for testing, remove it later
-		tenantSlug = 'tenant1';
-		serviceSlug = 'smallCarWash';
-
-		// TODO set the api url as an env variable
-		// TODO handle errors properly
-
-		const response = await fetch(
-			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/service/${serviceSlug}/availability?fromDate=2024-01-17&toDate=2024-01-24`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-
-		if (!response.ok) {
-			console.error('Network response was not ok');
-			return [];
-		}
-
-		const contentType = response.headers.get('content-type');
-		const isJson = contentType && contentType.includes('application/json');
-		if (!isJson) {
-			console.error('Response was not valid JSON');
-			return [];
-		}
-
-		const data = (await response.json()) as AvailabilityResponse;
-
-		return data.addOns.map(
-			(addOn): Service.Extra => ({
-				id: addOn.id,
-				name: addOn.name,
-				price: Number(addOn.priceWithNoDecimalPlaces),
-				description: addOn?.description || undefined,
-				selected: false
-			})
-		);
-	}
-};
-
 const api = {
 	tenant,
 	service,
-	timeSlot,
-	extras
+	timeSlot
 };
 
 export default api;
