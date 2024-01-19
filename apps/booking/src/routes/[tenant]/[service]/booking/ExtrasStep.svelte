@@ -7,7 +7,7 @@
 		extras: { extras, loading, value, step }
 	} = getBookingStore();
 
-	const { summary, open, status } = step;
+	const { summary, open, status, available } = step;
 
 	const onSubmit = () => {
 		step.onComplete();
@@ -23,6 +23,7 @@
 	onOpen={step.onOpen}
 	summary={$summary}
 	loading={$loading}
+	disabled={!$available}
 >
 	{#if !$extras.length}
 		<p class="text-center">No extras available.</p>

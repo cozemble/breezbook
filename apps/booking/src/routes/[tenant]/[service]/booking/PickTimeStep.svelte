@@ -7,7 +7,7 @@
 		time: { daySlots, loading, value, step }
 	} = getBookingStore();
 
-	const { summary, open, status } = step;
+	const { summary, open, status, available } = step;
 
 	const onSubmit = () => {
 		if (!$value) return;
@@ -27,6 +27,7 @@
 	onOpen={step.onOpen}
 	summary={$summary}
 	loading={$loading}
+	disabled={!$available}
 >
 	{#if $daySlots.length === 0}
 		<p>No available time slots.</p>

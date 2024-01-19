@@ -7,7 +7,7 @@
 		details: { schema, errors, value, onSubmit: submitDetails, step }
 	} = getBookingStore();
 
-	const { open, status } = step;
+	const { open, status, available } = step;
 
 	const onSubmit = () => {
 		submitDetails();
@@ -15,7 +15,13 @@
 	};
 </script>
 
-<StepWrapper open={$open} label="Details" status={$status} onOpen={step.onOpen}>
+<StepWrapper
+	open={$open}
+	label="Details"
+	status={$status}
+	onOpen={step.onOpen}
+	disabled={!$available}
+>
 	<div class="max-w-md mx-auto">
 		<SchemaForm schema={$schema} bind:value={$value} errors={$errors} />
 	</div>

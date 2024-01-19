@@ -1,5 +1,5 @@
 import { getContext, setContext } from 'svelte';
-import { derived, get, writable, type Writable } from 'svelte/store';
+import { derived, get, readable, writable, type Writable } from 'svelte/store';
 
 const STEPS_CONTEXT_KEY = Symbol('booking_steps');
 
@@ -31,23 +31,27 @@ export function defineStep<TValue, TName extends string>(
 	const getStepIdx = () => get(stepsStore).findIndex((s) => s.name === options.name);
 	const getNextStep = () => get(stepsStore)[getStepIdx() + 1] as BookingStep | undefined;
 	const getPreviousStep = () => get(stepsStore)[getStepIdx() - 1] as BookingStep | undefined;
+	const isPrevStepSuccess = () => {
+		const prevStep = getPreviousStep();
+		const prevStepSuccess = prevStep ? get(prevStep.status) === 'success' : true;
+		return prevStepSuccess;
+	};
+	const isFirst = !get(stepsStore).length;
 
 	const step: BookingStep<TName, TValue> = {
 		name: options.name,
 		status: writable<GenericStatus>('default'),
-		open: writable<boolean>(!get(stepsStore).length), // open the first step by default
+		open: writable<boolean>(isFirst), // open the first step by default
 		summary: derived(options.valueStore, (v) => options.summaryFunction?.(v) || ''),
-
+		available: writable<boolean>(isFirst),
 		onComplete: () => {
 			step.status.set('success');
+			getNextStep()?.available.set(true);
 			getNextStep()?.onOpen();
 		},
 
 		onOpen: () => {
-			// check if previous step is completed
-			const prevStep = getPreviousStep();
-			const prevStepSuccess = prevStep ? get(prevStep.status) === 'success' : true;
-			if (!prevStepSuccess) return;
+			if (!isPrevStepSuccess()) return;
 
 			get(stepsStore).forEach((s) => {
 				if (s.name !== options.name) s.open.set(false);

@@ -11,6 +11,8 @@
 
 	export let onOpen: () => void;
 
+	export let disabled: boolean = false;
+
 	/** Displays a loading indicator */
 	export let loading: boolean = false;
 </script>
@@ -29,6 +31,7 @@
     {status === 'warning' && 'text-warning'}
     {status === 'info' && 'text-info'}
     {status === 'default' && 'text-secondary'}
+		{disabled && '!cursor-default !text-base-content/50'}
   "
 		on:click={() => onOpen()}
 	>
