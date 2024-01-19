@@ -3,7 +3,7 @@ import { derived, get, writable, type Writable } from 'svelte/store';
 
 const STEPS_CONTEXT_KEY = Symbol('booking_steps');
 
-/** Create a store to manage the booking steps (internal to the steps) */
+/** Create or get the store to manage the booking steps */
 const stepsStoreCtx = () => {
 	const existing = getContext<Writable<BookingStep[]> | null>(STEPS_CONTEXT_KEY);
 	if (existing) return existing;
@@ -13,11 +13,20 @@ const stepsStoreCtx = () => {
 	return store;
 };
 
-/** Define a booking step */
+/** Define a booking step
+ * - Handles all the logic related to the step automatically
+ * - #### Define the steps in the order you want them to be displayed
+ * - Names must be unique (throws error if not)
+ */
 export function defineStep<TValue, TName extends string>(
 	options: BookingStepOptions<TName, TValue>
 ): BookingStep<TName, TValue> {
 	const stepsStore = stepsStoreCtx();
+
+	// check if name already exists
+	const nameExists = get(stepsStore).some((s) => s.name === options.name);
+	if (nameExists)
+		throw new Error(`Step with name ${options.name} already exists, names must be unique`);
 
 	const getStepIdx = () => get(stepsStore).findIndex((s) => s.name === options.name);
 	const getNextStep = () => get(stepsStore)[getStepIdx() + 1] as BookingStep | undefined;
@@ -26,31 +35,31 @@ export function defineStep<TValue, TName extends string>(
 	const step: BookingStep<TName, TValue> = {
 		name: options.name,
 		status: writable<GenericStatus>('default'),
-		open: writable<boolean>(false),
-		value: options.valueStore,
+		open: writable<boolean>(!get(stepsStore).length), // open the first step by default
 		summary: derived(options.valueStore, (v) => options.summaryFunction?.(v) || ''),
 
 		onComplete: () => {
-			if (!get(step.value)) return;
-
 			step.status.set('success');
 			getNextStep()?.onOpen();
 		},
 
 		onOpen: () => {
+			// check if previous step is completed
 			const prevStep = getPreviousStep();
 			const prevStepSuccess = prevStep ? get(prevStep.status) === 'success' : true;
 			if (!prevStepSuccess) return;
 
 			get(stepsStore).forEach((s) => {
 				if (s.name !== options.name) s.open.set(false);
+				else s.open.set(true);
 			});
-			step.open.set(true);
 		},
 
 		onGoBack: () => getPreviousStep()?.onOpen()
 	};
 
+	// add the step to the store to access it later
 	stepsStore.update((steps) => [...steps, step]);
+
 	return step;
 }

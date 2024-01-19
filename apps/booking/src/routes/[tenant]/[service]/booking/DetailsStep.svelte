@@ -1,12 +1,10 @@
 <script lang="ts">
 	import SchemaForm from '$lib/components/schemaForm/SchemaForm.svelte';
 	import { getBookingStore } from '$lib/stores/booking';
-	import { onMount } from 'svelte';
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {
-		steps: { detailsStep: step },
-		detailsStore: { schema, errors, value, onSubmit: submitDetails }
+		details: { schema, errors, value, onSubmit: submitDetails, step }
 	} = getBookingStore();
 
 	const { open, status } = step;
@@ -15,9 +13,6 @@
 		submitDetails();
 		step.onComplete();
 	};
-
-	$: console.log('value:', $value);
-	$: console.log('errors:', $errors);
 </script>
 
 <StepWrapper open={$open} label="Details" status={$status} onOpen={step.onOpen}>

@@ -4,11 +4,10 @@
 	import { getBookingStore } from '$lib/stores/booking';
 
 	const {
-		timeStore: { daySlots, loading },
-		steps: { timeStep: step }
+		time: { daySlots, loading, value, step }
 	} = getBookingStore();
 
-	const { summary, value, open, status } = step;
+	const { summary, open, status } = step;
 
 	const onSubmit = () => {
 		if (!$value) return;
@@ -16,7 +15,7 @@
 		step.onComplete();
 	};
 
-	$: if ($value) onSubmit();
+	$: if ($value) onSubmit(); // auto submit when user selects a time slot
 </script>
 
 <!-- TODO date range filter -->

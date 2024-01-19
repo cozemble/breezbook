@@ -7,7 +7,7 @@
 
 	export let service: Service;
 
-	const bookingStore = initBookingStore(service);
+	initBookingStore(service);
 
 	//
 </script>
@@ -19,4 +19,4 @@
 
 <PickTimeStep />
 <ExtrasStep />
-<DetailsStep step={bookingStore.steps.detailsStep} />
+<DetailsStep />

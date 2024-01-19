@@ -4,20 +4,14 @@
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {
-		extrasStore: { extras, loading },
-		steps: { extrasStep: step }
+		extras: { extras, loading, value, step }
 	} = getBookingStore();
 
-	const { summary, value, open, status } = step;
+	const { summary, open, status } = step;
 
 	const onSubmit = () => {
-		if (!value) return;
-
-		step.value = value;
 		step.onComplete();
 	};
-
-	$: console.log($extras);
 
 	$: $value = $extras.filter((extra) => extra.selected);
 </script>

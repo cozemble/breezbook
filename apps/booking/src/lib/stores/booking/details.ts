@@ -5,7 +5,6 @@ import _ from 'lodash';
 
 import api from '$lib/common/api';
 import { initValues, removeEmptyValues } from '$lib/utils';
-
 import * as ajvUtils from '$lib/utils/ajv';
 
 /** Setup stores to manage details */
@@ -17,14 +16,13 @@ export function createDetailsStore(service: Service) {
 
 	const initValue = (schema: JSONSchema) => {
 		const newVal = initValues(schema) as Service.Details;
-		console.log('newVal', newVal);
 		value.set(newVal);
 	};
 
 	const fetchSchema = async () => {
 		loading.set(true);
 
-		const res = await api.service.getDetails('', ''); // TODO proper params
+		const res = await api.service.getDetails('', service.slug); // TODO proper params
 		const sche = res.serviceSummary.forms[0].schema as JSONSchema;
 		schema.set(sche);
 
@@ -56,18 +54,17 @@ export function createDetailsStore(service: Service) {
 		ajv.addVocabulary([]); // TODO add specific words later if needed
 
 		const validate = ajv.compile(get(schema));
-		const valid = validate(removeEmptyValues(get(value)));
+		const isValid = validate(removeEmptyValues(get(value)));
 
 		addErrors(validate.errors);
 
-		return valid;
+		return isValid;
 	};
 
 	const onSubmit = async () => {
-		const valid = validate();
-		if (!valid) {
-			// dynamically validate when the form submitted incorrectly once (so the user knows what to fix)
-			value.subscribe(() => validate());
+		const isValid = validate();
+		if (!isValid) {
+			value.subscribe(() => validate()); // validate on change so the user knows what to fix
 			return;
 		}
 
