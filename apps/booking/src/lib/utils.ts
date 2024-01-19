@@ -54,3 +54,13 @@ export const formatPrice = (price: number) => {
 	const formattedPrice = `${priceInteger}.${priceDecimal}`;
 	return formattedPrice;
 };
+
+/** Convert a JSON schema type to an HTML input type */
+export const jsonSchemaTypeToInputType = (type: JSONSchema['type']) => {
+	if (type === 'string') return 'text';
+	if (type === 'number' || type === 'integer') return 'number';
+	if (type === 'boolean') return 'checkbox';
+
+	if (type === 'array') throw new Error('array type not supported');
+	if (type === 'object') throw new Error('object type not supported');
+};

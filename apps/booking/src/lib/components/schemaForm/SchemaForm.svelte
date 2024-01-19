@@ -1,7 +1,7 @@
 <script lang="ts">
 	import _ from 'lodash';
-	import StringInput from './StringInput.svelte';
 	import { initValues } from '$lib/utils';
+	import Input from './Input.svelte';
 
 	export let schema: JSONSchema;
 	export let value: ObjectValue;
@@ -40,7 +40,7 @@
 <!-- TODO fix type issue -->
 <div class="gap-x-4 flex flex-col justify-center items-center">
 	{#each simpleProperties as [key, prop], i (i)}
-		<StringInput bind:value={value[key]} name={key} schema={prop} error={_.get(errors, key)} />
+		<Input bind:value={value[key]} name={key} schema={prop} error={_.get(errors, key)} />
 	{/each}
 </div>
 
