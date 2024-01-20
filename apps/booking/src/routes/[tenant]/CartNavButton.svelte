@@ -17,12 +17,12 @@
 </script>
 
 <button class="btn {highlighted && 'btn-accent'}" on:click={goToCart}>
-	<span class="indicator mr-2">
+	<span class="indicator">
 		<!-- <Icon icon="ph:basket" class="w-6 h-6" /> -->
 		<Icon icon="solar:cart-linear" class="w-6 h-6" />
 
 		<span class="badge badge-sm aspect-square indicator-item">{itemCount}</span>
 	</span>
 
-	Checkout
+	<span class="ml-2 hidden sm:inline"> Checkout </span>
 </button>
