@@ -6,6 +6,8 @@ import { insertOrder } from '../src/express/insertOrder.js';
 import { carwash, environmentId, fullPaymentOnCheckout, isoDate, order, orderLine, tenantEnvironment, tenantId } from '@breezbook/packages-core';
 import { createOrderRequest } from '@breezbook/backend-api-types';
 import { goodCustomer } from './helper.js';
+import { Prisma } from '@prisma/client';
+import { DbSystemOutboundWebhook } from '../src/prisma/dbtypes.js';
 
 const expressPort = 3008;
 const postgresPort = 54338;
@@ -35,8 +37,11 @@ describe('Given a migrated database', async () => {
 		expect(createOrderResponse.bookingIds).toHaveLength(1);
 		expect(createOrderResponse.bookingIds[0]).toBeDefined();
 		const prisma = prismaClient();
-		const outboundWebhook = await prisma.system_outbound_webhooks.findFirst();
-		expect(outboundWebhook).toBeDefined();
+		const found = await prisma.$queryRaw`SELECT *
+                                          FROM system_outbound_webhooks
+                                          WHERE payload ->> 'id' = ${createOrderResponse.bookingIds[0]}`;
+		expect(found).toHaveLength(1);
+		const outboundWebhook = found[0];
 		expect(outboundWebhook.action).toBe('create');
 		expect(outboundWebhook.payload_type).toBe('booking');
 		expect(outboundWebhook.status).toBe('pending');

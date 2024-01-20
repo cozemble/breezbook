@@ -17,7 +17,7 @@ import {
 	pricing_rules,
 	reservations,
 	customers,
-	Prisma
+	system_outbound_webhooks
 } from '@prisma/client';
 import { TenantEnvironment } from '@breezbook/packages-core';
 
@@ -39,7 +39,8 @@ export {
 	time_slots as DbTimeSlot,
 	pricing_rules as DbPricingRule,
 	reservations as DbReservation,
-	customers as DbCustomer
+	customers as DbCustomer,
+	system_outbound_webhooks as DbSystemOutboundWebhook
 };
 
 export function findManyForTenant(tenantEnvironment: TenantEnvironment) {
