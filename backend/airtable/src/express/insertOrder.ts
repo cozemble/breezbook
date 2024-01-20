@@ -1,20 +1,14 @@
-import { calcSlotPeriod, mandatory, Service, TenantEnvironment } from '@breezbook/packages-core';
+import { calcSlotPeriod, mandatory, Order, Service, TenantEnvironment } from '@breezbook/packages-core';
 import { CreateOrderRequest, orderCreatedResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { prismaClient } from '../prisma/client.js';
 import { v4 as uuidv4 } from 'uuid';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClient, PrismaPromise } from '@prisma/client';
 
-export async function insertOrder(
-	tenantEnvironment: TenantEnvironment,
-	createOrderRequest: CreateOrderRequest,
-	services: Service[]
-): Promise<OrderCreatedResponse> {
-	const order = createOrderRequest.order;
-	const prisma = prismaClient();
+function upsertCustomer(prisma: PrismaClient, tenantEnvironment: TenantEnvironment, order: Order) {
 	const tenant_id = tenantEnvironment.tenantId.value;
 	const environment_id = tenantEnvironment.environmentId.value;
 	const email = order.customer.email.value;
-	const customerUpsert = prisma.customers.upsert({
+	return prisma.customers.upsert({
 		where: { tenant_id_environment_id_email: { tenant_id, environment_id, email } },
 		update: { first_name: order.customer.firstName, last_name: order.customer.lastName, tenant_id },
 		create: {
@@ -27,8 +21,13 @@ export async function insertOrder(
 			}
 		}
 	});
-	const orderId = uuidv4();
-	const createOrder = prisma.orders.create({
+}
+
+function createOrder(prisma: PrismaClient, tenantEnvironment: TenantEnvironment, createOrderRequest: CreateOrderRequest, orderId: string) {
+	const tenant_id = tenantEnvironment.tenantId.value;
+	const environment_id = tenantEnvironment.environmentId.value;
+	const email = createOrderRequest.order.customer.email.value;
+	return prisma.orders.create({
 		data: {
 			id: orderId,
 			environment_id,
@@ -42,6 +41,20 @@ export async function insertOrder(
 			}
 		}
 	});
+}
+
+function processOrderLines(
+	prisma: PrismaClient,
+	tenantEnvironment: TenantEnvironment,
+	createOrderRequest: CreateOrderRequest,
+	orderId: string,
+	services: Service[]
+): { lineInserts: PrismaPromise<unknown>[]; bookingIds: string[]; reservationIds: string[]; orderLineIds: string[] } {
+	const tenant_id = tenantEnvironment.tenantId.value;
+	const environment_id = tenantEnvironment.environmentId.value;
+	const order = createOrderRequest.order;
+	const email = createOrderRequest.order.customer.email.value;
+
 	const lineInserts: Prisma.PrismaPromise<unknown>[] = [];
 	const shouldMakeReservations =
 		createOrderRequest.paymentIntent._type === 'full.payment.on.checkout' || createOrderRequest.paymentIntent._type === 'deposit.and.balance';
@@ -120,6 +133,22 @@ export async function insertOrder(
 			);
 		}
 	}
-	const [customerOutcome, orderOutcome, ...remainingOutcomes] = await prisma.$transaction([customerUpsert, createOrder, ...lineInserts]);
+	return { lineInserts, bookingIds, reservationIds, orderLineIds };
+}
+
+export async function insertOrder(
+	tenantEnvironment: TenantEnvironment,
+	createOrderRequest: CreateOrderRequest,
+	services: Service[]
+): Promise<OrderCreatedResponse> {
+	const order = createOrderRequest.order;
+	const prisma = prismaClient();
+	const orderId = uuidv4();
+	const { lineInserts, bookingIds, reservationIds, orderLineIds } = processOrderLines(prisma, tenantEnvironment, createOrderRequest, orderId, services);
+	const [customerOutcome, orderOutcome, ...remainingOutcomes] = await prisma.$transaction([
+		upsertCustomer(prisma, tenantEnvironment, order),
+		createOrder(prisma, tenantEnvironment, createOrderRequest, orderId),
+		...lineInserts
+	]);
 	return orderCreatedResponse(orderOutcome.id, customerOutcome.id, bookingIds, reservationIds, orderLineIds);
 }

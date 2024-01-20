@@ -8,6 +8,7 @@ import { PaymentIntentWebhookBody } from '../src/stripe.js';
 import { STRIPE_WEBHOOK_ID } from '../src/express/stripeEndpoint.js';
 import { OrderPaymentCreatedResponse } from '../src/express/handlePostedWebhook.js';
 import { prismaClient } from '../src/prisma/client.js';
+import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 
 const expressPort = 3007;
 const postgresPort = 54337;
@@ -15,18 +16,14 @@ const postgresPort = 54337;
 const tenantEnv = tenantEnvironment(environmentId('dev'), tenantId('tenant1'));
 
 describe('Given a migrated database', async () => {
-	let dockerComposeEnv: StartedDockerComposeEnvironment;
+	let testEnvironment: StartedDockerComposeEnvironment;
+
 	beforeAll(async () => {
-		try {
-			dockerComposeEnv = await appWithTestContainer(expressPort, postgresPort);
-		} catch (e) {
-			console.error(e);
-			throw e;
-		}
+		testEnvironment = await startTestEnvironment(expressPort, postgresPort);
 	}, 1000 * 90);
 
 	afterAll(async () => {
-		await dockerComposeEnv.down();
+		await stopTestEnvironment(testEnvironment);
 	});
 
 	test('on receipt of a successful payment for an order, a payment record for the order is created', async () => {

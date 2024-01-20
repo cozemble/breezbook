@@ -1,25 +1,21 @@
-import { beforeAll, describe, expect, test, afterAll } from 'vitest';
-import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { AvailabilityResponse } from '@breezbook/backend-api-types';
 import { isoDate, isoDateFns } from '@breezbook/packages-core';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
+import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 
 const expressPort = 3002;
 const postgresPort = 54332;
 
 describe('with a migrated database', () => {
-	let dockerComposeEnv: StartedDockerComposeEnvironment;
+	let testEnvironment: StartedDockerComposeEnvironment;
+
 	beforeAll(async () => {
-		try {
-			dockerComposeEnv = await appWithTestContainer(expressPort, postgresPort);
-		} catch (e) {
-			console.error(e);
-			throw e;
-		}
+		testEnvironment = await startTestEnvironment(expressPort, postgresPort);
 	}, 1000 * 90);
 
 	afterAll(async () => {
-		await dockerComposeEnv.down();
+		await stopTestEnvironment(testEnvironment);
 	});
 
 	test('should be able to get service availability', async () => {

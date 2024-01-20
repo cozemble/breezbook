@@ -1,27 +1,23 @@
-import { beforeAll, describe, expect, test, afterAll } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { addOnOrder, carwash, couponCode, currency, customer, order, orderFns, orderLine, price, priceFns } from '@breezbook/packages-core';
 import { ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
-import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
 import { addOrderErrorCodes } from '../src/express/addOrder.js';
 import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow, tomorrow } from './helper.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
+import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 
 const expressPort = 3003;
 const postgresPort = 54333;
 
 describe('with a migrated database', () => {
-	let dockerComposeEnv: StartedDockerComposeEnvironment;
+	let testEnvironment: StartedDockerComposeEnvironment;
+
 	beforeAll(async () => {
-		try {
-			dockerComposeEnv = await appWithTestContainer(expressPort, postgresPort);
-		} catch (e) {
-			console.error(e);
-			throw e;
-		}
+		testEnvironment = await startTestEnvironment(expressPort, postgresPort);
 	}, 1000 * 90);
 
 	afterAll(async () => {
-		await dockerComposeEnv.down();
+		await stopTestEnvironment(testEnvironment);
 	});
 
 	test('tenant has a customer form, and the customer does not have a form response', async () => {

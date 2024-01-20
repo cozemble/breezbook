@@ -363,3 +363,14 @@ model system_config {
 
   @@id([environment_id, config_key])
 }
+
+model system_outbound_webhooks {
+  id             Int      @id @default(autoincrement())
+  environment_id String
+  action         String
+  status         String   @default("pending")
+  payload_type   String
+  payload        Json
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+}

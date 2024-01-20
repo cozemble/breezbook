@@ -4,8 +4,9 @@ import { goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow } from '
 import { OrderCreatedResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
 import { storeSecret } from '../src/infra/secretsInPostgres.js';
 import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME } from '../src/express/stripeEndpoint.js';
-import { appWithTestContainer, setTestSecretsEncryptionKey } from '../src/infra/appWithTestContainer.js';
+import { setTestSecretsEncryptionKey } from '../src/infra/appWithTestContainer.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
+import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 
 const expressPort = 3004;
 const postgresPort = 54334;
@@ -14,30 +15,25 @@ const tenantEnv = tenantEnvironment(environmentId('dev'), tenantId('tenant1'));
 
 describe('Given an order', () => {
 	let orderCreatedResponse: OrderCreatedResponse;
-	let dockerComposeEnv: StartedDockerComposeEnvironment;
+	let testEnvironment: StartedDockerComposeEnvironment;
 
 	beforeAll(async () => {
-		try {
-			dockerComposeEnv = await appWithTestContainer(expressPort, postgresPort);
-		} catch (e) {
-			console.error(e);
-			throw e;
-		}
+		testEnvironment = await startTestEnvironment(expressPort, postgresPort, async () => {
+			setTestSecretsEncryptionKey();
+			await storeSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME, 'stripe api key', 'sk_test_something');
+			await storeSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME, 'stripe public key', 'pk_test_something');
+			const theOrder = order(goodCustomer, [
+				orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], threeDaysFromNow, carwash.fourToSix, [goodServiceFormData])
+			]);
 
-		setTestSecretsEncryptionKey();
-		await storeSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME, 'stripe api key', 'sk_test_something');
-		await storeSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME, 'stripe public key', 'pk_test_something');
-		const theOrder = order(goodCustomer, [
-			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], threeDaysFromNow, carwash.fourToSix, [goodServiceFormData])
-		]);
-
-		const response = await postOrder(theOrder, carwash.smallCarWash.price, expressPort);
-		expect(response.status).toBe(200);
-		orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
+			const response = await postOrder(theOrder, carwash.smallCarWash.price, expressPort);
+			expect(response.status).toBe(200);
+			orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
+		});
 	}, 1000 * 90);
 
 	afterAll(async () => {
-		await dockerComposeEnv.down();
+		await stopTestEnvironment(testEnvironment);
 	});
 
 	test('can create a payment intent and get client_secret and public api key', async () => {

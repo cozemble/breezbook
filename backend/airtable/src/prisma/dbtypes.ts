@@ -16,7 +16,8 @@ import {
 	time_slots,
 	pricing_rules,
 	reservations,
-	customers
+	customers,
+	Prisma
 } from '@prisma/client';
 import { TenantEnvironment } from '@breezbook/packages-core';
 
