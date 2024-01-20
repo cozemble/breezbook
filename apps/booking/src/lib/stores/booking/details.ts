@@ -67,10 +67,6 @@ export function createDetailsStore(service: Service) {
 			value.subscribe(() => validate()); // validate on change so the user knows what to fix
 			return;
 		}
-
-		alert('You have finished your booking! ');
-
-		// TODO save booking to cart
 	};
 
 	return {

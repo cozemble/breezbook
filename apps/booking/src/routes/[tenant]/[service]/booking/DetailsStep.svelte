@@ -4,7 +4,8 @@
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {
-		details: { schema, errors, value, onSubmit: submitDetails, step }
+		details: { schema, errors, value, onSubmit: submitDetails, step },
+		finish
 	} = getBookingStore();
 
 	const { open, status, available } = step;
@@ -12,6 +13,7 @@
 	const onSubmit = () => {
 		submitDetails();
 		step.onComplete();
+		finish();
 	};
 </script>
 

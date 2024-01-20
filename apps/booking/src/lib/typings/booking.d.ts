@@ -18,3 +18,13 @@ type BookingStepOptions<TName extends string, TValue> = {
 	/** Function that sets the summary when value changes */
 	summaryFunction?: (value: TValue | null) => string;
 };
+
+type Booking = {
+	/** Only for frontend utility */
+	id: string;
+	serviceId: string;
+
+	time: TimeSlot;
+	extras: Service.Extra[];
+	details: Service.Details;
+};

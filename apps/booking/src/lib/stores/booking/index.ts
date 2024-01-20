@@ -1,8 +1,13 @@
+import { getContext, setContext } from 'svelte';
+import { get } from 'svelte/store';
+import { goto } from '$app/navigation';
+
 import { defineStep } from './stepHelper';
 import { createTimeStore } from './time';
-import { getContext, setContext } from 'svelte';
 import { createExtrasStore } from './extras';
 import { createDetailsStore } from './details';
+import { getCartStore } from '../cart';
+import { tenantStore } from '../tenant';
 
 const BOOKING_STORE_CONTEXT_KEY = Symbol('booking_store');
 
@@ -12,11 +17,35 @@ const BOOKING_STORE_CONTEXT_KEY = Symbol('booking_store');
  * - There are 3 default steps: time, extras, details
  */
 function createBookingStore(service: Service) {
+	const cartStore = getCartStore();
+	const tenantStr = tenantStore.get();
+
 	const timeStore = createTimeStore(service);
 	const extrasStore = createExtrasStore(service);
 	const detailsStore = createDetailsStore(service);
 
 	// TODO custom steps
+
+	/** Save the booking to cart and redirect to cart page */
+	const finish = async () => {
+		// TODO check if steps are valid
+
+		// get all values
+		const values = {
+			time: get(timeStore.value) as TimeSlot, // TODO fix typing
+			extras: get(extrasStore.value),
+			details: get(detailsStore.value)
+		};
+
+		// save to cart
+		cartStore.addItem({
+			serviceId: service.id,
+			...values
+		});
+
+		// redirect to cart // TODO make this a global function (probably as a navigate util)
+		goto(`/${tenantStr.slug}/cart`);
+	};
 
 	return {
 		time: {
@@ -50,7 +79,9 @@ function createBookingStore(service: Service) {
 				name: 'details',
 				valueStore: detailsStore.value
 			})
-		}
+		},
+
+		finish
 	};
 }
 
