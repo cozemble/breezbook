@@ -260,72 +260,6 @@ create table reservations
     updated_at       timestamp with time zone      not null default current_timestamp
 );
 
-create table tenant_secrets
-(
-    tenant_id          text references tenants (tenant_id) not null,
-    environment_id     text                                not null,
-    secret_short_name  varchar(255)                        not null,
-    secret_description text                                not null,
-    encrypted_secret   bytea                               not null,
-    created_at         timestamp with time zone default current_timestamp,
-    updated_at         timestamp with time zone default current_timestamp,
-    primary key (tenant_id, secret_short_name, environment_id)
-);
-
-create or replace function bb_upsert_tenant_secret(
-    p_tenant_id text,
-    p_environment_id text,
-    p_secret_short_name varchar,
-    p_secret_description text,
-    p_secret text,
-    p_encryption_key text
-) returns void as
-$$
-declare
-    encrypted_secret bytea;
-begin
-    -- encrypt the secret
-    encrypted_secret := pgp_sym_encrypt(p_secret, p_encryption_key);
-
-    -- upsert the encrypted secret
-    insert into tenant_secrets (tenant_id, environment_id, secret_short_name, secret_description, encrypted_secret)
-    values (p_tenant_id, p_environment_id, p_secret_short_name, p_secret_description, encrypted_secret)
-    on conflict (tenant_id, secret_short_name, environment_id)
-        do update set secret_description = excluded.secret_description,
-                      encrypted_secret   = excluded.encrypted_secret;
-end;
-$$ language plpgsql;
-
-
-create or replace function bb_get_tenant_secret(
-    p_tenant_id text,
-    p_environment_id text,
-    p_secret_short_name varchar,
-    p_encryption_key text
-) returns text as
-$$
-declare
-    retrieved_secret bytea;
-    decrypted_secret text;
-begin
-    -- retrieve the encrypted secret
-    select encrypted_secret
-    into retrieved_secret
-    from tenant_secrets
-    where tenant_id = p_tenant_id
-      and environment_id = p_environment_id
-      and secret_short_name = p_secret_short_name;
-
-    -- decrypt the secret
-    if retrieved_secret is not null then
-        decrypted_secret := pgp_sym_decrypt(retrieved_secret, p_encryption_key);
-        return decrypted_secret;
-    else
-        return null; -- or handle the case where the secret is not found
-    end if;
-end;
-$$ language plpgsql;
-
 create table order_payments
 (
     id                      text primary key                             default uuid_generate_v4(),
@@ -369,15 +303,14 @@ declare
     v_payload    jsonb;
     v_headers    jsonb;
 begin
-    -- fetch url and auth token from system_config
     select into v_url config_value
     from system_config
     where config_key = 'received_webhook_handler_url'
       and environment_id = new.environment_id;
-    select into v_auth_token config_value
-    from system_config
-    where config_key = 'received_webhook_handler_api_key'
-      and environment_id = new.environment_id;
+
+    select into v_auth_token decrypted_secret
+    from vault.decrypted_secrets
+    where name = new.environment_id || ':internal_bb_api_key';
 
     -- construct the json payload with webhook_id and payload
     v_payload := jsonb_build_object(
@@ -412,66 +345,3 @@ create trigger trigger_received_webhook
     on received_webhooks
     for each row
 execute function call_received_webhook_handler();
-
-create table system_outbound_webhooks
-(
-    id             serial primary key,
-    environment_id text                     not null,
-    action         text                     not null,                   -- create, update, delete
-    status         text                     not null default 'pending', -- pending, success, failed
-    payload_type   text                     not null,
-    payload        jsonb                    not null,
-    created_at     timestamp with time zone not null default current_timestamp,
-    updated_at     timestamp with time zone not null default current_timestamp
-);
-
--- Function to insert booking data into system_outbound_webhooks on creation
-create or replace function inserted_booking_webhook() returns trigger as
-$$
-begin
-    insert into system_outbound_webhooks (environment_id, action, payload_type, payload)
-    values (new.environment_id, 'create', 'booking', row_to_json(new));
-
-    return new;
-end;
-$$ language plpgsql;
-
-create trigger booking_create_notify
-    after insert
-    on bookings
-    for each row
-execute function inserted_booking_webhook();
-
--- function to insert booking data into system_outbound_webhooks on update
-create or replace function updated_booking_webhook() returns trigger as
-$$
-begin
-    insert into system_outbound_webhooks (environment_id, action, payload_type, payload)
-    values (new.environment_id, 'update', 'booking', row_to_json(new));
-
-    return new;
-end;
-$$ language plpgsql;
-
-create trigger booking_update_notify
-    after update
-    on bookings
-    for each row
-execute function updated_booking_webhook();
-
--- function to insert booking data into system_outbound_webhooks on deletion
-create or replace function deleted_booking_webhook() returns trigger as
-$$
-begin
-    insert into system_outbound_webhooks (environment_id, action, payload_type, payload)
-    values (old.environment_id, 'delete', 'booking', row_to_json(old));
-
-    return old;
-end;
-$$ language plpgsql;
-
-create trigger booking_delete_notify
-    after delete
-    on bookings
-    for each row
-execute function deleted_booking_webhook();

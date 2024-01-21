@@ -2,9 +2,8 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { carwash, environmentId, fullPaymentOnCheckout, order, orderLine, tenantEnvironment, tenantId } from '@breezbook/packages-core';
 import { goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow } from './helper.js';
 import { OrderCreatedResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
-import { storeSecret } from '../src/infra/secretsInPostgres.js';
+import { storeTenantSecret } from '../src/infra/secretsInPostgres.js';
 import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME } from '../src/express/stripeEndpoint.js';
-import { setTestSecretsEncryptionKey } from '../src/infra/appWithTestContainer.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
 import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 
@@ -19,9 +18,8 @@ describe('Given an order', () => {
 
 	beforeAll(async () => {
 		testEnvironment = await startTestEnvironment(expressPort, postgresPort, async () => {
-			setTestSecretsEncryptionKey();
-			await storeSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME, 'stripe api key', 'sk_test_something');
-			await storeSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME, 'stripe public key', 'pk_test_something');
+			await storeTenantSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME, 'stripe api key', 'sk_test_something');
+			await storeTenantSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME, 'stripe public key', 'pk_test_something');
 			const theOrder = order(goodCustomer, [
 				orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], threeDaysFromNow, carwash.fourToSix, [goodServiceFormData])
 			]);

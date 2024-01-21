@@ -6,7 +6,8 @@ import { addOrder } from './addOrder.js';
 import { createStripePaymentIntent, onStripeWebhook } from './stripeEndpoint.js';
 import bodyParser from 'body-parser';
 import { IncomingMessage } from 'http';
-import { handlePostedWebhook } from './handlePostedWebhook.js';
+import { handleReceivedWebhook } from './handleReceivedWebhook.js';
+import { onQueuedWebhooks } from './onQueuedWebhooks.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
 	rawBody?: string;
@@ -56,7 +57,8 @@ export function expressApp(): Express {
 	app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
 	app.post('/api/:envId/:tenantId/stripe/webhook', onStripeWebhook);
 
-	app.post('/internal/api/:envId/postedWebhook', handlePostedWebhook);
+	app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
+	app.post('/internal/api/:envId/webhook/queued/poll', onQueuedWebhooks);
 
 	return app;
 }

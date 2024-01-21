@@ -1,12 +1,11 @@
-import { afterAll, beforeAll, describe, test, expect } from 'vitest';
-import { appWithTestContainer } from '../src/infra/appWithTestContainer.js';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
 import { insertOrder } from '../src/express/insertOrder.js';
 import { currency, customer, environmentId, fullPaymentOnCheckout, order, price, randomInteger, tenantEnvironment, tenantId } from '@breezbook/packages-core';
 import { createOrderRequest } from '@breezbook/backend-api-types';
 import { PaymentIntentWebhookBody } from '../src/stripe.js';
 import { STRIPE_WEBHOOK_ID } from '../src/express/stripeEndpoint.js';
-import { OrderPaymentCreatedResponse } from '../src/express/handlePostedWebhook.js';
+import { OrderPaymentCreatedResponse } from '../src/express/handleReceivedWebhook.js';
 import { prismaClient } from '../src/prisma/client.js';
 import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 
@@ -46,7 +45,7 @@ describe('Given a migrated database', async () => {
 				environmentId: tenantEnv.environmentId.value
 			}
 		};
-		const postResponse = await fetch(`http://localhost:${expressPort}/internal/api/dev/postedWebhook`, {
+		const postResponse = await fetch(`http://localhost:${expressPort}/internal/api/dev/webhook/received`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

@@ -2,7 +2,7 @@ import express from 'express';
 import { orderIdParam, tenantEnvironmentParam, withOneRequestParams, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { prismaClient } from '../prisma/client.js';
 import { StripeCustomerInput, stripeErrorCodes } from '../stripe.js';
-import { getSecret } from '../infra/secretsInPostgres.js';
+import { getTenantSecret } from '../infra/secretsInPostgres.js';
 import { DbCustomer } from '../prisma/dbtypes.js';
 import { currency, price } from '@breezbook/packages-core';
 import { errorResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
@@ -29,7 +29,7 @@ export const STRIPE_WEBHOOK_ID = 'stripe';
 
 export async function onStripeWebhook(req: express.Request, res: express.Response): Promise<void> {
 	await withOneRequestParams(req, res, tenantEnvironmentParam(), async (tenantEnvironment) => {
-		const stripeApiKey = await getSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME);
+		const stripeApiKey = await getTenantSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME);
 		const stripeClient = getStripeClient(stripeApiKey, tenantEnvironment.environmentId.value);
 		const event = stripeClient.onWebhook(req.rawBody, req.headers['stripe-signature'] as string);
 		if (event._type === 'error.response') {
@@ -69,8 +69,8 @@ export async function createStripePaymentIntent(req: express.Request, res: expre
 			return;
 		}
 		const orderTotal = price(order.total_price_in_minor_units, currency(order.total_price_currency));
-		const stripeApiKey = await getSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME);
-		const stripePublicKey = await getSecret(tenantEnvironment, STRIPE_PUBLIC_KEY_SECRET_NAME);
+		const stripeApiKey = await getTenantSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME);
+		const stripePublicKey = await getTenantSecret(tenantEnvironment, STRIPE_PUBLIC_KEY_SECRET_NAME);
 
 		const stripeClient = getStripeClient(stripeApiKey, environment_id);
 		const paymentIntent = await stripeClient.createPaymentIntent(toStripeCustomerInput(order.customers), orderTotal, {

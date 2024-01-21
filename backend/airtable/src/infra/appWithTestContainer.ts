@@ -4,10 +4,6 @@ import { expressApp } from '../express/expressApp.js';
 import { DockerComposeEnvironment, StartedDockerComposeEnvironment, Wait } from 'testcontainers';
 import { v4 as uuidv4 } from 'uuid';
 
-export function setTestSecretsEncryptionKey(): void {
-	process.env.SECRETS_ENCRYPTION_KEY = 'test-encryption-key';
-}
-
 export async function withMigratedDatabase(postgresPort: number): Promise<StartedDockerComposeEnvironment> {
 	const composeAndFileName = 'supabase-min-docker-compose.yml';
 	const composeFilePath = '../supabase';
@@ -36,8 +32,6 @@ export async function withMigratedDatabase(postgresPort: number): Promise<Starte
 	process.env.INTERNAL_API_KEY = 'test-api-key';
 
 	process.env.DATABASE_URL = `postgres://${process.env.PG_ADMIN_USER}:${process.env.PG_ADMIN_PASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`;
-
-	setTestSecretsEncryptionKey();
 
 	console.log('Running migrations...');
 	const outcome = await exec(

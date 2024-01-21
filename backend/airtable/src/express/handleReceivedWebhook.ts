@@ -78,7 +78,7 @@ async function handleWebhook(webhookBody: PostedWebhook): Promise<WebhookHandleR
 	};
 }
 
-export async function handlePostedWebhook(req: express.Request, res: express.Response): Promise<void> {
+export async function handleReceivedWebhook(req: express.Request, res: express.Response): Promise<void> {
 	await withTwoRequestParams(req, res, environmentIdParam(), postedWebhookBody(), async (environmentId, webhookBody) => {
 		const response = await handleWebhook(webhookBody);
 		if (response._type === 'error.response') {

@@ -5,6 +5,8 @@ import { setSystemConfig } from '../src/prisma/setSystemConfig.js';
 import { prismaClient } from '../src/prisma/client.js';
 import { v4 as uuidV4 } from 'uuid';
 import { startTestEnvironment, stopTestEnvironment } from './setup.js';
+import { storeSystemSecret, storeTenantSecret } from '../src/infra/secretsInPostgres.js';
+import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME } from '../src/express/stripeEndpoint.js';
 
 const expressPort = 3005;
 const postgresPort = 54335;
@@ -16,7 +18,9 @@ describe('Given a configured webhook', () => {
 	beforeAll(async () => {
 		testEnvironment = await startTestEnvironment(expressPort, postgresPort, async () => {
 			await setSystemConfig(tenantEnv, 'received_webhook_handler_url', `http://localhost:8001/stashWebhook`);
-			await setSystemConfig(tenantEnv, 'received_webhook_handler_api_key', ``);
+			await storeSystemSecret(tenantEnv.environmentId, 'internal_bb_api_key', `internal api key`, 'test-api-key');
+			await storeTenantSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME, 'stripe api key', 'sk_test_something');
+			await storeTenantSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME, 'stripe public key', 'pk_test_something');
 		});
 	}, 1000 * 90);
 
