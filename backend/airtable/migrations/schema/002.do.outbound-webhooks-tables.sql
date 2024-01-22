@@ -40,13 +40,38 @@ create table webhook_payload_actions
     primary key (webhook_id, payload_id)
 );
 
-create table outbound_webhook_messages
+create table log_messages
 (
     id             uuid primary key                  default uuid_generate_v4(),
     environment_id text                     not null,
     message        text                     not null,
+    level          text                     not null default 'info', -- info, warning, error
+    correlation_id text                     null     default null,
     created_at     timestamp with time zone not null default current_timestamp
 );
+
+create or replace function log_info_message(p_environment_id text, p_message text)
+    returns void as
+$$
+begin
+    raise notice 'Environment: %, Info: %', p_environment_id, p_message;
+    insert into log_messages (environment_id, message, level)
+    values (p_environment_id, p_message, 'info');
+end;
+$$
+    language plpgsql;
+
+create or replace function log_error_message(p_environment_id text, p_message text)
+    returns void as
+$$
+begin
+    raise notice 'Environment: %, Error: %', p_environment_id,p_message;
+    raise exception 'Environment: %, Error: %', p_environment_id,p_message;
+end;
+$$
+    language plpgsql;
+
+
 
 create or replace function notify_outbound_webhooks() returns void as
 $$
@@ -61,6 +86,7 @@ declare
     -- For selecting distinct environment_id
     env          text;
     cursor_env   refcursor;
+    row_count    integer;
 begin
     -- Open a cursor for distinct environment_id's
     open cursor_env for select distinct environment_id
@@ -71,9 +97,12 @@ begin
     -- Loop through each environment_id
     loop
         fetch next from cursor_env into env;
+        raise notice 'Processing environment %', env;
 
-        -- No more rows to fetch, exit the loop
-        exit when not found;
+        -- If env is NULL, exit the loop
+        if env is NULL then
+            exit;
+        end if;
 
         batch := uuid_generate_v4();
 
@@ -88,6 +117,7 @@ begin
         get diagnostics count = row_count;
 
         if count > 0 then
+
             select into v_url config_value
             from system_config
             where config_key = 'outbound_webhook_handler_url'
@@ -102,11 +132,12 @@ begin
 
             if v_url is not null and v_auth_token is not null then
                 perform net.http_post(v_url, v_payload, '{}'::jsonb, v_headers);
-                insert into outbound_webhook_messages (message, environment_id)
-                values ('Batch created.  ID ' || batch, env);
+                perform log_info_message(env, 'Batch created.  ID ' || batch);
             else
-                raise exception 'Url or Auth token is missing in system_config for environment %', env;
+                perform log_error_message(env, 'Url or Auth token is missing in system_config');
             end if;
+        else
+            perform log_info_message(env, 'No outbound webhooks found');
         end if;
     end loop;
 

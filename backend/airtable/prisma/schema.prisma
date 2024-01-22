@@ -257,9 +257,9 @@ model tenants {
   resources             resources[]
   service_forms         service_forms[]
   services              services[]
-  tenant_secrets        tenant_secrets[]
   tenant_settings       tenant_settings?
   time_slots            time_slots[]
+  webhook_destinations  webhook_destinations[]
 }
 
 model time_slots {
@@ -316,19 +316,6 @@ model reservations {
   bookings         bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model tenant_secrets {
-  tenant_id          String
-  environment_id     String
-  secret_short_name  String    @db.VarChar(255)
-  secret_description String
-  encrypted_secret   Bytes
-  created_at         DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime? @default(now()) @db.Timestamptz(6)
-  tenants            tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([tenant_id, secret_short_name, environment_id])
-}
-
 model order_payments {
   id                      String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id               String
@@ -365,12 +352,53 @@ model system_config {
 }
 
 model system_outbound_webhooks {
-  id             Int      @id @default(autoincrement())
+  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
   environment_id String
   action         String
   status         String   @default("pending")
   payload_type   String
   payload        Json
+  batch_id       String?  @db.Uuid
   created_at     DateTime @default(now()) @db.Timestamptz(6)
   updated_at     DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model payload_actions {
+  id                      String                    @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
+  payload_type            String
+  action                  String
+  webhook_payload_actions webhook_payload_actions[]
+
+  @@unique([payload_type, action])
+}
+
+model webhook_destinations {
+  id                      String                    @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
+  tenant_id               String
+  environment_id          String
+  destination             String
+  destination_url         String
+  headers                 Json?
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  tenants                 tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  webhook_payload_actions webhook_payload_actions[]
+}
+
+model webhook_payload_actions {
+  webhook_id           String               @db.Uuid
+  payload_id           String               @db.Uuid
+  payload_actions      payload_actions      @relation(fields: [payload_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  webhook_destinations webhook_destinations @relation(fields: [webhook_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([webhook_id, payload_id])
+}
+
+model log_messages {
+  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
+  environment_id String
+  message        String
+  level          String   @default("info")
+  correlation_id String?
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
 }
