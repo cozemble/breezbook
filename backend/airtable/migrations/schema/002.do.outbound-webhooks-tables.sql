@@ -1,3 +1,5 @@
+create extension pg_cron;
+
 create table system_outbound_webhooks
 (
     id             uuid primary key                  default uuid_generate_v4(),
@@ -111,3 +113,5 @@ begin
     close cursor_env;
 end;
 $$ language plpgsql;
+
+SELECT cron.schedule('notify_outbound_webhooks', '* * * * *', $$SELECT notify_outbound_webhooks()$$);

@@ -23,7 +23,6 @@ export async function withMigratedDatabase(postgresPort: number): Promise<Starte
 	const startedEnvironment = await dockerComposeEnvironment.up();
 	startedEnvironment.getContainer(`${testEnvironmentName}-supabase-db`);
 
-	// Set environment variables
 	process.env.PGHOST = 'localhost';
 	process.env.PGPORT = postgresPort.toString();
 	process.env.PGDATABASE = environment.POSTGRES_DB;
