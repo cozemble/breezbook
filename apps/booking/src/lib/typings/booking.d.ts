@@ -22,7 +22,8 @@ type BookingStepOptions<TName extends string, TValue> = {
 type Booking = {
 	/** Only for frontend utility */
 	id: string;
-	serviceId: string;
+	service: Service;
+	calculatedPrice: number;
 
 	time: TimeSlot;
 	extras: Service.Extra[];

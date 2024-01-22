@@ -41,6 +41,7 @@ export const removeEmptyValues = (value: AnyValue): AnyValue => {
 	if (!_.includes(emptyValues, value)) return value;
 };
 
+// TODO add the unit to the price
 /** Format a price that consists of an integer and a decimal
  * @example
  * formatPrice(1000) // 10.00
