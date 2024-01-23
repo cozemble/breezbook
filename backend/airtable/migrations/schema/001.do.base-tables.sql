@@ -260,13 +260,15 @@ create table reservations
     updated_at       timestamp with time zone      not null default current_timestamp
 );
 
+create type payment_status as enum ('succeeded', 'pending', 'failed'); -- add any other statuses you have
+
 create table order_payments
 (
     id                      text primary key                             default uuid_generate_v4(),
     tenant_id               text references tenants (tenant_id) not null,
     environment_id          text                                not null,
     order_id                text references orders (id)         not null,
-    status                  text                                not null,
+    status                  payment_status                      not null,
     amount_in_minor_units   integer                             not null,
     amount_currency         text                                not null,
     provider                text                                not null,

@@ -317,19 +317,19 @@ model reservations {
 }
 
 model order_payments {
-  id                      String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id                      String         @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id               String
   environment_id          String
   order_id                String
-  status                  String
+  status                  payment_status
   amount_in_minor_units   Int
   amount_currency         String
   provider                String
   provider_transaction_id String
-  created_at              DateTime @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime @default(now()) @db.Timestamptz(6)
-  orders                  orders   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                 tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  created_at              DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime       @default(now()) @db.Timestamptz(6)
+  orders                  orders         @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                 tenants        @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model received_webhooks {
@@ -401,4 +401,10 @@ model log_messages {
   level          String   @default("info")
   correlation_id String?
   created_at     DateTime @default(now()) @db.Timestamptz(6)
+}
+
+enum payment_status {
+  succeeded
+  pending
+  failed
 }

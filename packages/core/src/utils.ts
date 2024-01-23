@@ -1,8 +1,8 @@
-export function mandatory<T>(value: T | undefined, errorMessage: string): T {
+export function mandatory<T>(value: T | undefined, errorMessage: string): Exclude<T | undefined | null, undefined | null> {
 	if (!value) {
 		throw new Error(errorMessage);
 	}
-	return value;
+	return value as Exclude<T | undefined | null, undefined | null>;
 }
 
 export function randomInteger(max: number, min = 0): number {

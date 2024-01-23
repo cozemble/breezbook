@@ -4,6 +4,8 @@ import { errorResponse, ErrorResponse } from '@breezbook/backend-api-types';
 import { prismaClient } from '../prisma/client.js';
 import { PaymentIntentWebhookBody } from '../stripe.js';
 import { v4 as uuidv4 } from 'uuid';
+import { $Enums } from '@prisma/client';
+import { mandatory } from '@breezbook/packages-core';
 
 export interface PostedWebhook {
 	webhook_id: string;
@@ -58,13 +60,14 @@ async function handleWebhook(webhookBody: PostedWebhook): Promise<WebhookHandleR
 	const orderId = metadata.orderId;
 	const prisma = prismaClient();
 	const paymentId = uuidv4();
+	const paymentStatus = mandatory(toPaymentStatus(payloadPaymentIntent.status), `Not a valid payment status: ${payloadPaymentIntent.status}`);
 	await prisma.order_payments.create({
 		data: {
 			id: paymentId,
 			tenants: { connect: { tenant_id: metadata.tenantId } },
 			environment_id: metadata.environmentId,
 			orders: { connect: { id: orderId } },
-			status: payloadPaymentIntent.status,
+			status: paymentStatus,
 			provider: 'Stripe',
 			provider_transaction_id: payloadPaymentIntent.id,
 			amount_in_minor_units: payloadPaymentIntent.amount,
@@ -76,6 +79,13 @@ async function handleWebhook(webhookBody: PostedWebhook): Promise<WebhookHandleR
 		orderId,
 		paymentId
 	};
+}
+
+function toPaymentStatus(status: string): $Enums.payment_status | null {
+	if (status === 'succeeded' || status === 'pending' || status === 'failed') {
+		return status as $Enums.payment_status;
+	}
+	return null;
 }
 
 export async function handleReceivedWebhook(req: express.Request, res: express.Response): Promise<void> {
