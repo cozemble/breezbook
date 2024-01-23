@@ -9,7 +9,7 @@
 </script>
 
 <div class="pb-8">
-	<h1 class="text-2xl font-semibold text-primary">Checkout Bookings</h1>
+	<h1 class="text-2xl font-semibold text-primary">Checkout Order</h1>
 	<!-- <p>Please review your bookings before proceeding to checkout.</p> -->
 </div>
 
@@ -18,13 +18,17 @@
 <!-- TODO select bookings system for bulk operations (later) -->
 
 <!-- bookings list -->
-<div class="border p-4">
+<div class="border p-4 rounded-lg">
 	{#if $items.length === 0}
 		<span></span>
 	{/if}
 
-	{#each $items as booking (booking.id)}
+	{#each $items as booking, i (booking.id)}
 		<BookingSummary {booking} />
+
+		{#if $items.length !== i + 1}
+			<hr />
+		{/if}
 	{/each}
 </div>
 
