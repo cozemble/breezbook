@@ -39,7 +39,7 @@
 
 			<div class="text-sm align-middle">
 				<span
-					>{time.day.toLocaleDateString('en-GB', {
+					>{new Date(time.day).toLocaleDateString('en-GB', {
 						dateStyle: 'long'
 					})}</span
 				>

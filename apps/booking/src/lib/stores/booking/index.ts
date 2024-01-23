@@ -40,7 +40,7 @@ function createBookingStore(service: Service) {
 		// save to cart
 		cartStore.addItem({
 			service: service,
-			calculatedPrice: 98000, // TODO calculate price
+			calculatedPrice: service.approximatePrice * 100, // TODO calculate price
 			...values
 		});
 

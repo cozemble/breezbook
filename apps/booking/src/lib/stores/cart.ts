@@ -3,82 +3,21 @@ import { writable } from 'svelte/store';
 
 const CART_STORE_CONTEXT_KEY = Symbol('cart_store');
 
+// TODO refactor this
+
+const getFromLocalStorage = () => {
+	const items = localStorage.getItem('cart_items');
+	if (!items) return [];
+
+	return JSON.parse(items) as Booking[];
+};
+
+const saveToLocalStorage = (items: Booking[]) => {
+	localStorage.setItem('cart_items', JSON.stringify(items));
+};
+
 export function createCartStore() {
-	const items = writable<Booking[]>([
-		// TODO remove mock
-		{
-			calculatedPrice: 24000,
-			details: {},
-			extras: [{ name: 'mock-extra' }] as Service.Extra[],
-			id: 'mock-1',
-			service: {
-				id: 'mock-1',
-				name: 'Toy Doll Execution',
-				image: 'https://picsum.photos/203',
-				slug: 'mock-service'
-			} as unknown as Service,
-			time: {
-				day: new Date(),
-				start: '10:00',
-				end: '12:00',
-				price: 24000
-			}
-		},
-		{
-			calculatedPrice: 55000,
-			details: {},
-			extras: [],
-			id: 'mock-2',
-			service: {
-				id: 'mock-2',
-				image: 'https://picsum.photos/201',
-				name: 'Exorcism of A Demonic Spirit',
-				slug: 'mock-service'
-			} as unknown as Service,
-			time: {
-				day: new Date(),
-				start: '09:00',
-				end: '11:00',
-				price: 24000
-			}
-		},
-		{
-			calculatedPrice: 12000,
-			details: {},
-			extras: [],
-			id: 'mock-3',
-			service: {
-				id: 'mock-3',
-				image: 'https://picsum.photos/200',
-				name: 'Watching Tom & Jerry With You',
-				slug: 'mock-service'
-			} as unknown as Service,
-			time: {
-				day: new Date(),
-				start: '12:00',
-				end: '14:00',
-				price: 24000
-			}
-		},
-		{
-			calculatedPrice: 720000,
-			details: {},
-			extras: [{ name: 'mock-extra' }, { name: 'extra-mock-2' }] as Service.Extra[],
-			id: 'mock-4',
-			service: {
-				id: 'mock-4',
-				image: 'https://picsum.photos/204',
-				name: 'Wedding Prank',
-				slug: 'mock-service'
-			} as unknown as Service,
-			time: {
-				day: new Date(),
-				start: '17:00',
-				end: '23:00',
-				price: 24000
-			}
-		}
-	]);
+	const items = writable<Booking[]>(getFromLocalStorage());
 
 	const addItem = (item: Omit<Booking, 'id'>) => {
 		const id = Math.random().toString(36).substring(2, 9);
@@ -99,6 +38,8 @@ export function createCartStore() {
 	const clearItems = () => {
 		items.set([]);
 	};
+
+	items.subscribe((value) => saveToLocalStorage(value));
 
 	return {
 		items,
