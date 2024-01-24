@@ -18,7 +18,7 @@
 <!-- TODO select bookings system for bulk operations (later) -->
 
 <!-- bookings list -->
-<div class="border p-4 rounded-lg">
+<div class="border p-4 rounded-box flex flex-col gap-4 bg-base-200">
 	{#if $items.length === 0}
 		<span></span>
 	{/if}
@@ -26,15 +26,15 @@
 	{#each $items as booking, i (booking.id)}
 		<BookingSummary {booking} />
 
-		{#if $items.length !== i + 1}
+		<!-- {#if $items.length !== i + 1}
 			<hr />
-		{/if}
+		{/if} -->
 	{/each}
 </div>
 
-<div class="flex justify-end">
-	<div class="flex flex-col items-end p-4 bg-base-200 rounded-lg">
-		<span class="text-sm font-bold text-primary mb-1">Selected Bookings ({$items.length}) </span>
+<div class="flex justify-end border border-t-0 rounded-box">
+	<div class="flex flex-col items-end p-4 rounded-lg">
+		<span class="text-sm font-bold text-primary mb-1">Total ({$items.length}): </span>
 		<span class="text-2xl font-bold mb-4">£ {formatPrice(total)}</span>
 
 		<button class="btn btn-primary"> Confirm & Pay </button>
