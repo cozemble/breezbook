@@ -30,7 +30,11 @@
  -->
 
 <div class="flex flex-col bg-base-100 rounded-box">
+	<!-- header -->
 	<div class="flex flex-between px-4 py-1 border-b">
+		<!-- header left slot for later -->
+
+		<!-- actions -->
 		<div class="flex ml-auto">
 			<button class="btn btn-circle btn-ghost btn-xs" title="Remove Item" on:click={remove}>
 				<!-- <Icon icon="ph:trash" class="text-xl" /> -->
@@ -39,18 +43,21 @@
 		</div>
 	</div>
 
+	<!-- body -->
 	<div class="flex items-start flex-col md:flex-row gap-4 p-4">
 		<!-- TODO figure the aspect ratio -->
 		<div class="flex items-start gap-4 w-full">
 			<img src={service.image} alt="service banner" class="aspect-square h-10 md:h-20 rounded-md" />
 
 			<div class="flex flex-col">
+				<!-- service -->
 				<a
 					href="./{service.slug}"
 					class="link-hover text-lg md:text-xl font-semibold"
 					title="Go to service">{service.name}</a
 				>
 
+				<!-- time and date -->
 				<div class="text-xs md:text-sm mt-2 flex flex-col">
 					<span>
 						<Icon icon="mdi:calendar-month-outline" class="inline-block align-text-top mr-1" />
@@ -67,13 +74,16 @@
 			</div>
 		</div>
 
+		<!-- list of prices -->
 		<table class="table table-xs">
 			<tbody>
+				<!-- service base price -->
 				<tr>
 					<td class="font-semibold text-sm"> Service </td>
 					<td class="text-right font-bold text-sm">£ {formatPrice(calculatedPrice)}</td>
 				</tr>
 
+				<!-- extras with prices -->
 				{#each extras as extra}
 					<tr>
 						<td class="font-semibold text-xs">
@@ -83,25 +93,16 @@
 						<td class="text-right font-bold text-xs">£ {formatPrice(extra.price)}</td>
 					</tr>
 				{/each}
-			</tbody>
 
-			<tfoot>
-				<tr class="border-t text-base-content">
+				<!-- service total -->
+				<tr class="border-t font-bold text-base-content">
 					<td class="text-base"> Service Total </td>
 					<td class="text-right text-base">
 						£ {formatPrice(calculatedPrice + extras.reduce((acc, extra) => acc + extra.price, 0))}
 						<!-- TODO just for display, fix later -->
 					</td>
 				</tr>
-			</tfoot>
+			</tbody>
 		</table>
-
-		<!-- <div class="ml-auto flex flex-col items-end justify-between self-stretch max-h-none">
-			<div class="mt-4 flex flex-col items-end justify-end">
-				<div>
-					<span class="text-lg font-bold">£ {formatPrice(calculatedPrice)}</span>
-				</div>
-			</div>
-		</div> -->
 	</div>
 </div>
