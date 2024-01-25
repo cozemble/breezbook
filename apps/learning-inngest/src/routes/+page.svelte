@@ -6,7 +6,6 @@
 	import { mandatory } from '@breezbook/packages-core';
 
 	onMount(() => {
-		console.log('The component has been mounted');
 		const x = mandatory(new Date(), `Date is not defined`);
 		console.log({x})
 	});
