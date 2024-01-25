@@ -1,4 +1,4 @@
-import { getContext, setContext } from 'svelte';
+import { getContext, onMount, setContext } from 'svelte';
 import { writable } from 'svelte/store';
 
 const CART_STORE_CONTEXT_KEY = Symbol('cart_store');
@@ -17,7 +17,7 @@ const saveToLocalStorage = (items: Booking[]) => {
 };
 
 export function createCartStore() {
-	const items = writable<Booking[]>(getFromLocalStorage());
+	const items = writable<Booking[]>([]);
 
 	const addItem = (item: Omit<Booking, 'id'>) => {
 		const id = Math.random().toString(36).substring(2, 9);
@@ -39,7 +39,12 @@ export function createCartStore() {
 		items.set([]);
 	};
 
-	items.subscribe((value) => saveToLocalStorage(value));
+	// doing this on mount otherwise SSR will fail
+	onMount(() => {
+		items.set(getFromLocalStorage());
+
+		items.subscribe((value) => saveToLocalStorage(value));
+	});
 
 	return {
 		items,
