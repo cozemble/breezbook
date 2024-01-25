@@ -1,9 +1,7 @@
 import { inngest } from '$lib/inngest/client';
-import { type RequestEvent } from '@sveltejs/kit';
-import { mandatory } from '@breezbook/packages-core';
 
-export async function GET(event: RequestEvent) {
-	const email = mandatory(event.url.searchParams.get('email'), `email`);
+export async function GET() {
+	const email = 'test@email.com';
 
 	await inngest.send({
 		name: 'test/hello.world',
