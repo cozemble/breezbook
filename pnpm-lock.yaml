@@ -101,6 +101,9 @@ importers:
 
   apps/learning-inngest:
     dependencies:
+      '@breezbook/packages-core':
+        specifier: workspace:*
+        version: link:../../packages/core
       inngest:
         specifier: ^3.11.0
         version: 3.11.0(typescript@5.3.3)

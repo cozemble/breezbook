@@ -25,6 +25,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@breezbook/packages-core": "workspace:*",
 		"inngest": "^3.11.0"
 	}
 }
