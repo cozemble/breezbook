@@ -9,6 +9,9 @@ export const load: LayoutServerLoad = async ({ params, url }) => {
 	if (!doesSubdomainExist) redirect(307, '/listTenants'); // redirect to list of tenants for demo purposes
 
 	const subdomain = url.host.split('.')[0];
+	const isSubdomainWww = subdomain === 'www';
+
+	if (isSubdomainWww) redirect(307, '/listTenants'); // redirect to list of tenants for demo purposes
 
 	const tenant = await api.tenant.getOne(subdomain);
 
