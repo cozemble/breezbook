@@ -66,7 +66,7 @@ function assignResourcesToBookings(config: BusinessConfiguration, bookings: Book
 				(r) => !resourceTimeSlots.find((rts) => dayAndTimePeriodFns.overlaps(rts.allocation, serviceTime) && values.isEqual(rts.resourceId, r.id))
 			);
 			if (!resource) {
-				throw new Error(`No resource of type '${rt.value}' available for booking ${booking.id.value}`);
+				throw new Error(`No resource of type '${rt.value}' available for booking ${booking.id.value}!`);
 			}
 			resourceTimeSlots.push({
 				resourceId: resource.id,
