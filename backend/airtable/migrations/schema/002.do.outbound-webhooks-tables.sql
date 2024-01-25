@@ -19,26 +19,12 @@ create table webhook_destinations
     id              uuid primary key                             default uuid_generate_v4(),
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
-    destination     text                                not null, -- zapier, airtable, etc.,
+    payload_type    text                                not null,
+    method          text                                not null default 'post', -- get, post, put, patch, delete
     destination_url text                                not null, -- url to which the message will be sent
     headers         jsonb,                                        -- used for authorisation or other purposes, may contain placeholders for secret names
     created_at      timestamp with time zone            not null default current_timestamp,
     updated_at      timestamp with time zone            not null default current_timestamp
-);
-
-create table payload_actions
-(
-    id           uuid primary key default uuid_generate_v4(),
-    payload_type text not null, -- booking, payment, ...
-    action       text not null, -- create, update, delete
-    unique (payload_type, action)
-);
-
-create table webhook_payload_actions
-(
-    webhook_id uuid references webhook_destinations (id),
-    payload_id uuid references payload_actions (id),
-    primary key (webhook_id, payload_id)
 );
 
 create table log_messages

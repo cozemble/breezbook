@@ -366,35 +366,16 @@ model system_outbound_webhooks {
   tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model payload_actions {
-  id                      String                    @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
-  payload_type            String
-  action                  String
-  webhook_payload_actions webhook_payload_actions[]
-
-  @@unique([payload_type, action])
-}
-
 model webhook_destinations {
-  id                      String                    @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
-  tenant_id               String
-  environment_id          String
-  destination             String
-  destination_url         String
-  headers                 Json?
-  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
-  tenants                 tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  webhook_payload_actions webhook_payload_actions[]
-}
-
-model webhook_payload_actions {
-  webhook_id           String               @db.Uuid
-  payload_id           String               @db.Uuid
-  payload_actions      payload_actions      @relation(fields: [payload_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  webhook_destinations webhook_destinations @relation(fields: [webhook_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([webhook_id, payload_id])
+  id              String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
+  tenant_id       String
+  environment_id  String
+  payload_type    String
+  destination_url String
+  headers         Json?
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime @default(now()) @db.Timestamptz(6)
+  tenants         tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model log_messages {
