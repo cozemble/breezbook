@@ -7,7 +7,7 @@ import { createStripePaymentIntent, onStripeWebhook } from './stripeEndpoint.js'
 import bodyParser from 'body-parser';
 import { IncomingMessage } from 'http';
 import { handleReceivedWebhook } from './handleReceivedWebhook.js';
-import { onQueuedWebhooks } from './onQueuedWebhooks.js';
+import { onOutboundWebhooksBatch } from './onOutboundWebhooksBatch.js';
 import { bindInngestToExpress } from '../inngest/expressBinding.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
@@ -59,7 +59,7 @@ export function expressApp(): Express {
 	app.post('/api/:envId/:tenantId/stripe/webhook', onStripeWebhook);
 
 	app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
-	app.post('/internal/api/:envId/webhook/queued/poll', onQueuedWebhooks);
+	app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);
 
 	bindInngestToExpress(app);
 

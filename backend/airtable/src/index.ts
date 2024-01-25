@@ -1,4 +1,6 @@
-import {expressApp} from "./express/expressApp.js";
+import { expressApp } from './express/expressApp.js';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 const DEFAULT_PORT = 3000;
 const app = expressApp();
