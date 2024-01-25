@@ -1,11 +1,5 @@
 import { inngest } from './client.js';
 import { prismaClient } from '../prisma/client.js';
-import { DbSystemOutboundWebhook } from '../prisma/dbtypes.js';
-
-export const helloWorld = inngest.createFunction({ id: 'hello-world' }, { event: 'test/hello.world' }, async ({ event, step }) => {
-	await step.sleep('wait-a-moment', '1s');
-	return { event, body: 'Hello, World!' };
-});
 
 export const outboundWebhooksEventNames = {
 	batchCreated: 'outboundWebhooks/batch.created',
@@ -27,8 +21,10 @@ export const onNewOutboundMessagesBatch = inngest.createFunction(
 					action: true,
 					status: true,
 					payload_type: true,
-					payload: true
-				}
+					payload: true,
+					created_at: true
+				},
+				orderBy: { created_at: 'asc' }
 			});
 			const uniqueTenantIds = new Set(messagesInBatch.map((message) => message.tenant_id));
 			const webhookDestinationsForTenantEnvironment = await prisma.webhook_destinations.findMany({
@@ -54,7 +50,31 @@ export const onNewOutboundMessagesBatch = inngest.createFunction(
 					})
 				)
 			);
-			await Promise.all(events);
+			for (const event1 of events) {
+				await event1;
+			}
+		});
+	}
+);
+
+export const onOutboundWebhooksSendQueued = inngest.createFunction(
+	{
+		id: 'on-outbound-message-queued',
+		concurrency: {
+			key: `event.data.destination.tenant_id + "-" + event.data.destination.environment_id + "-" + event.data.destination.destination_system`,
+			limit: 1
+		}
+	},
+	{ event: outboundWebhooksEventNames.sendQueued },
+	async ({ event, step }) => {
+		await step.run('send-the-message', async () => {
+			await fetch(event.data.destination.destination_url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(event.data.message.payload)
+			});
 		});
 	}
 );

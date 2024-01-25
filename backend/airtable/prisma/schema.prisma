@@ -367,15 +367,17 @@ model system_outbound_webhooks {
 }
 
 model webhook_destinations {
-  id              String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
-  tenant_id       String
-  environment_id  String
-  payload_type    String
-  destination_url String
-  headers         Json?
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime @default(now()) @db.Timestamptz(6)
-  tenants         tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id                 String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
+  tenant_id          String
+  environment_id     String
+  payload_type       String
+  method             String   @default("post")
+  destination_system String
+  destination_url    String
+  headers            Json?
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime @default(now()) @db.Timestamptz(6)
+  tenants            tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model log_messages {

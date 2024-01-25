@@ -16,15 +16,16 @@ create table system_outbound_webhooks
 
 create table webhook_destinations
 (
-    id              uuid primary key                             default uuid_generate_v4(),
-    tenant_id       text references tenants (tenant_id) not null,
-    environment_id  text                                not null,
-    payload_type    text                                not null,
-    method          text                                not null default 'post', -- get, post, put, patch, delete
-    destination_url text                                not null, -- url to which the message will be sent
-    headers         jsonb,                                        -- used for authorisation or other purposes, may contain placeholders for secret names
-    created_at      timestamp with time zone            not null default current_timestamp,
-    updated_at      timestamp with time zone            not null default current_timestamp
+    id                 uuid primary key                             default uuid_generate_v4(),
+    tenant_id          text references tenants (tenant_id) not null,
+    environment_id     text                                not null,
+    payload_type       text                                not null,
+    method             text                                not null default 'post', -- get, post, put, patch, delete
+    destination_system text                                not null,                -- system to which the message will be sent
+    destination_url    text                                not null,                -- url to which the message will be sent
+    headers            jsonb,                                                       -- used for authorisation or other purposes, may contain placeholders for secret names
+    created_at         timestamp with time zone            not null default current_timestamp,
+    updated_at         timestamp with time zone            not null default current_timestamp
 );
 
 create table log_messages
