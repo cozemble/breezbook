@@ -12,7 +12,7 @@
 
 	// <!-- TODO refactor this to a universal function -->
 	const goToCart = () => {
-		goto(`/${tenant.slug}/cart`);
+		goto(`/cart`);
 	};
 </script>
 

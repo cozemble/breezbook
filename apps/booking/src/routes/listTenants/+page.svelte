@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import api from '$lib/common/api';
 
 	let tenants: Tenant[] = [];
@@ -6,6 +7,15 @@
 	api.tenant.getAll().then((res) => {
 		tenants = res;
 	});
+
+	/** Create the link for the tenant subdomain based on the current page URL
+	 * - handles the ssl and port
+	 * - returns the full URL
+	 */
+	const tenantLink = (tenantSlug: string) => {
+		const [http, domain] = $page.url.origin.split('//');
+		return `${http}//${tenantSlug}.${domain}`;
+	};
 </script>
 
 <svelte:head>
@@ -22,7 +32,7 @@
 	<ul class="menu border-l">
 		{#each tenants as tenant}
 			<li>
-				<a href="/{tenant.slug}" class="link text-secondary">{tenant.name}</a>
+				<a href={tenantLink(tenant.slug)} class="link text-secondary">{tenant.name}</a>
 			</li>
 		{/each}
 	</ul>

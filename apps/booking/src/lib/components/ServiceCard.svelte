@@ -21,6 +21,6 @@
 			>
 		</span>
 
-		<a href="/{tenant.slug}/{service.slug}" class="btn btn-primary mt-4">Details</a>
+		<a href="/{service.slug}" class="btn btn-primary mt-4">Details</a>
 	</div>
 </li>

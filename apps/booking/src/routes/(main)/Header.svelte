@@ -13,7 +13,7 @@
 >
 	<div class="w-full max-w-7xl flex justify-between">
 		<div class="flex-1">
-			<a href="/{tenant.slug}" class="text-xl font-bold hover-link">{tenant.name}</a>
+			<a href="/" class="text-xl font-bold hover-link">{tenant.name}</a>
 		</div>
 
 		<CartNavButton />
