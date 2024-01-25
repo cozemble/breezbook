@@ -1,10 +1,9 @@
-
 -- Function to insert booking data into system_outbound_webhooks on creation
 create or replace function inserted_booking_webhook() returns trigger as
 $$
 begin
-    insert into system_outbound_webhooks (environment_id, action, payload_type, payload)
-    values (new.environment_id, 'create', 'booking', row_to_json(new));
+    insert into system_outbound_webhooks (environment_id, tenant_id, action, payload_type, payload)
+    values (new.environment_id, new.tenant_id, 'create', 'booking', row_to_json(new));
 
     return new;
 end;
@@ -20,8 +19,8 @@ execute function inserted_booking_webhook();
 create or replace function updated_booking_webhook() returns trigger as
 $$
 begin
-    insert into system_outbound_webhooks (environment_id, action, payload_type, payload)
-    values (new.environment_id, 'update', 'booking', row_to_json(new));
+    insert into system_outbound_webhooks (environment_id, tenant_id, action, payload_type, payload)
+    values (new.environment_id, new.tenant_id, 'update', 'booking', row_to_json(new));
 
     return new;
 end;
@@ -37,8 +36,8 @@ execute function updated_booking_webhook();
 create or replace function deleted_booking_webhook() returns trigger as
 $$
 begin
-    insert into system_outbound_webhooks (environment_id, action, payload_type, payload)
-    values (old.environment_id, 'delete', 'booking', row_to_json(old));
+    insert into system_outbound_webhooks (environment_id, tenant_id, action, payload_type, payload)
+    values (old.environment_id, old.tenant_id, 'delete', 'booking', row_to_json(old));
 
     return old;
 end;

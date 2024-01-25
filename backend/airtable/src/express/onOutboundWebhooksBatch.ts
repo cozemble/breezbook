@@ -1,6 +1,7 @@
 import { environmentIdParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import express from 'express';
 import { inngest } from '../inngest/client.js';
+import { outboundWebhooksEventNames } from '../inngest/functions.js';
 
 interface OutboundWebhooksBatchBody {
 	batch_id: string;
@@ -25,7 +26,7 @@ export function outboundWebhooksBatchBody(): (req: express.Request, res: express
 export async function onOutboundWebhooksBatch(req: express.Request, res: express.Response): Promise<void> {
 	await withTwoRequestParams(req, res, environmentIdParam(), outboundWebhooksBatchBody(), async (environmentId, webhookBody) => {
 		await inngest.send({
-			name: 'outboundWebhooks/batch.created',
+			name: outboundWebhooksEventNames.batchCreated,
 			data: {
 				batchId: webhookBody.batch_id
 			}

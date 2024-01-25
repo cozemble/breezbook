@@ -2,15 +2,16 @@ create extension pg_cron;
 
 create table system_outbound_webhooks
 (
-    id             uuid primary key                  default uuid_generate_v4(),
-    environment_id text                     not null,
-    action         text                     not null,                   -- create, update, delete
-    status         text                     not null default 'pending', -- pending, success, failed
-    payload_type   text                     not null,
-    payload        jsonb                    not null,
-    batch_id       uuid                     null     default null,
-    created_at     timestamp with time zone not null default current_timestamp,
-    updated_at     timestamp with time zone not null default current_timestamp
+    id             uuid primary key                             default uuid_generate_v4(),
+    environment_id text                                not null,
+    tenant_id      text references tenants (tenant_id) not null,
+    action         text                                not null,                   -- create, update, delete
+    status         text                                not null default 'pending', -- pending, success, failed
+    payload_type   text                                not null,
+    payload        jsonb                               not null,
+    batch_id       uuid                                null     default null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
 );
 
 create table webhook_destinations
