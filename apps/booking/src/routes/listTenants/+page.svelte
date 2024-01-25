@@ -14,7 +14,10 @@
 	 */
 	const tenantLink = (tenantSlug: string) => {
 		const [http, domain] = $page.url.origin.split('//');
-		return `${http}//${tenantSlug}.${domain}`;
+
+		const domainWithoutWww = domain.replace('www.', '');
+
+		return `${http}//${tenantSlug}.${domainWithoutWww}`;
 	};
 </script>
 
