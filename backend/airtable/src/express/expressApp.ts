@@ -8,6 +8,7 @@ import bodyParser from 'body-parser';
 import { IncomingMessage } from 'http';
 import { handleReceivedWebhook } from './handleReceivedWebhook.js';
 import { onQueuedWebhooks } from './onQueuedWebhooks.js';
+import { bindInngestToExpress } from '../inngest/expressBinding.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
 	rawBody?: string;
@@ -59,6 +60,8 @@ export function expressApp(): Express {
 
 	app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
 	app.post('/internal/api/:envId/webhook/queued/poll', onQueuedWebhooks);
+
+	bindInngestToExpress(app);
 
 	return app;
 }
