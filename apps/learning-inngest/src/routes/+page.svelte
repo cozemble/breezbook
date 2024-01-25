@@ -8,7 +8,7 @@
 	onMount(() => {
 		const x = mandatory(new Date(), `Date is not defined`);
 		console.log({x})
-		console.log('onMount');
+		console.log('onMount4');
 	});
 </script>
 
