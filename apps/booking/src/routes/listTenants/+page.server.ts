@@ -9,8 +9,8 @@ export const load: PageServerLoad = async ({ url }) => {
 
 	// don't allow to access this page on subdomains except "www"
 	if (doesSubdomainExist && !isSubdomainWww)
-		throw error(
-			403,
-			'This page is not accessible on tenant subdomains, visit the root domain instead'
-		);
+		error(
+        			403,
+        			'This page is not accessible on tenant subdomains, visit the root domain instead'
+        		);
 };
