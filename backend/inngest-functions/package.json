@@ -1,5 +1,5 @@
 {
-	"name": "learning-inngest",
+	"name": "@breezbook/backend-inngest-functions",
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "dotenv -- vite dev",
