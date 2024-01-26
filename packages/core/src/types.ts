@@ -121,6 +121,11 @@ export const isoDateFns = {
 	},
 	min(...dates: IsoDate[]) {
 		return dates.reduce((min, date) => (this.lte(date, min) ? date : min), dates[0]);
+	},
+	toJavascriptDate(date: IsoDate, time: TwentyFourHourClockTime) {
+		const [year, month, day] = date.value.split('-').map((s) => parseInt(s, 10));
+		const [hours, minutes] = time.value.split(':').map((s) => parseInt(s, 10));
+		return new Date(year, month - 1, day, hours, minutes);
 	}
 };
 
