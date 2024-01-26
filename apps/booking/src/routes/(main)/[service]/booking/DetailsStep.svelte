@@ -1,12 +1,12 @@
 <script lang="ts">
 	import SchemaForm from '$lib/components/schemaForm/SchemaForm.svelte';
-	import { getBookingStore } from '$lib/stores/booking';
+	import { bookingStore } from '$lib/stores/booking';
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {
 		details: { schema, errors, value, onSubmit: submitDetails, step },
 		finish
-	} = getBookingStore();
+	} = bookingStore.get();
 
 	const { open, status, available } = step;
 

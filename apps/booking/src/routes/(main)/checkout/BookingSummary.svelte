@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { formatPrice } from '$lib/utils';
-	import { getCartStore } from '$lib/stores/cart';
+	import { cartStore } from '$lib/stores/cart';
 
 	export let booking: Booking;
 
 	const { service, calculatedPrice, time, extras, id } = booking;
 
-	const { removeItem } = getCartStore();
+	const { removeItem } = cartStore.get();
 
 	function remove() {
 		// <!-- TODO ask for confirmation -->
@@ -15,6 +15,8 @@
 		console.log('remove item', id);
 		removeItem(id);
 	}
+
+	$: console.log('booking summary', booking);
 </script>
 
 <!-- 

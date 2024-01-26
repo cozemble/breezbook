@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { getCartStore } from '$lib/stores/cart';
+	import { cartStore } from '$lib/stores/cart';
 	import { formatPrice } from '$lib/utils';
 
-	const { items } = getCartStore();
+	const { items } = cartStore.get();
 
 	$: total = $items.reduce((acc, item) => acc + item.calculatedPrice, 0);
 </script>

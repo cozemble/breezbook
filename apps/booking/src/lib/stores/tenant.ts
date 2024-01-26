@@ -4,10 +4,17 @@ const TENANT_CTX_KEY = Symbol('tenant');
 
 /** Store the tenant as Svelte context */
 export const tenantStore = {
+	/** Set the tenant in the context
+	 * - Call this in the root layout component
+	 */
 	set: (value: Tenant) => {
 		setContext(TENANT_CTX_KEY, value);
 	},
-	/** Set the tenant in +layout.svelte to make it available in all components */
+
+	/** Get the tenant from the context
+	 * - Throws if the tenant is not set
+	 * - Call this in any component that needs the tenant
+	 */
 	get: () => {
 		const tenant = getContext<Tenant>(TENANT_CTX_KEY);
 

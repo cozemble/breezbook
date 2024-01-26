@@ -1,34 +1,34 @@
-import { getContext, onMount, setContext } from 'svelte';
+import { onMount } from 'svelte';
 import { writable } from 'svelte/store';
+import { createStoreContext } from '$lib/helpers/store';
 
-const CART_STORE_CONTEXT_KEY = Symbol('cart_store');
+const CART_STORE_CONTEXT_KEY = 'cart_store';
 
 // TODO refactor this
 
 const getFromLocalStorage = () => {
-	const items = localStorage.getItem('cart_items');
+	const items = localStorage.getItem(CART_STORE_CONTEXT_KEY);
 	if (!items) return [];
 
 	return JSON.parse(items) as Booking[];
 };
 
 const saveToLocalStorage = (items: Booking[]) => {
-	localStorage.setItem('cart_items', JSON.stringify(items));
+	localStorage.setItem(CART_STORE_CONTEXT_KEY, JSON.stringify(items));
 };
+
+//
 
 export function createCartStore() {
 	const items = writable<Booking[]>([]);
 
 	const addItem = (item: Omit<Booking, 'id'>) => {
-		const id = Math.random().toString(36).substring(2, 9);
-
 		const newItem = {
 			...item,
-			id
+			id: Math.random().toString(36).substring(2, 9)
 		};
-
+		console.log(newItem);
 		items.update((prev) => [...prev, newItem]);
-
 		return newItem;
 	};
 
@@ -42,7 +42,6 @@ export function createCartStore() {
 	// doing this on mount otherwise SSR will fail
 	onMount(() => {
 		items.set(getFromLocalStorage());
-
 		items.subscribe((value) => saveToLocalStorage(value));
 	});
 
@@ -54,21 +53,6 @@ export function createCartStore() {
 	};
 }
 
-type CartStore = ReturnType<typeof createCartStore>;
+//
 
-export const initCartStore = () => {
-	const store = createCartStore();
-	setContext(CART_STORE_CONTEXT_KEY, store);
-
-	return store;
-};
-
-export const getCartStore = () => {
-	const store = getContext<CartStore | null>(CART_STORE_CONTEXT_KEY);
-	if (!store)
-		throw new Error(
-			'Cart store not initialized, initialize with initCartStore() in the root layout'
-		);
-
-	return store;
-};
+export const cartStore = createStoreContext(CART_STORE_CONTEXT_KEY, createCartStore);

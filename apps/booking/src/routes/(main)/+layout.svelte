@@ -3,14 +3,14 @@
 	import { tenantStore } from '$lib/stores/tenant';
 	import Footer from './Footer.svelte';
 	import Header from './Header.svelte';
-	import { initCartStore } from '$lib/stores/cart';
+	import { cartStore } from '$lib/stores/cart';
 
 	export let data: PageData;
 	const tenant = data.tenant;
 
 	tenantStore.set(tenant);
 
-	initCartStore();
+	cartStore.init();
 </script>
 
 <div

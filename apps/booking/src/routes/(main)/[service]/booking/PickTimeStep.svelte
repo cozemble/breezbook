@@ -1,11 +1,11 @@
 <script lang="ts">
 	import TimeSlotForm from '$lib/components/time/TimeSlotForm.svelte';
 	import StepWrapper from './StepWrapper.svelte';
-	import { getBookingStore } from '$lib/stores/booking';
+	import { bookingStore } from '$lib/stores/booking';
 
 	const {
 		time: { daySlots, loading, value, step }
-	} = getBookingStore();
+	} = bookingStore.get();
 
 	const { summary, open, status, available } = step;
 

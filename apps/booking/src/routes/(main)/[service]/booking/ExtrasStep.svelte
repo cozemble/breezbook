@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { getBookingStore } from '$lib/stores/booking';
+	import { bookingStore } from '$lib/stores/booking';
 	import { formatPrice } from '$lib/utils';
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {
 		extras: { extras, loading, value, step }
-	} = getBookingStore();
+	} = bookingStore.get();
 
 	const { summary, open, status, available } = step;
 

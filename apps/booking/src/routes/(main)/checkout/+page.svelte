@@ -1,9 +1,13 @@
 <script lang="ts">
-	import { getCartStore } from '$lib/stores/cart';
+	import { cartStore } from '$lib/stores/cart';
 	import BookingSummary from './BookingSummary.svelte';
 	import OrderSummary from './OrderSummary.svelte';
 
-	const { items } = getCartStore();
+	const { items } = cartStore.get();
+
+	$: {
+		console.log($items);
+	}
 </script>
 
 <div class="pb-8">

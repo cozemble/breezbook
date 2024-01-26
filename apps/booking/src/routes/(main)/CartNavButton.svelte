@@ -1,8 +1,8 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { getCartStore } from '$lib/stores/cart';
+	import { cartStore } from '$lib/stores/cart';
 
-	const { items } = getCartStore();
+	const { items } = cartStore.get();
 
 	$: itemCount = $items.length;
 	$: highlighted = itemCount > 0;
