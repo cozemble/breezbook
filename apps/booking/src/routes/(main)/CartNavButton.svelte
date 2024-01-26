@@ -12,7 +12,7 @@
 
 	// <!-- TODO refactor this to a universal function -->
 	const goToCart = () => {
-		goto(`/cart`);
+		goto(`/checkout`);
 	};
 </script>
 

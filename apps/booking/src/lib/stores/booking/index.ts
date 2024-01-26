@@ -45,7 +45,7 @@ function createBookingStore(service: Service) {
 		});
 
 		// redirect to cart // TODO make this a global function (probably as a navigate util)
-		goto(`/cart`);
+		goto(`/checkout`);
 	};
 
 	return {
