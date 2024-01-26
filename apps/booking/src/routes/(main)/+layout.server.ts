@@ -17,10 +17,7 @@ export const load: LayoutServerLoad = async ({ params, url }) => {
 
 	if (!tenant) error(404, 'Not found');
 
-	const services = await api.service.getAll(subdomain);
-
 	return {
-		tenant,
-		services
+		tenant
 	};
 };
