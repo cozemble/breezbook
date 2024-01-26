@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cartStore } from '$lib/stores/cart';
-	import BookingSummary from './BookingSummary.svelte';
-	import OrderSummary from './OrderSummary.svelte';
+	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
+	import OrderSummary from '$lib/sections/checkout/OrderSummary.svelte';
 
 	const { items } = cartStore.get();
 

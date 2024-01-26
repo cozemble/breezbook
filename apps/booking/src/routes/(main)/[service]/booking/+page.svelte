@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import Steps from './Steps.svelte';
 	import { tenantStore } from '$lib/stores/tenant';
+	import Steps from '$lib/sections/booking/Steps.svelte';
 
 	export let data: PageData;
 	const service = data.service;

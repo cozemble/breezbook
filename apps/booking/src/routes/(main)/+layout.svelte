@@ -1,9 +1,11 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+
 	import { tenantStore } from '$lib/stores/tenant';
-	import Footer from './Footer.svelte';
-	import Header from './Header.svelte';
 	import { cartStore } from '$lib/stores/cart';
+
+	import Footer from '$lib/sections/home/Footer.svelte';
+	import Header from '$lib/sections/home/Header.svelte';
 
 	export let data: PageData;
 	const tenant = data.tenant;
