@@ -37,6 +37,36 @@ export const tenants: Tenant[] = [
 			},
 			theme: 'cyberpunk'
 		}
+	},
+	{
+		id: '4',
+		slug: 'ninja-cleaners',
+		name: 'Ninja Cleaners',
+		heading: 'We clean your house like ninjas.',
+		description:
+			" You will not even notice. Sometimes we may get help from Rob's Robbery Team so beware of missing items.",
+		heroImage: 'https://picsum.photos/800/450',
+		theme: {
+			font: {
+				sans: 'Ysabeau'
+			},
+			theme: 'lemonade'
+		}
+	},
+	{
+		id: '5',
+		slug: 'the-ghostbusters',
+		name: 'The Ghostbusters',
+		heading: "I ain't afraid of no ghost.",
+		description:
+			"If you're seeing things running through your head, who you gonna call? Ghostbusters! If you're all alone, pick up the phone and call Ghostbusters!",
+		heroImage: 'https://picsum.photos/800/450',
+		theme: {
+			font: {
+				sans: 'Commissioner'
+			},
+			theme: 'dim'
+		}
 	}
 ];
 
@@ -61,6 +91,7 @@ export const services: Service[] = [
 		approximatePrice: 50,
 		approximateDuration: 30
 	},
+
 	{
 		tenantId: '2',
 		id: '1',
@@ -111,6 +142,7 @@ export const services: Service[] = [
 		approximatePrice: 500000,
 		approximateDuration: 90
 	},
+
 	{
 		tenantId: '3',
 		id: '1',
@@ -150,6 +182,69 @@ export const services: Service[] = [
 		image: 'https://picsum.photos/400/203',
 		approximatePrice: 5000,
 		approximateDuration: 120
+	},
+
+	{
+		tenantId: '4',
+		id: '1',
+		slug: 'clean-a-house',
+		name: 'Clean a house',
+		description: 'We clean your house.',
+		image: 'https://picsum.photos/400/200',
+		approximatePrice: 200,
+		approximateDuration: 60
+	},
+	{
+		tenantId: '4',
+		id: '2',
+		slug: 'clean-a-big-house',
+		name: 'Clean a big house',
+		description: 'We clean your big house like 4-7 bedrooms',
+		image: 'https://picsum.photos/400/201',
+		approximatePrice: 300,
+		approximateDuration: 120
+	},
+	{
+		tenantId: '4',
+		id: '3',
+		slug: 'clean-a-giant-mansion',
+		name: 'Clean a giant mansion',
+		description:
+			"We clean your giant mansion. Here we'll need help from Rob's Robbery Team. We'll clean your mansion and rob it.",
+		image: 'https://picsum.photos/400/202',
+		approximatePrice: 10000,
+		approximateDuration: 240
+	},
+
+	{
+		tenantId: '5',
+		id: '1',
+		slug: 'catch-a-ghost',
+		name: 'Catch a ghost',
+		description: "We ain't afraid of no ghost.",
+		image: 'https://picsum.photos/400/200',
+		approximatePrice: 150,
+		approximateDuration: 60
+	},
+	{
+		tenantId: '5',
+		id: '2',
+		slug: 'catch-a-big-ghost',
+		name: 'Catch a big ghost',
+		description: "We ain't afraid of no big ghost either.",
+		image: 'https://picsum.photos/400/201',
+		approximatePrice: 250,
+		approximateDuration: 120
+	},
+	{
+		tenantId: '5',
+		id: '3',
+		slug: 'catch-a-ghost-gang',
+		name: 'Catch a ghost gang',
+		description: "We ain't afraid of no ghost gang.",
+		image: 'https://picsum.photos/400/202',
+		approximatePrice: 4500,
+		approximateDuration: 300
 	}
 ];
 
