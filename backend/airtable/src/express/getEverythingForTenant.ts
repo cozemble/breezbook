@@ -32,7 +32,15 @@ import {
 import { makeBusinessAvailability } from './makeBusinessAvailability.js';
 import { DbResource, DbResourceAvailability, DbResourceBlockedTime, findManyForTenant } from '../prisma/dbtypes.js';
 import { prismaClient } from '../prisma/client.js';
-import { toDomainAddOn, toDomainBooking, toDomainForm, toDomainPricingRule, toDomainService, toDomainTenantSettings } from '../prisma/dbToDomain.js';
+import {
+	toDomainAddOn,
+	toDomainBooking,
+	toDomainForm,
+	toDomainPricingRule,
+	toDomainService,
+	toDomainTenantSettings,
+	toDomainTimeslotSpec
+} from '../prisma/dbToDomain.js';
 
 export interface EverythingForTenant {
 	_type: 'everything.for.tenant';
@@ -170,7 +178,7 @@ export async function getEverythingForTenant(tenantEnvironment: TenantEnvironmen
 				`No customer form ${tenantSettings.customer_form_id}`
 		  )
 		: undefined;
-	const mappedTimeSlots = timeSlots.map((ts) => timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description, id(ts.id)));
+	const mappedTimeSlots = timeSlots.map(toDomainTimeslotSpec);
 
 	return everythingForTenant(
 		businessConfiguration(

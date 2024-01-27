@@ -1,4 +1,4 @@
-import { DbAddOn, DbBooking, DbForm, DbPricingRule, DbService, DbServiceForm, DbTenantSettings } from './dbtypes.js';
+import { DbAddOn, DbBooking, DbForm, DbPricingRule, DbService, DbServiceForm, DbTenantSettings, DbTimeSlot } from './dbtypes.js';
 import {
 	addOn,
 	AddOn as DomainAddOn,
@@ -12,6 +12,7 @@ import {
 	exactTimeAvailability,
 	Form,
 	formId,
+	id,
 	isoDate,
 	isoDateFns,
 	mandatory,
@@ -26,6 +27,7 @@ import {
 	TenantSettings,
 	time24,
 	timePeriodFns,
+	timeslotSpec,
 	TimeslotSpec,
 	TimeSpec
 } from '@breezbook/packages-core';
@@ -51,6 +53,10 @@ export function toDomainService(dbService: DbService, resourceTypes: ResourceTyp
 		forms,
 		serviceId(dbService.id)
 	);
+}
+
+export function toDomainTimeslotSpec(ts: DbTimeSlot): TimeslotSpec {
+	return timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description, id(ts.id));
 }
 
 export function toDomainBooking(b: DbBooking, timeslots: TimeslotSpec[]): Booking {

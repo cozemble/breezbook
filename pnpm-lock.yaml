@@ -301,7 +301,13 @@ importers:
       '@breezbook/packages-core':
         specifier: workspace:*
         version: link:../../packages/core
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
     devDependencies:
+      '@types/uuid':
+        specifier: ^9.0.7
+        version: 9.0.7
       eslint:
         specifier: ^8.28.0
         version: 8.54.0

@@ -1,4 +1,6 @@
 import { Form, Order, PaymentIntent, Price } from '@breezbook/packages-core';
+import { BookingIsInThePast } from '@breezbook/packages-core/dist/cancellation.js';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface TimeSlotAvailability {
 	_type: 'time.slot.availability';
@@ -108,3 +110,16 @@ export interface PaymentIntentResponse {
 	stripePublicKey: string;
 	clientSecret: string;
 }
+
+export interface CancellationGranted {
+	_type: 'cancellation.granted';
+	cancellationId: string;
+	refundPercentageAsRatio: number;
+	hoursBeforeBookingStart: number | null;
+}
+
+export function cancellationGranted(refundPercentageAsRatio: number, hoursBeforeBookingStart: number | null, cancellationId = uuidv4()): CancellationGranted {
+	return { _type: 'cancellation.granted', cancellationId, refundPercentageAsRatio, hoursBeforeBookingStart };
+}
+
+export type CancellationGrantResponse = CancellationGranted | BookingIsInThePast;

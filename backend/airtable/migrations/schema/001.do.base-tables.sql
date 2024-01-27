@@ -347,3 +347,23 @@ create trigger trigger_received_webhook
     on received_webhooks
     for each row
 execute function call_received_webhook_handler();
+
+create table refund_rules
+(
+    id             text primary key,
+    environment_id text                                not null,
+    tenant_id      text references tenants (tenant_id) not null,
+    definition     jsonb                               not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
+);
+
+create table cancellation_grants (
+    id             text primary key,
+    environment_id text                                not null,
+    tenant_id      text references tenants (tenant_id) not null,
+    booking_id     text references bookings (id)       not null,
+    definition     jsonb                               not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp
+);

@@ -9,6 +9,7 @@ import { IncomingMessage } from 'http';
 import { handleReceivedWebhook } from './handleReceivedWebhook.js';
 import { onOutboundWebhooksBatch } from './onOutboundWebhooksBatch.js';
 import { bindInngestToExpress } from '../inngest/expressBinding.js';
+import { requestCancellationGrant } from './cancellation.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
 	rawBody?: string;
@@ -57,6 +58,7 @@ export function expressApp(): Express {
 	app.post('/api/:envId/:tenantId/orders', addOrder);
 	app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
 	app.post('/api/:envId/:tenantId/stripe/webhook', onStripeWebhook);
+	app.post('/api/:envId/:tenantId/booking/:bookingId/cancellationGrant', requestCancellationGrant);
 
 	app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
 	app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);

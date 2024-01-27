@@ -1,5 +1,7 @@
 import express from 'express';
 import {
+	bookingId,
+	BookingId,
 	EnvironmentId,
 	environmentId,
 	isoDate,
@@ -13,7 +15,7 @@ import {
 	tenantId,
 	TenantId
 } from '@breezbook/packages-core';
-import { CreateOrderRequest, ErrorResponse, isErrorResponse } from '@breezbook/backend-api-types';
+import { CreateOrderRequest } from '@breezbook/backend-api-types';
 
 export interface RequestValueExtractor {
 	name: string;
@@ -42,7 +44,7 @@ export function path(paramName: string): RequestValueExtractor {
 	return { name: paramName, extractor };
 }
 
-type ParamExtractor<T> = (req: express.Request, res: express.Response) => T | null;
+export type ParamExtractor<T> = (req: express.Request, res: express.Response) => T | null;
 
 export function date(requestValue: RequestValueExtractor): ParamExtractor<IsoDate | null> {
 	return (req: express.Request, res: express.Response) => {
@@ -133,6 +135,17 @@ export function orderIdParam(requestValue: RequestValueExtractor = path('orderId
 			return null;
 		}
 		return orderId(paramValue);
+	};
+}
+
+export function bookingIdParam(requestValue: RequestValueExtractor = path('bookingId')): ParamExtractor<BookingId | null> {
+	return (req: express.Request, res: express.Response) => {
+		const paramValue = requestValue.extractor(req);
+		if (!paramValue) {
+			res.status(400).send(`Missing required parameter bookingId`);
+			return null;
+		}
+		return bookingId(paramValue);
 	};
 }
 
@@ -263,4 +276,9 @@ export async function withFiveRequestParams<A, B, C, D, E>(
 		return;
 	}
 	return await withErrorHandling(res, async () => await f(a, b, c, d, e));
+}
+
+export function sendJson<T>(res: express.Response, data: T, status = 200): void {
+	res.setHeader('Content-Type', 'application/json');
+	res.status(status).send(JSON.stringify(data));
 }
