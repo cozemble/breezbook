@@ -6,7 +6,7 @@ import express from 'express';
 
 export type DbResourceFinder<V> = (prisma: PrismaClient, tenantEnvironment: TenantEnvironment) => Promise<V | null>;
 
-class DbExpressBridge {
+export class DbExpressBridge {
 	constructor(
 		private readonly res: express.Response,
 		public readonly tenantEnvironment: TenantEnvironment,

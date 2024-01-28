@@ -114,12 +114,18 @@ export interface PaymentIntentResponse {
 export interface CancellationGranted {
 	_type: 'cancellation.granted';
 	cancellationId: string;
+	bookingId: string;
 	refundPercentageAsRatio: number;
 	hoursBeforeBookingStart: number | null;
 }
 
-export function cancellationGranted(refundPercentageAsRatio: number, hoursBeforeBookingStart: number | null, cancellationId = uuidv4()): CancellationGranted {
-	return { _type: 'cancellation.granted', cancellationId, refundPercentageAsRatio, hoursBeforeBookingStart };
+export function cancellationGranted(
+	refundPercentageAsRatio: number,
+	hoursBeforeBookingStart: number | null,
+	bookingId: string,
+	cancellationId = uuidv4()
+): CancellationGranted {
+	return { _type: 'cancellation.granted', bookingId, cancellationId, refundPercentageAsRatio, hoursBeforeBookingStart };
 }
 
 export type CancellationGrantResponse = CancellationGranted | BookingIsInThePast;
