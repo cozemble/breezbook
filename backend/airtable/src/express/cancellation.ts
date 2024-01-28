@@ -19,14 +19,14 @@ function findBookingById(bookingId: BookingId): DbResourceFinder<DbBooking> {
 	};
 }
 
-async function grantCancellation(res: express.Response, db: DbExpressBridge, bookingId: BookingId, grant: CancellationGranted): Promise<void> {
+async function grantCancellation(res: express.Response, db: DbExpressBridge, grant: CancellationGranted): Promise<void> {
 	await db.prisma.cancellation_grants.create({
 		data: {
 			id: grant.cancellationId,
 			tenants: { connect: { tenant_id: db.tenantEnvironment.tenantId.value } },
 			environment_id: db.tenantEnvironment.environmentId.value,
 			definition: grant as any,
-			bookings: { connect: { id: bookingId.value } }
+			bookings: { connect: { id: grant.bookingId } }
 		}
 	});
 	return sendJson(res, grant, 201);
@@ -41,28 +41,25 @@ export async function requestCancellationGrant(req: express.Request, res: expres
 					environment_id: db.tenantEnvironment.environmentId.value
 				}
 			});
-			if (refundRules.length > 1) {
-				const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));
-				const timeslots = await db.prisma.time_slots.findMany({
-					where: {
-						tenant_id: db.tenantEnvironment.tenantId.value,
-						environment_id: db.tenantEnvironment.environmentId.value
-					}
-				});
-				const refundJudgement = findRefundRule(toDomainBooking(theBooking, timeslots.map(toDomainTimeslotSpec)), theRefundPolicy, new SystemClock());
-				if (refundJudgement._type === 'refund.possible') {
-					return grantCancellation(
-						res,
-						db,
-						bookingId,
-						cancellationGranted(refundJudgement.applicableRule.percentage.value, refundJudgement.hoursToBookingStart.value, bookingId.value)
-					);
+			const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));
+			const timeslots = await db.prisma.time_slots.findMany({
+				where: {
+					tenant_id: db.tenantEnvironment.tenantId.value,
+					environment_id: db.tenantEnvironment.environmentId.value
 				}
-				if (refundJudgement._type === 'booking.is.in.the.past') {
-					return res.status(400).send('Cannot cancel a booking in the past');
-				}
+			});
+			const refundJudgement = findRefundRule(toDomainBooking(theBooking, timeslots.map(toDomainTimeslotSpec)), theRefundPolicy, new SystemClock());
+			if (refundJudgement._type === 'refund.possible') {
+				return grantCancellation(
+					res,
+					db,
+					cancellationGranted(refundJudgement.applicableRule.percentage.value, refundJudgement.hoursToBookingStart.value, bookingId.value)
+				);
 			}
+			if (refundJudgement._type === 'booking.is.in.the.past') {
+				return res.status(400).send('Cannot cancel a booking in the past');
+			}
+			return grantCancellation(res, db, cancellationGranted(1, null, bookingId.value));
 		});
-		return grantCancellation(res, db, bookingId, cancellationGranted(1, null, bookingId.value));
 	});
 }

@@ -5,6 +5,7 @@ import {
 	IsoDate,
 	isoDate,
 	isoDateFns,
+	mandatory,
 	order,
 	orderLine,
 	tenantEnvironment,
@@ -32,6 +33,17 @@ describe('Given a migrated database', async () => {
 		await stopTestEnvironment(testEnvironment);
 	});
 
+	test("can't get a cancellation grant for a booking in the past", async () => {
+		const bookingId = await createBooking(isoDateFns.addDays(isoDate(), -1));
+		const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellationGrant`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		expect(cancellationGrantResponse.status).toBe(400);
+	});
+
 	test('can get a cancellation grant for a booking in the future', async () => {
 		const bookingId = await createBooking(isoDateFns.addDays(isoDate(), 3));
 		const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellationGrant`, {
@@ -47,7 +59,7 @@ describe('Given a migrated database', async () => {
 	});
 });
 
-async function createBooking(date: IsoDate) {
+async function createBooking(date: IsoDate): Promise<string> {
 	const createOrderResponse = await insertOrder(
 		tenantEnv,
 		createOrderRequest(
@@ -59,5 +71,5 @@ async function createBooking(date: IsoDate) {
 	);
 	expect(createOrderResponse.bookingIds).toHaveLength(1);
 	expect(createOrderResponse.bookingIds[0]).toBeDefined();
-	return createOrderResponse.bookingIds[0];
+	return mandatory(createOrderResponse.bookingIds[0], 'Booking id is not defined');
 }
