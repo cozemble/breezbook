@@ -4,16 +4,17 @@
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {
-		details: { schema, errors, value, onSubmit: submitDetails, step },
+		details: { schema, errors, value, submitWithCallback, step },
 		finish
 	} = bookingStore.get();
 
 	const { open, status, available } = step;
 
-	const onSubmit = () => {
-		submitDetails();
-		step.onComplete();
-		finish();
+	const handleSubmit = () => {
+		submitWithCallback(() => {
+			step.onComplete();
+			finish();
+		});
 	};
 </script>
 
@@ -30,6 +31,6 @@
 
 	<div class="flex justify-end gap-3 mt-2">
 		<button class="btn btn-secondary" on:click={step.onGoBack}> Back </button>
-		<button class="btn btn-primary" on:click={onSubmit}> Finish Booking </button>
+		<button class="btn btn-primary" on:click={handleSubmit}> Finish Booking </button>
 	</div>
 </StepWrapper>

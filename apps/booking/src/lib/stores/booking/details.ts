@@ -61,12 +61,19 @@ export function createDetailsStore(service: Service) {
 		return isValid;
 	};
 
-	const onSubmit = async () => {
+	let unsubValidate: () => void; // prevent memory leak
+
+	/** Submit the form and call the callback if valid */
+	const submitWithCallback = async (callbackIfValid: () => void) => {
+		unsubValidate?.(); // unsubscribe from validation
 		const isValid = validate();
+
 		if (!isValid) {
-			value.subscribe(() => validate()); // validate on change so the user knows what to fix
+			unsubValidate = value.subscribe(() => validate()); // validate on change so the user knows what to fix
 			return;
 		}
+
+		callbackIfValid();
 	};
 
 	return {
@@ -74,6 +81,6 @@ export function createDetailsStore(service: Service) {
 		value,
 		loading,
 		errors,
-		onSubmit
+		submitWithCallback
 	};
 }
