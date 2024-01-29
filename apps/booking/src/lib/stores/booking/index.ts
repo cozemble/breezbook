@@ -5,7 +5,7 @@ import { defineStep } from './stepHelper';
 import { createTimeStore } from './time';
 import { createExtrasStore } from './extras';
 import { createDetailsStore } from './details';
-import { cartStore } from '../cart';
+import { cartStore } from '../checkout';
 import { createStoreContext } from '$lib/helpers/store';
 
 const BOOKING_STORE_CONTEXT_KEY = 'booking_store';

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { cartStore } from '$lib/stores/cart';
+	import { cartStore } from '$lib/stores/checkout';
 
 	const { items } = cartStore.get();
 

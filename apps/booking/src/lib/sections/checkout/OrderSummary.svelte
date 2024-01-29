@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cartStore } from '$lib/stores/cart';
+	import { cartStore } from '$lib/stores/checkout';
 	import { formatPrice } from '$lib/utils';
 
 	const { items } = cartStore.get();

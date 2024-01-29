@@ -2,7 +2,7 @@
 	import type { PageData } from './$types';
 
 	import { tenantStore } from '$lib/stores/tenant';
-	import { cartStore } from '$lib/stores/cart';
+	import { cartStore } from '$lib/stores/checkout';
 
 	import Footer from '$lib/sections/home/Footer.svelte';
 	import Header from '$lib/sections/home/Header.svelte';

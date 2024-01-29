@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cartStore } from '$lib/stores/cart';
+	import { cartStore } from '$lib/stores/checkout';
 	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
 	import OrderSummary from '$lib/sections/checkout/OrderSummary.svelte';
 
