@@ -58,7 +58,7 @@ export function expressApp(): Express {
 	app.post('/api/:envId/:tenantId/orders', addOrder);
 	app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
 	app.post('/api/:envId/:tenantId/stripe/webhook', onStripeWebhook);
-	app.post('/api/:envId/:tenantId/booking/:bookingId/cancellationGrant', requestCancellationGrant);
+	app.post('/api/:envId/:tenantId/booking/:bookingId/cancellation/grant', requestCancellationGrant);
 
 	app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
 	app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);

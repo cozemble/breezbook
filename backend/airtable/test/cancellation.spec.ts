@@ -35,7 +35,7 @@ describe('Given a migrated database', async () => {
 
 	test("can't get a cancellation grant for a booking in the past", async () => {
 		const bookingId = await createBooking(isoDateFns.addDays(isoDate(), -1));
-		const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellationGrant`, {
+		const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellation/grant`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -46,7 +46,7 @@ describe('Given a migrated database', async () => {
 
 	test('can get a cancellation grant for a booking in the future', async () => {
 		const bookingId = await createBooking(isoDateFns.addDays(isoDate(), 3));
-		const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellationGrant`, {
+		const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellation/grant`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
