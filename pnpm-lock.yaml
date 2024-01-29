@@ -26,6 +26,9 @@ importers:
       '@breezbook/backend-api-types':
         specifier: workspace:*
         version: link:../../backend/api-types
+      '@breezbook/packages-core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@iconify/svelte':
         specifier: ^3.1.6
         version: 3.1.6(svelte@4.2.8)
