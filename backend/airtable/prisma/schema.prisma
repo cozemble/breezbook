@@ -38,6 +38,7 @@ model bookings {
   id                  String                @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id           String
   environment_id      String
+  status              booking_status        @default(confirmed)
   customer_id         String
   service_id          String
   order_id            String
@@ -398,6 +399,7 @@ model cancellation_grants {
   tenant_id      String
   booking_id     String
   definition     Json
+  committed      Boolean  @default(false)
   created_at     DateTime @default(now()) @db.Timestamptz(6)
   updated_at     DateTime @default(now()) @db.Timestamptz(6)
   bookings       bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -418,4 +420,9 @@ enum payment_status {
   succeeded
   pending
   failed
+}
+
+enum booking_status {
+  confirmed
+  cancelled
 }

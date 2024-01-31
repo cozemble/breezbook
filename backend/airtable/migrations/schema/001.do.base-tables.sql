@@ -220,11 +220,14 @@ create table order_lines
     updated_at        timestamp with time zone            not null default current_timestamp
 );
 
+create type booking_status as enum ('confirmed', 'cancelled');
+
 create table bookings
 (
     id              text primary key                             default uuid_generate_v4(),
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
+    status          booking_status                      not null default 'confirmed',
     customer_id     text references customers (id)      not null,
     service_id      text references services (id)       not null,
     order_id        text references orders (id)         not null,
@@ -358,12 +361,14 @@ create table refund_rules
     updated_at     timestamp with time zone            not null default current_timestamp
 );
 
-create table cancellation_grants (
+create table cancellation_grants
+(
     id             text primary key,
     environment_id text                                not null,
     tenant_id      text references tenants (tenant_id) not null,
     booking_id     text references bookings (id)       not null,
     definition     jsonb                               not null,
+    committed      boolean                             not null default false,
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp
 );

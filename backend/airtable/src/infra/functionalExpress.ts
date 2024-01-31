@@ -16,6 +16,8 @@ import {
 	TenantId
 } from '@breezbook/packages-core';
 import { CreateOrderRequest } from '@breezbook/backend-api-types';
+import { DbExpressBridge } from './dbExpressBridge.js';
+import { PrismaUpdates, toPrismaPromises } from './prismaMutations.js';
 
 export interface RequestValueExtractor {
 	name: string;
@@ -78,25 +80,11 @@ export function createOrderRequest(): ParamExtractor<CreateOrderRequest | null> 
 }
 
 export function tenantIdParam(requestValue: RequestValueExtractor = path('tenantId')): ParamExtractor<TenantId | null> {
-	return (req: express.Request, res: express.Response) => {
-		const paramValue = requestValue.extractor(req);
-		if (!paramValue) {
-			res.status(400).send(`Missing required parameter tenantId`);
-			return null;
-		}
-		return tenantId(paramValue);
-	};
+	return paramExtractor('tenantId', requestValue.extractor, tenantId);
 }
 
 export function environmentIdParam(requestValue: RequestValueExtractor = path('envId')): ParamExtractor<EnvironmentId | null> {
-	return (req: express.Request, res: express.Response) => {
-		const paramValue = requestValue.extractor(req);
-		if (!paramValue) {
-			res.status(400).send(`Missing required parameter envId`);
-			return null;
-		}
-		return environmentId(paramValue);
-	};
+	return paramExtractor('envId', requestValue.extractor, environmentId);
 }
 
 export function tenantEnvironmentParam(
@@ -117,35 +105,29 @@ export function tenantEnvironmentParam(
 }
 
 export function serviceIdParam(requestValue: RequestValueExtractor = path('serviceId')): ParamExtractor<ServiceId | null> {
-	return (req: express.Request, res: express.Response) => {
-		const paramValue = requestValue.extractor(req);
-		if (!paramValue) {
-			res.status(400).send(`Missing required parameter serviceId`);
-			return null;
-		}
-		return serviceId(paramValue);
-	};
+	return paramExtractor('serviceId', requestValue.extractor, serviceId);
 }
 
 export function orderIdParam(requestValue: RequestValueExtractor = path('orderId')): ParamExtractor<OrderId | null> {
-	return (req: express.Request, res: express.Response) => {
-		const paramValue = requestValue.extractor(req);
-		if (!paramValue) {
-			res.status(400).send(`Missing required parameter orderId`);
-			return null;
-		}
-		return orderId(paramValue);
-	};
+	return paramExtractor('orderId', requestValue.extractor, orderId);
 }
 
 export function bookingIdParam(requestValue: RequestValueExtractor = path('bookingId')): ParamExtractor<BookingId | null> {
+	return paramExtractor('bookingId', requestValue.extractor, bookingId);
+}
+
+export function cancellationId(requestValue: RequestValueExtractor = path('cancellationId')): ParamExtractor<string | null> {
+	return paramExtractor('cancellationId', requestValue.extractor, (s) => s);
+}
+
+function paramExtractor<T>(paramName: string, extractor: (req: express.Request) => string | null, factoryFn: (s: string) => T): ParamExtractor<T | null> {
 	return (req: express.Request, res: express.Response) => {
-		const paramValue = requestValue.extractor(req);
+		const paramValue = extractor(req);
 		if (!paramValue) {
-			res.status(400).send(`Missing required parameter bookingId`);
+			res.status(400).send(`Missing required parameter ${paramName}`);
 			return null;
 		}
-		return bookingId(paramValue);
+		return factoryFn(paramValue);
 	};
 }
 
@@ -281,4 +263,21 @@ export async function withFiveRequestParams<A, B, C, D, E>(
 export function sendJson<T>(res: express.Response, data: T, status = 200): void {
 	res.setHeader('Content-Type', 'application/json');
 	res.status(status).send(JSON.stringify(data));
+}
+
+export interface HttpError {
+	_type: 'http.error';
+	message?: string;
+	status: number;
+}
+
+export function httpError(status: number, message?: string): HttpError {
+	return { _type: 'http.error', status, message };
+}
+
+export async function handleOutcome(res: express.Response, db: DbExpressBridge, outcome: PrismaUpdates | HttpError) {
+	if (outcome._type === 'http.error') {
+		return res.status(outcome.status).send(outcome.message);
+	}
+	await db.prisma.$transaction(toPrismaPromises(outcome.updates));
 }

@@ -6,6 +6,15 @@ import express from 'express';
 
 export type DbResourceFinder<V> = (prisma: PrismaClient, tenantEnvironment: TenantEnvironment) => Promise<V | null>;
 
+export interface NamedDbResourceFinder<V> {
+	name: string;
+	finder: DbResourceFinder<V>;
+}
+
+export function namedDbResourceFinder<V>(name: string, finder: DbResourceFinder<V>): NamedDbResourceFinder<V> {
+	return { name, finder };
+}
+
 export class DbExpressBridge {
 	constructor(
 		private readonly res: express.Response,
@@ -13,10 +22,10 @@ export class DbExpressBridge {
 		public readonly prisma: PrismaClient = prismaClient()
 	) {}
 
-	async withResource<V, R>(resourceType: string, finder: DbResourceFinder<V>, fn: (theResource: V) => Promise<R>) {
-		const theResource = await finder(this.prisma, this.tenantEnvironment);
+	async withResource<V, R>(namedFinder: NamedDbResourceFinder<V>, fn: (theResource: V) => Promise<R>) {
+		const theResource = await namedFinder.finder(this.prisma, this.tenantEnvironment);
 		if (!theResource) {
-			this.res.status(404).send(`No such ${resourceType} found`);
+			this.res.status(404).send(`No such ${namedFinder.name} found`);
 			return;
 		}
 		return fn(theResource);
