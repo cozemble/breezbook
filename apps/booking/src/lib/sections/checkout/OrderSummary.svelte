@@ -2,9 +2,11 @@
 	import { cartStore } from '$lib/stores/checkout';
 	import { formatPrice } from '$lib/utils';
 
-	const { items } = cartStore.get();
+	const { total, items, submitOrder } = cartStore.get();
 
-	$: total = $items.reduce((acc, item) => acc + item.calculatedPrice, 0);
+	const handleSubmit = () => {
+		submitOrder();
+	};
 </script>
 
 <div class="flex flex-col items-end p-6 gap-6 rounded-box bg-base-200">
@@ -16,7 +18,7 @@
 				Subtotal ({$items.length})
 			</span>
 			<span class="text-right text-lg font-bold">
-				£ {formatPrice(total)}
+				£ {formatPrice($total?.orderTotal.amount.value || 0)}
 			</span>
 		</div>
 
@@ -25,7 +27,7 @@
 		<div class="flex justify-between">
 			<span class="text-sm font-semibold opacity-60"> 20% off </span>
 			<span class="text-right text-base font-semibold text-success">
-				-£{formatPrice(total * 0.2)}
+				-£{formatPrice(($total?.orderTotal.amount.value || 0) * 0.2)}
 			</span>
 		</div>
 
@@ -35,10 +37,10 @@
 		<div class="flex justify-between">
 			<span class="text-lg font-bold text-primary"> Total </span>
 			<span class="text-right text-2xl font-bold">
-				£ {formatPrice(total * 0.8)}
+				£ {formatPrice($total?.orderTotal.amount.value || 0)}
 			</span>
 		</div>
 	</div>
 
-	<button class="btn btn-primary"> Confirm & Pay </button>
+	<button class="btn btn-primary" on:click={handleSubmit}> Confirm & Pay </button>
 </div>

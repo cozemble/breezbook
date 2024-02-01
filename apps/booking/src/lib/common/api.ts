@@ -1,5 +1,6 @@
 import mock, { services } from '$lib/mock';
 import type { AvailabilityResponse } from '@breezbook/backend-api-types';
+import type { Order, OrderWithTotal } from '@breezbook/packages-core';
 
 // TODO: replace with real fetch
 
@@ -125,10 +126,44 @@ export const timeSlot = {
 	}
 };
 
+export const booking = {
+	placeOrder: async (order: OrderWithTotal) => {
+		const tenantSlug = 'tenant1';
+
+		const response = await fetch(
+			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/orders`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(order)
+			}
+		);
+
+		if (!response.ok) {
+			console.error('Network response was not ok');
+			return;
+		}
+
+		const contentType = response.headers.get('content-type');
+		const isJson = contentType && contentType.includes('application/json');
+		if (!isJson) {
+			console.error('Response was not valid JSON');
+			return;
+		}
+
+		const data = await response.json();
+
+		return data;
+	}
+};
+
 const api = {
 	tenant,
 	service,
-	timeSlot
+	timeSlot,
+	booking
 };
 
 export default api;

@@ -1,6 +1,8 @@
 import { onMount } from 'svelte';
-import { writable } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 import { createStoreContext } from '$lib/helpers/store';
+import * as core from '@breezbook/packages-core';
+import api from '$lib/common/api';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -21,6 +23,41 @@ const saveToLocalStorage = (items: Booking[]) => {
 
 export function createCartStore() {
 	const items = writable<Booking[]>([]);
+	const customerStore = writable<core.Customer>(core.customer('Mike', 'Hogan', 'mike@email.com'));
+	const coupons = writable<core.Coupon[]>([]);
+
+	// TODO clean up this mess and make it make sense
+
+	const order = derived([items, customerStore], ([$items, $customerStore]): core.Order | null => {
+		if ($items.length === 0) return null;
+
+		const lines = $items.map((item) =>
+			core.orderLine(
+				core.carwash.smallCarWash.id,
+				core.carwash.smallCarWash.price,
+				item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
+				core.isoDate(item.time.day),
+				core.timeslotSpec(core.time24(item.time.start), core.time24(item.time.end), ''),
+				[item.details]
+			)
+		);
+
+		const res = core.order($customerStore, lines);
+		return res;
+	});
+
+	const total = derived([order, coupons], ([$orderStore, $coupons]) => {
+		if (!$orderStore) return null;
+
+		const total = core.calculateOrderTotal(
+			$orderStore,
+			core.carwash.services,
+			core.carwash.addOns,
+			$coupons
+		);
+
+		return total;
+	});
 
 	const addItem = (item: Omit<Booking, 'id'>) => {
 		const newItem = {
@@ -39,6 +76,22 @@ export function createCartStore() {
 		items.set([]);
 	};
 
+	const submitOrder = async () => {
+		const theOrder = get(total);
+
+		if (!theOrder) return;
+
+		const res = api.booking.placeOrder(theOrder);
+
+		console.log(res);
+	};
+
+	// TODO properly create bookings
+	// TODO properly create order
+	// TODO calculate order total
+	// TODO submit order to backend
+	// TODO handle stripe payment stuff
+
 	// doing this on mount otherwise SSR will fail
 	onMount(() => {
 		items.set(getFromLocalStorage());
@@ -49,7 +102,11 @@ export function createCartStore() {
 		items,
 		addItem,
 		removeItem,
-		clearItems
+		clearItems,
+		coupons,
+		order,
+		total,
+		submitOrder
 	};
 }
 
