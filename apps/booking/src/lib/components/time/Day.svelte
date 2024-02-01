@@ -4,7 +4,7 @@
 	export let day: DaySlot;
 	export let selectedSlot: TimeSlot | null;
 
-	const formattedDate = day.date.toLocaleDateString('en-GB', {
+	const formattedDate = new Date(day.date).toLocaleDateString('en-GB', {
 		weekday: 'long',
 		day: 'numeric',
 		month: 'short'

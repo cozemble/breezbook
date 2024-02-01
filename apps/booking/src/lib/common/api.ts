@@ -110,14 +110,13 @@ export const timeSlot = {
 		const data = (await response.json()) as AvailabilityResponse;
 
 		const adaptedDays: DaySlot[] = Object.entries(data.slots).reduce((prev, [key, value]) => {
-			const date = new Date(key);
 			const timeSlots: TimeSlot[] = value.map((slot) => ({
 				start: slot.startTime24hr,
 				end: slot.endTime24hr,
-				price: Number(slot.priceWithNoDecimalPlaces),
-				day: date
+				price: slot.priceWithNoDecimalPlaces,
+				day: key
 			}));
-			const day: DaySlot = { date, timeSlots };
+			const day: DaySlot = { date: key, timeSlots };
 
 			return [...prev, day];
 		}, [] as DaySlot[]);

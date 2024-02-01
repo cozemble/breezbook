@@ -54,7 +54,7 @@ function createBookingStore(service: Service) {
 				valueStore: timeStore.value,
 				summaryFunction: (value) =>
 					value
-						? `${value.day.toLocaleDateString('en-GB', {
+						? `${new Date(value.day).toLocaleDateString('en-GB', {
 								weekday: 'short',
 								day: 'numeric',
 								month: 'short'
