@@ -3,6 +3,7 @@ import { derived, get, writable } from 'svelte/store';
 import { createStoreContext } from '$lib/helpers/store';
 import * as core from '@breezbook/packages-core';
 import api from '$lib/common/api';
+import { createOrderRequest } from '@breezbook/backend-api-types';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -23,7 +24,13 @@ const saveToLocalStorage = (items: Booking[]) => {
 
 export function createCartStore() {
 	const items = writable<Booking[]>([]);
-	const customerStore = writable<core.Customer>(core.customer('Mike', 'Hogan', 'mike@email.com'));
+	const customerStore = writable<core.Customer>(
+		core.customer('Mike', 'Hogan', 'mike@email.com', {
+			phone: '1234567890',
+			firstLineOfAddress: '123 Fake Street',
+			postcode: 'AB1 2CD'
+		})
+	);
 	const coupons = writable<core.Coupon[]>([]);
 
 	// TODO clean up this mess and make it make sense
@@ -77,11 +84,19 @@ export function createCartStore() {
 	};
 
 	const submitOrder = async () => {
-		const theOrder = get(total);
-
+		const theOrder = get(order);
 		if (!theOrder) return;
 
-		const res = api.booking.placeOrder(theOrder);
+		const theTotal = get(total);
+		if (!theTotal) return;
+
+		const orderReq = createOrderRequest(
+			theOrder,
+			theTotal.orderTotal,
+			core.fullPaymentOnCheckout()
+		);
+
+		const res = api.booking.placeOrder(orderReq);
 
 		console.log(res);
 	};

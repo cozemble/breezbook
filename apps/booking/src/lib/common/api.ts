@@ -1,5 +1,5 @@
 import mock, { services } from '$lib/mock';
-import type { AvailabilityResponse } from '@breezbook/backend-api-types';
+import type { AvailabilityResponse, CreateOrderRequest } from '@breezbook/backend-api-types';
 import type { Order, OrderWithTotal } from '@breezbook/packages-core';
 
 // TODO: replace with real fetch
@@ -127,7 +127,7 @@ export const timeSlot = {
 };
 
 export const booking = {
-	placeOrder: async (order: OrderWithTotal) => {
+	placeOrder: async (order: CreateOrderRequest) => {
 		const tenantSlug = 'tenant1';
 
 		const response = await fetch(
