@@ -33,7 +33,7 @@ export default function createTimeStore(service: Service) {
 	const fetchTimeSlots = async () => {
 		loading.set(true);
 
-		const res = await api.timeSlot.getAll('', '', get(filters)); // TODO proper params
+		const res = await api.booking.getTimeSlots('', '', get(filters)); // TODO proper params
 		daySlots.set(res);
 
 		loading.set(false);

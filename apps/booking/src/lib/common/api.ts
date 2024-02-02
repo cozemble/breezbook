@@ -1,7 +1,7 @@
-import mock, { services } from '$lib/mock';
+import mock from '$lib/mock';
 import type { AvailabilityResponse, CreateOrderRequest } from '@breezbook/backend-api-types';
 
-// TODO: replace with real fetch
+// TODO: remove mock
 
 export const tenant = {
 	getOne: async (slug: string) => {
@@ -20,7 +20,7 @@ export const service = {
 		const tenant = await api.tenant.getOne(tenantSlug);
 		if (!tenant) return null;
 
-		const service = services.find((service) => service.slug === serviceSlug);
+		const service = mock.services.find((service) => service.slug === serviceSlug);
 		return service || null;
 	},
 
@@ -28,20 +28,19 @@ export const service = {
 		const tenant = await api.tenant.getOne(tenantSlug);
 		if (!tenant) return null;
 
-		const tenantServices = services.filter((service) => service.tenantId === tenant.id);
+		const tenantServices = mock.services.filter((service) => service.tenantId === tenant.id);
 		return tenantServices || null;
-	},
+	}
+};
 
+export const booking = {
 	getDetails: async (tenantSlug: string, serviceSlug: string) => {
 		// TODO this is just for testing, remove it later
 		tenantSlug = 'tenant1';
 		serviceSlug = 'smallCarWash';
 
-		// TODO set the api url as an env variable
-		// TODO handle errors properly
-
 		const response = await fetch(
-			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/service/${serviceSlug}/availability?fromDate=2024-01-17&toDate=2024-01-24`,
+			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/service/${serviceSlug}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
 			{
 				method: 'POST',
 				headers: {
@@ -59,11 +58,9 @@ export const service = {
 		const data = (await response.json()) as AvailabilityResponse;
 
 		return data;
-	}
-};
+	},
 
-export const timeSlot = {
-	getAll: async (
+	getTimeSlots: async (
 		tenantSlug: string,
 		serviceSlug: string,
 		filters: {
@@ -75,7 +72,6 @@ export const timeSlot = {
 		tenantSlug = 'tenant1';
 		serviceSlug = 'smallCarWash';
 
-		// TODO filter with fromDate and toDate
 		// TODO set the api url as an env variable
 		// TODO handle errors properly
 
@@ -95,17 +91,11 @@ export const timeSlot = {
 			}
 		);
 
-		if (!response.ok) {
-			console.error('Network response was not ok');
-			return [];
-		}
+		if (!response.ok) throw new Error('Network response was not ok');
 
 		const contentType = response.headers.get('content-type');
 		const isJson = contentType && contentType.includes('application/json');
-		if (!isJson) {
-			console.error('Response was not valid JSON');
-			return [];
-		}
+		if (!isJson) throw new Error('Response was not valid JSON');
 
 		const data = (await response.json()) as AvailabilityResponse;
 
@@ -123,10 +113,8 @@ export const timeSlot = {
 		}, [] as DaySlot[]);
 
 		return adaptedDays;
-	}
-};
+	},
 
-export const booking = {
 	placeOrder: async (order: CreateOrderRequest) => {
 		const tenantSlug = 'tenant1';
 
@@ -162,7 +150,6 @@ export const booking = {
 const api = {
 	tenant,
 	service,
-	timeSlot,
 	booking
 };
 

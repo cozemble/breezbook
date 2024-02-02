@@ -22,7 +22,7 @@ export default function createDetailsStore(service: Service) {
 	const fetchSchema = async () => {
 		loading.set(true);
 
-		const res = await api.service.getDetails('', service.slug); // TODO proper params
+		const res = await api.booking.getDetails('', service.slug); // TODO proper params
 		const sche = res.serviceSummary.forms[0].schema as JSONSchema;
 		schema.set(sche);
 
