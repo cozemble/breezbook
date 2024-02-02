@@ -321,15 +321,24 @@ export interface Booking {
 	date: IsoDate;
 	slot: BookableSlot;
 	serviceId: ServiceId;
+	status: 'confirmed' | 'cancelled';
 	formData?: unknown;
 }
 
-export function booking(customerId: CustomerId, serviceId: ServiceId, date: IsoDate, slot: BookableSlot, id = bookingId(uuidv4())): Booking {
+export function booking(
+	customerId: CustomerId,
+	serviceId: ServiceId,
+	date: IsoDate,
+	slot: BookableSlot,
+	status: 'confirmed' | 'cancelled' = 'confirmed',
+	id = bookingId(uuidv4())
+): Booking {
 	return {
 		id,
 		customerId,
 		date,
 		slot,
+		status,
 		serviceId
 	};
 }
