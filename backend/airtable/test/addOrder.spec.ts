@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { addOnOrder, carwash, couponCode, currency, customer, order, orderFns, orderLine, price, priceFns } from '@breezbook/packages-core';
+import { addOnOrder, carwash, couponCode, currency, customer, id, order, orderFns, orderLine, price, priceFns } from '@breezbook/packages-core';
 import { ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { addOrderErrorCodes } from '../src/express/addOrder.js';
 import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow, tomorrow } from './helper.js';
@@ -163,5 +163,18 @@ describe('with a migrated database', () => {
 		expect(json.bookingIds.length).toBe(1);
 		expect(json.orderLineIds.length).toBe(1);
 		expect(json.reservationIds.length).toBe(1);
+	});
+
+	test('an order with a non-existent timeslot by id should result in an error', async () => {
+		const timeslot = { ...carwash.oneToFour, id: id('this-does-not-exist') };
+		const theOrder = order(goodCustomer, [
+			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], fourDaysFromNow, timeslot, [goodServiceFormData])
+		]);
+		const response = await postOrder(theOrder, carwash.smallCarWash.price, expressPort);
+
+		expect(response.status).toBe(400);
+		const json = (await response.json()) as ErrorResponse;
+		expect(json.errorCode).toBe(addOrderErrorCodes.noSuchTimeslotId);
+		expect(json.errorMessage).toBeDefined();
 	});
 });

@@ -2,7 +2,14 @@ import * as express from 'express';
 import { createOrderRequest, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { Order, orderFns, Price } from '@breezbook/packages-core';
 import { EverythingForTenant, getEverythingForTenant } from './getEverythingForTenant.js';
-import { validateAvailability, validateCoupon, validateCustomerForm, validateOrderTotal, validateServiceForms } from './addOrderValidations.js';
+import {
+	validateAvailability,
+	validateCoupon,
+	validateCustomerForm,
+	validateOrderTotal,
+	validateServiceForms,
+	validateTimeslotId
+} from './addOrderValidations.js';
 import { insertOrder } from './insertOrder.js';
 
 export const addOrderErrorCodes = {
@@ -13,7 +20,8 @@ export const addOrderErrorCodes = {
 	noAvailability: 'addOrder.no.availability',
 	noSuchCoupon: 'addOrder.no.such.coupon',
 	expiredCoupon: 'addOrder.expired.coupon',
-	wrongTotalPrice: 'addOrder.wrong.total.price'
+	wrongTotalPrice: 'addOrder.wrong.total.price',
+	noSuchTimeslotId: 'addOrder.no.such.timeslot.id'
 };
 
 async function withValidationsPerformed(
@@ -24,6 +32,7 @@ async function withValidationsPerformed(
 	fn: () => Promise<void>
 ) {
 	const validationFns = [
+		() => validateTimeslotId(everythingForTenant, order),
 		() => validateCustomerForm(everythingForTenant, order),
 		() => validateServiceForms(everythingForTenant, order),
 		() => validateAvailability(everythingForTenant, order),

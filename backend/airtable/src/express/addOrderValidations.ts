@@ -56,6 +56,14 @@ export function validateOrderTotal(everythingForTenant: EverythingForTenant, giv
 	return null;
 }
 
+export function validateTimeslotId(everythingForTenant: EverythingForTenant, order: Order): ErrorResponse | null {
+	const timeslotIds = order.lines.flatMap((line) => (line.slot._type === 'timeslot.spec' ? [line.slot.id] : []));
+	const invalidTimeslotIds = timeslotIds.filter((id) => !everythingForTenant.businessConfiguration.timeslots.some((ts) => ts.id.value === id.value));
+	if (invalidTimeslotIds.length > 0) {
+		return errorResponse(addOrderErrorCodes.noSuchTimeslotId, `Timeslot ids ${invalidTimeslotIds.join(', ')} not found`);
+	}
+	return null;
+}
 export function validateCustomerForm(everythingForTenant: EverythingForTenant, order: Order): ErrorResponse | null {
 	if (everythingForTenant.tenantSettings.customerFormId) {
 		if (!order.customer.formData) {
