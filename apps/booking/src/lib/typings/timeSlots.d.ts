@@ -1,4 +1,5 @@
 declare interface TimeSlot {
+	id: string;
 	start: string;
 	end: string;
 	price: number;

@@ -44,7 +44,12 @@ export function createCartStore() {
 				core.carwash.smallCarWash.price,
 				item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
 				core.isoDate(item.time.day),
-				core.timeslotSpec(core.time24(item.time.start), core.time24(item.time.end), ''),
+				core.timeslotSpec(
+					core.time24(item.time.start),
+					core.time24(item.time.end),
+					'',
+					core.id(item.time.id)
+				),
 				[item.details]
 			)
 		);

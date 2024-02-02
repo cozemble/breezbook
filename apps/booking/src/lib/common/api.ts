@@ -1,6 +1,5 @@
 import mock, { services } from '$lib/mock';
 import type { AvailabilityResponse, CreateOrderRequest } from '@breezbook/backend-api-types';
-import type { Order, OrderWithTotal } from '@breezbook/packages-core';
 
 // TODO: replace with real fetch
 
@@ -112,6 +111,7 @@ export const timeSlot = {
 
 		const adaptedDays: DaySlot[] = Object.entries(data.slots).reduce((prev, [key, value]) => {
 			const timeSlots: TimeSlot[] = value.map((slot) => ({
+				id: slot.timeslotId,
 				start: slot.startTime24hr,
 				end: slot.endTime24hr,
 				price: slot.priceWithNoDecimalPlaces,
