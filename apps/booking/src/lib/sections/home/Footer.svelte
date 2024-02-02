@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { tenantStore } from '$lib/stores/tenant';
+	import tenantStore from '$lib/stores/tenant';
 
 	const tenant = tenantStore.get();
 

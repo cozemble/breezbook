@@ -22,7 +22,7 @@ const saveToLocalStorage = (items: Booking[]) => {
 
 //
 
-export function createCartStore() {
+function createCheckoutStore() {
 	const items = writable<Booking[]>([]);
 	const customerStore = writable<core.Customer>(
 		core.customer('Mike', 'Hogan', 'mike@email.com', {
@@ -132,4 +132,6 @@ export function createCartStore() {
 
 //
 
-export const cartStore = createStoreContext(CART_STORE_CONTEXT_KEY, createCartStore);
+const checkoutStore = createStoreContext(CART_STORE_CONTEXT_KEY, createCheckoutStore);
+
+export default checkoutStore;

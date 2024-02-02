@@ -1,6 +1,6 @@
 <script lang="ts">
 	import SchemaForm from '$lib/components/schemaForm/SchemaForm.svelte';
-	import { bookingStore } from '$lib/stores/booking';
+	import bookingStore from '$lib/stores/booking';
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {

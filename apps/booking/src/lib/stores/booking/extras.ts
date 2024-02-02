@@ -4,7 +4,7 @@ import api from '$lib/common/api';
 /** Setup stores to manage extras
  * - fetch extras initially
  */
-export function createExtrasStore(service: Service) {
+export default function createExtrasStore(service: Service) {
 	const extras = writable<Service.Extra[]>([]);
 	const loading = writable(false);
 	const value = writable<Service.Extra[]>([]);

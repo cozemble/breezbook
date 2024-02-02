@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { cartStore } from '$lib/stores/checkout';
+	import checkoutStore from '$lib/stores/checkout';
 	import { formatPrice } from '$lib/utils';
 
-	const { total, items, submitOrder } = cartStore.get();
+	const { total, items, submitOrder } = checkoutStore.get();
 
 	const handleSubmit = () => {
 		submitOrder();

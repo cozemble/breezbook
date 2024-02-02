@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { bookingStore } from '$lib/stores/booking';
+	import bookingStore from '$lib/stores/booking';
 	import { formatPrice } from '$lib/utils';
 	import StepWrapper from './StepWrapper.svelte';
 

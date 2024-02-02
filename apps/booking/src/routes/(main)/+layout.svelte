@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 
-	import { tenantStore } from '$lib/stores/tenant';
-	import { cartStore } from '$lib/stores/checkout';
+	import tenantStore from '$lib/stores/tenant';
+	import checkoutStore from '$lib/stores/checkout';
 
 	import Footer from '$lib/sections/home/Footer.svelte';
 	import Header from '$lib/sections/home/Header.svelte';
@@ -10,9 +10,9 @@
 	export let data: PageData;
 	const tenant = data.tenant;
 
-	tenantStore.set(tenant);
+	tenantStore.init(tenant);
 
-	cartStore.init();
+	checkoutStore.init();
 </script>
 
 <div

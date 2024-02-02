@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { tenantStore } from '$lib/stores/tenant';
+	import tenantStore from '$lib/stores/tenant';
 	import CartNavButton from './CartNavButton.svelte';
 
 	const tenant = tenantStore.get();

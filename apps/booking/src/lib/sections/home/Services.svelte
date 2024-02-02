@@ -1,6 +1,6 @@
 <script lang="ts">
 	import ServiceCard from '$lib/components/ServiceCard.svelte';
-	import { tenantStore } from '$lib/stores/tenant';
+	import tenantStore from '$lib/stores/tenant';
 
 	export let services: Service[] | null;
 

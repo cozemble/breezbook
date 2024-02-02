@@ -1,26 +1,12 @@
-import { getContext, setContext } from 'svelte';
+import { createStoreContext } from '$lib/helpers/store';
 
-const TENANT_CTX_KEY = Symbol('tenant');
+const TENANT_CTX_KEY = 'tenant';
 
-/** Store the tenant as Svelte context */
-export const tenantStore = {
-	/** Set the tenant in the context
-	 * - Call this in the root layout component
-	 */
-	set: (value: Tenant) => {
-		setContext(TENANT_CTX_KEY, value);
-	},
-
-	/** Get the tenant from the context
-	 * - Throws if the tenant is not set
-	 * - Call this in any component that needs the tenant
-	 */
-	get: () => {
-		const tenant = getContext<Tenant>(TENANT_CTX_KEY);
-
-		if (!tenant)
-			throw new Error('Tenant not set, use `tenant.set` to set it in the root component');
-
-		return tenant;
-	}
+// TODO fully functional store when needed
+const createTenantStore = (tenant: Tenant) => {
+	return tenant;
 };
+
+const tenantStore = createStoreContext(TENANT_CTX_KEY, createTenantStore);
+
+export default tenantStore;

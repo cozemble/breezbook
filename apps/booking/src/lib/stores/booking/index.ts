@@ -2,10 +2,10 @@ import { get } from 'svelte/store';
 import { goto } from '$app/navigation';
 
 import { defineStep } from './stepHelper';
-import { createTimeStore } from './time';
-import { createExtrasStore } from './extras';
-import { createDetailsStore } from './details';
-import { cartStore } from '../checkout';
+import createTimeStore from './time';
+import createExtrasStore from './extras';
+import createDetailsStore from './details';
+import checkoutStore from '../checkout';
 import { createStoreContext } from '$lib/helpers/store';
 
 const BOOKING_STORE_CONTEXT_KEY = 'booking_store';
@@ -16,7 +16,7 @@ const BOOKING_STORE_CONTEXT_KEY = 'booking_store';
  * - There are 3 default steps: time, extras, details
  */
 function createBookingStore(service: Service) {
-	const cart = cartStore.get();
+	const checkout = checkoutStore.get();
 
 	const timeStore = createTimeStore(service);
 	const extrasStore = createExtrasStore(service);
@@ -36,7 +36,7 @@ function createBookingStore(service: Service) {
 		};
 
 		// save to cart
-		cart.addItem({
+		checkout.addItem({
 			service: service,
 			calculatedPrice: service.approximatePrice * 100, // TODO calculate price
 			...values
@@ -86,4 +86,6 @@ function createBookingStore(service: Service) {
 
 //
 
-export const bookingStore = createStoreContext(BOOKING_STORE_CONTEXT_KEY, createBookingStore);
+const bookingStore = createStoreContext(BOOKING_STORE_CONTEXT_KEY, createBookingStore);
+
+export default bookingStore;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import TimeSlotForm from '$lib/components/time/TimeSlotForm.svelte';
 	import StepWrapper from './StepWrapper.svelte';
-	import { bookingStore } from '$lib/stores/booking';
+	import bookingStore from '$lib/stores/booking';
 
 	const {
 		time: { daySlots, loading, value, step }

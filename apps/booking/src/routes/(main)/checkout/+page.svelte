@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { cartStore } from '$lib/stores/checkout';
+	import checkoutStore from '$lib/stores/checkout';
 	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
 	import OrderSummary from '$lib/sections/checkout/OrderSummary.svelte';
 
-	const { items } = cartStore.get();
+	const { items } = checkoutStore.get();
 
 	$: {
 		console.log($items);

@@ -8,7 +8,7 @@ import { initValues, removeEmptyValues } from '$lib/utils';
 import * as ajvUtils from '$lib/utils/ajv';
 
 /** Setup stores to manage details */
-export function createDetailsStore(service: Service) {
+export default function createDetailsStore(service: Service) {
 	const schema = writable<JSONSchema>({});
 	const value = writable<Service.Details>({}); // TODO proper typing
 	const loading = writable(false);

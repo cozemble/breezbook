@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import { formatPrice } from '$lib/utils';
-	import { cartStore } from '$lib/stores/checkout';
+	import checkoutStore from '$lib/stores/checkout';
 
 	export let booking: Booking;
 
 	const { service, calculatedPrice, time, extras, id } = booking;
 
-	const { removeItem } = cartStore.get();
+	const { removeItem } = checkoutStore.get();
 
 	function remove() {
 		// <!-- TODO ask for confirmation -->

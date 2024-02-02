@@ -24,7 +24,7 @@ const isSlotWithinFilters = (slot: TimeSlot, filter: TimeSlotFilter) => {
  * - re-fetch time slots when filters change
  * - manage selected time slot
  */
-export function createTimeStore(service: Service) {
+export default function createTimeStore(service: Service) {
 	const daySlots = writable<DaySlot[]>([]);
 	const filters = writable<TimeSlotFilter>(DEFAULT_TIME_SLOT_FILTER);
 	const value = writable<TimeSlot | null>(null);

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import type { PageData } from './$types';
-	import { tenantStore } from '$lib/stores/tenant';
+	import tenantStore from '$lib/stores/tenant';
 
 	export let data: PageData;
 	const service = data.service;

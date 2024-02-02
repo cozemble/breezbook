@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { bookingStore } from '$lib/stores/booking';
+	import bookingStore from '$lib/stores/booking';
 
 	import DetailsStep from './DetailsStep.svelte';
 	import ExtrasStep from './ExtrasStep.svelte';
