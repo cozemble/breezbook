@@ -61,12 +61,7 @@ function createCheckoutStore() {
 	const total = derived([order, coupons], ([$orderStore, $coupons]) => {
 		if (!$orderStore) return null;
 
-		const total = core.calculateOrderTotal(
-			$orderStore,
-			core.carwash.services,
-			core.carwash.addOns,
-			$coupons
-		);
+		const total = core.calculateOrderTotal($orderStore, core.carwash.addOns, $coupons);
 
 		return total;
 	});

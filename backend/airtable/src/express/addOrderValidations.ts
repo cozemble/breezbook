@@ -44,12 +44,7 @@ export function validateOrderTotal(everythingForTenant: EverythingForTenant, giv
 		return orderLine(line.serviceId, slotPrice, line.addOns, line.date, line.slot, line.serviceFormData);
 	});
 	const recalcedOrder = { ...givenOrder, lines: recalcedOrderLines };
-	const calcedOrderTotal = calculateOrderTotal(
-		recalcedOrder,
-		everythingForTenant.businessConfiguration.services,
-		everythingForTenant.businessConfiguration.addOns,
-		everythingForTenant.coupons
-	);
+	const calcedOrderTotal = calculateOrderTotal(recalcedOrder, everythingForTenant.businessConfiguration.addOns, everythingForTenant.coupons);
 	if (!priceFns.isEqual(calcedOrderTotal.orderTotal, postedOrderTotal)) {
 		return errorResponse(addOrderErrorCodes.wrongTotalPrice, `Expected ${calcedOrderTotal.orderTotal.amount.value} but got ${postedOrderTotal.amount.value}`);
 	}

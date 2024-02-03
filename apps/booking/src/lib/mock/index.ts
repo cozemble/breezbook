@@ -248,124 +248,6 @@ export const services: Service[] = [
 	}
 ];
 
-export const daySlots: DaySlot[] = [
-	{
-		date: new Date(Date.now()),
-		timeSlots: [
-			{
-				start: '9:00',
-				end: '11:00',
-				price: 60,
-				day: new Date(Date.now())
-			},
-			{
-				start: '12:00',
-				end: '14:00',
-				price: 62.5,
-				day: new Date(Date.now())
-			},
-			{
-				start: '15:00',
-				end: '17:00',
-				price: 62.5,
-				day: new Date(Date.now())
-			}
-		]
-	},
-	{
-		date: new Date(Date.now() + 86400000),
-		timeSlots: [
-			{
-				start: '9:00',
-				end: '11:00',
-				price: 55,
-				day: new Date(Date.now() + 86400000)
-			},
-			{
-				start: '12:00',
-				end: '14:00',
-				price: 55,
-				day: new Date(Date.now() + 86400000)
-			},
-			{
-				start: '15:00',
-				end: '17:00',
-				price: 58,
-				day: new Date(Date.now() + 86400000)
-			}
-		]
-	},
-	{
-		date: new Date(Date.now() + 86400000 * 2),
-		timeSlots: [
-			{
-				start: '9:00',
-				end: '11:00',
-				price: 55,
-				day: new Date(Date.now() + 86400000 * 2)
-			},
-			{
-				start: '12:00',
-				end: '14:00',
-				price: 55,
-				day: new Date(Date.now() + 86400000 * 2)
-			},
-			{
-				start: '15:00',
-				end: '17:00',
-				price: 58,
-				day: new Date(Date.now() + 86400000 * 2)
-			}
-		]
-	},
-	{
-		date: new Date(Date.now() + 86400000 * 3),
-		timeSlots: [
-			{
-				start: '9:00',
-				end: '11:00',
-				price: 55,
-				day: new Date(Date.now() + 86400000 * 3)
-			},
-			{
-				start: '12:00',
-				end: '14:00',
-				price: 55,
-				day: new Date(Date.now() + 86400000 * 3)
-			},
-			{
-				start: '15:00',
-				end: '17:00',
-				price: 58,
-				day: new Date(Date.now() + 86400000 * 3)
-			}
-		]
-	},
-	{
-		date: new Date(Date.now() + 86400000 * 4),
-		timeSlots: [
-			{
-				start: '9:00',
-				end: '11:00',
-				price: 55,
-				day: new Date(Date.now() + 86400000 * 4)
-			},
-			{
-				start: '12:00',
-				end: '14:00',
-				price: 55,
-				day: new Date(Date.now() + 86400000 * 4)
-			},
-			{
-				start: '15:00',
-				end: '17:00',
-				price: 58,
-				day: new Date(Date.now() + 86400000 * 4)
-			}
-		]
-	}
-];
-
 const extras: Service.Extra[] = [
 	{
 		id: '1',
@@ -429,7 +311,6 @@ const jsonSchema = `
 export default {
 	tenants,
 	services,
-	daySlots,
 	extras,
 	jsonSchema
 };

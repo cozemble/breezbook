@@ -978,19 +978,19 @@ export function addOnWithTotal(addOn: AddOn, quantity: number): AddOnWithTotal {
 
 export interface OrderLineWithTotal {
 	_type: 'order.line.with.total';
-	service: Service;
+	serviceId: ServiceId;
 	addOn: AddOnWithTotal[];
 	lineTotal: Price;
 }
 
-export function orderLineWithTotal(service: Service, servicePrice: Price, addOns: AddOnWithTotal[]): OrderLineWithTotal {
+export function orderLineWithTotal(serviceId: ServiceId, servicePrice: Price, addOns: AddOnWithTotal[]): OrderLineWithTotal {
 	const lineTotal = priceFns.add(
 		servicePrice,
-		addOns.reduce((total, addOn) => priceFns.add(total, addOn.addOnTotal), price(0, service.price.currency))
+		addOns.reduce((total, addOn) => priceFns.add(total, addOn.addOnTotal), price(0, servicePrice.currency))
 	);
 	return {
 		_type: 'order.line.with.total',
-		service,
+		serviceId: serviceId,
 		addOn: addOns,
 		lineTotal
 	};
@@ -1013,7 +1013,7 @@ export function orderWithTotal(order: Order, lineTotals: OrderLineWithTotal[], c
 		orderTotal:
 			lineTotals.length === 0
 				? price(0, currency('N/A'))
-				: lineTotals.reduce((total, line) => priceFns.add(total, line.lineTotal), price(0, lineTotals[0].service.price.currency))
+				: lineTotals.reduce((total, line) => priceFns.add(total, line.lineTotal), price(0, lineTotals[0].lineTotal.currency))
 	};
 }
 
