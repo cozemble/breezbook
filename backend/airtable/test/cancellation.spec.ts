@@ -21,7 +21,7 @@ import { StartedDockerComposeEnvironment } from 'testcontainers';
 import { doCommitCancellation } from '../src/express/cancellation.js';
 import { prismaClient } from '../src/prisma/client.js';
 import { DbCancellationGrant } from '../src/prisma/dbtypes.js';
-import { prismaMutations, prismaUpdates } from '../src/infra/prismaMutations.js';
+import { prismaMutations } from '../src/infra/prismaMutations.js';
 import { updateBooking, updateCancellationGrant } from '../src/prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
 

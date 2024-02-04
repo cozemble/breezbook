@@ -16,6 +16,7 @@ import {
 	timeslotSpec
 } from '../types.js';
 import { percentageBasedPriceAdjustment } from '../calculatePrice.js';
+import { carwashForm } from './carWashForms.js';
 
 const tenantIdCarwash = tenantId('carwash');
 const nineAm = time24('09:00');
@@ -31,7 +32,17 @@ const van = resourceType('van');
 const van1 = resource(van, 'Van 1');
 const van2 = resource(van, 'Van 2');
 const resources = [van1, van2];
-const smallCarWash = service('Small Car Wash', 'Small Car Wash', [van], 120, true, price(1000, GBP), [wax.id, polish.id], [], serviceId('smallCarWash'));
+const smallCarWash = service(
+	'Small Car Wash',
+	'Small Car Wash',
+	[van],
+	120,
+	true,
+	price(1000, GBP),
+	[wax.id, polish.id],
+	[carwashForm.id],
+	serviceId('smallCarWash')
+);
 const mediumCarWash = service('Medium Car Wash', 'Medium Car Wash', [van], 120, true, price(1500, GBP), [wax.id, polish.id], [], serviceId('mediumCarWash'));
 const largeCarWash = service(
 	'Large Car Wash',
