@@ -81,8 +81,8 @@
 			<tbody>
 				<!-- service base price -->
 				<tr>
-					<td class="font-semibold text-sm"> Service </td>
-					<td class="text-right font-bold text-sm">£ {formatPrice(calculatedPrice)}</td>
+					<td class="font-semibold text-sm"> Service at selected time </td>
+					<td class="text-right font-bold text-sm">£ {formatPrice(time.price)}</td>
 				</tr>
 
 				<!-- extras with prices -->
@@ -100,7 +100,7 @@
 				<tr class="border-t font-bold text-base-content">
 					<td class="text-base"> Service Total </td>
 					<td class="text-right text-base">
-						£ {formatPrice(calculatedPrice + extras.reduce((acc, extra) => acc + extra.price, 0))}
+						£ {formatPrice(calculatedPrice)}
 						<!-- TODO just for display, fix later -->
 					</td>
 				</tr>
