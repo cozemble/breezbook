@@ -1,4 +1,4 @@
-import { get } from 'svelte/store';
+import { derived, get } from 'svelte/store';
 import { goto } from '$app/navigation';
 
 import { defineStep } from './stepHelper';
@@ -22,6 +22,13 @@ function createBookingStore(service: Service) {
 	const extrasStore = createExtrasStore(service);
 	const detailsStore = createDetailsStore(service);
 
+	const total = derived([timeStore.value, extrasStore.value], ([$time, $extras]) => {
+		const timePrice = $time?.price || 0;
+		const extrasPrice = $extras.reduce((acc, extra) => acc + extra.price, 0);
+
+		return timePrice + extrasPrice;
+	});
+
 	// TODO custom steps
 
 	/** Save the booking to cart and redirect to cart page */
@@ -38,7 +45,7 @@ function createBookingStore(service: Service) {
 		// save to cart
 		checkout.addItem({
 			service: service,
-			calculatedPrice: service.approximatePrice * 100, // TODO calculate price
+			calculatedPrice: get(total), // TODO calculate price
 			...values
 		});
 
@@ -62,6 +69,7 @@ function createBookingStore(service: Service) {
 			step: defineStep()
 		},
 
+		total,
 		finish
 	};
 }

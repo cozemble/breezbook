@@ -1,12 +1,20 @@
 <script lang="ts">
 	import type { PageData } from './$types';
+	import { formatPrice } from '$lib/utils';
+
 	import tenantStore from '$lib/stores/tenant';
-	import Steps from '$lib/sections/booking/Steps.svelte';
+	import bookingStore from '$lib/stores/booking';
+
+	import PickTimeStep from '$lib/sections/booking/PickTimeStep.svelte';
+	import ExtrasStep from '$lib/sections/booking/ExtrasStep.svelte';
+	import DetailsStep from '$lib/sections/booking/DetailsStep.svelte';
 
 	export let data: PageData;
 	const service = data.service;
 
 	const tenant = tenantStore.get();
+
+	const { total } = bookingStore.init(service);
 </script>
 
 <svelte:head>
@@ -26,12 +34,14 @@
 	<div class="">
 		<span class="text-base font-normal text-secondary mr-4">Total:</span>
 		<span class="text-2xl font-bold mt-4">
-			£{service.approximatePrice}
+			£{formatPrice($total)}
 		</span>
 	</div>
 </section>
 
 <!-- Steps as accordion -->
 <section>
-	<Steps {service} />
+	<PickTimeStep />
+	<ExtrasStep />
+	<DetailsStep />
 </section>
