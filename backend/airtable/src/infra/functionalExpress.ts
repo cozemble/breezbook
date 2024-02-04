@@ -15,9 +15,9 @@ import {
 	tenantId,
 	TenantId
 } from '@breezbook/packages-core';
-import { CreateOrderRequest } from '@breezbook/backend-api-types';
-import { DbExpressBridge } from './dbExpressBridge.js';
-import { PrismaUpdates, toPrismaPromises } from './prismaMutations.js';
+import { CreateOrderRequest, ErrorResponse } from '@breezbook/backend-api-types';
+import { PrismaMutations, prismaMutationToPromise } from './prismaMutations.js';
+import { PrismaClient } from '@prisma/client';
 
 export interface RequestValueExtractor {
 	name: string;
@@ -275,9 +275,32 @@ export function httpError(status: number, message?: string): HttpError {
 	return { _type: 'http.error', status, message };
 }
 
-export async function handleOutcome(res: express.Response, db: DbExpressBridge, outcome: PrismaUpdates | HttpError) {
+export interface HttpJsonResponse {
+	_type: 'http.json.response';
+	status: number;
+	body: unknown;
+}
+
+export function httpJsonResponse(status: number, body: unknown): HttpJsonResponse {
+	return { _type: 'http.json.response', status, body };
+}
+
+export async function handleOutcome(
+	res: express.Response,
+	prisma: PrismaClient,
+	outcome: PrismaMutations | HttpError | ErrorResponse,
+	response: HttpJsonResponse | null = null
+): Promise<void> {
 	if (outcome._type === 'http.error') {
-		return res.status(outcome.status).send(outcome.message);
+		res.status(outcome.status).send(outcome.message);
+		return;
 	}
-	await db.prisma.$transaction(toPrismaPromises(outcome.updates));
+	if (outcome._type === 'error.response') {
+		res.status(400).send(outcome);
+		return;
+	}
+	await prisma.$transaction(outcome.mutations.map(prismaMutationToPromise));
+	if (response) {
+		return sendJson(res, response.body, response.status);
+	}
 }

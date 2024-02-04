@@ -7,7 +7,7 @@ import { findRefundRule, refundPolicy, TimebasedRefundRule } from '@breezbook/pa
 import { toDomainBooking, toDomainTimeslotSpec } from '../prisma/dbToDomain.js';
 import { CancellationGranted, cancellationGranted } from '@breezbook/backend-api-types';
 import { PrismaClient } from '@prisma/client';
-import { prismaUpdates, PrismaUpdates } from '../infra/prismaMutations.js';
+import { prismaMutations, PrismaMutations } from '../infra/prismaMutations.js';
 import { updateBooking, updateCancellationGrant } from '../prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
 
@@ -83,7 +83,7 @@ export async function requestCancellationGrant(req: express.Request, res: expres
 	});
 }
 
-export function doCommitCancellation(prisma: PrismaClient, cancellation: DbCancellationGrant, clock: Clock): PrismaUpdates | HttpError {
+export function doCommitCancellation(prisma: PrismaClient, cancellation: DbCancellationGrant, clock: Clock): PrismaMutations | HttpError {
 	if (cancellation.committed) {
 		return httpError(409, 'Cancellation already committed');
 	}
@@ -92,7 +92,7 @@ export function doCommitCancellation(prisma: PrismaClient, cancellation: DbCance
 	if (jsDateFns.differenceInMinutes(now, cancellation.created_at) > 30) {
 		return httpError(409, 'Cancellation too old to commit');
 	}
-	return prismaUpdates([
+	return prismaMutations([
 		updateCancellationGrant(prisma, { committed: true }, { id: cancellation.id }),
 		updateBooking(prisma, { status: 'cancelled' }, { id: cancellation.booking_id })
 	]);
@@ -101,7 +101,7 @@ export function doCommitCancellation(prisma: PrismaClient, cancellation: DbCance
 export async function commitCancellation(req: express.Request, res: express.Response): Promise<void> {
 	await withTwoRequestParams(req, res, dbBridge(), cancellationId(), async (db, cancellationId) => {
 		await db.withResource(namedDbResourceFinder('Cancellation', findCancellationById(cancellationId)), async (cancellation) => {
-			await handleOutcome(res, db, doCommitCancellation(db.prisma, cancellation, new SystemClock()));
+			await handleOutcome(res, db.prisma, doCommitCancellation(db.prisma, cancellation, new SystemClock()));
 		});
 	});
 }

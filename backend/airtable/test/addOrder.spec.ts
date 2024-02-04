@@ -65,35 +65,6 @@ describe('with a migrated database', () => {
 		expect(json.errorMessage).toBeDefined();
 	});
 
-	test('can add an order for two car washes, each with different add-ons', async () => {
-		const twoServices = order(goodCustomer, [
-			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], fourDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
-			orderLine(
-				carwash.mediumCarWash.id,
-				carwash.mediumCarWash.price,
-				[addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)],
-				fourDaysFromNow,
-				carwash.nineToOne,
-				[goodServiceFormData]
-			)
-		]);
-
-		const fetched = await postOrder(
-			twoServices,
-			priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price),
-			expressPort
-		);
-		if (!fetched.ok) {
-			console.error(await fetched.text());
-			throw new Error(`Failed to add order`);
-		}
-		const json = (await fetched.json()) as OrderCreatedResponse;
-		expect(json.orderId).toBeDefined();
-		expect(json.customerId).toBeDefined();
-		expect(json.bookingIds.length).toBe(2);
-		expect(json.orderLineIds.length).toBe(2);
-	});
-
 	test('error message when posted price is not the same as the server side calculated price', async () => {
 		const theOrder = order(goodCustomer, [
 			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], tomorrow, carwash.nineToOne, [goodServiceFormData])

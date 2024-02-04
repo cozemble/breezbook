@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { createOrderRequest, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
+import { createOrderRequest, handleOutcome, httpJsonResponse, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { Order, orderFns, Price } from '@breezbook/packages-core';
 import { EverythingForTenant, getEverythingForTenant } from './getEverythingForTenant.js';
 import {
@@ -10,7 +10,10 @@ import {
 	validateServiceForms,
 	validateTimeslotId
 } from './addOrderValidations.js';
-import { insertOrder } from './insertOrder.js';
+import { doInsertOrder } from './insertOrder.js';
+import { CreateOrderRequest, ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
+import { PrismaMutations, prismaMutationToPromise } from '../infra/prismaMutations.js';
+import { prismaClient } from '../prisma/client.js';
 
 export const addOrderErrorCodes = {
 	customerFormMissing: 'addOrder.customer.form.missing',
@@ -24,13 +27,7 @@ export const addOrderErrorCodes = {
 	noSuchTimeslotId: 'addOrder.no.such.timeslot.id'
 };
 
-async function withValidationsPerformed(
-	everythingForTenant: EverythingForTenant,
-	order: Order,
-	orderTotal: Price,
-	res: express.Response,
-	fn: () => Promise<void>
-) {
+function withValidationsPerformed<T>(everythingForTenant: EverythingForTenant, order: Order, orderTotal: Price, fn: () => T): ErrorResponse | T {
 	const validationFns = [
 		() => validateTimeslotId(everythingForTenant, order),
 		() => validateCustomerForm(everythingForTenant, order),
@@ -43,21 +40,40 @@ async function withValidationsPerformed(
 	for (const validationFn of validationFns) {
 		const validationError = validationFn();
 		if (validationError) {
-			res.status(400).send(validationError);
-			return;
+			return validationError;
 		}
 	}
 
-	await fn();
+	return fn();
+}
+
+export function doAddOrder(
+	everythingForTenant: EverythingForTenant,
+	createOrderRequest: CreateOrderRequest
+):
+	| ErrorResponse
+	| {
+			_type: 'success';
+			prismaMutations: PrismaMutations;
+			orderCreatedResponse: OrderCreatedResponse;
+	  } {
+	return withValidationsPerformed(everythingForTenant, createOrderRequest.order, createOrderRequest.orderTotal, () => {
+		return doInsertOrder(everythingForTenant.tenantEnvironment, createOrderRequest, everythingForTenant.businessConfiguration.services);
+	});
 }
 
 export async function addOrder(req: express.Request, res: express.Response): Promise<void> {
 	await withTwoRequestParams(req, res, tenantEnvironmentParam(), createOrderRequest(), async (tenantEnvironment, createOrderRequest) => {
 		const { fromDate, toDate } = orderFns.getOrderDateRange(createOrderRequest.order);
 		const everythingForTenant = await getEverythingForTenant(tenantEnvironment, fromDate, toDate);
-		await withValidationsPerformed(everythingForTenant, createOrderRequest.order, createOrderRequest.orderTotal, res, async () => {
-			const response = await insertOrder(tenantEnvironment, createOrderRequest, everythingForTenant.businessConfiguration.services);
-			res.status(200).send(response);
+		const outcome = withValidationsPerformed(everythingForTenant, createOrderRequest.order, createOrderRequest.orderTotal, () => {
+			return doAddOrder(everythingForTenant, createOrderRequest);
 		});
+		const prisma = prismaClient();
+		if (outcome._type === 'error.response') {
+			return handleOutcome(res, prisma, outcome);
+		}
+		const { prismaMutations, orderCreatedResponse } = outcome;
+		await handleOutcome(res, prisma, prismaMutations, httpJsonResponse(200, orderCreatedResponse));
 	});
 }
