@@ -7,13 +7,13 @@
 		extras: { extras, loading, value, step }
 	} = bookingStore.get();
 
-	const { summary, open, status, available } = step;
+	const { open, status, available } = step;
 
 	const onSubmit = () => {
 		step.onComplete();
 	};
 
-	$: $value = $extras.filter((extra) => extra.selected);
+	$: summary = `${$value?.length || 'no'} extras selected`;
 </script>
 
 <StepWrapper
@@ -21,7 +21,7 @@
 	label="Pick extras"
 	status={$status}
 	onOpen={step.onOpen}
-	summary={$summary}
+	{summary}
 	loading={$loading}
 	disabled={!$available}
 >

@@ -1,5 +1,6 @@
+import _ from 'lodash';
 import { getContext, setContext } from 'svelte';
-import { derived, get, readable, writable, type Writable } from 'svelte/store';
+import { type Writable, get, writable } from 'svelte/store';
 
 const STEPS_CONTEXT_KEY = Symbol('booking_steps');
 
@@ -16,19 +17,14 @@ const stepsStoreCtx = () => {
 /** Define a booking step
  * - Handles all the logic related to the step automatically
  * - #### Define the steps in the order you want them to be displayed
- * - Names must be unique (throws error if not)
  */
-export function defineStep<TValue, TName extends string>(
-	options: BookingStepOptions<TName, TValue>
-): BookingStep<TName, TValue> {
+export function defineStep(): BookingStep {
 	const stepsStore = stepsStoreCtx();
 
-	// check if name already exists
-	const nameExists = get(stepsStore).some((s) => s.name === options.name);
-	if (nameExists)
-		throw new Error(`Step with name ${options.name} already exists, names must be unique`);
+	const id = _.uniqueId('step_');
+	const isFirst = !get(stepsStore).length;
 
-	const getStepIdx = () => get(stepsStore).findIndex((s) => s.name === options.name);
+	const getStepIdx = () => get(stepsStore).findIndex((s) => s.id === id);
 	const getNextStep = () => get(stepsStore)[getStepIdx() + 1] as BookingStep | undefined;
 	const getPreviousStep = () => get(stepsStore)[getStepIdx() - 1] as BookingStep | undefined;
 	const isPrevStepSuccess = () => {
@@ -36,14 +32,13 @@ export function defineStep<TValue, TName extends string>(
 		const prevStepSuccess = prevStep ? get(prevStep.status) === 'success' : true;
 		return prevStepSuccess;
 	};
-	const isFirst = !get(stepsStore).length;
 
-	const step: BookingStep<TName, TValue> = {
-		name: options.name,
+	const step: BookingStep = {
+		id,
 		status: writable<GenericStatus>('default'),
 		open: writable<boolean>(isFirst), // open the first step by default
-		summary: derived(options.valueStore, (v) => options.summaryFunction?.(v) || ''),
 		available: writable<boolean>(isFirst),
+
 		onComplete: () => {
 			step.status.set('success');
 			getNextStep()?.available.set(true);
@@ -54,7 +49,7 @@ export function defineStep<TValue, TName extends string>(
 			if (!isPrevStepSuccess()) return;
 
 			get(stepsStore).forEach((s) => {
-				if (s.name !== options.name) s.open.set(false);
+				if (s.id !== id) s.open.set(false);
 				else s.open.set(true);
 			});
 		},

@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { derived, writable } from 'svelte/store';
 import api from '$lib/common/api';
 
 /** Setup stores to manage extras
@@ -7,12 +7,13 @@ import api from '$lib/common/api';
 export default function createExtrasStore(service: Service) {
 	const extras = writable<Service.Extra[]>([]);
 	const loading = writable(false);
-	const value = writable<Service.Extra[]>([]);
+	/** Automatically derived from the extras with `selected: true` */
+	const value = derived(extras, ($extras) => $extras.filter((extra) => extra.selected));
 
 	const fetchExtras = async () => {
 		loading.set(true);
 
-		const res = await api.booking.getDetails('', ''); // TODO proper params
+		const res = await api.booking.getDetails('', service.slug); // TODO proper params
 
 		const addOns = res.addOns.map(
 			(addOn): Service.Extra => ({

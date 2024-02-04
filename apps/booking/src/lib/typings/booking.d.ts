@@ -1,8 +1,7 @@
-type BookingStep<TName extends string = string, TValue = any> = {
-	name: TName;
+type BookingStep = {
+	id: string;
 	status: import('svelte/store').Writable<GenericStatus>;
 	open: import('svelte/store').Writable<boolean>;
-	summary: import('svelte/store').Readable<string>;
 	available: import('svelte/store').Writable<boolean>;
 	/** Check for the value, then set the status to success and open the next step */
 	onComplete: () => void;
@@ -10,13 +9,6 @@ type BookingStep<TName extends string = string, TValue = any> = {
 	onOpen: () => void;
 	/** Open the previous step */
 	onGoBack?: () => void;
-};
-
-type BookingStepOptions<TName extends string, TValue> = {
-	name: TName;
-	valueStore: import('svelte/store').Writable<TValue | null>;
-	/** Function that sets the summary when value changes */
-	summaryFunction?: (value: TValue | null) => string;
 };
 
 type Booking = {

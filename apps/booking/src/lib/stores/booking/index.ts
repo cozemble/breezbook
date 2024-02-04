@@ -49,35 +49,17 @@ function createBookingStore(service: Service) {
 	return {
 		time: {
 			...timeStore,
-			step: defineStep<TimeSlot, 'time'>({
-				name: 'time',
-				valueStore: timeStore.value,
-				summaryFunction: (value) =>
-					value
-						? `${new Date(value.day).toLocaleDateString('en-GB', {
-								weekday: 'short',
-								day: 'numeric',
-								month: 'short'
-						  })} ${value.start} - ${value.end}`
-						: 'no time slot selected'
-			})
+			step: defineStep()
 		},
 
 		extras: {
 			...extrasStore,
-			step: defineStep<Service.Extra[], 'extras'>({
-				name: 'extras',
-				valueStore: extrasStore.value,
-				summaryFunction: (value) => `${value?.length || 'no'} extras selected`
-			})
+			step: defineStep()
 		},
 
 		details: {
 			...detailsStore,
-			step: defineStep<Service.Details, 'details'>({
-				name: 'details',
-				valueStore: detailsStore.value
-			})
+			step: defineStep()
 		},
 
 		finish

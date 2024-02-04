@@ -7,7 +7,7 @@
 		time: { daySlots, loading, value, step }
 	} = bookingStore.get();
 
-	const { summary, open, status, available } = step;
+	const { open, status, available } = step;
 
 	const onSubmit = () => {
 		if (!$value) return;
@@ -16,6 +16,13 @@
 	};
 
 	$: if ($value) onSubmit(); // auto submit when user selects a time slot
+	$: summary = $value
+		? `${new Date($value.day).toLocaleDateString('en-GB', {
+				weekday: 'short',
+				day: 'numeric',
+				month: 'short'
+		  })} ${$value.start} - ${$value.end}`
+		: 'no time slot selected';
 </script>
 
 <!-- TODO date range filter -->
@@ -25,7 +32,7 @@
 	label="Pick a time"
 	status={$status}
 	onOpen={step.onOpen}
-	summary={$summary}
+	{summary}
 	loading={$loading}
 	disabled={!$available}
 >
