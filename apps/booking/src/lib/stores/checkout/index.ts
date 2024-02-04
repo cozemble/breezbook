@@ -38,10 +38,13 @@ function createCheckoutStore() {
 	const order = derived([items, customerStore], ([$items, $customerStore]): core.Order | null => {
 		if ($items.length === 0) return null;
 
-		const lines = $items.map((item) =>
-			core.orderLine(
+		const lines = $items.map((item) => {
+			const price = item.time.price + item.extras.reduce((acc, e) => acc + e.price, 0);
+			console.log(price);
+
+			return core.orderLine(
 				core.carwash.smallCarWash.id,
-				core.carwash.smallCarWash.price,
+				core.price(price, core.currency('GBP')),
 				item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
 				core.isoDate(item.time.day),
 				core.timeslotSpec(
@@ -51,8 +54,8 @@ function createCheckoutStore() {
 					core.id(item.time.id)
 				),
 				[item.details]
-			)
-		);
+			);
+		});
 
 		const res = core.order($customerStore, lines);
 		return res;
@@ -60,6 +63,8 @@ function createCheckoutStore() {
 
 	const total = derived([order, coupons], ([$orderStore, $coupons]) => {
 		if (!$orderStore) return null;
+
+		console.log($orderStore);
 
 		const total = core.calculateOrderTotal($orderStore, core.carwash.addOns, $coupons);
 
