@@ -1,6 +1,8 @@
 import {
 	addOnOrder,
 	carwash,
+	currency,
+	customer,
 	environmentId,
 	fullPaymentOnCheckout,
 	IsoDate,
@@ -9,7 +11,9 @@ import {
 	mandatory,
 	order,
 	orderLine,
+	price,
 	priceFns,
+	randomInteger,
 	tenantEnvironment,
 	tenantId
 } from '@breezbook/packages-core';
@@ -19,13 +23,18 @@ import { StartedDockerComposeEnvironment } from 'testcontainers';
 import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder } from './helper.js';
 import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { insertOrder } from '../src/express/insertOrder.js';
-import { expressApp } from '../src/express/expressApp.js';
 import { prismaClient } from '../src/prisma/client.js';
+import { PaymentIntentWebhookBody } from '../src/stripe.js';
+import { STRIPE_WEBHOOK_ID } from '../src/express/stripeEndpoint.js';
+import { OrderPaymentCreatedResponse } from '../src/express/handleReceivedWebhook.js';
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
  * to make sure that the app is configured correctly.  Details of the logic of each endpoint
  * should be unit tested.
+ *
+ * This likely will make this file long, and disparate, but we/I took this decision to balance coverage and
+ * test suite speed.  Let's see how it pans out.
  */
 const expressPort = 3010;
 const postgresPort = 54340;
@@ -124,6 +133,52 @@ describe('Given a migrated database', async () => {
 		expect(outboundWebhook.payload_type).toBe('booking');
 		expect(outboundWebhook.status).toBe('pending');
 		expect(outboundWebhook.payload.id).toEqual(createOrderResponse.bookingIds[0]);
+	});
+
+	test('on receipt of a successful payment for an order, a payment record for the order is created', async () => {
+		const costInPence = randomInteger(5000);
+		const createOrderResponse = await insertOrder(
+			tenantEnv,
+			createOrderRequest(order(customer('Mike', 'Hogan', 'mike@email.com'), []), price(costInPence, currency('GBP')), fullPaymentOnCheckout()),
+			[]
+		);
+		const paymentIntentWebhook: PaymentIntentWebhookBody = {
+			_type: 'stripe.payment.intent.webhook.body',
+			id: 'pi_3OYX8wFTtlkGavGx0RSugobm',
+			amount: costInPence,
+			currency: 'gbp',
+			status: 'succeeded',
+			metadata: {
+				_type: 'order.metadata',
+				orderId: createOrderResponse.orderId,
+				tenantId: tenantEnv.tenantId.value,
+				environmentId: tenantEnv.environmentId.value
+			}
+		};
+		const postResponse = await fetch(`http://localhost:${expressPort}/internal/api/dev/webhook/received`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: process.env.INTERNAL_API_KEY ?? ''
+			},
+			body: JSON.stringify({ webhook_id: STRIPE_WEBHOOK_ID, payload: paymentIntentWebhook })
+		});
+		if (!postResponse.ok) {
+			throw new Error(`Failed to post webhook: ${await postResponse.text()}`);
+		}
+		const orderPaymentCreatedResponse = (await postResponse.json()) as OrderPaymentCreatedResponse;
+		expect(orderPaymentCreatedResponse._type).toBe('order.payment.created.response');
+		expect(orderPaymentCreatedResponse.orderId).toBe(createOrderResponse.orderId);
+		expect(orderPaymentCreatedResponse.paymentId).toBeDefined();
+		const prisma = prismaClient();
+		const payment = await prisma.order_payments.findUnique({ where: { id: orderPaymentCreatedResponse.paymentId } });
+		expect(payment).toBeDefined();
+		expect(payment?.order_id).toBe(createOrderResponse.orderId);
+		expect(payment?.amount_in_minor_units).toBe(costInPence);
+		expect(payment?.amount_currency).toBe('gbp');
+		expect(payment?.provider).toBe('Stripe');
+		expect(payment?.provider_transaction_id).toBe(paymentIntentWebhook.id);
+		expect(payment?.status).toBe(paymentIntentWebhook.status);
 	});
 });
 
