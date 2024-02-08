@@ -19,6 +19,7 @@ import { StartedDockerComposeEnvironment } from 'testcontainers';
 import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder } from './helper.js';
 import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { insertOrder } from '../src/express/insertOrder.js';
+import { expressApp } from '../src/express/expressApp.js';
 
 const expressPort = 3010;
 const postgresPort = 54340;
@@ -88,6 +89,14 @@ describe('Given a migrated database', async () => {
 		expect(cancellationGrant.bookingId).toBe(bookingId);
 		expect(cancellationGrant.cancellationId).toBeDefined();
 		expect(cancellationGrant.refundPercentageAsRatio).toBe(1);
+	});
+
+	test('calls to /internal/api requires an API key in the Authorization header', async () => {
+		// process.env.INTERNAL_API_KEY = 'test-api-key';
+		// const app = expressApp();
+		// app.listen(expressPort);
+		const response = await fetch(`http://localhost:${expressPort}/internal/api/anything`);
+		expect(response.status).toBe(401);
 	});
 });
 
