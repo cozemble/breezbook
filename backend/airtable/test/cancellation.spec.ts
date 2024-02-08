@@ -1,65 +1,48 @@
-import {
-	carwash,
-	environmentId,
-	fullPaymentOnCheckout,
-	IsoDate,
-	isoDate,
-	isoDateFns,
-	mandatory,
-	order,
-	orderLine,
-	SystemClock,
-	tenantEnvironment,
-	tenantId
-} from '@breezbook/packages-core';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { startTestEnvironment, stopTestEnvironment } from './setup.js';
+import { carwash, fullPaymentOnCheckout, IsoDate, isoDate, isoDateFns, mandatory, order, orderLine, SystemClock } from '@breezbook/packages-core';
+import { describe, expect, test } from 'vitest';
 import { insertOrder } from '../src/express/insertOrder.js';
 import { CancellationGranted, createOrderRequest } from '@breezbook/backend-api-types';
 import { goodCustomer } from './helper.js';
-import { StartedDockerComposeEnvironment } from 'testcontainers';
-import { doCommitCancellation } from '../src/express/cancellation.js';
+import { doCancellationRequest, doCommitCancellation } from '../src/express/cancellation.js';
 import { prismaClient } from '../src/prisma/client.js';
-import { DbCancellationGrant } from '../src/prisma/dbtypes.js';
+import { DbBooking, DbCancellationGrant } from '../src/prisma/dbtypes.js';
 import { prismaMutations } from '../src/infra/prismaMutations.js';
 import { updateBooking, updateCancellationGrant } from '../src/prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
+import { HttpError } from '../src/infra/functionalExpress.js';
 
-const expressPort = 3009;
-const postgresPort = 54339;
-const tenantEnv = tenantEnvironment(environmentId('dev'), tenantId('tenant1'));
-
-describe('Given a migrated database', async () => {
-	let testEnvironment: StartedDockerComposeEnvironment;
-
-	beforeAll(async () => {
-		testEnvironment = await startTestEnvironment(expressPort, postgresPort);
-	}, 1000 * 90);
-
-	afterAll(async () => {
-		await stopTestEnvironment(testEnvironment);
-	});
-
-	test("can't get a cancellation grant for a booking in the past", async () => {
-		const bookingId = await createBooking(isoDateFns.addDays(isoDate(), -1));
-		const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellation/grant`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
-		expect(cancellationGrantResponse.status).toBe(400);
-	});
-
-	test('can get a cancellation grant for a booking in the future', async () => {
-		const { bookingId, cancellationGrant } = await completeCancellationGrant();
-		expect(cancellationGrant).toBeDefined();
-		expect(cancellationGrant._type).toBe('cancellation.granted');
-		expect(cancellationGrant.bookingId).toBe(bookingId);
-		expect(cancellationGrant.cancellationId).toBeDefined();
-		expect(cancellationGrant.refundPercentageAsRatio).toBe(1);
-	});
+test("can't get a cancellation grant for a booking in the past", () => {
+	const theBooking = makeDbBooking(isoDateFns.addDays(isoDate(), -1));
+	const outcome = doCancellationRequest([], [], theBooking, new SystemClock()) as HttpError;
+	expect(outcome._type).toBe('http.error');
+	expect(outcome.status).toBe(400);
 });
+
+test('full refund if there are no refund rules, and booking is in the future', () => {
+	const theBooking = makeDbBooking(isoDateFns.addDays(isoDate(), 1));
+	const outcome = doCancellationRequest([], [], theBooking, new SystemClock()) as CancellationGranted;
+	expect(outcome._type).toBe('cancellation.granted');
+	expect(outcome.refundPercentageAsRatio).toBe(1.0);
+});
+
+function makeDbBooking(yesterday: IsoDate) {
+	const theBooking: DbBooking = {
+		id: 'booking-id',
+		environment_id: 'environment-id',
+		tenant_id: 'tenant-id',
+		created_at: new Date(),
+		updated_at: new Date(),
+		date: yesterday.value,
+		status: 'confirmed',
+		service_id: 'service-id',
+		time_slot_id: null,
+		start_time_24hr: '09:00',
+		end_time_24hr: '10:00',
+		customer_id: 'customer-id',
+		order_id: 'order-id'
+	};
+	return theBooking;
+}
 
 describe('Given a cancellation grant', () => {
 	const prisma = prismaClient();
@@ -100,19 +83,6 @@ describe('Given a cancellation grant', () => {
 		expect(outcome._type).toBe('http.error');
 	});
 });
-
-async function completeCancellationGrant() {
-	const bookingId = await createBooking(isoDateFns.addDays(isoDate(), 3));
-	const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellation/grant`, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	});
-	expect(cancellationGrantResponse.status).toBe(201);
-	const cancellationGrant = (await cancellationGrantResponse.json()) as CancellationGranted;
-	return { bookingId, cancellationGrant };
-}
 
 async function createBooking(date: IsoDate): Promise<string> {
 	const createOrderResponse = await insertOrder(

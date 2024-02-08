@@ -1,7 +1,7 @@
 import express from 'express';
 import { bookingIdParam, cancellationId, handleOutcome, HttpError, httpError, sendJson, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { BookingId, Clock, SystemClock } from '@breezbook/packages-core';
-import { DbBooking, DbCancellationGrant } from '../prisma/dbtypes.js';
+import { DbBooking, DbCancellationGrant, DbRefundRule, DbTimeSlot } from '../prisma/dbtypes.js';
 import { dbBridge, DbExpressBridge, DbResourceFinder, namedDbResourceFinder } from '../infra/dbExpressBridge.js';
 import { findRefundRule, refundPolicy, TimebasedRefundRule } from '@breezbook/packages-core/dist/cancellation.js';
 import { toDomainBooking, toDomainTimeslotSpec } from '../prisma/dbToDomain.js';
@@ -51,6 +51,23 @@ async function grantCancellation(res: express.Response, db: DbExpressBridge, gra
 	return sendJson(res, grant, 201);
 }
 
+export function doCancellationRequest(
+	refundRules: DbRefundRule[],
+	timeslots: DbTimeSlot[],
+	theBooking: DbBooking,
+	clock = new SystemClock()
+): HttpError | CancellationGranted {
+	const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));
+	const refundJudgement = findRefundRule(toDomainBooking(theBooking, timeslots.map(toDomainTimeslotSpec)), theRefundPolicy, clock);
+	if (refundJudgement._type === 'refund.possible') {
+		return cancellationGranted(refundJudgement.applicableRule.percentage.value, refundJudgement.hoursToBookingStart.value, theBooking.id);
+	}
+	if (refundJudgement._type === 'booking.is.in.the.past') {
+		return httpError(400, 'Cannot cancel a booking in the past');
+	}
+	return cancellationGranted(1, null, theBooking.id);
+}
+
 export async function requestCancellationGrant(req: express.Request, res: express.Response): Promise<void> {
 	await withTwoRequestParams(req, res, dbBridge(), bookingIdParam(), async (db, bookingId) => {
 		await db.withResource(namedDbResourceFinder('Booking', findBookingById(bookingId)), async (theBooking) => {
@@ -60,25 +77,17 @@ export async function requestCancellationGrant(req: express.Request, res: expres
 					environment_id: db.tenantEnvironment.environmentId.value
 				}
 			});
-			const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));
 			const timeslots = await db.prisma.time_slots.findMany({
 				where: {
 					tenant_id: db.tenantEnvironment.tenantId.value,
 					environment_id: db.tenantEnvironment.environmentId.value
 				}
 			});
-			const refundJudgement = findRefundRule(toDomainBooking(theBooking, timeslots.map(toDomainTimeslotSpec)), theRefundPolicy, new SystemClock());
-			if (refundJudgement._type === 'refund.possible') {
-				return grantCancellation(
-					res,
-					db,
-					cancellationGranted(refundJudgement.applicableRule.percentage.value, refundJudgement.hoursToBookingStart.value, bookingId.value)
-				);
+			const outcome = doCancellationRequest(refundRules, timeslots, theBooking);
+			if (outcome._type === 'http.error') {
+				return res.status(outcome.status).send(outcome.message);
 			}
-			if (refundJudgement._type === 'booking.is.in.the.past') {
-				return res.status(400).send('Cannot cancel a booking in the past');
-			}
-			return grantCancellation(res, db, cancellationGranted(1, null, bookingId.value));
+			return grantCancellation(res, db, outcome);
 		});
 	});
 }
