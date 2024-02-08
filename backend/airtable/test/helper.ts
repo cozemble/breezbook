@@ -9,6 +9,7 @@ import {
 	customer,
 	customerForm,
 	dayAndTimePeriod,
+	daysFromToday,
 	duration,
 	environmentId,
 	fullPaymentOnCheckout,
@@ -23,13 +24,19 @@ import {
 	tenantEnvironment,
 	tenantId,
 	tenantSettings,
+	time24,
+	timeBasedPriceAdjustmentSpec,
+	timePeriod,
 	unlimited
 } from '@breezbook/packages-core';
 import { createOrderRequest } from '@breezbook/backend-api-types';
 import { everythingForTenant } from '../src/express/getEverythingForTenant.js';
+import { percentageBasedPriceAdjustment, timeBasedPriceAdjustment } from '@breezbook/packages-core/dist/calculatePrice.js';
+import { toDomainPricingRule } from '../src/prisma/dbToDomain.js';
 
 export const today = isoDate();
 export const tomorrow = isoDateFns.addDays(isoDate(), 1);
+export const twoDaysFromNow = isoDateFns.addDays(isoDate(), 2);
 export const threeDaysFromNow = isoDateFns.addDays(isoDate(), 3);
 export const fourDaysFromNow = isoDateFns.addDays(isoDate(), 4);
 
@@ -57,6 +64,19 @@ export const goodServiceFormData = {
 	year: 2021
 };
 
+const fortyPercentMoreToday = timeBasedPriceAdjustment(
+	dayAndTimePeriod(isoDate(), timePeriod(time24('00:00'), time24('23:59'))),
+	percentageBasedPriceAdjustment(0.4)
+);
+const twentyFivePercentMoreTomorrow = timeBasedPriceAdjustment(
+	dayAndTimePeriod(tomorrow, timePeriod(time24('00:00'), time24('23:59'))),
+	percentageBasedPriceAdjustment(0.25)
+);
+const tenPercentMoreTwoDaysFromNow = timeBasedPriceAdjustment(
+	dayAndTimePeriod(twoDaysFromNow, timePeriod(time24('00:00'), time24('23:59'))),
+	percentageBasedPriceAdjustment(0.1)
+);
+
 export function everythingForCarWashTenant(bookings: Booking[] = [], today = isoDate()) {
 	return everythingForTenant(
 		businessConfiguration(
@@ -69,7 +89,7 @@ export function everythingForCarWashTenant(bookings: Booking[] = [], today = iso
 			periodicStartTime(duration(90)),
 			null
 		),
-		[],
+		[fortyPercentMoreToday, twentyFivePercentMoreTomorrow, tenPercentMoreTwoDaysFromNow],
 		bookings,
 		[coupon(couponCode('expired-20-percent-off'), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-05-23'), isoDate('2021-05-26'))],
 		tenantSettings(customerForm.id),

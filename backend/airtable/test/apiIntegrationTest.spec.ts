@@ -17,7 +17,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
 import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder } from './helper.js';
-import { CancellationGranted, createOrderRequest, OrderCreatedResponse } from '@breezbook/backend-api-types';
+import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { insertOrder } from '../src/express/insertOrder.js';
 
 const expressPort = 3010;
@@ -33,6 +33,23 @@ describe('Given a migrated database', async () => {
 
 	afterAll(async () => {
 		await stopTestEnvironment(testEnvironment);
+	});
+
+	test('should be able to get service availability', async () => {
+		const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/service/smallCarWash/availability?fromDate=2023-12-20&toDate=2023-12-23`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		const json = (await fetched.json()) as AvailabilityResponse;
+
+		expect(json.slots['2023-12-19']).toBeUndefined();
+		expect(json.slots['2023-12-20']).toHaveLength(3);
+		expect(json.slots['2023-12-21']).toHaveLength(3);
+		expect(json.slots['2023-12-22']).toHaveLength(3);
+		expect(json.slots['2023-12-23']).toHaveLength(3);
+		expect(json.slots['2023-12-24']).toBeUndefined();
 	});
 
 	test('can add an order for two car washes, each with different add-ons', async () => {

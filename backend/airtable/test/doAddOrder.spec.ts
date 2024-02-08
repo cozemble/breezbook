@@ -89,11 +89,24 @@ test('an order with an expired coupon should fail with an error code', () => {
 });
 
 test('an order intending full payment on checkout should reserve the booking', () => {
-	const theOrder = order(goodCustomer, [orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], today, carwash.nineToOne, [goodServiceFormData])]);
-	const request = createOrderRequest(theOrder, carwash.smallCarWash.price, fullPaymentOnCheckout());
+	const theOrder = order(goodCustomer, [
+		orderLine(
+			carwash.smallCarWash.id,
+			price(carwash.smallCarWash.price.amount.value * 1.4, carwash.smallCarWash.price.currency),
+			[],
+			today,
+			carwash.nineToOne,
+			[goodServiceFormData]
+		)
+	]);
+	const request = createOrderRequest(
+		theOrder,
+		price(carwash.smallCarWash.price.amount.value * 1.4, carwash.smallCarWash.price.currency),
+		fullPaymentOnCheckout()
+	);
 	const outcome = doAddOrder(everythingForCarWashTenant(), request);
 	if (!outcome || outcome._type !== 'success') {
-		throw new Error('Expected success');
+		throw new Error('Expected success, got ' + JSON.stringify(outcome));
 	}
 	expect(outcome.prismaMutations.mutations.some((m) => m._type === 'prisma.create' && m.delegate === Prisma.reservationsDelegate)).toBeDefined();
 });
