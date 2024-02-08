@@ -20,7 +20,13 @@ import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder } from '.
 import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { insertOrder } from '../src/express/insertOrder.js';
 import { expressApp } from '../src/express/expressApp.js';
+import { prismaClient } from '../src/prisma/client.js';
 
+/**
+ * This test should contain one test case for each API endpoint, or integration scenario,
+ * to make sure that the app is configured correctly.  Details of the logic of each endpoint
+ * should be unit tested.
+ */
 const expressPort = 3010;
 const postgresPort = 54340;
 const tenantEnv = tenantEnvironment(environmentId('dev'), tenantId('tenant1'));
@@ -92,11 +98,32 @@ describe('Given a migrated database', async () => {
 	});
 
 	test('calls to /internal/api requires an API key in the Authorization header', async () => {
-		// process.env.INTERNAL_API_KEY = 'test-api-key';
-		// const app = expressApp();
-		// app.listen(expressPort);
 		const response = await fetch(`http://localhost:${expressPort}/internal/api/anything`);
 		expect(response.status).toBe(401);
+	});
+
+	test('inserting a new booking queues up an outbound webhook', async () => {
+		const createOrderResponse = await insertOrder(
+			tenantEnv,
+			createOrderRequest(
+				order(goodCustomer, [orderLine(carwash.mediumCarWash.id, carwash.mediumCarWash.price, [], isoDate(), carwash.nineToOne, [])]),
+				carwash.mediumCarWash.price,
+				fullPaymentOnCheckout()
+			),
+			carwash.services
+		);
+		expect(createOrderResponse.bookingIds).toHaveLength(1);
+		expect(createOrderResponse.bookingIds[0]).toBeDefined();
+		const prisma = prismaClient();
+		const found = await prisma.$queryRaw`SELECT *
+                                         FROM system_outbound_webhooks
+                                         WHERE payload ->> 'id' = ${createOrderResponse.bookingIds[0]}`;
+		expect(found).toHaveLength(1);
+		const outboundWebhook = found[0];
+		expect(outboundWebhook.action).toBe('create');
+		expect(outboundWebhook.payload_type).toBe('booking');
+		expect(outboundWebhook.status).toBe('pending');
+		expect(outboundWebhook.payload.id).toEqual(createOrderResponse.bookingIds[0]);
 	});
 });
 
