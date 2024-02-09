@@ -1,4 +1,4 @@
-create extension pg_cron;
+create extension if not exists pg_cron;
 
 create table system_outbound_webhooks
 (
