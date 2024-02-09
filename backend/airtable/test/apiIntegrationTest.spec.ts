@@ -20,8 +20,8 @@ import {
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
-import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder } from './helper.js';
-import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCreatedResponse } from '@breezbook/backend-api-types';
+import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow } from './helper.js';
+import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCreatedResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
 import { insertOrder } from '../src/express/insertOrder.js';
 import { prismaClient } from '../src/prisma/client.js';
 import { PaymentIntentWebhookBody } from '../src/stripe.js';
@@ -212,6 +212,28 @@ describe('Given a migrated database', async () => {
 		});
 		expect(postedWebhook).toBeDefined();
 		expect(postedWebhook?.payload).toEqual(webhookPayload);
+	});
+
+	test('can create a stripe payment intent and get client_secret and public api key', async () => {
+		const theOrder = order(goodCustomer, [
+			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], threeDaysFromNow, carwash.fourToSix, [goodServiceFormData])
+		]);
+
+		const response = await postOrder(theOrder, carwash.smallCarWash.price, expressPort);
+		expect(response.status).toBe(200);
+		const orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
+
+		const paymentIntentResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/orders/${orderCreatedResponse.orderId}/paymentIntent`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(fullPaymentOnCheckout())
+		});
+		expect(paymentIntentResponse.status).toBe(200);
+		const json = (await paymentIntentResponse.json()) as PaymentIntentResponse;
+		expect(json.clientSecret).toBeDefined();
+		expect(json.stripePublicKey).toBe('pk_test_something');
 	});
 });
 
