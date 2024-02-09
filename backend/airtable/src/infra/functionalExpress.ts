@@ -168,7 +168,7 @@ export async function withThreeRequestParams<A, B, C>(
 	return await withErrorHandling(res, async () => await f(a, b, c));
 }
 
-export async function withOneRequestParams<A>(
+export async function withOneRequestParam<A>(
 	req: express.Request,
 	res: express.Response,
 	aParam: ParamExtractor<A | null>,

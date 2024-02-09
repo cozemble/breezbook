@@ -1,5 +1,5 @@
 import express from 'express';
-import { orderIdParam, tenantEnvironmentParam, withOneRequestParams, withTwoRequestParams } from '../infra/functionalExpress.js';
+import { orderIdParam, tenantEnvironmentParam, withOneRequestParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { prismaClient } from '../prisma/client.js';
 import { StripeCustomerInput, stripeErrorCodes } from '../stripe.js';
 import { getTenantSecret } from '../infra/secretsInPostgres.js';
@@ -28,7 +28,7 @@ function toStripeCustomerInput(customers: DbCustomer): StripeCustomerInput {
 export const STRIPE_WEBHOOK_ID = 'stripe';
 
 export async function onStripeWebhook(req: express.Request, res: express.Response): Promise<void> {
-	await withOneRequestParams(req, res, tenantEnvironmentParam(), async (tenantEnvironment) => {
+	await withOneRequestParam(req, res, tenantEnvironmentParam(), async (tenantEnvironment) => {
 		const stripeApiKey = await getTenantSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME);
 		const stripeClient = getStripeClient(stripeApiKey, tenantEnvironment.environmentId.value);
 		const event = stripeClient.onWebhook(req.rawBody, req.headers['stripe-signature'] as string);

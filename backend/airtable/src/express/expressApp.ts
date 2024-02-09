@@ -10,6 +10,7 @@ import { handleReceivedWebhook } from './handleReceivedWebhook.js';
 import { onOutboundWebhooksBatch } from './onOutboundWebhooksBatch.js';
 import { bindInngestToExpress } from '../inngest/expressBinding.js';
 import { commitCancellation, requestCancellationGrant } from './cancellation.js';
+import { onStoreTenantSecret } from './secretManagement.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
 	rawBody?: string;
@@ -63,6 +64,7 @@ export function expressApp(): Express {
 
 	app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
 	app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);
+	app.post('/internal/api/:envId/:tenantId/secret', onStoreTenantSecret);
 
 	bindInngestToExpress(app);
 

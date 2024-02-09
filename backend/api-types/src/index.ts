@@ -2,6 +2,8 @@ import { Form, Order, PaymentIntent, Price } from '@breezbook/packages-core';
 import { BookingIsInThePast } from '@breezbook/packages-core/dist/cancellation.js';
 import { v4 as uuidv4 } from 'uuid';
 
+export * from './secrets.js';
+
 export interface TimeSlotAvailability {
 	_type: 'time.slot.availability';
 	timeslotId: string;
