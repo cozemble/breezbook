@@ -25,8 +25,11 @@ import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCre
 import { insertOrder } from '../src/express/insertOrder.js';
 import { prismaClient } from '../src/prisma/client.js';
 import { PaymentIntentWebhookBody } from '../src/stripe.js';
-import { STRIPE_WEBHOOK_ID } from '../src/express/stripeEndpoint.js';
+import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME, STRIPE_WEBHOOK_ID } from '../src/express/stripeEndpoint.js';
 import { OrderPaymentCreatedResponse } from '../src/express/handleReceivedWebhook.js';
+import { setSystemConfig } from '../src/prisma/setSystemConfig.js';
+import { storeSystemSecret, storeTenantSecret } from '../src/infra/secretsInPostgres.js';
+import { v4 as uuidV4 } from 'uuid';
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
@@ -44,7 +47,12 @@ describe('Given a migrated database', async () => {
 	let testEnvironment: StartedDockerComposeEnvironment;
 
 	beforeAll(async () => {
-		testEnvironment = await startTestEnvironment(expressPort, postgresPort);
+		testEnvironment = await startTestEnvironment(expressPort, postgresPort, async () => {
+			await setSystemConfig(tenantEnv, 'received_webhook_handler_url', `http://localhost:8001/stashWebhook`);
+			await storeSystemSecret(tenantEnv.environmentId, 'internal_bb_api_key', `internal api key`, 'test-api-key');
+			await storeTenantSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME, 'stripe api key', 'sk_test_something');
+			await storeTenantSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME, 'stripe public key', 'pk_test_something');
+		});
 	}, 1000 * 90);
 
 	afterAll(async () => {
@@ -179,6 +187,31 @@ describe('Given a migrated database', async () => {
 		expect(payment?.provider).toBe('Stripe');
 		expect(payment?.provider_transaction_id).toBe(paymentIntentWebhook.id);
 		expect(payment?.status).toBe(paymentIntentWebhook.status);
+	});
+
+	test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {
+		const webhookPayload = {
+			value: uuidV4()
+		};
+		const webhookPostResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/stripe/webhook`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(webhookPayload)
+		});
+		expect(webhookPostResponse.status).toBe(202);
+		const json = await webhookPostResponse.json();
+		const postedWebhookId = json.id;
+		expect(postedWebhookId).toBeDefined();
+		const prisma = prismaClient();
+		const postedWebhook = await prisma.received_webhooks.findUnique({
+			where: {
+				id: postedWebhookId
+			}
+		});
+		expect(postedWebhook).toBeDefined();
+		expect(postedWebhook?.payload).toEqual(webhookPayload);
 	});
 });
 
