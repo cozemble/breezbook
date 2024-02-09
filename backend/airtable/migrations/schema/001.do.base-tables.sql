@@ -239,6 +239,19 @@ create table bookings
     updated_at      timestamp with time zone            not null default current_timestamp
 );
 
+create type booking_event_type as enum ('cancelled', 'amended', 'completed', 'no_show');
+
+create table booking_events
+(
+    id             text primary key                             default uuid_generate_v4(),
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    booking_id     text references bookings (id)       not null,
+    event_type     booking_event_type                  not null,
+    event_data     jsonb                               not null,
+    created_at     timestamp with time zone            not null default current_timestamp
+);
+
 create table coupons
 (
     id             text primary key                             default uuid_generate_v4(),

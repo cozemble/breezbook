@@ -48,6 +48,7 @@ model bookings {
   time_slot_id        String?
   created_at          DateTime              @default(now()) @db.Timestamptz(6)
   updated_at          DateTime              @default(now()) @db.Timestamptz(6)
+  booking_events      booking_events[]
   customers           customers             @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   orders              orders                @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services            services              @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -243,6 +244,7 @@ model tenants {
   updated_at               DateTime                   @default(now()) @db.Timestamptz(6)
   add_on                   add_on[]
   blocked_time             blocked_time[]
+  booking_events           booking_events[]
   bookings                 bookings[]
   business_hours           business_hours[]
   cancellation_grants      cancellation_grants[]
@@ -416,6 +418,18 @@ model refund_rules {
   tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
+model booking_events {
+  id             String             @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  tenant_id      String
+  environment_id String
+  booking_id     String
+  event_type     booking_event_type
+  event_data     Json
+  created_at     DateTime           @default(now()) @db.Timestamptz(6)
+  bookings       bookings           @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants            @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
 enum payment_status {
   succeeded
   pending
@@ -425,4 +439,11 @@ enum payment_status {
 enum booking_status {
   confirmed
   cancelled
+}
+
+enum booking_event_type {
+  cancelled
+  amended
+  completed
+  no_show
 }

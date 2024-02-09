@@ -5,6 +5,7 @@ export type CreateOrder = PrismaCreate<Prisma.ordersDelegate, Prisma.ordersCreat
 export type CreateBooking = PrismaCreate<Prisma.bookingsDelegate, Prisma.bookingsCreateArgs['data']>;
 export type CreateReservation = PrismaCreate<Prisma.reservationsDelegate, Prisma.reservationsCreateArgs['data']>;
 export type CreateOrderLine = PrismaCreate<Prisma.order_linesDelegate, Prisma.order_linesCreateArgs['data']>;
+export type CreateBookingEvent = PrismaCreate<Prisma.booking_eventsDelegate, Prisma.booking_eventsCreateArgs['data']>;
 
 type UpdateCancellationGrant = PrismaUpdate<
 	Prisma.cancellation_grantsDelegate,
@@ -86,6 +87,14 @@ export function createOrderLine(prisma: PrismaClient, data: Prisma.order_linesCr
 	return {
 		_type: 'prisma.create',
 		delegate: prisma.order_lines,
+		data
+	};
+}
+
+export function createBookingEvent(prisma: PrismaClient, data: Prisma.booking_eventsCreateArgs['data']): CreateBookingEvent {
+	return {
+		_type: 'prisma.create',
+		delegate: prisma.booking_events,
 		data
 	};
 }

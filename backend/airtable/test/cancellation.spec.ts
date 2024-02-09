@@ -7,7 +7,7 @@ import { doCancellationRequest, doCommitCancellation } from '../src/express/canc
 import { prismaClient } from '../src/prisma/client.js';
 import { DbBooking, DbCancellationGrant } from '../src/prisma/dbtypes.js';
 import { prismaMutations } from '../src/infra/prismaMutations.js';
-import { updateBooking, updateCancellationGrant } from '../src/prisma/breezPrismaMutations.js';
+import { createBookingEvent, updateBooking, updateCancellationGrant } from '../src/prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
 import { HttpError } from '../src/infra/functionalExpress.js';
 
@@ -63,7 +63,14 @@ describe('Given a cancellation grant', () => {
 		expect(outcome).toEqual(
 			prismaMutations([
 				updateCancellationGrant(prisma, { committed: true }, { id: cancellation.id }),
-				updateBooking(prisma, { status: 'cancelled' }, { id: cancellation.booking_id })
+				updateBooking(prisma, { status: 'cancelled' }, { id: cancellation.booking_id }),
+				createBookingEvent(prisma, {
+					environment_id: 'environment-id',
+					tenant_id: 'tenant-id',
+					booking_id: cancellation.booking_id,
+					event_type: 'cancelled',
+					event_data: {}
+				})
 			])
 		);
 	});
