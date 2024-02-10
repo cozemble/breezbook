@@ -51,11 +51,13 @@ export function tenantEnvironment(environmentId: EnvironmentId, tenantId: Tenant
 export interface TenantSettings {
 	_type: 'tenant.settings';
 	customerFormId: FormId | null;
+	timezone: Timezone;
 }
 
-export function tenantSettings(customerFormId: FormId | null): TenantSettings {
+export function tenantSettings(timezone: Timezone, customerFormId: FormId | null): TenantSettings {
 	return {
 		_type: 'tenant.settings',
+		timezone,
 		customerFormId
 	};
 }

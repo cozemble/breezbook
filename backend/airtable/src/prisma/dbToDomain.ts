@@ -29,7 +29,8 @@ import {
 	timePeriodFns,
 	timeslotSpec,
 	TimeslotSpec,
-	TimeSpec
+	TimeSpec,
+	timezone
 } from '@breezbook/packages-core';
 import { timeBasedPriceAdjustment } from '@breezbook/packages-core/dist/calculatePrice.js';
 
@@ -78,7 +79,7 @@ export function toDomainForm(f: DbForm): Form {
 }
 
 export function toDomainTenantSettings(settings: DbTenantSettings): TenantSettings {
-	return tenantSettings(settings.customer_form_id ? formId(settings.customer_form_id) : null);
+	return tenantSettings(timezone(settings.iana_timezone), settings.customer_form_id ? formId(settings.customer_form_id) : null);
 }
 
 function toDayAndTimePeriod(timeSpec: TimeSpec): DayAndTimePeriod {

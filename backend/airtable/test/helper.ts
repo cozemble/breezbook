@@ -27,6 +27,7 @@ import {
 	time24,
 	timeBasedPriceAdjustmentSpec,
 	timePeriod,
+	timezone,
 	unlimited
 } from '@breezbook/packages-core';
 import { createOrderRequest } from '@breezbook/backend-api-types';
@@ -92,7 +93,7 @@ export function everythingForCarWashTenant(bookings: Booking[] = [], today = iso
 		[fortyPercentMoreToday, twentyFivePercentMoreTomorrow, tenPercentMoreTwoDaysFromNow],
 		bookings,
 		[coupon(couponCode('expired-20-percent-off'), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-05-23'), isoDate('2021-05-26'))],
-		tenantSettings(customerForm.id),
+		tenantSettings(timezone('Europe/London'), customerForm.id),
 		tenantEnvironment(environmentId('dev'), tenantId('tenant#1'))
 	);
 }

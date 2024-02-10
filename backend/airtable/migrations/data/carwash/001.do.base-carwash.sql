@@ -166,8 +166,8 @@ values ('contact-details-form',
           }
         }');
 
-insert into tenant_settings(tenant_id, environment_id, customer_form_id)
-values ('tenant1', 'dev', 'contact-details-form');
+insert into tenant_settings(tenant_id, environment_id, customer_form_id, iana_timezone)
+values ('tenant1', 'dev', 'contact-details-form', 'Europe/London');
 
 insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
                      price_currency,
