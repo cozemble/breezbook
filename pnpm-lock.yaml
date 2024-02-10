@@ -83,12 +83,18 @@ importers:
       prettier-plugin-svelte:
         specifier: ^3.0.0
         version: 3.1.2(prettier@3.1.0)(svelte@4.2.8)
+      stripe:
+        specifier: ^14.11.0
+        version: 14.11.0
       svelte:
         specifier: ^4.2.7
         version: 4.2.8
       svelte-check:
         specifier: ^3.6.0
         version: 3.6.2(postcss@8.4.32)(svelte@4.2.8)
+      svelte-stripe:
+        specifier: ^1.1.4
+        version: 1.1.4
       tailwindcss:
         specifier: ^3.3.6
         version: 3.3.6
@@ -1439,6 +1445,10 @@ packages:
 
   /@sinclair/typebox@0.27.8:
     resolution: {integrity: sha512-+Fj43pSMwJs4KRrH/938Uf+uAELIgVBmQzg/q1YG10djyfA3TnrU8N8XzqCh/okZdszqBQTZf96idMfE5lnwTA==}
+    dev: true
+
+  /@stripe/stripe-js@2.4.0:
+    resolution: {integrity: sha512-WFkQx1mbs2b5+7looI9IV1BLa3bIApuN3ehp9FP58xGg7KL9hCHDECgW3BwO9l9L+xBPVAD7Yjn1EhGe6EDTeA==}
     dev: true
 
   /@sveltejs/adapter-auto@3.0.1(@sveltejs/kit@2.0.6):
@@ -5910,7 +5920,6 @@ packages:
     engines: {node: '>=0.6'}
     dependencies:
       side-channel: 1.0.4
-    dev: false
 
   /queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
@@ -6615,7 +6624,6 @@ packages:
     dependencies:
       '@types/node': 20.10.4
       qs: 6.11.0
-    dev: false
 
   /sucrase@3.34.0:
     resolution: {integrity: sha512-70/LQEZ07TEcxiU2dz51FKaE6hCTWC6vr7FOk3Gr0U60C3shtAN+H+BFr9XlYe5xqf3RA8nrc+VIwzCfnxuXJw==}
@@ -6796,6 +6804,12 @@ packages:
       strip-indent: 3.0.0
       svelte: 4.2.8
       typescript: 5.3.3
+    dev: true
+
+  /svelte-stripe@1.1.4:
+    resolution: {integrity: sha512-6ujNzguKGkqQ0cvz+kfNoRyNisTGaNzT1OQ8Rh4GbCXVut9X0exlWtk/yF5ZjzR5/epmXuaEOjWAKpe7larL4A==}
+    dependencies:
+      '@stripe/stripe-js': 2.4.0
     dev: true
 
   /svelte@4.2.8:
