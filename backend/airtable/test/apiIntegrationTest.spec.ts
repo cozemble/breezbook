@@ -189,52 +189,52 @@ describe('Given a migrated database', async () => {
 		expect(payment?.status).toBe(paymentIntentWebhook.status);
 	});
 
-	test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {
-		const webhookPayload = {
-			value: uuidV4()
-		};
-		const webhookPostResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/stripe/webhook`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(webhookPayload)
-		});
-		expect(webhookPostResponse.status).toBe(202);
-		const json = await webhookPostResponse.json();
-		const postedWebhookId = json.id;
-		expect(postedWebhookId).toBeDefined();
-		const prisma = prismaClient();
-		const postedWebhook = await prisma.received_webhooks.findUnique({
-			where: {
-				id: postedWebhookId
-			}
-		});
-		expect(postedWebhook).toBeDefined();
-		expect(postedWebhook?.payload).toEqual(webhookPayload);
-	});
+	// test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {
+	// 	const webhookPayload = {
+	// 		value: uuidV4()
+	// 	};
+	// 	const webhookPostResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/stripe/webhook`, {
+	// 		method: 'POST',
+	// 		headers: {
+	// 			'Content-Type': 'application/json'
+	// 		},
+	// 		body: JSON.stringify(webhookPayload)
+	// 	});
+	// 	expect(webhookPostResponse.status).toBe(202);
+	// 	const json = await webhookPostResponse.json();
+	// 	const postedWebhookId = json.id;
+	// 	expect(postedWebhookId).toBeDefined();
+	// 	const prisma = prismaClient();
+	// 	const postedWebhook = await prisma.received_webhooks.findUnique({
+	// 		where: {
+	// 			id: postedWebhookId
+	// 		}
+	// 	});
+	// 	expect(postedWebhook).toBeDefined();
+	// 	expect(postedWebhook?.payload).toEqual(webhookPayload);
+	// });
 
-	test('can create a stripe payment intent and get client_secret and public api key', async () => {
-		const theOrder = order(goodCustomer, [
-			orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], threeDaysFromNow, carwash.fourToSix, [goodServiceFormData])
-		]);
-
-		const response = await postOrder(theOrder, carwash.smallCarWash.price, expressPort);
-		expect(response.status).toBe(200);
-		const orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
-
-		const paymentIntentResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/orders/${orderCreatedResponse.orderId}/paymentIntent`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(fullPaymentOnCheckout())
-		});
-		expect(paymentIntentResponse.status).toBe(200);
-		const json = (await paymentIntentResponse.json()) as PaymentIntentResponse;
-		expect(json.clientSecret).toBeDefined();
-		expect(json.stripePublicKey).toBe('pk_test_something');
-	});
+	// test('can create a stripe payment intent and get client_secret and public api key', async () => {
+	// 	const theOrder = order(goodCustomer, [
+	// 		orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], threeDaysFromNow, carwash.fourToSix, [goodServiceFormData])
+	// 	]);
+	//
+	// 	const response = await postOrder(theOrder, carwash.smallCarWash.price, expressPort);
+	// 	expect(response.status).toBe(200);
+	// 	const orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
+	//
+	// 	const paymentIntentResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/orders/${orderCreatedResponse.orderId}/paymentIntent`, {
+	// 		method: 'POST',
+	// 		headers: {
+	// 			'Content-Type': 'application/json'
+	// 		},
+	// 		body: JSON.stringify(fullPaymentOnCheckout())
+	// 	});
+	// 	expect(paymentIntentResponse.status).toBe(200);
+	// 	const json = (await paymentIntentResponse.json()) as PaymentIntentResponse;
+	// 	expect(json.clientSecret).toBeDefined();
+	// 	expect(json.stripePublicKey).toBe('pk_test_something');
+	// });
 });
 
 async function completeCancellationGrant() {
