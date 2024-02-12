@@ -12,10 +12,12 @@
 
 	let elements: StripeElements | undefined;
 
-	onMount(async () => {
-		if (!$stripePublicKey) return console.error('Stripe public key not found');
+	onMount(() => {
+		stripePublicKey.subscribe(async (value) => {
+			if (!value) return console.error('Stripe public key not found');
 
-		stripe = await loadStripe($stripePublicKey);
+			stripe = await loadStripe(value);
+		});
 	});
 
 	const onSubmit = async () => {
