@@ -41,7 +41,7 @@ function createCheckoutStore() {
 		const lines = $items.map((item) =>
 			core.orderLine(
 				core.carwash.smallCarWash.id,
-				core.price(item.time.price, core.currency('GBP')),
+				core.price(item.time.price, core.currency('GBP')), // TODO correct this
 				item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
 				core.isoDate(item.time.day),
 				core.timeslotSpec(
@@ -98,9 +98,17 @@ function createCheckoutStore() {
 			core.fullPaymentOnCheckout()
 		);
 
-		const res = api.booking.placeOrder(orderReq);
+		const orderRes = await api.booking.placeOrder(orderReq);
 
-		console.log(res);
+		console.log(orderRes);
+
+		const orderId = orderRes?.orderId;
+
+		if (!orderId) return;
+
+		const paymentIntentRes = await api.payment.createPaymentIntent(orderId);
+
+		console.log(paymentIntentRes);
 	};
 
 	// TODO properly create bookings

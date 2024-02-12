@@ -1,9 +1,15 @@
 import mock from '$lib/mock';
-import type { AvailabilityResponse, CreateOrderRequest } from '@breezbook/backend-api-types';
+import type {
+	AvailabilityResponse,
+	CreateOrderRequest,
+	OrderCreatedResponse,
+	PaymentIntentResponse
+} from '@breezbook/backend-api-types';
+import type { Order, OrderId } from '@breezbook/packages-core';
 
 // TODO: remove mock
 
-export const tenant = {
+const tenant = {
 	getOne: async (slug: string) => {
 		const tenant = mock.tenants.find((tenant) => tenant.slug === slug);
 
@@ -15,7 +21,7 @@ export const tenant = {
 	}
 };
 
-export const service = {
+const service = {
 	getOne: async (tenantSlug: string, serviceSlug: string) => {
 		const tenant = await api.tenant.getOne(tenantSlug);
 		if (!tenant) return null;
@@ -33,7 +39,7 @@ export const service = {
 	}
 };
 
-export const booking = {
+const booking = {
 	getDetails: async (tenantSlug: string, serviceSlug: string) => {
 		// TODO this is just for testing, remove it later
 		tenantSlug = 'tenant1';
@@ -141,7 +147,39 @@ export const booking = {
 			return;
 		}
 
-		const data = await response.json();
+		const data = (await response.json()) as OrderCreatedResponse;
+
+		return data;
+	}
+};
+
+const payment = {
+	createPaymentIntent: async (orderId: string) => {
+		const tenantSlug = 'tenant1';
+
+		const response = await fetch(
+			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/orders/${orderId}/paymentIntent`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+
+		if (!response.ok) {
+			console.error('Network response was not ok');
+			return;
+		}
+
+		const contentType = response.headers.get('content-type');
+		const isJson = contentType && contentType.includes('application/json');
+		if (!isJson) {
+			console.error('Response was not valid JSON');
+			return;
+		}
+
+		const data = (await response.json()) as PaymentIntentResponse;
 
 		return data;
 	}
@@ -150,7 +188,8 @@ export const booking = {
 const api = {
 	tenant,
 	service,
-	booking
+	booking,
+	payment
 };
 
 export default api;
