@@ -2,20 +2,20 @@
 	import { type Stripe, loadStripe, type StripeElements } from '@stripe/stripe-js';
 	import { Elements, PaymentElement } from 'svelte-stripe';
 	import { onMount } from 'svelte';
-	import { PUBLIC_STRIPE_KEY } from '$env/static/public';
 	import checkoutStore from '$lib/stores/checkout';
 
 	let stripe: Stripe | null = null;
 
 	const {
-		paymentStore: { clientSecret }
+		paymentStore: { clientSecret, stripePublicKey }
 	} = checkoutStore.get();
 
 	let elements: StripeElements | undefined;
 
 	onMount(async () => {
-		stripe = await loadStripe(PUBLIC_STRIPE_KEY);
-		console.log(stripe);
+		if (!$stripePublicKey) return console.error('Stripe public key not found');
+
+		stripe = await loadStripe($stripePublicKey);
 	});
 
 	const onSubmit = async () => {
