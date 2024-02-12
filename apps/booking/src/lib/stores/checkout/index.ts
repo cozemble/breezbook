@@ -4,6 +4,8 @@ import { createStoreContext } from '$lib/helpers/store';
 import * as core from '@breezbook/packages-core';
 import api from '$lib/common/api';
 import { createOrderRequest } from '@breezbook/backend-api-types';
+import { createPaymentStore } from './payment';
+import { goto } from '$app/navigation';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -23,6 +25,8 @@ const saveToLocalStorage = (items: Booking[]) => {
 //
 
 function createCheckoutStore() {
+	const paymentStore = createPaymentStore();
+
 	const items = writable<Booking[]>([]);
 	const customerStore = writable<core.Customer>(
 		core.customer('Mike', 'Hogan', 'mike@email.com', {
@@ -99,16 +103,11 @@ function createCheckoutStore() {
 		);
 
 		const orderRes = await api.booking.placeOrder(orderReq);
-
 		console.log(orderRes);
+		if (!orderRes?.orderId) return;
 
-		const orderId = orderRes?.orderId;
-
-		if (!orderId) return;
-
-		const paymentIntentRes = await api.payment.createPaymentIntent(orderId);
-
-		console.log(paymentIntentRes);
+		paymentStore.createPaymentIntent(orderRes.orderId);
+		goto('payment');
 	};
 
 	// TODO properly create bookings
@@ -131,7 +130,8 @@ function createCheckoutStore() {
 		coupons,
 		order,
 		total,
-		submitOrder
+		submitOrder,
+		paymentStore
 	};
 }
 
