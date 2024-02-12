@@ -35,6 +35,9 @@ importers:
       '@playwright/test':
         specifier: ^1.28.1
         version: 1.40.1
+      '@stripe/stripe-js':
+        specifier: ^2.4.0
+        version: 2.4.0
       '@sveltejs/adapter-auto':
         specifier: ^3.0.0
         version: 3.0.1(@sveltejs/kit@2.0.6)
