@@ -6,6 +6,7 @@ import api from '$lib/common/api';
 import { createOrderRequest } from '@breezbook/backend-api-types';
 import { createPaymentStore } from './payment';
 import { goto } from '$app/navigation';
+import { createCustomerStore } from './customer';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -25,52 +26,43 @@ const saveToLocalStorage = (items: Booking[]) => {
 //
 
 function createCheckoutStore() {
+	const customerStore = createCustomerStore();
 	const paymentStore = createPaymentStore();
 
 	const items = writable<Booking[]>([]);
-	const customerStore = writable<core.Customer>(
-		core.customer('Mike', 'Hogan', 'mike@email.com', {
-			phone: '1234567890',
-			firstLineOfAddress: '123 Fake Street',
-			postcode: 'AB1 2CD'
-		})
-	);
 	const coupons = writable<core.Coupon[]>([]);
 
-	// TODO clean up this mess and make it make sense
+	const order = derived(
+		[items, customerStore.customer],
+		([$items, $customer]): core.Order | null => {
+			if ($items.length === 0) return null;
 
-	const order = derived([items, customerStore], ([$items, $customerStore]): core.Order | null => {
-		if ($items.length === 0) return null;
+			const lines = $items.map((item) =>
+				core.orderLine(
+					core.carwash.smallCarWash.id,
+					core.price(item.time.price, core.currency('GBP')), // TODO correct this
+					item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
+					core.isoDate(item.time.day),
+					core.timeslotSpec(
+						core.time24(item.time.start),
+						core.time24(item.time.end),
+						'',
+						core.id(item.time.id)
+					),
+					[item.details]
+				)
+			);
 
-		const lines = $items.map((item) =>
-			core.orderLine(
-				core.carwash.smallCarWash.id,
-				core.price(item.time.price, core.currency('GBP')), // TODO correct this
-				item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
-				core.isoDate(item.time.day),
-				core.timeslotSpec(
-					core.time24(item.time.start),
-					core.time24(item.time.end),
-					'',
-					core.id(item.time.id)
-				),
-				[item.details]
-			)
-		);
+			return core.order($customer, lines);
+		}
+	);
 
-		const res = core.order($customerStore, lines);
-		return res;
+	const total = derived([order, coupons], ([$order, $coupons]) => {
+		if (!$order) return null;
+		return core.calculateOrderTotal($order, core.carwash.addOns, $coupons);
 	});
 
-	const total = derived([order, coupons], ([$orderStore, $coupons]) => {
-		if (!$orderStore) return null;
-
-		console.log($orderStore);
-
-		const total = core.calculateOrderTotal($orderStore, core.carwash.addOns, $coupons);
-
-		return total;
-	});
+	// ----------------------------------------------------------------
 
 	const addItem = (item: Omit<Booking, 'id'>) => {
 		const newItem = {
@@ -110,11 +102,7 @@ function createCheckoutStore() {
 		goto('payment');
 	};
 
-	// TODO properly create bookings
-	// TODO properly create order
-	// TODO calculate order total
-	// TODO submit order to backend
-	// TODO handle stripe payment stuff
+	// ----------------------------------------------------------------
 
 	// doing this on mount otherwise SSR will fail
 	onMount(() => {
@@ -123,15 +111,18 @@ function createCheckoutStore() {
 	});
 
 	return {
+		customerStore,
+		paymentStore,
+
 		items,
-		addItem,
-		removeItem,
-		clearItems,
 		coupons,
 		order,
 		total,
-		submitOrder,
-		paymentStore
+
+		addItem,
+		removeItem,
+		clearItems,
+		submitOrder
 	};
 }
 
