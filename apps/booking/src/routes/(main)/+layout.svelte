@@ -4,6 +4,8 @@
 	import tenantStore from '$lib/stores/tenant';
 	import checkoutStore from '$lib/stores/checkout';
 
+	import NotificationProvider from '$lib/components/notifications/NotificationProvider.svelte';
+
 	import Footer from '$lib/sections/home/Footer.svelte';
 	import Header from '$lib/sections/home/Header.svelte';
 
@@ -28,3 +30,5 @@
 	</main>
 	<Footer />
 </div>
+
+<NotificationProvider />

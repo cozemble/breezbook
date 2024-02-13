@@ -65,3 +65,6 @@ export const jsonSchemaTypeToInputType = (type: JSONSchema['type']) => {
 	if (type === 'array') throw new Error('array type not supported');
 	if (type === 'object') throw new Error('object type not supported');
 };
+
+export const createUID = (length = 8) =>
+	(Math.random() * Date.now()).toString(36).substring(2, 2 + length);
