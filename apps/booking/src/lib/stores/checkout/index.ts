@@ -7,6 +7,7 @@ import { createOrderRequest } from '@breezbook/backend-api-types';
 import { createPaymentStore } from './payment';
 import { goto } from '$app/navigation';
 import { createCustomerStore } from './customer';
+import notifications from '../notifications';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -88,6 +89,13 @@ function createCheckoutStore() {
 		const theTotal = get(total);
 		if (!theTotal) return;
 
+		const notif = notifications.create({
+			title: 'Placing order',
+			description: "You'll be redirected to the payment page in a moment.",
+			type: 'loading',
+			canUserClose: false
+		});
+
 		const orderReq = createOrderRequest(
 			theOrder,
 			theTotal.orderTotal,
@@ -96,9 +104,20 @@ function createCheckoutStore() {
 
 		const orderRes = await api.booking.placeOrder(orderReq);
 		console.log(orderRes);
-		if (!orderRes?.orderId) return;
+		if (!orderRes?.orderId) {
+			notif.remove();
+			notifications.create({
+				title: 'Error',
+				description: 'Failed to place order',
+				type: 'error',
+				duration: 4000
+			});
+			return;
+		}
 
 		paymentStore.createPaymentIntent(orderRes.orderId);
+
+		notif.remove();
 		goto('payment');
 	};
 

@@ -2,6 +2,7 @@ import api from '$lib/common/api';
 import { loadStripe, type Stripe, type StripeElements } from '@stripe/stripe-js';
 import { onMount } from 'svelte';
 import { get, writable } from 'svelte/store';
+import notifications from '../notifications';
 
 export const createPaymentStore = () => {
 	const clientSecret = writable<string | null>(null);
@@ -16,8 +17,15 @@ export const createPaymentStore = () => {
 		stripePublicKey.subscribe(async (key) => {
 			if (!key) return;
 
+			const notif = notifications.create({
+				title: 'Loading payment gateway',
+				description: 'Please wait...',
+				type: 'loading'
+			});
+
 			const stripeInstance = await loadStripe(key);
 			stripe.set(stripeInstance);
+			notif.remove();
 		});
 	});
 
@@ -33,7 +41,13 @@ export const createPaymentStore = () => {
 	};
 
 	const onSubmit = async () => {
-		const stripeInstance = await get(stripe);
+		const notif = notifications.create({
+			title: 'Processing payment',
+			description: 'Hold on a moment...',
+			type: 'loading'
+		});
+
+		const stripeInstance = get(stripe);
 		const elem = get(elements);
 
 		if (!stripeInstance || !elem) return;
@@ -46,15 +60,28 @@ export const createPaymentStore = () => {
 			}
 		});
 
+		notif.remove();
+
 		// This point will only be reached if there is an immediate error when
 		// confirming the payment. Otherwise, your customer will be redirected to
 		// your `return_url`. For some payment methods like iDEAL, your customer will
 		// be redirected to an intermediate site first to authorize the payment, then
 		// redirected to the `return_url`.
 		if (error.type === 'card_error' || error.type === 'validation_error') {
-			console.error(error.message);
+			notifications.create({
+				title: 'Payment failed',
+				description: error.message,
+				type: 'error',
+				duration: 5000
+			});
 		} else {
-			console.error('An unexpected error occurred.');
+			notifications.create({
+				title: 'Payment failed',
+				description:
+					'An unexpected error occurred while processing your payment. Please try again later.',
+				type: 'error',
+				duration: 5000
+			});
 		}
 	};
 
