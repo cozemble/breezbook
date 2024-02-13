@@ -13,7 +13,6 @@
 	const tenant = data.tenant;
 
 	tenantStore.init(tenant);
-
 	checkoutStore.init();
 </script>
 
@@ -29,6 +28,6 @@
 		</div>
 	</main>
 	<Footer />
-</div>
 
-<NotificationProvider />
+	<NotificationProvider />
+</div>
