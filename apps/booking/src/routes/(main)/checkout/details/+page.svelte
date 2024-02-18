@@ -22,8 +22,13 @@
 	$: console.log('customer', $customer);
 </script>
 
-<div class="flex items-center justify-center">
-	<div class="card flex flex-col w-full max-w-md p-4">
+<div class="mb-10">
+	<h1 class="text-2xl font-semibold text-primary">Customer Details</h1>
+	<p>Please enter your details to complete your booking</p>
+</div>
+
+<div class="flex flex-col items-center justify-center">
+	<div class="card flex flex-col w-full max-w-lg p- bg-base-200">
 		<div class="card-body">
 			<SchemaForm schema={$schema} bind:value={$customer} errors={$errors} />
 

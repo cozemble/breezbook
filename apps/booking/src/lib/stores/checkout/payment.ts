@@ -9,6 +9,7 @@ export const createPaymentStore = () => {
 	const stripePublicKey = writable<string | null>(null);
 	const stripe = writable<Stripe | null>(null);
 	const elements = writable<StripeElements | undefined>(undefined);
+	const loading = writable<boolean>(false);
 
 	// ----------------------------------------------------------
 
@@ -17,15 +18,21 @@ export const createPaymentStore = () => {
 		stripePublicKey.subscribe(async (key) => {
 			if (!key) return;
 
+			loading.set(true);
+
 			const notif = notifications.create({
 				title: 'Loading payment gateway',
 				description: 'Please wait...',
 				type: 'loading'
 			});
 
+			// false timeout // TODO remove
+			await new Promise((res) => setTimeout(res, 1000));
+
 			const stripeInstance = await loadStripe(key);
 			stripe.set(stripeInstance);
 			notif.remove();
+			loading.set(false);
 		});
 	});
 
@@ -91,6 +98,7 @@ export const createPaymentStore = () => {
 
 		stripe,
 		elements,
+		loading,
 
 		createPaymentIntent,
 		onSubmit

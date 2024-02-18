@@ -12,7 +12,7 @@
 
 <div class="pb-8">
 	<h1 class="text-2xl font-semibold text-primary">Checkout Order</h1>
-	<!-- <p>Please review your bookings before proceeding to checkout.</p> -->
+	<p>Please review your bookings before proceeding to checkout</p>
 </div>
 
 <!-- TODO remove or display error if the booking is taken while in cart -->
