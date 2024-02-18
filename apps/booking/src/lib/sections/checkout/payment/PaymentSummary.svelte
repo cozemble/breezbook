@@ -4,17 +4,11 @@
 	import notifications from '$lib/stores/notifications';
 	import { formatPrice } from '$lib/utils';
 
-	const { total, items, submitOrder } = checkoutStore.get();
-
-	const handleSubmit = () => {
-		// <!-- TODO proper validation -->
-		if (!$items.length) {
-			notifications.create({ type: 'error', title: 'Your cart is empty', duration: 3000 });
-			return;
-		}
-
-		goto('/checkout/details');
-	};
+	const {
+		total,
+		items,
+		paymentStore: { onSubmit }
+	} = checkoutStore.get();
 </script>
 
 <div class="flex flex-col items-end p-6 gap-6 rounded-box bg-base-200">
@@ -50,5 +44,5 @@
 		</div>
 	</div>
 
-	<button class="btn btn-primary" on:click={handleSubmit}> Confirm & Checkout </button>
+	<button class="btn btn-primary" on:click={onSubmit}> Confirm & Pay </button>
 </div>
