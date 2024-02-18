@@ -1,11 +1,19 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import checkoutStore from '$lib/stores/checkout';
+	import notifications from '$lib/stores/notifications';
 	import { formatPrice } from '$lib/utils';
 
 	const { total, items, submitOrder } = checkoutStore.get();
 
 	const handleSubmit = () => {
-		submitOrder();
+		// <!-- TODO proper validation -->
+		if (!$items.length) {
+			notifications.create({ type: 'error', title: 'Your cart is empty', duration: 3000 });
+			return;
+		}
+
+		goto('/checkout/details');
 	};
 </script>
 

@@ -54,7 +54,16 @@ function createCheckoutStore() {
 				)
 			);
 
-			return core.order($customer, lines);
+			// TODO get rid of this, this is a hack to prevent id being lost
+
+			return core.order(
+				{
+					...$customer,
+					id: core.customerId(''),
+					email: core.email($customer.email as unknown as string)
+				},
+				lines
+			);
 		}
 	);
 
@@ -118,7 +127,7 @@ function createCheckoutStore() {
 		paymentStore.createPaymentIntent(orderRes.orderId);
 
 		notif.remove();
-		goto('payment');
+		goto('/payment');
 	};
 
 	// ----------------------------------------------------------------
