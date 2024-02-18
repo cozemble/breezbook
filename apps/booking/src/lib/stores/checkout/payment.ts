@@ -26,9 +26,6 @@ export const createPaymentStore = () => {
 				type: 'loading'
 			});
 
-			// false timeout // TODO remove
-			await new Promise((res) => setTimeout(res, 1000));
-
 			const stripeInstance = await loadStripe(key);
 			stripe.set(stripeInstance);
 			notif.remove();
