@@ -127,7 +127,7 @@ function createCheckoutStore() {
 		paymentStore.createPaymentIntent(orderRes.orderId);
 
 		notif.remove();
-		goto('/payment');
+		goto('/checkout/payment');
 	};
 
 	// ----------------------------------------------------------------
