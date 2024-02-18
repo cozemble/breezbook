@@ -12,10 +12,11 @@
 
 	$: properties = schema.properties;
 
-	// <!-- TODO IF NEEDED object and array properties -->
-	// $: objectProperties = Object.entries(properties || []).filter(
-	// 	([key, prop]) => prop.type === 'object'
-	// );
+	$: objectProperties = Object.entries(properties || []).filter(
+		([key, prop]) => prop.type === 'object'
+	);
+
+	// <!-- TODO IF NEEDED  array properties -->
 	// $: arrayProperties = Object.entries(properties || []).filter(
 	// 	([key, prop]) => prop.type === 'array'
 	// );
@@ -38,9 +39,13 @@
 
 <!-- TODO render components respective to property types: date, int, float etc. -->
 <!-- TODO fix type issue -->
-<div class="gap-x-4 flex flex-col justify-center items-center">
+<div class="gap-x-4 flex flex-col justify-center items-center w-full">
 	{#each simpleProperties as [key, prop], i (i)}
 		<Input bind:value={value[key]} name={key} schema={prop} error={_.get(errors, key)} />
+	{/each}
+
+	{#each objectProperties as [key, prop], i (i)}
+		<svelte:self schema={prop} value={value[key]} errors={_.get(errors, key)} />
 	{/each}
 </div>
 
