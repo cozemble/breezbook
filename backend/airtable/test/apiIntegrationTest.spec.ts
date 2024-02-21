@@ -20,8 +20,8 @@ import {
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
-import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow } from './helper.js';
-import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCreatedResponse, PaymentIntentResponse } from '@breezbook/backend-api-types';
+import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder } from './helper.js';
+import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { insertOrder } from '../src/express/insertOrder.js';
 import { prismaClient } from '../src/prisma/client.js';
 import { PaymentIntentWebhookBody } from '../src/stripe.js';
@@ -29,7 +29,6 @@ import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME, STRIPE_WEBHO
 import { OrderPaymentCreatedResponse } from '../src/express/handleReceivedWebhook.js';
 import { setSystemConfig } from '../src/prisma/setSystemConfig.js';
 import { storeSystemSecret, storeTenantSecret } from '../src/infra/secretsInPostgres.js';
-import { v4 as uuidV4 } from 'uuid';
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
@@ -187,6 +186,13 @@ describe('Given a migrated database', async () => {
 		expect(payment?.provider).toBe('Stripe');
 		expect(payment?.provider_transaction_id).toBe(paymentIntentWebhook.id);
 		expect(payment?.status).toBe(paymentIntentWebhook.status);
+	});
+
+	test('can check if a coupon is valid', async () => {
+		const response = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/coupon/validity?couponCode=expired-20-percent-off`);
+		expect(response.status).toBe(200);
+		const json = await response.json();
+		expect(json.valid).toBe(false);
 	});
 
 	// test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {

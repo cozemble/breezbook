@@ -20,7 +20,8 @@ import {
 	system_outbound_webhooks,
 	webhook_destinations,
 	cancellation_grants,
-	refund_rules
+	refund_rules,
+	coupons
 } from '@prisma/client';
 import { TenantEnvironment } from '@breezbook/packages-core';
 
@@ -46,7 +47,8 @@ export {
 	system_outbound_webhooks as DbSystemOutboundWebhook,
 	webhook_destinations as DbWebhookDestination,
 	cancellation_grants as DbCancellationGrant,
-	refund_rules as DbRefundRule
+	refund_rules as DbRefundRule,
+	coupons as DbCoupon
 };
 
 export function findManyForTenant(tenantEnvironment: TenantEnvironment) {

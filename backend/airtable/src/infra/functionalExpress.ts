@@ -120,7 +120,11 @@ export function cancellationId(requestValue: RequestValueExtractor = path('cance
 	return paramExtractor('cancellationId', requestValue.extractor, (s) => s);
 }
 
-function paramExtractor<T>(paramName: string, extractor: (req: express.Request) => string | null, factoryFn: (s: string) => T): ParamExtractor<T | null> {
+export function paramExtractor<T>(
+	paramName: string,
+	extractor: (req: express.Request) => string | null,
+	factoryFn: (s: string) => T
+): ParamExtractor<T | null> {
 	return (req: express.Request, res: express.Response) => {
 		const paramValue = extractor(req);
 		if (!paramValue) {

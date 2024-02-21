@@ -7,5 +7,11 @@ export const jsDateFns = {
 	},
 	differenceInMinutes(now: Date, time: Date) {
 		return Math.floor((now.getTime() - time.getTime()) / 1000 / 60);
+	},
+	isBefore(date: Date, other: Date) {
+		return date < other;
+	},
+	isAfter(date: Date, other: Date) {
+		return date > other;
 	}
 };
