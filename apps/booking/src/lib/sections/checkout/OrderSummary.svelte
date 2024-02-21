@@ -17,8 +17,8 @@
 	};
 </script>
 
-<div class="flex flex-col items-end p-6 gap-6 rounded-box bg-base-200">
-	<div class="flex flex-col w-64">
+<div class="flex flex-col p-6 gap-6 rounded-box bg-base-200">
+	<div class="flex flex-col w-full">
 		<!-- subtotal before discount -->
 
 		<div class="flex justify-between">

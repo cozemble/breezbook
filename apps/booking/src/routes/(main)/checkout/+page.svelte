@@ -2,6 +2,7 @@
 	import checkoutStore from '$lib/stores/checkout';
 	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
 	import OrderSummary from '$lib/sections/checkout/OrderSummary.svelte';
+	import CouponEntry from '$lib/sections/checkout/CouponEntry.svelte';
 
 	const { items } = checkoutStore.get();
 
@@ -19,7 +20,7 @@
 <!-- TODO checkout and payment -->
 <!-- TODO select bookings system for bulk operations (later) -->
 
-<div class="flex flex-col md:flex-row md:items-start gap-8">
+<div class="flex flex-col md:flex-row md:items-start gap-4">
 	<!-- bookings list -->
 	<div class="rounded-box flex flex-col flex-grow gap-4 p-4 bg-base-200">
 		{#if $items.length === 0}
@@ -35,5 +36,8 @@
 		{/each}
 	</div>
 
-	<OrderSummary />
+	<div class="flex flex-col gap-4">
+		<CouponEntry />
+		<OrderSummary />
+	</div>
 </div>
