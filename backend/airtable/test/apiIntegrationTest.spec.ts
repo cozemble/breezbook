@@ -193,6 +193,7 @@ describe('Given a migrated database', async () => {
 		expect(response.status).toBe(200);
 		const json = await response.json();
 		expect(json.valid).toBe(false);
+		expect(json.reason).toBe('coupon.end.date.past');
 	});
 
 	// test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {
