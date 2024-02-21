@@ -4,6 +4,7 @@
 	import Loading from '$lib/components/Loading.svelte';
 	import CustomerSummary from '$lib/sections/checkout/payment/CustomerSummary.svelte';
 	import PaymentSummary from '$lib/sections/checkout/payment/PaymentSummary.svelte';
+	import Bookings from '$lib/sections/checkout/payment/PaymentBookings.svelte';
 
 	const {
 		paymentStore: { clientSecret, stripe, onSubmit, elements, loading }
@@ -34,6 +35,8 @@
 				</div>
 			{/if}
 		</div>
+
+		<Bookings />
 	</div>
 
 	<PaymentSummary />
