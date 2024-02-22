@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import api from '$lib/common/api';
+	import BreezbookLogo from '$lib/components/BreezbookLogo.svelte';
 
 	let tenants: Tenant[] = [];
 
@@ -26,11 +27,9 @@
 </svelte:head>
 
 <div class="p-10">
-	<h1 class="text-4xl mb-10 font-black text-accent">
-		<span class="text-primary">breez</span>book
-	</h1>
+	<BreezbookLogo />
 
-	<h2 class="text-xl mb-8">Tenants</h2>
+	<h2 class="text-xl my-8">Tenants</h2>
 
 	<ul class="menu border-l">
 		{#each tenants as tenant}
