@@ -68,3 +68,21 @@ export const jsonSchemaTypeToInputType = (type: JSONSchema['type']) => {
 
 export const createUID = (length = 8) =>
 	(Math.random() * Date.now()).toString(36).substring(2, 2 + length);
+
+export const link = {
+	getSubdomain: (url: URL) => {
+		const isThereASubdomain = url.host.split('.').length > 1;
+		if (!isThereASubdomain) return;
+
+		const subdomain = url.host.split('.')[0];
+		return subdomain;
+	},
+
+	removeSubdomain: (url: URL) => {
+		const hasSubdomain = !!link.getSubdomain(url);
+		if (!hasSubdomain) return url.host;
+
+		const domain = url.host.split('.').slice(1).join('.');
+		return url.protocol + '//' + domain;
+	}
+};
