@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { formatPrice } from '$lib/utils';
+
 	export let booking: Booking;
 
 	const { service, time, calculatedPrice, extras } = booking;
@@ -27,7 +29,7 @@
 
 			<div class="ml-auto flex flex-col items-end">
 				<span>{extras.length || 'no'} extras</span>
-				<span class="font-bold">£ {calculatedPrice}</span>
+				<span class="font-bold">£ {formatPrice(calculatedPrice)}</span>
 			</div>
 		</div>
 	</div>
