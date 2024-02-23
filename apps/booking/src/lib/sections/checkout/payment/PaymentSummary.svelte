@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import checkoutStore from '$lib/stores/checkout';
 	import notifications from '$lib/stores/notifications';
-	import { formatPrice } from '$lib/utils';
+	import { formatPrice } from '$lib/common/utils';
 
 	const {
 		total,

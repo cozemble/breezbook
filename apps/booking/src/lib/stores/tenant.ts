@@ -1,4 +1,4 @@
-import { createStoreContext } from '$lib/helpers/store';
+import { createStoreContext } from '$lib/common/helpers/store';
 
 const TENANT_CTX_KEY = 'tenant';
 

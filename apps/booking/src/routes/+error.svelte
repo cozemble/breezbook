@@ -3,7 +3,7 @@
 
 	import { page } from '$app/stores';
 	import BreezbookLogo from '$lib/components/BreezbookLogo.svelte';
-	import * as utils from '$lib/utils';
+	import * as utils from '$lib/common/utils';
 
 	onMount(() => {
 		console.error('Error loading page', $page.status, $page.error?.message);

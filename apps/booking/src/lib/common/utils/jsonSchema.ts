@@ -41,21 +41,6 @@ export const removeEmptyValues = (value: AnyValue): AnyValue => {
 	if (!_.includes(emptyValues, value)) return value;
 };
 
-// TODO add the unit to the price
-/** Format a price that consists of an integer and a decimal
- * @example
- * formatPrice(1000) // 10.00
- */
-export const formatPrice = (price: number) => {
-	const priceStr = price.toString();
-
-	const priceInteger = priceStr.substring(0, priceStr.length - 2);
-	const priceDecimal = priceStr.substring(priceStr.length - 2);
-
-	const formattedPrice = `${priceInteger}.${priceDecimal}`;
-	return formattedPrice;
-};
-
 /** Convert a JSON schema type to an HTML input type */
 export const jsonSchemaTypeToInputType = (type: JSONSchema['type']) => {
 	if (type === 'string') return 'text';
@@ -64,25 +49,4 @@ export const jsonSchemaTypeToInputType = (type: JSONSchema['type']) => {
 
 	if (type === 'array') throw new Error('array type not supported');
 	if (type === 'object') throw new Error('object type not supported');
-};
-
-export const createUID = (length = 8) =>
-	(Math.random() * Date.now()).toString(36).substring(2, 2 + length);
-
-export const link = {
-	getSubdomain: (url: URL) => {
-		const isThereASubdomain = url.host.split('.').length > 1;
-		if (!isThereASubdomain) return;
-
-		const subdomain = url.host.split('.')[0];
-		return subdomain;
-	},
-
-	removeSubdomain: (url: URL) => {
-		const hasSubdomain = !!link.getSubdomain(url);
-		if (!hasSubdomain) return url.host;
-
-		const domain = url.host.split('.').slice(1).join('.');
-		return url.protocol + '//' + domain;
-	}
 };

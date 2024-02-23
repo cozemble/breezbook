@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import * as utils from '$lib/utils';
+import * as utils from '$lib/common/utils';
 
 export const load: PageServerLoad = async ({ url }) => {
 	const subdomain = utils.link.getSubdomain(url);

@@ -6,7 +6,7 @@ import createTimeStore from './time';
 import createExtrasStore from './extras';
 import createDetailsStore from './details';
 import checkoutStore from '../checkout';
-import { createStoreContext } from '$lib/helpers/store';
+import { createStoreContext } from '$lib/common/helpers/store';
 
 const BOOKING_STORE_CONTEXT_KEY = 'booking_store';
 

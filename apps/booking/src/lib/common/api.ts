@@ -1,4 +1,4 @@
-import mock from '$lib/mock';
+import mock from '$lib/common/mock';
 import type {
 	AvailabilityResponse,
 	CreateOrderRequest,

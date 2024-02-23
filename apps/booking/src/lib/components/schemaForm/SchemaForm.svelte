@@ -1,6 +1,6 @@
 <script lang="ts">
 	import _ from 'lodash';
-	import { initValues } from '$lib/utils';
+	import { jsonSchemaUtils } from '$lib/common/utils';
 	import Input from './Input.svelte';
 
 	export let schema: JSONSchema;
@@ -8,7 +8,7 @@
 	export let errors: ErrorObject;
 
 	// <!-- TODO make sure values are defined -->
-	value = initValues(schema) as ObjectValue;
+	value = jsonSchemaUtils.initValues(schema) as ObjectValue;
 
 	$: properties = schema.properties;
 

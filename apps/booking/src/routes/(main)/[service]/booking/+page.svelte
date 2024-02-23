@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { PageData } from './$types';
-	import { formatPrice } from '$lib/utils';
+	import { formatPrice } from '$lib/common/utils';
 
 	import tenantStore from '$lib/stores/tenant';
 	import bookingStore from '$lib/stores/booking';

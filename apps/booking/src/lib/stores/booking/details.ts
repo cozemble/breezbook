@@ -4,8 +4,7 @@ import Ajv from 'ajv';
 import _ from 'lodash';
 
 import api from '$lib/common/api';
-import { initValues, removeEmptyValues } from '$lib/utils';
-import * as ajvUtils from '$lib/utils/ajv';
+import { jsonSchemaUtils, ajvUtils } from '$lib/common/utils';
 
 /** Setup stores to manage details */
 export default function createDetailsStore(service: Service) {
@@ -15,7 +14,7 @@ export default function createDetailsStore(service: Service) {
 	const errors = writable<ObjectError>({});
 
 	const initValue = (schema: JSONSchema) => {
-		const newVal = initValues(schema) as Service.Details;
+		const newVal = jsonSchemaUtils.initValues(schema) as Service.Details;
 		value.set(newVal);
 	};
 
@@ -54,7 +53,7 @@ export default function createDetailsStore(service: Service) {
 		ajv.addVocabulary([]); // TODO add specific words later if needed
 
 		const validate = ajv.compile(get(schema));
-		const isValid = validate(removeEmptyValues(get(value)));
+		const isValid = validate(jsonSchemaUtils.removeEmptyValues(get(value)));
 
 		addErrors(validate.errors);
 

@@ -2,7 +2,7 @@ import { error, redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 
 import api from '$lib/common/api';
-import * as utils from '$lib/utils';
+import * as utils from '$lib/common/utils';
 
 export const load: LayoutServerLoad = async ({ params, url }) => {
 	const subdomain = utils.link.getSubdomain(url);

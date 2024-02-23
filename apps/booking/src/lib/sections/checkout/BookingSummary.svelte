@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
-	import { formatPrice } from '$lib/utils';
+	import { formatPrice } from '$lib/common/utils';
 	import checkoutStore from '$lib/stores/checkout';
 
 	export let booking: Booking;

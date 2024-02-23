@@ -1,6 +1,6 @@
 <script lang="ts">
 	import bookingStore from '$lib/stores/booking';
-	import { formatPrice } from '$lib/utils';
+	import { formatPrice } from '$lib/common/utils';
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {

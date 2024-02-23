@@ -5,8 +5,7 @@ import _ from 'lodash';
 
 import * as core from '@breezbook/packages-core';
 
-import { removeEmptyValues } from '$lib/utils';
-import * as ajvUtils from '$lib/utils/ajv';
+import { ajvUtils, jsonSchemaUtils } from '$lib/common/utils';
 import notifications, { type Notification } from '../notifications';
 
 export function createCustomerStore() {
@@ -75,7 +74,7 @@ export function createCustomerStore() {
 
 		const validate = ajv.compile(get(schema));
 		// @ts-expect-error: the customer type is not working with AnyValue
-		const isValid = validate(removeEmptyValues(get(customer))); // TODO fix AnyValue type issue
+		const isValid = validate(jsonSchemaUtils.removeEmptyValues(get(customer))); // TODO fix AnyValue type issue
 
 		addErrors(validate.errors);
 

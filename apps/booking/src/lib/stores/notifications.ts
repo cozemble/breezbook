@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store';
-import { createUID } from '$lib/utils';
+import { createUID } from '$lib/common/utils';
 
 export interface Notification {
 	id: string;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatPrice } from '$lib/utils';
+	import { formatPrice } from '$lib/common/utils';
 
 	export let slot: TimeSlot;
 	export let selectedSlot: TimeSlot | null;

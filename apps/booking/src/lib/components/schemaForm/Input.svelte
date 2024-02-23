@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { jsonSchemaTypeToInputType } from '$lib/utils';
+	import { jsonSchemaUtils } from '$lib/common/utils';
 
 	export let name: string;
 	export let value: string;
 	export let error: string | undefined = undefined;
 	export let readonly = false;
 	export let schema: JSONSchema;
-	export let type: string = jsonSchemaTypeToInputType(schema.type) || 'text'; // <!-- TODO strict typing -->
+	export let type: string = jsonSchemaUtils.jsonSchemaTypeToInputType(schema.type) || 'text'; // <!-- TODO strict typing -->
 
 	console.log(name, schema);
 </script>
