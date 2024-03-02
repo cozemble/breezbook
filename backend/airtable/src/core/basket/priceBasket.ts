@@ -1,5 +1,5 @@
 import { EverythingForTenant } from '../../express/getEverythingForTenant.js';
-import { pricedAddOn, pricedBasket, PricedBasket, PricedBasketLine, pricedBasketLine, UnpricedBasket, UnpricedBasketLine } from './pricingTypes.js';
+import { pricedAddOn, pricedBasket, PricedBasket, PricedBasketLine, pricedBasketLine, UnpricedBasket, UnpricedBasketLine } from '@breezbook/backend-api-types';
 import { ErrorResponse } from '@breezbook/backend-api-types';
 import { currencies, currency, mandatory, price, priceFns, success, Success } from '@breezbook/packages-core';
 import { getAvailabilityForService } from '../getAvailabilityForService.js';

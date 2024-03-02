@@ -29,7 +29,7 @@ import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME, STRIPE_WEBHO
 import { OrderPaymentCreatedResponse } from '../src/express/handleReceivedWebhook.js';
 import { setSystemConfig } from '../src/prisma/setSystemConfig.js';
 import { storeSystemSecret, storeTenantSecret } from '../src/infra/secretsInPostgres.js';
-import { PricedBasket, unpricedBasket, unpricedBasketLine } from '../src/core/basket/pricingTypes.js';
+import { PricedBasket, unpricedBasket, unpricedBasketLine } from '@breezbook/backend-api-types';
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,

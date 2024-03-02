@@ -1,6 +1,6 @@
 import { bodyAsJsonParam, ParamExtractor, tenantEnvironmentParam, withTwoRequestParams } from '../../infra/functionalExpress.js';
 import express from 'express';
-import { UnpricedBasket, unpricedBasketFns } from '../../core/basket/pricingTypes.js';
+import { UnpricedBasket, unpricedBasketFns } from '@breezbook/backend-api-types';
 import { getEverythingForTenant } from '../getEverythingForTenant.js';
 import { priceBasket } from '../../core/basket/priceBasket.js';
 

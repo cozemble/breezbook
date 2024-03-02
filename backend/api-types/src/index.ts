@@ -3,6 +3,7 @@ import { BookingIsInThePast } from '@breezbook/packages-core/dist/cancellation.j
 import { v4 as uuidv4 } from 'uuid';
 
 export * from './secrets.js';
+export * from './pricingTypes.js';
 
 export interface TimeSlotAvailability {
 	_type: 'time.slot.availability';

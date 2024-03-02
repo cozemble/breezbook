@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { PricedBasket, unpricedBasket, unpricedBasketLine } from '../../../src/core/basket/pricingTypes.js';
+import { PricedBasket, unpricedBasket, unpricedBasketLine } from '@breezbook/backend-api-types';
 import { everythingForCarWashTenantWithDynamicPricing } from '../../helper.js';
 import { priceBasket } from '../../../src/core/basket/priceBasket.js';
 import { addOnOrder, carwash, couponCode, currencies, isoDate, isoDateFns, price, priceFns } from '@breezbook/packages-core';
