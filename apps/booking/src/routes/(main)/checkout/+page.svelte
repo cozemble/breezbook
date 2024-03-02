@@ -3,6 +3,7 @@
 	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
 	import OrderSummary from '$lib/sections/checkout/OrderSummary.svelte';
 	import CouponEntry from '$lib/sections/checkout/CouponEntry.svelte';
+	import MikeTestingBasketPricingEndpoint from './MikeTestingBasketPricingEndpoint.svelte';
 
 	const { items } = checkoutStore.get();
 
@@ -41,3 +42,5 @@
 		<OrderSummary />
 	</div>
 </div>
+
+<MikeTestingBasketPricingEndpoint />

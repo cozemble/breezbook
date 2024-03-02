@@ -43,6 +43,7 @@ export interface PricedBasketLine {
 	_type: 'priced.basket.line';
 	serviceId: ServiceId;
 	addOnIds: PricedAddOn[];
+	servicePrice: Price;
 	total: Price;
 }
 
@@ -64,12 +65,13 @@ export function pricedBasket(lines: PricedBasketLine[], total: Price, couponCode
 	};
 }
 
-export function pricedBasketLine(serviceIdValue: ServiceId, addOnIds: PricedAddOn[], total: Price): PricedBasketLine {
+export function pricedBasketLine(serviceIdValue: ServiceId, addOnIds: PricedAddOn[], servicePrice: Price, total: Price): PricedBasketLine {
 	return {
 		_type: 'priced.basket.line',
 		serviceId: serviceIdValue,
 		addOnIds,
-		total
+		total,
+		servicePrice
 	};
 }
 

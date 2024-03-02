@@ -1,9 +1,8 @@
 import { expect, test } from 'vitest';
-import { PricedBasket, unpricedBasket, unpricedBasketLine } from '@breezbook/backend-api-types';
+import { ErrorResponse, PricedBasket, unpricedBasket, unpricedBasketLine } from '@breezbook/backend-api-types';
 import { everythingForCarWashTenantWithDynamicPricing } from '../../helper.js';
-import { priceBasket } from '../../../src/core/basket/priceBasket.js';
+import { priceBasket, pricingErrorCodes } from '../../../src/core/basket/priceBasket.js';
 import { addOnOrder, carwash, couponCode, currencies, isoDate, isoDateFns, price, priceFns } from '@breezbook/packages-core';
-import { ErrorResponse } from '@breezbook/backend-api-types';
 import { addOrderErrorCodes } from '../../../src/express/addOrder.js';
 
 const today = isoDate();
@@ -23,6 +22,7 @@ test('can price a basket with one line item', () => {
 	expect(result.total).toEqual(carwash.smallCarWash.price);
 	expect(result.lines).toHaveLength(1);
 	expect(result.lines[0].total).toEqual(carwash.smallCarWash.price);
+	expect(result.lines[0].servicePrice).toEqual(carwash.smallCarWash.price);
 });
 
 test('uses dynamic pricing if applicable', () => {
@@ -77,4 +77,11 @@ test('issues a good error message if the coupon code is not found', () => {
 	const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as ErrorResponse;
 	expect(result._type).toBe('error.response');
 	expect(result.errorCode).toBe(addOrderErrorCodes.noSuchCoupon);
+});
+
+test('can deal with no availability on the day', () => {
+	const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, [], today, carwash.nineToOne)]);
+	const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as ErrorResponse;
+	expect(result._type).toBe('error.response');
+	expect(result.errorCode).toBe(pricingErrorCodes.pricingError);
 });
