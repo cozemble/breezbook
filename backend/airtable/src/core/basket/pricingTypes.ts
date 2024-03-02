@@ -64,6 +64,15 @@ export function pricedBasket(lines: PricedBasketLine[], total: Price, couponCode
 	};
 }
 
+export function pricedBasketLine(serviceIdValue: ServiceId, addOnIds: PricedAddOn[], total: Price): PricedBasketLine {
+	return {
+		_type: 'priced.basket.line',
+		serviceId: serviceIdValue,
+		addOnIds,
+		total
+	};
+}
+
 export const unpricedBasketFns = {
 	getDates(unpricedBasket: UnpricedBasket): { fromDate: IsoDate; toDate: IsoDate } {
 		const dates = unpricedBasket.lines.map((l) => l.date);

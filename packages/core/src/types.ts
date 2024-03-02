@@ -372,6 +372,7 @@ export interface Currency extends ValueType<string> {
 }
 
 export const currencies = {
+	NULL: currency('NULL'),
 	GBP: currency('GBP'),
 	USD: currency('USD'),
 	EUR: currency('EUR'),

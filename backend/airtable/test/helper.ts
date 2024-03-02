@@ -9,7 +9,6 @@ import {
 	customer,
 	customerForm,
 	dayAndTimePeriod,
-	daysFromToday,
 	duration,
 	environmentId,
 	fullPaymentOnCheckout,
@@ -25,7 +24,6 @@ import {
 	tenantId,
 	tenantSettings,
 	time24,
-	timeBasedPriceAdjustmentSpec,
 	timePeriod,
 	timezone,
 	unlimited
@@ -33,7 +31,6 @@ import {
 import { createOrderRequest } from '@breezbook/backend-api-types';
 import { everythingForTenant } from '../src/express/getEverythingForTenant.js';
 import { percentageBasedPriceAdjustment, timeBasedPriceAdjustment } from '@breezbook/packages-core/dist/calculatePrice.js';
-import { toDomainPricingRule } from '../src/prisma/dbToDomain.js';
 
 export const today = isoDate();
 export const tomorrow = isoDateFns.addDays(isoDate(), 1);
@@ -78,7 +75,7 @@ const tenPercentMoreTwoDaysFromNow = timeBasedPriceAdjustment(
 	percentageBasedPriceAdjustment(0.1)
 );
 
-export function everythingForCarWashTenant(bookings: Booking[] = [], today = isoDate()) {
+export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[] = [], today = isoDate()) {
 	return everythingForTenant(
 		businessConfiguration(
 			businessAvailability([dayAndTimePeriod(today, carwash.nineToSix)]),
@@ -92,7 +89,10 @@ export function everythingForCarWashTenant(bookings: Booking[] = [], today = iso
 		),
 		[fortyPercentMoreToday, twentyFivePercentMoreTomorrow, tenPercentMoreTwoDaysFromNow],
 		bookings,
-		[coupon(couponCode('expired-20-percent-off'), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-05-23'), isoDate('2021-05-26'))],
+		[
+			coupon(couponCode('expired-20-percent-off'), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-05-23'), isoDate('2021-05-26')),
+			coupon(couponCode('20-percent-off'), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-05-23'))
+		],
 		tenantSettings(timezone('Europe/London'), customerForm.id),
 		tenantEnvironment(environmentId('dev'), tenantId('tenant#1'))
 	);

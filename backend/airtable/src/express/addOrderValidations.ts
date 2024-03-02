@@ -1,4 +1,18 @@
-import { booking, Booking, currency, Form, FormId, isoDateFns, mandatory, Order, orderLine, price, Price, priceFns } from '@breezbook/packages-core';
+import {
+	booking,
+	Booking,
+	CouponCode,
+	currency,
+	Form,
+	FormId,
+	isoDateFns,
+	mandatory,
+	Order,
+	orderLine,
+	price,
+	Price,
+	priceFns
+} from '@breezbook/packages-core';
 import { EverythingForTenant } from './getEverythingForTenant.js';
 import { Availability, errorResponse, ErrorResponse } from '@breezbook/backend-api-types';
 import { calculateOrderTotal } from '@breezbook/packages-core/dist/calculateOrderTotal.js';
@@ -118,8 +132,7 @@ export function validateAvailability(everythingForTenant: EverythingForTenant, o
 	return null;
 }
 
-export function validateCoupon(everythingForTenant: EverythingForTenant, order: Order) {
-	const couponCode = order.couponCode;
+export function validateCouponCode(everythingForTenant: EverythingForTenant, couponCode: CouponCode | undefined) {
 	if (couponCode) {
 		const coupon = everythingForTenant.coupons.find((c) => c.code.value === couponCode.value);
 		if (!coupon) {
@@ -132,4 +145,8 @@ export function validateCoupon(everythingForTenant: EverythingForTenant, order: 
 		}
 	}
 	return null;
+}
+
+export function validateCoupon(everythingForTenant: EverythingForTenant, order: Order) {
+	return validateCouponCode(everythingForTenant, order.couponCode);
 }

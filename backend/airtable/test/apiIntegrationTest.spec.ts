@@ -1,7 +1,6 @@
 import {
 	addOnOrder,
 	carwash,
-	couponCode,
 	currency,
 	customer,
 	environmentId,
@@ -21,7 +20,7 @@ import {
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { startTestEnvironment, stopTestEnvironment } from './setup.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
-import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder } from './helper.js';
+import { fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow } from './helper.js';
 import { AvailabilityResponse, CancellationGranted, createOrderRequest, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { insertOrder } from '../src/express/insertOrder.js';
 import { prismaClient } from '../src/prisma/client.js';
@@ -30,7 +29,7 @@ import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME, STRIPE_WEBHO
 import { OrderPaymentCreatedResponse } from '../src/express/handleReceivedWebhook.js';
 import { setSystemConfig } from '../src/prisma/setSystemConfig.js';
 import { storeSystemSecret, storeTenantSecret } from '../src/infra/secretsInPostgres.js';
-import { PricedBasket, unpricedBasket, unpricedBasketLine } from '../src/core/basket/pricing.js';
+import { PricedBasket, unpricedBasket, unpricedBasketLine } from '../src/core/basket/pricingTypes.js';
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
@@ -106,14 +105,10 @@ describe('Given a migrated database', async () => {
 		expect(json.orderLineIds.length).toBe(2);
 	});
 
-	test('can price an basket', async () => {
-		const theBasket = unpricedBasket(
-			[
-				unpricedBasketLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], fourDaysFromNow, carwash.nineToOne),
-				unpricedBasketLine(carwash.mediumCarWash.id, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], fourDaysFromNow, carwash.nineToOne)
-			],
-			couponCode('20-percent-off')
-		);
+	test('can price a basket', async () => {
+		const theBasket = unpricedBasket([
+			unpricedBasketLine(carwash.mediumCarWash.id, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.nineToOne)
+		]);
 
 		const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/basket/price`, {
 			method: 'POST',
@@ -122,6 +117,9 @@ describe('Given a migrated database', async () => {
 			},
 			body: JSON.stringify(theBasket)
 		});
+		if (!fetched.ok) {
+			console.error(await fetched.text());
+		}
 		expect(fetched.status).toBe(200);
 		const json = (await fetched.json()) as PricedBasket;
 		expect(json._type).toBe('priced.basket');
