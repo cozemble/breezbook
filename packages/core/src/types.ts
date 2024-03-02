@@ -371,6 +371,17 @@ export interface Currency extends ValueType<string> {
 	_type: 'currency';
 }
 
+export const currencies = {
+	GBP: currency('GBP'),
+	USD: currency('USD'),
+	EUR: currency('EUR'),
+	AUD: currency('AUD'),
+	CAD: currency('CAD'),
+	JPY: currency('JPY'),
+	NZD: currency('NZD'),
+	CHF: currency('CHF')
+};
+
 export interface Price {
 	_type: 'price';
 	amount: MoneyInMinorUnits;

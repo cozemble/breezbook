@@ -1,6 +1,7 @@
 import {
 	addOnOrder,
 	carwash,
+	couponCode,
 	currency,
 	customer,
 	environmentId,
@@ -29,6 +30,7 @@ import { STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME, STRIPE_WEBHO
 import { OrderPaymentCreatedResponse } from '../src/express/handleReceivedWebhook.js';
 import { setSystemConfig } from '../src/prisma/setSystemConfig.js';
 import { storeSystemSecret, storeTenantSecret } from '../src/infra/secretsInPostgres.js';
+import { PricedBasket, unpricedBasket, unpricedBasketLine } from '../src/core/basket/pricing.js';
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
@@ -102,6 +104,27 @@ describe('Given a migrated database', async () => {
 		expect(json.customerId).toBeDefined();
 		expect(json.bookingIds.length).toBe(2);
 		expect(json.orderLineIds.length).toBe(2);
+	});
+
+	test('can price an basket', async () => {
+		const theBasket = unpricedBasket(
+			[
+				unpricedBasketLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], fourDaysFromNow, carwash.nineToOne),
+				unpricedBasketLine(carwash.mediumCarWash.id, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], fourDaysFromNow, carwash.nineToOne)
+			],
+			couponCode('20-percent-off')
+		);
+
+		const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/basket/price`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(theBasket)
+		});
+		expect(fetched.status).toBe(200);
+		const json = (await fetched.json()) as PricedBasket;
+		expect(json._type).toBe('priced.basket');
 	});
 
 	test('can get a cancellation grant for a booking in the future', async () => {

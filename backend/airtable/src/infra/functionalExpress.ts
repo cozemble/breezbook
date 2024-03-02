@@ -64,19 +64,27 @@ export function date(requestValue: RequestValueExtractor): ParamExtractor<IsoDat
 	};
 }
 
-export function createOrderRequest(): ParamExtractor<CreateOrderRequest | null> {
+interface ThingWithType {
+	_type: string;
+}
+
+export function bodyAsJsonParam<T extends ThingWithType>(expectedType: string): ParamExtractor<T | null> {
 	return (req: express.Request, res: express.Response) => {
-		const body = req.body as CreateOrderRequest | null;
+		const body = req.body as T | null;
 		if (!body) {
 			res.status(400).send(`Missing required body`);
 			return null;
 		}
-		if (body._type !== 'create.order.request') {
-			res.status(400).send(`Posted body is not a create order request`);
+		if (body._type !== expectedType) {
+			res.status(400).send(`Posted body is not a ${expectedType}`);
 			return null;
 		}
 		return body;
 	};
+}
+
+export function createOrderRequest(): ParamExtractor<CreateOrderRequest | null> {
+	return bodyAsJsonParam<CreateOrderRequest>('create.order.request');
 }
 
 export function tenantIdParam(requestValue: RequestValueExtractor = path('tenantId')): ParamExtractor<TenantId | null> {

@@ -12,6 +12,7 @@ import { bindInngestToExpress } from '../inngest/expressBinding.js';
 import { commitCancellation, requestCancellationGrant } from './cancellation.js';
 import { onStoreTenantSecret } from './secretManagement.js';
 import { couponValidityCheck } from './coupons/couponHandlers.js';
+import { onBasketPriceRequest } from './basket/basketHandler.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
 	rawBody?: string;
@@ -63,6 +64,7 @@ export function expressApp(): Express {
 	app.post('/api/:envId/:tenantId/booking/:bookingId/cancellation/grant', requestCancellationGrant);
 	app.post('/api/:envId/:tenantId/booking/:bookingId/cancellation/:cancellationId/commit', commitCancellation);
 	app.get('/api/:envId/:tenantId/coupon/validity', couponValidityCheck);
+	app.post('/api/:envId/:tenantId/basket/price', onBasketPriceRequest);
 
 	app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
 	app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);
