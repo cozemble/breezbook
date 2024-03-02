@@ -73,6 +73,14 @@ export function pricedBasketLine(serviceIdValue: ServiceId, addOnIds: PricedAddO
 	};
 }
 
+export function pricedAddOn(addOnId: AddOnId, quantity: number, price: Price): PricedAddOn {
+	return {
+		addOnId,
+		quantity,
+		price
+	};
+}
+
 export const unpricedBasketFns = {
 	getDates(unpricedBasket: UnpricedBasket): { fromDate: IsoDate; toDate: IsoDate } {
 		const dates = unpricedBasket.lines.map((l) => l.date);

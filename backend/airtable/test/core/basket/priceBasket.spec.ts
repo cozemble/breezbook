@@ -2,7 +2,9 @@ import { expect, test } from 'vitest';
 import { PricedBasket, unpricedBasket, unpricedBasketLine } from '../../../src/core/basket/pricingTypes.js';
 import { everythingForCarWashTenantWithDynamicPricing } from '../../helper.js';
 import { priceBasket } from '../../../src/core/basket/priceBasket.js';
-import { carwash, couponCode, currencies, isoDate, isoDateFns, price, priceFns } from '@breezbook/packages-core';
+import { addOnOrder, carwash, couponCode, currencies, isoDate, isoDateFns, price, priceFns } from '@breezbook/packages-core';
+import { ErrorResponse } from '@breezbook/backend-api-types';
+import { addOrderErrorCodes } from '../../../src/express/addOrder.js';
 
 const today = isoDate();
 const dayBeyondDynamicPricing = isoDateFns.addDays(today, 10);
@@ -50,4 +52,29 @@ test('can price a basket with a coupon code', () => {
 	expect(result.lines).toHaveLength(1);
 	expect(result.lines[0].total).toEqual(carwash.smallCarWash.price);
 	expect(result.discount).toEqual(priceFns.multiply(carwash.smallCarWash.price, 0.2));
+});
+
+test('adds the cost of add-ons to the line total and the main total', () => {
+	const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, [addOnOrder(carwash.wax.id)], dayBeyondDynamicPricing, carwash.nineToOne)]);
+	const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as PricedBasket;
+	expect(result.total).toEqual(priceFns.add(carwash.smallCarWash.price, carwash.wax.price));
+	expect(result.lines).toHaveLength(1);
+	expect(result.lines[0].total).toEqual(priceFns.add(carwash.smallCarWash.price, carwash.wax.price));
+});
+
+test('issues a good error message if the coupon code is expired', () => {
+	const basket = unpricedBasket(
+		[unpricedBasketLine(carwash.smallCarWash.id, [], dayBeyondDynamicPricing, carwash.nineToOne)],
+		couponCode('expired-20-percent-off')
+	);
+	const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as ErrorResponse;
+	expect(result._type).toBe('error.response');
+	expect(result.errorCode).toBe(addOrderErrorCodes.expiredCoupon);
+});
+
+test('issues a good error message if the coupon code is not found', () => {
+	const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, [], dayBeyondDynamicPricing, carwash.nineToOne)], couponCode('no-such-coupon'));
+	const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as ErrorResponse;
+	expect(result._type).toBe('error.response');
+	expect(result.errorCode).toBe(addOrderErrorCodes.noSuchCoupon);
 });
