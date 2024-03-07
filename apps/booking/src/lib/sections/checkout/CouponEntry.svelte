@@ -1,5 +1,16 @@
 <script lang="ts">
-	let value = '';
+	import checkoutStore from '$lib/stores/checkout';
+
+	const { couponCode } = checkoutStore.get();
+	let value: string | undefined = undefined;
+
+	const onApply = () => {
+		couponCode.set(value);
+	};
+
+	couponCode.subscribe((val) => {
+		value = val;
+	});
 </script>
 
 <div class="card bg-base-200">
@@ -14,7 +25,7 @@
 				class="input input-bordered join-item"
 			/>
 
-			<button class="btn btn-secondary join-item">Apply</button>
+			<button class="btn btn-secondary join-item" on:click={onApply}>Apply</button>
 		</div>
 	</div>
 </div>

@@ -3,9 +3,15 @@ import type {
 	AvailabilityResponse,
 	CreateOrderRequest,
 	OrderCreatedResponse,
-	PaymentIntentResponse
+	PaymentIntentResponse,
+	UnpricedBasket
 } from '@breezbook/backend-api-types';
 import type { Order, OrderId } from '@breezbook/packages-core';
+import {
+	unpricedBasket,
+	unpricedBasketLine,
+	type PricedBasket
+} from '@breezbook/backend-api-types';
 
 // TODO: remove mock
 
@@ -185,11 +191,39 @@ const payment = {
 	}
 };
 
+const basket = {
+	pricing: async (tenantSlug: string, basket: UnpricedBasket) => {
+		// TODO this is just for testing, remove it later
+		tenantSlug = 'tenant1';
+
+		const response = await fetch(
+			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/basket/price`,
+			{
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(basket)
+			}
+		);
+
+		if (!response.ok) {
+			const res = await response.json().then((data) => data.errorCode);
+
+			throw new Error(res);
+		}
+
+		const data = await response.json();
+		return data as PricedBasket;
+	}
+};
+
 const api = {
 	tenant,
 	service,
 	booking,
-	payment
+	payment,
+	basket
 };
 
 export default api;

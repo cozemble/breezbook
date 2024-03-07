@@ -1,13 +1,21 @@
 import { onMount } from 'svelte';
-import { derived, get, writable } from 'svelte/store';
+import { derived, get, writable, type Readable } from 'svelte/store';
 import { createStoreContext } from '$lib/common/helpers/store';
 import * as core from '@breezbook/packages-core';
 import api from '$lib/common/api';
-import { createOrderRequest } from '@breezbook/backend-api-types';
+import {
+	createOrderRequest,
+	type PricedBasket,
+	type UnpricedBasket
+} from '@breezbook/backend-api-types';
 import { createPaymentStore } from './payment';
 import { goto } from '$app/navigation';
 import { createCustomerStore } from './customer';
 import notifications from '../notifications';
+
+import { unpricedBasket, unpricedBasketLine } from '@breezbook/backend-api-types';
+import { addOnId, addOnOrder } from '@breezbook/packages-core';
+import tenantStore from '../tenant';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -27,11 +35,13 @@ const saveToLocalStorage = (items: Booking[]) => {
 //
 
 function createCheckoutStore() {
+	const tenant = tenantStore.get();
+
 	const customerStore = createCustomerStore();
 	const paymentStore = createPaymentStore();
 
 	const items = writable<Booking[]>([]);
-	const coupons = writable<core.Coupon[]>([]);
+	const couponCode = writable<string | undefined>();
 
 	const order = derived(
 		[items, customerStore.customer],
@@ -67,10 +77,72 @@ function createCheckoutStore() {
 		}
 	);
 
-	const total = derived([order, coupons], ([$order, $coupons]) => {
-		if (!$order) return null;
-		return core.calculateOrderTotal($order, core.carwash.addOns, $coupons);
-	});
+	const total: Readable<PricedBasket | null> = derived(
+		[items, couponCode],
+		([$items, $couponCode], set) => {
+			if ($items.length === 0) return set(null);
+
+			const basketItems = $items.map((item) => {
+				return unpricedBasketLine(
+					core.carwash.smallCarWash.id,
+					item.extras.map((extra) => addOnOrder(addOnId(extra.id))),
+					core.isoDate(item.time.day),
+					core.timeslotSpec(
+						core.time24(item.time.start),
+						core.time24(item.time.end),
+						'',
+						core.id(item.time.id)
+					)
+				);
+			});
+
+			const _couponCode = $couponCode ? core.couponCode($couponCode) : undefined;
+
+			const unpriced = unpricedBasket(basketItems, _couponCode);
+
+			const tNotif = notifications.create({
+				title: 'Calculating total',
+				description: 'Please wait...',
+				type: 'loading',
+				canUserClose: false
+			});
+
+			api.basket
+				.pricing(tenant.slug, unpriced)
+				.then((res) => {
+					set(res);
+					tNotif.remove();
+				})
+				.catch((err) => {
+					console.error(err);
+					tNotif.remove();
+
+					if (err.message === 'addOrder.no.such.coupon') {
+						console.error('Invalid coupon code');
+						notifications.create({
+							title: 'Error',
+							description: 'Invalid coupon code',
+							type: 'error',
+							duration: 4000
+						});
+						couponCode.set(undefined);
+						return;
+					}
+
+					// notifications.create({
+					// 	title: 'Error',
+					// 	description: err.message,
+					// 	type: 'error',
+					// 	duration: 4000
+					// });
+				});
+		}
+	);
+
+	// const total = derived([order, coupons], ([$order, $coupons]) => {
+	// 	if (!$order) return null;
+	// 	return core.calculateOrderTotal($order, core.carwash.addOns, $coupons);
+	// });
 
 	// ----------------------------------------------------------------
 
@@ -105,11 +177,7 @@ function createCheckoutStore() {
 			canUserClose: false
 		});
 
-		const orderReq = createOrderRequest(
-			theOrder,
-			theTotal.orderTotal,
-			core.fullPaymentOnCheckout()
-		);
+		const orderReq = createOrderRequest(theOrder, theTotal.total, core.fullPaymentOnCheckout());
 
 		const orderRes = await api.booking.placeOrder(orderReq);
 		console.log(orderRes);
@@ -143,7 +211,7 @@ function createCheckoutStore() {
 		paymentStore,
 
 		items,
-		coupons,
+		couponCode,
 		order,
 		total,
 
