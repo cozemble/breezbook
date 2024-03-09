@@ -164,11 +164,17 @@ function createCheckoutStore() {
 	};
 
 	const submitOrder = async () => {
+		const coupon = get(couponCode);
+
 		const theOrder = get(order);
 		if (!theOrder) return;
 
 		const theTotal = get(total);
 		if (!theTotal) return;
+
+		const orderWithCoupon = coupon
+			? core.orderFns.addCoupon(theOrder, core.couponCode(coupon))
+			: theOrder;
 
 		const notif = notifications.create({
 			title: 'Placing order',
@@ -177,7 +183,11 @@ function createCheckoutStore() {
 			canUserClose: false
 		});
 
-		const orderReq = createOrderRequest(theOrder, theTotal.total, core.fullPaymentOnCheckout());
+		const orderReq = createOrderRequest(
+			orderWithCoupon,
+			theTotal.total,
+			core.fullPaymentOnCheckout()
+		);
 
 		const orderRes = await api.booking.placeOrder(orderReq);
 		console.log(orderRes);
