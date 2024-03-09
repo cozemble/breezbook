@@ -280,3 +280,30 @@ values ('fd85db7b-4762-42fb-9a5d-6652e1a05682', 'tenant1', 'dev', 'expired-20-pe
             "value": "2021-05-26"
           }
         }');
+
+insert into coupons(id, tenant_id, environment_id, code, start_date, definition)
+values ('3e2217b1-1c55-4cc4-bdf3-b9be9ed667c3', 'tenant1', 'dev', '20-OFF', '2021-05-23', '{
+  "_type": "coupon",
+  "id": {
+    "_type": "coupon.id",
+    "value": "3e2217b1-1c55-4cc4-bdf3-b9be9ed667c3"
+  },
+  "code": {
+    "_type": "coupon.code",
+    "value": "20-OFF"
+  },
+  "usagePolicy": {
+    "_type": "unlimited"
+  },
+  "value": {
+    "_type": "percentage.coupon",
+    "percentage": {
+      "_type": "percentage.as.ratio",
+      "value": 0.2
+    }
+  },
+  "validFrom": {
+    "_type": "iso.date",
+    "value": "2021-05-23"
+  }
+}');

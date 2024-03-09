@@ -2,7 +2,20 @@ import { expect, test } from 'vitest';
 import { ErrorResponse, PricedBasket, unpricedBasket, unpricedBasketLine } from '@breezbook/backend-api-types';
 import { everythingForCarWashTenantWithDynamicPricing } from '../../helper.js';
 import { priceBasket, pricingErrorCodes } from '../../../src/core/basket/priceBasket.js';
-import { addOnOrder, carwash, couponCode, currencies, isoDate, isoDateFns, price, priceFns } from '@breezbook/packages-core';
+import {
+	addOnOrder,
+	carwash,
+	coupon,
+	couponCode,
+	currencies,
+	isoDate,
+	isoDateFns,
+	percentageAsRatio,
+	percentageCoupon,
+	price,
+	priceFns,
+	unlimited
+} from '@breezbook/packages-core';
 import { addOrderErrorCodes } from '../../../src/express/addOrder.js';
 
 const today = isoDate();
@@ -84,4 +97,9 @@ test('can deal with no availability on the day', () => {
 	const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as ErrorResponse;
 	expect(result._type).toBe('error.response');
 	expect(result.errorCode).toBe(pricingErrorCodes.pricingError);
+});
+
+test('x', () => {
+	const c = coupon(couponCode('20-OFF'), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-05-23'));
+	console.log(JSON.stringify(c, null, 2));
 });

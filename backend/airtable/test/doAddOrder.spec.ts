@@ -11,9 +11,10 @@ import {
 	order,
 	orderFns,
 	orderLine,
-	price
+	price,
+	priceFns
 } from '@breezbook/packages-core';
-import { everythingForCarWashTenantWithDynamicPricing, goodCustomer, goodServiceFormData, today } from './helper.js';
+import { everythingForCarWashTenantWithDynamicPricing, fourDaysFromNow, goodCustomer, goodServiceFormData, today } from './helper.js';
 import { createOrderRequest, ErrorResponse } from '@breezbook/backend-api-types';
 import { addOrderErrorCodes, doAddOrder } from '../src/express/addOrder.js';
 import { Prisma } from '@prisma/client';
@@ -118,4 +119,17 @@ test('an order with a non-existent timeslot by id should result in an error', ()
 	const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
 	expect(outcome.errorCode).toBe(addOrderErrorCodes.noSuchTimeslotId);
 	expect(outcome.errorMessage).toBeDefined();
+});
+
+test('an order with a coupon code should apply the discount', () => {
+	const theOrder = orderFns.addCoupon(
+		order(goodCustomer, [orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], fourDaysFromNow, carwash.nineToOne, [goodServiceFormData])]),
+		couponCode('20-percent-off')
+	);
+	const request = createOrderRequest(theOrder, priceFns.multiply(carwash.smallCarWash.price, 0.8), fullPaymentOnCheckout());
+	const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing([], fourDaysFromNow), request);
+	if (!outcome || outcome._type !== 'success') {
+		throw new Error('Expected success, got ' + JSON.stringify(outcome));
+	}
+	expect(outcome.orderCreatedResponse.bookingIds).toHaveLength(1);
 });
