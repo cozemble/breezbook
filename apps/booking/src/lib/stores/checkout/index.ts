@@ -189,7 +189,7 @@ function createCheckoutStore() {
 			core.fullPaymentOnCheckout()
 		);
 
-		const orderRes = await api.booking.placeOrder(orderReq);
+		const orderRes = await api.booking.placeOrder(tenant.slug, orderReq);
 		console.log(orderRes);
 		if (!orderRes?.orderId) {
 			notif.remove();

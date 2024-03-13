@@ -1,4 +1,4 @@
-import mock from '$lib/common/mock';
+import axios from 'axios';
 import type {
 	AvailabilityResponse,
 	CreateOrderRequest,
@@ -6,14 +6,14 @@ import type {
 	PaymentIntentResponse,
 	UnpricedBasket
 } from '@breezbook/backend-api-types';
-import type { Order, OrderId } from '@breezbook/packages-core';
-import {
-	unpricedBasket,
-	unpricedBasketLine,
-	type PricedBasket
-} from '@breezbook/backend-api-types';
+import { type PricedBasket } from '@breezbook/backend-api-types';
+
+import mock from '$lib/common/mock';
+
+import { PUBLIC_API_URL } from '$env/static/public';
 
 // TODO: remove mock
+// TODO: enable real tenant and service slugs
 
 const tenant = {
 	getOne: async (slug: string) => {
@@ -46,31 +46,17 @@ const service = {
 };
 
 const booking = {
-	getDetails: async (tenantSlug: string, serviceSlug: string) => {
-		// TODO this is just for testing, remove it later
-		tenantSlug = 'tenant1';
-		serviceSlug = 'smallCarWash';
-
-		const response = await fetch(
-			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/service/${serviceSlug}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
+	getDetails: async (tenantSlug: string, serviceSlug: string) =>
+		axios
+			.post<AvailabilityResponse>(
+				`${PUBLIC_API_URL}/${'tenant1'}/service/${'smallCarWash'}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
+				{
+					headers: {
+						'Content-Type': 'application/json'
+					}
 				}
-			}
-		);
-
-		if (!response.ok) throw new Error('Network response was not ok');
-
-		const contentType = response.headers.get('content-type');
-		const isJson = contentType && contentType.includes('application/json');
-		if (!isJson) throw new Error('Response was not valid JSON');
-
-		const data = (await response.json()) as AvailabilityResponse;
-
-		return data;
-	},
+			)
+			.then((res) => res.data),
 
 	getTimeSlots: async (
 		tenantSlug: string,
@@ -79,143 +65,55 @@ const booking = {
 			fromDate: Date;
 			toDate: Date;
 		}
-	) => {
-		// TODO this is just for testing, remove it later
-		tenantSlug = 'tenant1';
-		serviceSlug = 'smallCarWash';
-
-		// TODO set the api url as an env variable
-		// TODO handle errors properly
-
-		// format: YYYY-MM-DD
-		const filtersAsUrlParams = new URLSearchParams({
-			fromDate: filters.fromDate.toISOString().split('T')[0],
-			toDate: filters.toDate.toISOString().split('T')[0]
-		}).toString();
-
-		const response = await fetch(
-			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/service/${serviceSlug}/availability?${filtersAsUrlParams}`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
+	) =>
+		axios
+			.post<AvailabilityResponse>(
+				`${PUBLIC_API_URL}/${'tenant1'}/service/${'smallCarWash'}/availability`,
+				undefined,
+				{
+					params: {
+						fromDate: filters.fromDate.toISOString().split('T')[0],
+						toDate: filters.toDate.toISOString().split('T')[0]
+					}
 				}
-			}
-		);
+			)
+			.then((res) => {
+				const data = res.data;
 
-		if (!response.ok) throw new Error('Network response was not ok');
+				const adaptedDays: DaySlot[] = Object.entries(data.slots).reduce((prev, [key, value]) => {
+					const timeSlots: TimeSlot[] = value.map((slot) => ({
+						id: slot.timeslotId,
+						start: slot.startTime24hr,
+						end: slot.endTime24hr,
+						price: slot.priceWithNoDecimalPlaces,
+						day: key
+					}));
+					const day: DaySlot = { date: key, timeSlots };
 
-		const contentType = response.headers.get('content-type');
-		const isJson = contentType && contentType.includes('application/json');
-		if (!isJson) throw new Error('Response was not valid JSON');
+					return [...prev, day];
+				}, [] as DaySlot[]);
 
-		const data = (await response.json()) as AvailabilityResponse;
+				return adaptedDays;
+			}),
 
-		const adaptedDays: DaySlot[] = Object.entries(data.slots).reduce((prev, [key, value]) => {
-			const timeSlots: TimeSlot[] = value.map((slot) => ({
-				id: slot.timeslotId,
-				start: slot.startTime24hr,
-				end: slot.endTime24hr,
-				price: slot.priceWithNoDecimalPlaces,
-				day: key
-			}));
-			const day: DaySlot = { date: key, timeSlots };
-
-			return [...prev, day];
-		}, [] as DaySlot[]);
-
-		return adaptedDays;
-	},
-
-	placeOrder: async (order: CreateOrderRequest) => {
-		const tenantSlug = 'tenant1';
-
-		const response = await fetch(
-			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/orders`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(order)
-			}
-		);
-
-		if (!response.ok) {
-			console.error('Network response was not ok');
-			return;
-		}
-
-		const contentType = response.headers.get('content-type');
-		const isJson = contentType && contentType.includes('application/json');
-		if (!isJson) {
-			console.error('Response was not valid JSON');
-			return;
-		}
-
-		const data = (await response.json()) as OrderCreatedResponse;
-
-		return data;
-	}
+	placeOrder: async (tenantSlug: string, order: CreateOrderRequest) =>
+		axios
+			.post<OrderCreatedResponse>(`${PUBLIC_API_URL}/${'tenant1'}/orders`, order)
+			.then((res) => res.data)
 };
 
 const payment = {
-	createPaymentIntent: async (orderId: string) => {
-		const tenantSlug = 'tenant1';
-
-		const response = await fetch(
-			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/orders/${orderId}/paymentIntent`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-
-		if (!response.ok) {
-			console.error('Network response was not ok');
-			return;
-		}
-
-		const contentType = response.headers.get('content-type');
-		const isJson = contentType && contentType.includes('application/json');
-		if (!isJson) {
-			console.error('Response was not valid JSON');
-			return;
-		}
-
-		const data = (await response.json()) as PaymentIntentResponse;
-
-		return data;
-	}
+	createPaymentIntent: async (tenantSlug: string, orderId: string) =>
+		axios
+			.post<PaymentIntentResponse>(`${PUBLIC_API_URL}/${'tenant1'}/orders/${orderId}/paymentIntent`)
+			.then((res) => res.data)
 };
 
 const basket = {
-	pricing: async (tenantSlug: string, basket: UnpricedBasket) => {
-		// TODO this is just for testing, remove it later
-		tenantSlug = 'tenant1';
-
-		const response = await fetch(
-			`https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/dev/${tenantSlug}/basket/price`,
-			{
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(basket)
-			}
-		);
-
-		if (!response.ok) {
-			const res = await response.json().then((data) => data.errorCode);
-
-			throw new Error(res);
-		}
-
-		const data = await response.json();
-		return data as PricedBasket;
-	}
+	pricing: async (tenantSlug: string, basket: UnpricedBasket) =>
+		axios
+			.post<PricedBasket>(`${PUBLIC_API_URL}/${'tenant1'}/basket/price`, basket)
+			.then((res) => res.data)
 };
 
 const api = {

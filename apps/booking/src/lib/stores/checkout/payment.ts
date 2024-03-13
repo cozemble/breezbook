@@ -3,8 +3,11 @@ import { loadStripe, type Stripe, type StripeElements } from '@stripe/stripe-js'
 import { onMount } from 'svelte';
 import { get, writable } from 'svelte/store';
 import notifications from '../notifications';
+import tenantStore from '../tenant';
 
 export const createPaymentStore = () => {
+	const tenant = tenantStore.get();
+
 	const clientSecret = writable<string | null>(null);
 	const stripePublicKey = writable<string | null>(null);
 	const stripe = writable<Stripe | null>(null);
@@ -36,7 +39,7 @@ export const createPaymentStore = () => {
 	// ----------------------------------------------------------
 
 	const createPaymentIntent = async (orderId: string) => {
-		const res = await api.payment.createPaymentIntent(orderId);
+		const res = await api.payment.createPaymentIntent(tenant.slug, orderId);
 
 		if (!res?.clientSecret || !res?.stripePublicKey) return;
 

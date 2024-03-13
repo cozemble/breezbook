@@ -1,10 +1,13 @@
 import { derived, writable } from 'svelte/store';
 import api from '$lib/common/api';
+import tenantStore from '../tenant';
 
 /** Setup stores to manage extras
  * - fetch extras initially
  */
 export default function createExtrasStore(service: Service) {
+	const tenant = tenantStore.get();
+
 	const extras = writable<Service.Extra[]>([]);
 	const loading = writable(false);
 	/** Automatically derived from the extras with `selected: true` */
@@ -13,7 +16,7 @@ export default function createExtrasStore(service: Service) {
 	const fetchExtras = async () => {
 		loading.set(true);
 
-		const res = await api.booking.getDetails('', service.slug); // TODO proper params
+		const res = await api.booking.getDetails(tenant.slug, service.slug);
 
 		const addOns = res.addOns.map(
 			(addOn): Service.Extra => ({
