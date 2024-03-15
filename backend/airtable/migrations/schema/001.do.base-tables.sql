@@ -168,12 +168,13 @@ create table pricing_rules
 
 create table tenant_settings
 (
-    tenant_id        text references tenants (tenant_id) not null primary key,
+    tenant_id        text references tenants (tenant_id) not null,
     environment_id   text                                not null,
     customer_form_id text                                null     default null references forms (id),
     iana_timezone    text                                not null,
     created_at       timestamp with time zone            not null default current_timestamp,
-    updated_at       timestamp with time zone            not null default current_timestamp
+    updated_at       timestamp with time zone            not null default current_timestamp,
+    primary key (tenant_id, environment_id)
 );
 
 create table customers

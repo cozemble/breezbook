@@ -228,7 +228,7 @@ model services {
 }
 
 model tenant_settings {
-  tenant_id        String   @id
+  tenant_id        String
   environment_id   String
   customer_form_id String?
   iana_timezone    String
@@ -236,6 +236,8 @@ model tenant_settings {
   updated_at       DateTime @default(now()) @db.Timestamptz(6)
   forms            forms?   @relation(fields: [customer_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id])
 }
 
 model tenants {
@@ -265,7 +267,7 @@ model tenants {
   service_forms            service_forms[]
   services                 services[]
   system_outbound_webhooks system_outbound_webhooks[]
-  tenant_settings          tenant_settings?
+  tenant_settings          tenant_settings[]
   time_slots               time_slots[]
   webhook_destinations     webhook_destinations[]
 }
