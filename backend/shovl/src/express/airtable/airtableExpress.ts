@@ -5,7 +5,7 @@ import * as qs from 'qs';
 
 const airtableUrl = 'https://www.airtable.com';
 const authorizationCache = {} as Record<string, { codeVerifier: string }>;
-const scope = 'data.records:read data.records:write';
+const scope = 'data.records:read data.records:write schema.bases:read';
 
 export async function onAirtableOauthCallback(req: express.Request, res: express.Response): Promise<void> {
 	const clientId = process.env.AIRTABLE_CLIENT_ID;
