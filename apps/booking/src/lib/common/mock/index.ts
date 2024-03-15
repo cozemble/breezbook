@@ -1,12 +1,18 @@
 export const tenants: Tenant[] = [
 	{
 		id: '1',
-		slug: 'the-smart-wash',
+		slug: 'thesmartwashltd',
 		name: 'The Smart Wash',
 		heading: 'Get your car cleaned in a smart way.',
 		description:
 			'We use the latest technology to clean your car. Your car will shine like a new one.',
-		heroImage: 'https://picsum.photos/800/450'
+		heroImage: 'https://picsum.photos/800/450',
+		theme: {
+			font: {
+				sans: 'Comfortaa'
+			},
+			theme: 'sunset'
+		}
 	},
 	{
 		id: '2',
@@ -15,13 +21,7 @@ export const tenants: Tenant[] = [
 		heading: 'We rob. We are professionals.',
 		description:
 			'We rob any place for you. Just tell us where and when. We are not responsible for any consequences. And remember, there is no rest for the wicked.',
-		heroImage: 'https://picsum.photos/800/450',
-		theme: {
-			font: {
-				sans: 'Comfortaa'
-			},
-			theme: 'sunset'
-		}
+		heroImage: 'https://picsum.photos/800/450'
 	},
 	{
 		id: '3',
