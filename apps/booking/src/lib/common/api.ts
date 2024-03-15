@@ -10,7 +10,9 @@ import { type PricedBasket } from '@breezbook/backend-api-types';
 
 import mock from '$lib/common/mock';
 
-import { PUBLIC_API_URL } from '$env/static/public';
+import { env } from '$env/dynamic/public';
+
+const PUBLIC_API_URL = env.PUBLIC_API_URL;
 
 // TODO: remove mock
 // TODO: enable real tenant and service slugs
