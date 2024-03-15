@@ -180,6 +180,12 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^3.0.0
         version: 3.0.1(svelte@4.2.8)(vite@5.0.7)
+      daisyui:
+        specifier: ^4.7.3
+        version: 4.7.3(postcss@8.4.32)
+      postcss:
+        specifier: ^8.4.32
+        version: 8.4.32
       svelte:
         specifier: ^4.2.7
         version: 4.2.8
@@ -3062,6 +3068,18 @@ packages:
 
   /daisyui@4.4.24(postcss@8.4.32):
     resolution: {integrity: sha512-u/B3484J08V7N0rIYymnC+SyxOjlYQL+2vyhHWV+/KC+VaUcbEF2Z3H06eCPgdTiZ0J+ml44aH7wBhIymPFQ+g==}
+    engines: {node: '>=16.9.0'}
+    dependencies:
+      css-selector-tokenizer: 0.8.0
+      culori: 3.3.0
+      picocolors: 1.0.0
+      postcss-js: 4.0.1(postcss@8.4.32)
+    transitivePeerDependencies:
+      - postcss
+    dev: true
+
+  /daisyui@4.7.3(postcss@8.4.32):
+    resolution: {integrity: sha512-R8jUpBMAUm4rSyxzGa9QqFdJTkzREtb1QahXdDoOfElGiF4VbSuu5bfqQoOro1kkSagPy+aTKu5WtSSXmH3u3g==}
     engines: {node: '>=16.9.0'}
     dependencies:
       css-selector-tokenizer: 0.8.0

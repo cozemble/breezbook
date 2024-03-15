@@ -1,19 +1,12 @@
-<script context="module" lang="ts">
-
-	export async function load({ page, fetch }) {
-		const param = page.query.get('param');
-		return {
-			props: {
-				param
-			}
-		};
-	}
-</script>
-
 <script lang="ts">
 	import AirtableOauth from '../lib/components/AirtableOauth.svelte';
-
-	export let param: string;
+	import AirtableAccessToken from '$lib/components/AirtableAccessToken.svelte';
 </script>
 
-<AirtableOauth {param} />
+<main class="m-2 p-2">
+	<div>
+		<AirtableAccessToken />
+	</div>
+
+	<AirtableOauth />
+</main>
