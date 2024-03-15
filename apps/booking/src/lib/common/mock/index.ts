@@ -74,22 +74,33 @@ export const services: Service[] = [
 	{
 		tenantId: '1',
 		id: '1',
-		slug: 'big-car-wash',
-		name: 'Big Car Wash',
-		description: 'We wash your big car.',
+		slug: 'smallCarWash',
+		name: 'Small Car Wash',
+		description: 'We wash your small size car.',
+		image: 'https://picsum.photos/400/201',
+		approximatePrice: 50,
+		approximateDuration: 30
+	},
+
+	{
+		tenantId: '1',
+		id: '2',
+		slug: 'mediumCarWash',
+		name: 'Medium Car Wash',
+		description: 'We wash your medium size car.',
 		image: 'https://picsum.photos/400/200',
-		approximatePrice: 100,
+		approximatePrice: 80,
 		approximateDuration: 60
 	},
 	{
 		tenantId: '1',
-		id: '2',
-		slug: 'small-car-wash',
-		name: 'Small Car Wash',
-		description: 'We wash your small car.',
-		image: 'https://picsum.photos/400/201',
-		approximatePrice: 50,
-		approximateDuration: 30
+		id: '3',
+		slug: 'largeCarWash',
+		name: 'Large Car Wash',
+		description: 'We wash your large car.',
+		image: 'https://picsum.photos/400/200',
+		approximatePrice: 100,
+		approximateDuration: 60
 	},
 
 	{
