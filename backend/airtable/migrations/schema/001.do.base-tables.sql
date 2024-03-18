@@ -211,7 +211,7 @@ create table order_lines
     tenant_id         text references tenants (tenant_id) not null,
     environment_id    text                                not null,
     order_id          text                                not null,
-    service_id        text                                not null,
+    service_id        text references services (id)       not null,
     add_on_ids        text[]                              not null default '{}',
     date              text                                not null,
     time_slot_id      text                                null     default null references time_slots (id),

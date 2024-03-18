@@ -73,10 +73,10 @@ export const tenants: Tenant[] = [
 export const services: Service[] = [
 	{
 		tenantId: '1',
-		id: '1',
-		slug: 'smallCarWash',
-		name: 'Small Car Wash',
-		description: 'We wash your small size car.',
+		id: 'thesmartwashltd_dev_service_mini.valet.large.car',
+		slug: 'thesmartwashltd_dev_service_mini.valet.large.car',
+		name: 'Mini Valet Large Car',
+		description: 'Mini Valet Large Car',
 		image: 'https://picsum.photos/400/201',
 		approximatePrice: 50,
 		approximateDuration: 30
