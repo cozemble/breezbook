@@ -50,7 +50,7 @@ function createCheckoutStore() {
 
 			const lines = $items.map((item) =>
 				core.orderLine(
-					core.serviceId(item.id),
+					core.serviceId(item.service.id),
 					core.price(item.time.price, core.currency('GBP')), // TODO correct this
 					item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
 					core.isoDate(item.time.day),
