@@ -84,7 +84,7 @@ function createCheckoutStore() {
 
 			const basketItems = $items.map((item) => {
 				return unpricedBasketLine(
-					core.carwash.smallCarWash.id,
+					core.serviceId(item.id),
 					item.extras.map((extra) => addOnOrder(addOnId(extra.id))),
 					core.isoDate(item.time.day),
 					core.timeslotSpec(
