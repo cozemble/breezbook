@@ -13,6 +13,7 @@ import { commitCancellation, requestCancellationGrant } from './cancellation.js'
 import { onStoreTenantSecret } from './secretManagement.js';
 import { couponValidityCheck } from './coupons/couponHandlers.js';
 import { onBasketPriceRequest } from './basket/basketHandler.js';
+import { onShovlOut } from './shovl/shovlEndpoints.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
 	rawBody?: string;
@@ -69,6 +70,7 @@ export function expressApp(): Express {
 	app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
 	app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);
 	app.post('/internal/api/:envId/:tenantId/secret', onStoreTenantSecret);
+	app.post('/internal/api/:envId/shovl/out', onShovlOut);
 
 	bindInngestToExpress(app);
 
