@@ -4,6 +4,7 @@ import { onMount } from 'svelte';
 import { get, writable } from 'svelte/store';
 import notifications from '../notifications';
 import tenantStore from '../tenant';
+import orderHistoryStore from '../orderHistory';
 
 export const createPaymentStore = () => {
 	const tenant = tenantStore.get();

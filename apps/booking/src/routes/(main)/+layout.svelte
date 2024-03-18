@@ -8,12 +8,14 @@
 
 	import Footer from '$lib/sections/home/Footer.svelte';
 	import Header from '$lib/sections/home/Header.svelte';
+	import orderHistoryStore from '$lib/stores/orderHistory';
 
 	export let data: PageData;
 	const tenant = data.tenant;
 
 	tenantStore.init(tenant);
 	checkoutStore.init();
+	orderHistoryStore.init();
 </script>
 
 <div

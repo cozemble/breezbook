@@ -2,9 +2,16 @@
 	import { page } from '$app/stores';
 	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
 	import PaymentBookings from '$lib/sections/checkout/payment/PaymentBookings.svelte';
+	import checkoutStore from '$lib/stores/checkout';
+	import notifications from '$lib/stores/notifications';
+	import orderHistoryStore from '$lib/stores/orderHistory';
 	import tenantStore from '$lib/stores/tenant';
+	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
 
 	const tenant = tenantStore.get();
+	const checkout = checkoutStore.get();
+	const orderHistory = orderHistoryStore.get();
 
 	$: params = $page.url.href
 		.split('?')[1]
@@ -23,6 +30,37 @@
 	};
 
 	$: success = params.redirect_status === 'succeeded';
+
+	onMount(() => {
+		if (!success) return;
+
+		const historyOrder = get(orderHistory.items).find(
+			(item) => item.paymentIntent === params.payment_intent
+		);
+		const checkoutOrder = get(checkout.order);
+
+		if (!historyOrder && !checkoutOrder) {
+			notifications.create({
+				type: 'error',
+				title: 'An error occurred',
+				description: 'We could not find your order. Please contact us for assistance.',
+				canUserClose: true
+			});
+
+			return;
+		}
+
+		if (!historyOrder && checkoutOrder) {
+			orderHistory.addItem({
+				order: checkoutOrder,
+				paymentIntent: params.payment_intent,
+				success: true
+			});
+
+			checkout.clearItems();
+			return;
+		}
+	});
 </script>
 
 <div class="w-full flex flex-col gap-4">
