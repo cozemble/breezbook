@@ -35,8 +35,24 @@ const service = {
 		const tenant = await api.tenant.getOne(tenantSlug);
 		if (!tenant) return null;
 
-		const service = mock.services.find((service) => service.slug === serviceSlug);
-		return service || null;
+		// TODO remove mock
+		const service = await booking
+			.getDetails(tenantSlug, serviceSlug)
+			.then((res): Service => {
+				return {
+					id: res.serviceSummary.id,
+					name: res.serviceSummary.name,
+					description: res.serviceSummary.description,
+					tenantId: tenant.id,
+					approximateDuration: res.serviceSummary.durationMinutes,
+					image: 'https://picsum.photos/400/203',
+					approximatePrice: Object.values(res.slots)[0][0].priceWithNoDecimalPlaces,
+					slug: serviceSlug
+				};
+			})
+			.catch(() => null);
+		const mockService = mock.services.find((service) => service.slug === serviceSlug);
+		return service || mockService || null;
 	},
 
 	getAll: async (tenantSlug: string) => {
@@ -52,9 +68,7 @@ const booking = {
 	getDetails: async (tenantSlug: string, serviceSlug: string) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/service/${
-					dev ? 'smallCarWash' : serviceSlug
-				}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
+				`${PUBLIC_API_URL}/${tenantSlug}/service/${serviceSlug}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
 				{
 					headers: {
 						'Content-Type': 'application/json'
@@ -73,9 +87,7 @@ const booking = {
 	) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/service/${
-					dev ? 'smallCarWash' : serviceSlug
-				}/availability`,
+				`${PUBLIC_API_URL}/${tenantSlug}/service/${serviceSlug}/availability`,
 				undefined,
 				{
 					params: {
