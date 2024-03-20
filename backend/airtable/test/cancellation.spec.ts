@@ -90,18 +90,3 @@ describe('Given a cancellation grant', () => {
 		expect(outcome._type).toBe('http.error');
 	});
 });
-
-async function createBooking(date: IsoDate): Promise<string> {
-	const createOrderResponse = await insertOrder(
-		tenantEnv,
-		createOrderRequest(
-			order(goodCustomer, [orderLine(carwash.mediumCarWash.id, carwash.mediumCarWash.price, [], date, carwash.nineToOne, [])]),
-			carwash.mediumCarWash.price,
-			fullPaymentOnCheckout()
-		),
-		carwash.services
-	);
-	expect(createOrderResponse.bookingIds).toHaveLength(1);
-	expect(createOrderResponse.bookingIds[0]).toBeDefined();
-	return mandatory(createOrderResponse.bookingIds[0], 'Booking id is not defined');
-}

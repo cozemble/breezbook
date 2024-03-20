@@ -18,6 +18,7 @@ import { everythingForCarWashTenantWithDynamicPricing, fourDaysFromNow, goodCust
 import { createOrderRequest, ErrorResponse } from '@breezbook/backend-api-types';
 import { addOrderErrorCodes, doAddOrder } from '../src/express/addOrder.js';
 import { Prisma } from '@prisma/client';
+import { prismaClient } from '../src/prisma/client.js';
 
 test('tenant has a customer form, and the customer does not have a form response', () => {
 	const theCustomer = customer('Mike', 'Hogan', 'mike@email.com');
@@ -132,4 +133,26 @@ test('an order with a coupon code should apply the discount', () => {
 		throw new Error('Expected success, got ' + JSON.stringify(outcome));
 	}
 	expect(outcome.orderCreatedResponse.bookingIds).toHaveLength(1);
+});
+
+test('the customer and service forms should be persisted', () => {
+	const theOrder = orderFns.addCoupon(
+		order(goodCustomer, [orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], fourDaysFromNow, carwash.nineToOne, [goodServiceFormData])]),
+		couponCode('20-percent-off')
+	);
+	const request = createOrderRequest(theOrder, priceFns.multiply(carwash.smallCarWash.price, 0.8), fullPaymentOnCheckout());
+	const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing([], fourDaysFromNow), request);
+	if (!outcome || outcome._type !== 'success') {
+		throw new Error('Expected success, got ' + JSON.stringify(outcome));
+	}
+	const prisma = prismaClient();
+
+	const customerFormUpsert = outcome.prismaMutations.mutations.find(
+		(mutation) => mutation._type === 'prisma.upsert' && mutation.delegate === prisma.customer_form_values
+	);
+	expect(customerFormUpsert).toBeDefined();
+	const serviceFormUpsert = outcome.prismaMutations.mutations.find(
+		(mutation) => mutation._type === 'prisma.upsert' && mutation.delegate === prisma.booking_service_form_values
+	);
+	expect(serviceFormUpsert).toBeDefined();
 });

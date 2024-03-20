@@ -22,6 +22,20 @@ export type UpsertCustomer = PrismaUpsert<
 	Prisma.customersUpdateArgs['where']
 >;
 
+export type UpsertCustomerFormValues = PrismaUpsert<
+	Prisma.customer_form_valuesDelegate,
+	Prisma.customer_form_valuesCreateArgs['data'],
+	Prisma.customer_form_valuesUpdateArgs['data'],
+	Prisma.customer_form_valuesUpdateArgs['where']
+>;
+
+export type UpsertBookingServiceFormValues = PrismaUpsert<
+	Prisma.booking_service_form_valuesDelegate,
+	Prisma.booking_service_form_valuesCreateArgs['data'],
+	Prisma.booking_service_form_valuesUpdateArgs['data'],
+	Prisma.booking_service_form_valuesUpdateArgs['where']
+>;
+
 export function updateCancellationGrant(
 	prisma: PrismaClient,
 	data: Prisma.cancellation_grantsUpdateArgs['data'],
@@ -53,6 +67,36 @@ export function upsertCustomer(
 	return {
 		_type: 'prisma.upsert',
 		delegate: prisma.customers,
+		where,
+		update,
+		create
+	};
+}
+
+export function upsertCustomerFormValues(
+	prisma: PrismaClient,
+	create: Prisma.customer_form_valuesCreateArgs['data'],
+	update: Prisma.customer_form_valuesUpdateArgs['data'],
+	where: Prisma.customer_form_valuesWhereUniqueInput
+): UpsertCustomerFormValues {
+	return {
+		_type: 'prisma.upsert',
+		delegate: prisma.customer_form_values,
+		where,
+		update,
+		create
+	};
+}
+
+export function upsertBookingServiceFormValues(
+	prisma: PrismaClient,
+	create: Prisma.booking_service_form_valuesCreateArgs['data'],
+	update: Prisma.booking_service_form_valuesUpdateArgs['data'],
+	where: Prisma.booking_service_form_valuesWhereUniqueInput
+): UpsertBookingServiceFormValues {
+	return {
+		_type: 'prisma.upsert',
+		delegate: prisma.booking_service_form_values,
 		where,
 		update,
 		create

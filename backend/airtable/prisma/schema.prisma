@@ -35,27 +35,28 @@ model blocked_time {
 }
 
 model bookings {
-  id                  String                @id @default(dbgenerated("extensions.uuid_generate_v4()"))
-  tenant_id           String
-  environment_id      String
-  status              booking_status        @default(confirmed)
-  customer_id         String
-  service_id          String
-  order_id            String
-  date                String
-  start_time_24hr     String
-  end_time_24hr       String
-  time_slot_id        String?
-  created_at          DateTime              @default(now()) @db.Timestamptz(6)
-  updated_at          DateTime              @default(now()) @db.Timestamptz(6)
-  booking_events      booking_events[]
-  customers           customers             @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  orders              orders                @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services            services              @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants             tenants               @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  time_slots          time_slots?           @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  cancellation_grants cancellation_grants[]
-  reservations        reservations[]
+  id                          String                        @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  tenant_id                   String
+  environment_id              String
+  status                      booking_status                @default(confirmed)
+  customer_id                 String
+  service_id                  String
+  order_id                    String
+  date                        String
+  start_time_24hr             String
+  end_time_24hr               String
+  time_slot_id                String?
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  booking_events              booking_events[]
+  booking_service_form_values booking_service_form_values[]
+  customers                   customers                     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders                      orders                        @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services                    services                      @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  time_slots                  time_slots?                   @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cancellation_grants         cancellation_grants[]
+  reservations                reservations[]
 }
 
 model business_hours {
@@ -72,33 +73,35 @@ model business_hours {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model customers {
-  id             String     @id @default(dbgenerated("extensions.uuid_generate_v4()"))
-  tenant_id      String
-  environment_id String
-  first_name     String
-  last_name      String
-  email          String
-  created_at     DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime   @default(now()) @db.Timestamptz(6)
-  bookings       bookings[]
-  tenants        tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  orders         orders[]
+  id                   String                 @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  tenant_id            String
+  environment_id       String
+  first_name           String
+  last_name            String
+  email                String
+  created_at           DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime               @default(now()) @db.Timestamptz(6)
+  bookings             bookings[]
+  customer_form_values customer_form_values[]
+  tenants              tenants                @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  orders               orders[]
 
   @@unique([tenant_id, environment_id, email], map: "customers_tenant_id_email_key")
 }
 
 model forms {
-  id              String            @id
-  tenant_id       String
-  environment_id  String
-  name            String
-  description     String?
-  definition      Json
-  created_at      DateTime          @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime          @default(now()) @db.Timestamptz(6)
-  tenants         tenants           @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  service_forms   service_forms[]
-  tenant_settings tenant_settings[]
+  id                          String                        @id
+  tenant_id                   String
+  environment_id              String
+  name                        String
+  description                 String?
+  definition                  Json
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  booking_service_form_values booking_service_form_values[]
+  tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  service_forms               service_forms[]
+  tenant_settings             tenant_settings[]
 }
 
 model order_lines {
@@ -243,35 +246,37 @@ model tenant_settings {
 }
 
 model tenants {
-  tenant_id                String                     @id
-  name                     String
-  created_at               DateTime                   @default(now()) @db.Timestamptz(6)
-  updated_at               DateTime                   @default(now()) @db.Timestamptz(6)
-  add_on                   add_on[]
-  blocked_time             blocked_time[]
-  booking_events           booking_events[]
-  bookings                 bookings[]
-  business_hours           business_hours[]
-  cancellation_grants      cancellation_grants[]
-  coupons                  coupons[]
-  customers                customers[]
-  forms                    forms[]
-  order_lines              order_lines[]
-  order_payments           order_payments[]
-  orders                   orders[]
-  pricing_rules            pricing_rules[]
-  received_webhooks        received_webhooks[]
-  refund_rules             refund_rules[]
-  resource_availability    resource_availability[]
-  resource_blocked_time    resource_blocked_time[]
-  resource_types           resource_types[]
-  resources                resources[]
-  service_forms            service_forms[]
-  services                 services[]
-  system_outbound_webhooks system_outbound_webhooks[]
-  tenant_settings          tenant_settings[]
-  time_slots               time_slots[]
-  webhook_destinations     webhook_destinations[]
+  tenant_id                   String                        @id
+  name                        String
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  add_on                      add_on[]
+  blocked_time                blocked_time[]
+  booking_events              booking_events[]
+  booking_service_form_values booking_service_form_values[]
+  bookings                    bookings[]
+  business_hours              business_hours[]
+  cancellation_grants         cancellation_grants[]
+  coupons                     coupons[]
+  customer_form_values        customer_form_values[]
+  customers                   customers[]
+  forms                       forms[]
+  order_lines                 order_lines[]
+  order_payments              order_payments[]
+  orders                      orders[]
+  pricing_rules               pricing_rules[]
+  received_webhooks           received_webhooks[]
+  refund_rules                refund_rules[]
+  resource_availability       resource_availability[]
+  resource_blocked_time       resource_blocked_time[]
+  resource_types              resource_types[]
+  resources                   resources[]
+  service_forms               service_forms[]
+  services                    services[]
+  system_outbound_webhooks    system_outbound_webhooks[]
+  tenant_settings             tenant_settings[]
+  time_slots                  time_slots[]
+  webhook_destinations        webhook_destinations[]
 }
 
 model time_slots {
@@ -433,6 +438,38 @@ model booking_events {
   created_at     DateTime           @default(now()) @db.Timestamptz(6)
   bookings       bookings           @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants        tenants            @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model last_shovl_out {
+  environment_id String
+  entity_type    String
+  last_shovl_out DateTime @db.Timestamp(6)
+
+  @@id([environment_id, entity_type])
+}
+
+model booking_service_form_values {
+  tenant_id           String
+  environment_id      String
+  booking_id          String
+  service_form_id     String
+  service_form_values Json
+  bookings            bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  forms               forms    @relation(fields: [service_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants             tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, booking_id, service_form_id])
+}
+
+model customer_form_values {
+  tenant_id      String
+  environment_id String
+  customer_id    String
+  form_values    Json
+  customers      customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, customer_id])
 }
 
 enum payment_status {

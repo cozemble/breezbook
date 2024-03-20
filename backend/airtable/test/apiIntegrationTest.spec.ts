@@ -15,7 +15,9 @@ import {
 	priceFns,
 	randomInteger,
 	tenantEnvironment,
-	tenantId
+	tenantId,
+	tenantSettings,
+	timezone
 } from '@breezbook/packages-core';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import { startTestEnvironment, stopTestEnvironment } from './setup.js';
@@ -147,7 +149,8 @@ describe('Given a migrated database', async () => {
 				carwash.mediumCarWash.price,
 				fullPaymentOnCheckout()
 			),
-			carwash.services
+			carwash.services,
+			tenantSettings(timezone('Europe/London'), null)
 		);
 		expect(createOrderResponse.bookingIds).toHaveLength(1);
 		expect(createOrderResponse.bookingIds[0]).toBeDefined();
@@ -168,7 +171,8 @@ describe('Given a migrated database', async () => {
 		const createOrderResponse = await insertOrder(
 			tenantEnv,
 			createOrderRequest(order(customer('Mike', 'Hogan', 'mike@email.com'), []), price(costInPence, currency('GBP')), fullPaymentOnCheckout()),
-			[]
+			[],
+			tenantSettings(timezone('Europe/London'), null)
 		);
 		const paymentIntentWebhook: PaymentIntentWebhookBody = {
 			_type: 'stripe.payment.intent.webhook.body',
@@ -286,7 +290,8 @@ async function createBooking(date: IsoDate): Promise<string> {
 			carwash.mediumCarWash.price,
 			fullPaymentOnCheckout()
 		),
-		carwash.services
+		carwash.services,
+		tenantSettings(timezone('Europe/London'), null)
 	);
 	expect(createOrderResponse.bookingIds).toHaveLength(1);
 	expect(createOrderResponse.bookingIds[0]).toBeDefined();

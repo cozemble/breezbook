@@ -4,6 +4,7 @@ import {
 	currency,
 	type Customer,
 	customerId,
+	email,
 	formId,
 	id,
 	isoDate,
@@ -58,7 +59,7 @@ export function toCustomer(input: CustomerInput): Customer {
 		id: customerId(),
 		firstName: mandatory(input.firstName, 'No first name'),
 		lastName: mandatory(input.lastName, 'No last name'),
-		email: mandatory(input.email, 'No email'),
+		email: email(mandatory(input.email, 'No email')),
 		formData: input.formData,
 		formId: formId(mandatory(input.formId, 'No form ID'))
 	};

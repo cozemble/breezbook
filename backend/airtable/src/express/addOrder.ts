@@ -12,7 +12,7 @@ import {
 } from './addOrderValidations.js';
 import { doInsertOrder } from './insertOrder.js';
 import { CreateOrderRequest, ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
-import { PrismaMutations, prismaMutationToPromise } from '../infra/prismaMutations.js';
+import { PrismaMutations } from '../infra/prismaMutations.js';
 import { prismaClient } from '../prisma/client.js';
 
 export const addOrderErrorCodes = {
@@ -58,7 +58,12 @@ export function doAddOrder(
 			orderCreatedResponse: OrderCreatedResponse;
 	  } {
 	return withValidationsPerformed(everythingForTenant, createOrderRequest.order, createOrderRequest.orderTotal, () => {
-		return doInsertOrder(everythingForTenant.tenantEnvironment, createOrderRequest, everythingForTenant.businessConfiguration.services);
+		return doInsertOrder(
+			everythingForTenant.tenantEnvironment,
+			createOrderRequest,
+			everythingForTenant.businessConfiguration.services,
+			everythingForTenant.tenantSettings
+		);
 	});
 }
 
