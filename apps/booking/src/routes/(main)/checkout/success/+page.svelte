@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
 	import { page } from '$app/stores';
 	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
 	import PaymentBookings from '$lib/sections/checkout/payment/PaymentBookings.svelte';
@@ -6,8 +8,6 @@
 	import notifications from '$lib/stores/notifications';
 	import orderHistoryStore from '$lib/stores/orderHistory';
 	import tenantStore from '$lib/stores/tenant';
-	import { onMount } from 'svelte';
-	import { get } from 'svelte/store';
 
 	const tenant = tenantStore.get();
 	const checkout = checkoutStore.get();
@@ -34,32 +34,34 @@
 	onMount(() => {
 		if (!success) return;
 
-		const historyOrder = get(orderHistory.items).find(
-			(item) => item.paymentIntent === params.payment_intent
-		);
-		const checkoutOrder = get(checkout.order);
+		checkout.clearItems();
 
-		if (!historyOrder && !checkoutOrder) {
-			notifications.create({
-				type: 'error',
-				title: 'An error occurred',
-				description: 'We could not find your order. Please contact us for assistance.',
-				canUserClose: true
-			});
+		// const historyOrder = get(orderHistory.items).find(
+		// 	(item) => item.paymentIntent === params.payment_intent
+		// );
+		// const checkoutOrder = get(checkout.order);
 
-			return;
-		}
+		// if (!historyOrder && !checkoutOrder) {
+		// 	notifications.create({
+		// 		type: 'error',
+		// 		title: 'An error occurred',
+		// 		description: 'We could not find your order. Please contact us for assistance.',
+		// 		canUserClose: true
+		// 	});
 
-		if (!historyOrder && checkoutOrder) {
-			orderHistory.addItem({
-				order: checkoutOrder,
-				paymentIntent: params.payment_intent,
-				success: true
-			});
+		// 	return;
+		// }
 
-			checkout.clearItems();
-			return;
-		}
+		// if (!historyOrder && checkoutOrder) {
+		// 	orderHistory.addItem({
+		// 		order: checkoutOrder,
+		// 		paymentIntent: params.payment_intent,
+		// 		success: true
+		// 	});
+
+		// 	checkout.clearItems();
+		// 	return;
+		// }
 	});
 </script>
 
@@ -75,7 +77,7 @@
 		</div>
 	</div>
 
-	<PaymentBookings />
+	<!-- <PaymentBookings /> -->
 
 	<div>
 		<p class="text-sm opacity-50">
