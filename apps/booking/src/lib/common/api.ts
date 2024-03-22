@@ -68,7 +68,9 @@ const booking = {
 	getDetails: async (tenantSlug: string, serviceSlug: string) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/service/${serviceSlug}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
+				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/service/${
+					dev ? 'smallCarWash' : serviceSlug
+				}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
 				{
 					headers: {
 						'Content-Type': 'application/json'
@@ -87,7 +89,9 @@ const booking = {
 	) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/service/${serviceSlug}/availability`,
+				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/service/${
+					dev ? 'smallCarWash' : serviceSlug
+				}/availability`,
 				undefined,
 				{
 					params: {
@@ -117,7 +121,7 @@ const booking = {
 
 	placeOrder: async (tenantSlug: string, order: CreateOrderRequest) =>
 		axios
-			.post<OrderCreatedResponse>(`${PUBLIC_API_URL}/${tenantSlug}/orders`, order)
+			.post<OrderCreatedResponse>(`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/orders`, order)
 			.then((res) => res.data)
 };
 
@@ -125,7 +129,7 @@ const payment = {
 	createPaymentIntent: async (tenantSlug: string, orderId: string) =>
 		axios
 			.post<PaymentIntentResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/orders/${orderId}/paymentIntent`
+				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/orders/${orderId}/paymentIntent`
 			)
 			.then((res) => res.data)
 };
@@ -133,7 +137,7 @@ const payment = {
 const basket = {
 	pricing: async (tenantSlug: string, basket: UnpricedBasket) =>
 		axios
-			.post<PricedBasket>(`${PUBLIC_API_URL}/${tenantSlug}/basket/price`, basket)
+			.post<PricedBasket>(`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/basket/price`, basket)
 			.then((res) => res.data)
 };
 
