@@ -76,9 +76,9 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
 		});
 		const prisma = prismaClient();
 		if (outcome._type === 'error.response') {
-			return handleOutcome(res, prisma, outcome);
+			return handleOutcome(res, prisma, tenantEnvironment, outcome);
 		}
 		const { mutations, orderCreatedResponse } = outcome;
-		await handleOutcome(res, prisma, mutations, httpJsonResponse(200, orderCreatedResponse));
+		await handleOutcome(res, prisma, tenantEnvironment, mutations, httpJsonResponse(200, orderCreatedResponse));
 	});
 }

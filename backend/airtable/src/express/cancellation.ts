@@ -1,12 +1,21 @@
 import express from 'express';
-import { bookingIdParam, cancellationId, handleOutcome, HttpError, httpError, sendJson, withTwoRequestParams } from '../infra/functionalExpress.js';
+import {
+	bookingIdParam,
+	cancellationId,
+	handleOutcome,
+	HttpError,
+	httpError,
+	sendJson,
+	tenantEnvironmentParam,
+	withThreeRequestParams,
+	withTwoRequestParams
+} from '../infra/functionalExpress.js';
 import { BookingId, Clock, SystemClock } from '@breezbook/packages-core';
 import { DbBooking, DbCancellationGrant, DbRefundRule, DbTimeSlot } from '../prisma/dbtypes.js';
 import { dbBridge, DbExpressBridge, DbResourceFinder, namedDbResourceFinder } from '../infra/dbExpressBridge.js';
 import { findRefundRule, refundPolicy, TimebasedRefundRule } from '@breezbook/packages-core/dist/cancellation.js';
 import { toDomainBooking, toDomainTimeslotSpec } from '../prisma/dbToDomain.js';
 import { CancellationGranted, cancellationGranted } from '@breezbook/backend-api-types';
-import { PrismaClient } from '@prisma/client';
 import { createBookingEvent, updateBooking, updateCancellationGrant } from '../prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
 import { Mutations, mutations } from '../mutation/mutations.js';
@@ -116,9 +125,9 @@ export function doCommitCancellation(cancellation: DbCancellationGrant, clock: C
 }
 
 export async function commitCancellation(req: express.Request, res: express.Response): Promise<void> {
-	await withTwoRequestParams(req, res, dbBridge(), cancellationId(), async (db, cancellationId) => {
+	await withThreeRequestParams(req, res, dbBridge(), cancellationId(), tenantEnvironmentParam(), async (db, cancellationId, tenantEnvironment) => {
 		await db.withResource(namedDbResourceFinder('Cancellation', findCancellationById(cancellationId)), async (cancellation) => {
-			await handleOutcome(res, db.prisma, doCommitCancellation(cancellation, new SystemClock()));
+			await handleOutcome(res, db.prisma, tenantEnvironment, doCommitCancellation(cancellation, new SystemClock()));
 		});
 	});
 }

@@ -1,15 +1,14 @@
 import express from 'express';
 import {
 	handleOutcome,
-	HttpError,
-	httpError,
 	httpJsonResponse,
 	HttpJsonResponse,
 	paramExtractor,
 	ParamExtractor,
 	query,
 	RequestValueExtractor,
-	withTwoRequestParams
+	tenantEnvironmentParam,
+	withThreeRequestParams
 } from '../../infra/functionalExpress.js';
 import { dbBridge, DbResourceFinder, namedDbResourceFinder } from '../../infra/dbExpressBridge.js';
 import { Clock, SystemClock } from '@breezbook/packages-core';
@@ -47,9 +46,9 @@ export function doCouponValidityCheck(coupon: DbCoupon, clock: Clock): HttpJsonR
 }
 
 export async function couponValidityCheck(req: express.Request, res: express.Response): Promise<void> {
-	await withTwoRequestParams(req, res, dbBridge(), couponCode(), async (db, couponCode) => {
+	await withThreeRequestParams(req, res, dbBridge(), couponCode(), tenantEnvironmentParam(), async (db, couponCode, tenantEnvironment) => {
 		await db.withResource(namedDbResourceFinder('Coupon', findCouponByCouponCode(couponCode)), async (coupon) => {
-			await handleOutcome(res, db.prisma, mutations([]), doCouponValidityCheck(coupon, new SystemClock()));
+			await handleOutcome(res, db.prisma, tenantEnvironment, mutations([]), doCouponValidityCheck(coupon, new SystemClock()));
 		});
 	});
 }

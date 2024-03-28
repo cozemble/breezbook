@@ -261,6 +261,7 @@ model tenants {
   customer_form_values        customer_form_values[]
   customers                   customers[]
   forms                       forms[]
+  mutation_events             mutation_events[]
   order_lines                 order_lines[]
   order_payments              order_payments[]
   orders                      orders[]
@@ -470,6 +471,17 @@ model customer_form_values {
   tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id, customer_id])
+}
+
+model mutation_events {
+  id             Int       @id @default(autoincrement())
+  tenant_id      String
+  environment_id String
+  event_type     String?   @db.VarChar(255)
+  entity_type    String?   @db.VarChar(255)
+  event_time     DateTime? @db.Timestamp(6)
+  event_data     Json?
+  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum payment_status {
