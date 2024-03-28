@@ -25,6 +25,17 @@ export interface RequestValueExtractor {
 	extractor: (req: express.Request) => string | null;
 }
 
+export function withDefault(attempt: RequestValueExtractor, defaultValue: string): RequestValueExtractor {
+	const extractor = (req: express.Request) => {
+		const value = attempt.extractor(req);
+		if (!value) {
+			return defaultValue;
+		}
+		return value;
+	};
+	return { name: attempt.name, extractor };
+}
+
 export function query(paramName: string): RequestValueExtractor {
 	const extractor = (req: express.Request) => {
 		const paramValue = req.query[paramName];
@@ -62,6 +73,17 @@ export function date(requestValue: RequestValueExtractor): ParamExtractor<IsoDat
 			res.status(400).send(`Invalid date format ${paramValue}. Expected YYYY-MM-DD`);
 			return null;
 		}
+	};
+}
+
+export function iso8601Timestamp(requestValue: RequestValueExtractor): ParamExtractor<string | null> {
+	return (req: express.Request, res: express.Response) => {
+		const paramValue = requestValue.extractor(req);
+		if (!paramValue) {
+			res.status(400).send(`Missing required parameter ${requestValue.name}`);
+			return null;
+		}
+		return paramValue;
 	};
 }
 

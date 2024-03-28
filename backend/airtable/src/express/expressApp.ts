@@ -14,6 +14,7 @@ import { onStoreTenantSecret } from './secretManagement.js';
 import { couponValidityCheck } from './coupons/couponHandlers.js';
 import { onBasketPriceRequest } from './basket/basketHandler.js';
 import { onShovlOut } from './shovl/shovlEndpoints.js';
+import { onGetChanges } from './changes/changesHandlers.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
 	rawBody?: string;
@@ -71,6 +72,7 @@ export function expressApp(): Express {
 	app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);
 	app.post('/internal/api/:envId/:tenantId/secret', onStoreTenantSecret);
 	app.post('/internal/api/:envId/shovl/out', onShovlOut);
+	app.get('/internal/api/:envId/changes', onGetChanges);
 
 	bindInngestToExpress(app);
 
