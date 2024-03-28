@@ -69,7 +69,7 @@ function createCheckoutStore() {
 			return core.order(
 				{
 					...$customer,
-					id: core.customerId(''),
+					id: core.customerId(),
 					email: core.email($customer.email as unknown as string)
 				},
 				lines
