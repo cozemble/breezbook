@@ -1,7 +1,7 @@
 import { environmentIdParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import express from 'express';
 import { inngest } from '../inngest/client.js';
-import { outboundWebhooksEventNames } from '../inngest/functions.js';
+import { outboundWebhooksEventNames } from '../inngest/outboundMessageFunctions.js';
 
 interface OutboundWebhooksBatchBody {
 	batch_id: string;

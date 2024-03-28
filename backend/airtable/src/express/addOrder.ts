@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { createOrderRequest, handleOutcome, httpJsonResponse, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
-import { Order, orderFns, Price } from '@breezbook/packages-core';
+import { customerId, Order, orderFns, Price } from '@breezbook/packages-core';
 import { EverythingForTenant, getEverythingForTenant } from './getEverythingForTenant.js';
 import {
 	validateAvailability,
@@ -71,10 +71,22 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
 	await withTwoRequestParams(req, res, tenantEnvironmentParam(), createOrderRequest(), async (tenantEnvironment, createOrderRequest) => {
 		const { fromDate, toDate } = orderFns.getOrderDateRange(createOrderRequest.order);
 		const everythingForTenant = await getEverythingForTenant(tenantEnvironment, fromDate, toDate);
+		const prisma = prismaClient();
+		let maybeExistingCustomer = await prisma.customers.findUnique({
+			where: {
+				tenant_id_environment_id_email: {
+					tenant_id: tenantEnvironment.tenantId.value,
+					environment_id: tenantEnvironment.environmentId.value,
+					email: createOrderRequest.order.customer.email.value
+				}
+			}
+		});
+		if (maybeExistingCustomer) {
+			createOrderRequest.order.customer.id = customerId(maybeExistingCustomer.id);
+		}
 		const outcome = withValidationsPerformed(everythingForTenant, createOrderRequest.order, createOrderRequest.orderTotal, () => {
 			return doAddOrder(everythingForTenant, createOrderRequest);
 		});
-		const prisma = prismaClient();
 		if (outcome._type === 'error.response') {
 			return handleOutcome(res, prisma, tenantEnvironment, outcome);
 		}

@@ -186,7 +186,8 @@ create table customers
     last_name      text                                not null,
     email          text                                not null check (email ~* '^.+@.+\..+$'),
     created_at     timestamp with time zone            not null default current_timestamp,
-    updated_at     timestamp with time zone            not null default current_timestamp
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    unique (tenant_id, environment_id, email)
 );
 
 alter table customers

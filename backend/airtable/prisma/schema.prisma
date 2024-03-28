@@ -87,6 +87,7 @@ model customers {
   orders               orders[]
 
   @@unique([tenant_id, environment_id, email], map: "customers_tenant_id_email_key")
+  @@unique([tenant_id, environment_id, email])
 }
 
 model forms {
@@ -482,6 +483,12 @@ model mutation_events {
   event_time     DateTime @default(now()) @db.Timestamp(6)
   event_data     Json
   tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model last_change_announcements {
+  id                Int      @id @default(autoincrement())
+  environment_id    Int
+  announcement_date DateTime @db.Timestamp(6)
 }
 
 enum payment_status {
