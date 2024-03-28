@@ -17,8 +17,6 @@ import {
 import { everythingForCarWashTenantWithDynamicPricing, fourDaysFromNow, goodCustomer, goodServiceFormData, today } from './helper.js';
 import { createOrderRequest, ErrorResponse } from '@breezbook/backend-api-types';
 import { addOrderErrorCodes, doAddOrder } from '../src/express/addOrder.js';
-import { Prisma } from '@prisma/client';
-import { prismaClient } from '../src/prisma/client.js';
 
 test('tenant has a customer form, and the customer does not have a form response', () => {
 	const theCustomer = customer('Mike', 'Hogan', 'mike@email.com');
@@ -110,7 +108,7 @@ test('an order intending full payment on checkout should reserve the booking', (
 	if (!outcome || outcome._type !== 'success') {
 		throw new Error('Expected success, got ' + JSON.stringify(outcome));
 	}
-	expect(outcome.prismaMutations.mutations.some((m) => m._type === 'prisma.create' && m.delegate === Prisma.reservationsDelegate)).toBeDefined();
+	expect(outcome.mutations.mutations.some((m) => m._type === 'create' && m.entity === 'reservations')).toBeDefined();
 });
 
 test('an order with a non-existent timeslot by id should result in an error', () => {
@@ -145,14 +143,10 @@ test('the customer and service forms should be persisted', () => {
 	if (!outcome || outcome._type !== 'success') {
 		throw new Error('Expected success, got ' + JSON.stringify(outcome));
 	}
-	const prisma = prismaClient();
-
-	const customerFormUpsert = outcome.prismaMutations.mutations.find(
-		(mutation) => mutation._type === 'prisma.upsert' && mutation.delegate === prisma.customer_form_values
-	);
+	const customerFormUpsert = outcome.mutations.mutations.find((mutation) => mutation._type === 'upsert' && mutation.update.entity === 'customer_form_values');
 	expect(customerFormUpsert).toBeDefined();
-	const serviceFormUpsert = outcome.prismaMutations.mutations.find(
-		(mutation) => mutation._type === 'prisma.upsert' && mutation.delegate === prisma.booking_service_form_values
+	const serviceFormUpsert = outcome.mutations.mutations.find(
+		(mutation) => mutation._type === 'upsert' && mutation.update.entity === 'booking_service_form_values'
 	);
 	expect(serviceFormUpsert).toBeDefined();
 });

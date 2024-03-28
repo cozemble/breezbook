@@ -1,22 +1,12 @@
-import { carwash, fullPaymentOnCheckout, IsoDate, isoDate, isoDateFns, mandatory, order, orderLine, SystemClock } from '@breezbook/packages-core';
+import { IsoDate, isoDate, isoDateFns, SystemClock } from '@breezbook/packages-core';
 import { describe, expect, test } from 'vitest';
-import { insertOrder } from '../src/express/insertOrder.js';
-import { CancellationGranted, createOrderRequest } from '@breezbook/backend-api-types';
-import { goodCustomer } from './helper.js';
+import { CancellationGranted } from '@breezbook/backend-api-types';
 import { doCancellationRequest, doCommitCancellation } from '../src/express/cancellation.js';
-import { prismaClient } from '../src/prisma/client.js';
 import { DbBooking, DbCancellationGrant } from '../src/prisma/dbtypes.js';
-import { prismaMutations } from '../src/infra/prismaMutations.js';
-import {
-	createBookingEvent,
-	prismaCreateBookingEvent,
-	prismaUpdateBooking,
-	prismaUpdateCancellationGrant,
-	updateBooking,
-	updateCancellationGrant
-} from '../src/prisma/breezPrismaMutations.js';
+import { createBookingEvent, updateBooking, updateCancellationGrant } from '../src/prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
 import { HttpError } from '../src/infra/functionalExpress.js';
+import { mutations } from '../src/mutation/mutations.js';
 
 test("can't get a cancellation grant for a booking in the past", () => {
 	const theBooking = makeDbBooking(isoDateFns.addDays(isoDate(), -1));
@@ -52,7 +42,6 @@ function makeDbBooking(yesterday: IsoDate) {
 }
 
 describe('Given a cancellation grant', () => {
-	const prisma = prismaClient();
 	const cancellation: DbCancellationGrant = {
 		id: 'cancellation-id',
 		environment_id: 'environment-id',
@@ -65,32 +54,30 @@ describe('Given a cancellation grant', () => {
 			_type: 'cancellation.granted'
 		}
 	};
+
 	test('can commit it and cancel the booking', () => {
-		const outcome = doCommitCancellation(prisma, cancellation, new SystemClock());
+		const outcome = doCommitCancellation(cancellation, new SystemClock());
 		expect(outcome).toEqual(
-			prismaMutations([
-				prismaUpdateCancellationGrant(prisma, updateCancellationGrant({ committed: true }, { id: cancellation.id })),
-				prismaUpdateBooking(prisma, updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id })),
-				prismaCreateBookingEvent(
-					prisma,
-					createBookingEvent({
-						environment_id: 'environment-id',
-						tenant_id: 'tenant-id',
-						booking_id: cancellation.booking_id,
-						event_type: 'cancelled',
-						event_data: {}
-					})
-				)
+			mutations([
+				updateCancellationGrant({ committed: true }, { id: cancellation.id }),
+				updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id }),
+				createBookingEvent({
+					environment_id: 'environment-id',
+					tenant_id: 'tenant-id',
+					booking_id: cancellation.booking_id,
+					event_type: 'cancelled',
+					event_data: {}
+				})
 			])
 		);
 	});
+
 	test('returns error if already committed', () => {
-		const outcome = doCommitCancellation(prisma, { ...cancellation, committed: true }, new SystemClock());
+		const outcome = doCommitCancellation({ ...cancellation, committed: true }, new SystemClock());
 		expect(outcome._type).toBe('http.error');
 	});
 	test('returns error if grant is too old', () => {
 		const outcome = doCommitCancellation(
-			prisma,
 			{
 				...cancellation,
 				created_at: jsDateFns.addHours(new Date(), -1)

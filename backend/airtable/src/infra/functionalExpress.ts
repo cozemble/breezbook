@@ -16,8 +16,9 @@ import {
 	TenantId
 } from '@breezbook/packages-core';
 import { CreateOrderRequest, ErrorResponse } from '@breezbook/backend-api-types';
-import { PrismaMutations, prismaMutationToPromise } from './prismaMutations.js';
+import { prismaMutationToPromise } from './prismaMutations.js';
 import { PrismaClient } from '@prisma/client';
+import { Mutations } from '../mutation/mutations.js';
 
 export interface RequestValueExtractor {
 	name: string;
@@ -300,7 +301,7 @@ export function httpJsonResponse(status: number, body: unknown): HttpJsonRespons
 export async function handleOutcome(
 	res: express.Response,
 	prisma: PrismaClient,
-	outcome: PrismaMutations | HttpError | ErrorResponse,
+	outcome: Mutations | HttpError | ErrorResponse,
 	response: HttpJsonResponse | null = null
 ): Promise<void> {
 	if (outcome._type === 'http.error') {
@@ -311,7 +312,7 @@ export async function handleOutcome(
 		res.status(400).send(outcome);
 		return;
 	}
-	await prisma.$transaction(outcome.mutations.map(prismaMutationToPromise));
+	await prisma.$transaction(outcome.mutations.map((mutation) => prismaMutationToPromise(prisma, mutation)));
 	if (response) {
 		return sendJson(res, response.body, response.status);
 	}

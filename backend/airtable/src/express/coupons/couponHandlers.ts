@@ -14,8 +14,8 @@ import {
 import { dbBridge, DbResourceFinder, namedDbResourceFinder } from '../../infra/dbExpressBridge.js';
 import { Clock, SystemClock } from '@breezbook/packages-core';
 import { DbCoupon } from '../../prisma/dbtypes.js';
-import { prismaMutations } from '../../infra/prismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
+import { mutations } from '../../mutation/mutations.js';
 
 export function couponCode(requestValue: RequestValueExtractor = query('couponCode')): ParamExtractor<string | null> {
 	return paramExtractor('couponCode', requestValue.extractor, (s) => s);
@@ -49,7 +49,7 @@ export function doCouponValidityCheck(coupon: DbCoupon, clock: Clock): HttpJsonR
 export async function couponValidityCheck(req: express.Request, res: express.Response): Promise<void> {
 	await withTwoRequestParams(req, res, dbBridge(), couponCode(), async (db, couponCode) => {
 		await db.withResource(namedDbResourceFinder('Coupon', findCouponByCouponCode(couponCode)), async (coupon) => {
-			await handleOutcome(res, db.prisma, prismaMutations([]), doCouponValidityCheck(coupon, new SystemClock()));
+			await handleOutcome(res, db.prisma, mutations([]), doCouponValidityCheck(coupon, new SystemClock()));
 		});
 	});
 }

@@ -12,8 +12,8 @@ import {
 } from './addOrderValidations.js';
 import { doInsertOrder } from './insertOrder.js';
 import { CreateOrderRequest, ErrorResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
-import { PrismaMutations } from '../infra/prismaMutations.js';
 import { prismaClient } from '../prisma/client.js';
+import { Mutations } from '../mutation/mutations.js';
 
 export const addOrderErrorCodes = {
 	customerFormMissing: 'addOrder.customer.form.missing',
@@ -54,7 +54,7 @@ export function doAddOrder(
 	| ErrorResponse
 	| {
 			_type: 'success';
-			prismaMutations: PrismaMutations;
+			mutations: Mutations;
 			orderCreatedResponse: OrderCreatedResponse;
 	  } {
 	return withValidationsPerformed(everythingForTenant, createOrderRequest.order, createOrderRequest.orderTotal, () => {
@@ -78,7 +78,7 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
 		if (outcome._type === 'error.response') {
 			return handleOutcome(res, prisma, outcome);
 		}
-		const { prismaMutations, orderCreatedResponse } = outcome;
-		await handleOutcome(res, prisma, prismaMutations, httpJsonResponse(200, orderCreatedResponse));
+		const { mutations, orderCreatedResponse } = outcome;
+		await handleOutcome(res, prisma, mutations, httpJsonResponse(200, orderCreatedResponse));
 	});
 }

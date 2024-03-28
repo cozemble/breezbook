@@ -7,16 +7,9 @@ import { findRefundRule, refundPolicy, TimebasedRefundRule } from '@breezbook/pa
 import { toDomainBooking, toDomainTimeslotSpec } from '../prisma/dbToDomain.js';
 import { CancellationGranted, cancellationGranted } from '@breezbook/backend-api-types';
 import { PrismaClient } from '@prisma/client';
-import { prismaMutations, PrismaMutations } from '../infra/prismaMutations.js';
-import {
-	createBookingEvent,
-	prismaCreateBookingEvent,
-	prismaUpdateBooking,
-	prismaUpdateCancellationGrant,
-	updateBooking,
-	updateCancellationGrant
-} from '../prisma/breezPrismaMutations.js';
+import { createBookingEvent, updateBooking, updateCancellationGrant } from '../prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
+import { Mutations, mutations } from '../mutation/mutations.js';
 
 function findBookingById(bookingId: BookingId): DbResourceFinder<DbBooking> {
 	return (prisma, tenantEnvironment) => {
@@ -99,7 +92,8 @@ export async function requestCancellationGrant(req: express.Request, res: expres
 	});
 }
 
-export function doCommitCancellation(prisma: PrismaClient, cancellation: DbCancellationGrant, clock: Clock): PrismaMutations | HttpError {
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+export function doCommitCancellation(cancellation: DbCancellationGrant, clock: Clock): Mutations | HttpError {
 	if (cancellation.committed) {
 		return httpError(409, 'Cancellation already committed');
 	}
@@ -108,26 +102,23 @@ export function doCommitCancellation(prisma: PrismaClient, cancellation: DbCance
 	if (jsDateFns.differenceInMinutes(now, cancellation.created_at) > 30) {
 		return httpError(409, 'Cancellation too old to commit');
 	}
-	return prismaMutations([
-		prismaUpdateCancellationGrant(prisma, updateCancellationGrant({ committed: true }, { id: cancellation.id })),
-		prismaUpdateBooking(prisma, updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id })),
-		prismaCreateBookingEvent(
-			prisma,
-			createBookingEvent({
-				environment_id: cancellation.environment_id,
-				tenant_id: cancellation.tenant_id,
-				booking_id: cancellation.booking_id,
-				event_type: 'cancelled',
-				event_data: {}
-			})
-		)
+	return mutations([
+		updateCancellationGrant({ committed: true }, { id: cancellation.id }),
+		updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id }),
+		createBookingEvent({
+			environment_id: cancellation.environment_id,
+			tenant_id: cancellation.tenant_id,
+			booking_id: cancellation.booking_id,
+			event_type: 'cancelled',
+			event_data: {}
+		})
 	]);
 }
 
 export async function commitCancellation(req: express.Request, res: express.Response): Promise<void> {
 	await withTwoRequestParams(req, res, dbBridge(), cancellationId(), async (db, cancellationId) => {
 		await db.withResource(namedDbResourceFinder('Cancellation', findCancellationById(cancellationId)), async (cancellation) => {
-			await handleOutcome(res, db.prisma, doCommitCancellation(db.prisma, cancellation, new SystemClock()));
+			await handleOutcome(res, db.prisma, doCommitCancellation(cancellation, new SystemClock()));
 		});
 	});
 }

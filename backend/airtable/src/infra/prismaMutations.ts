@@ -1,49 +1,26 @@
-import { Create, Delete, Update, Upsert } from '../mutation/mutations.js';
+import { Entity, Mutation, mutationFns } from '../mutation/mutations.js';
+import { PrismaClient } from '@prisma/client';
+import { mandatory } from '@breezbook/packages-core';
 
-export interface PrismaUpdate<TDelegate, TData, TWhereUniqueInput> {
-	_type: 'prisma.update';
-	delegate: TDelegate;
-	update: Update<TData, TWhereUniqueInput>;
+function delegateForEntity(prisma: PrismaClient, entity: Entity): any {
+	return mandatory(prisma[entity], `Unknown entity ${entity}`);
 }
 
-export interface PrismaUpsert<TDelegate, TCreateInput, TUpdateInput, TWhereUniqueInput> {
-	_type: 'prisma.upsert';
-	delegate: TDelegate;
-	upsert: Upsert<TCreateInput, TUpdateInput, TWhereUniqueInput>;
-}
-
-export interface PrismaCreate<TDelegate, TCreateInput> {
-	_type: 'prisma.create';
-	delegate: TDelegate;
-	create: Create<TCreateInput>;
-}
-
-export interface PrismaDelete<TDelegate, TWhereUniqueInput> {
-	_type: 'prisma.delete';
-	delegate: TDelegate;
-	_delete: Delete<TWhereUniqueInput>;
-}
-
-export type PrismaMutation = PrismaUpdate<any, any, any> | PrismaUpsert<any, any, any, any> | PrismaCreate<any, any> | PrismaDelete<any, any>;
-
-export interface PrismaMutations {
-	_type: 'prisma.mutations';
-	mutations: PrismaMutation[];
-}
-
-export function prismaMutations(mutations: PrismaMutation[]): PrismaMutations {
-	return { _type: 'prisma.mutations', mutations };
-}
-
-export function prismaMutationToPromise(mutation: PrismaMutation) {
+export function prismaMutationToPromise(prisma: PrismaClient, mutation: Mutation) {
+	const entity = mutationFns.entity(mutation);
+	const delegate = delegateForEntity(prisma, entity);
 	switch (mutation._type) {
-		case 'prisma.update':
-			return mutation.delegate.update({ data: mutation.update.data, where: mutation.update.where });
-		case 'prisma.upsert':
-			return mutation.delegate.upsert({ where: mutation.upsert.update.where, create: mutation.upsert.create.data, update: mutation.upsert.update.data });
-		case 'prisma.create':
-			return mutation.delegate.create({ data: mutation.create.data });
-		case 'prisma.delete':
-			return mutation.delegate.delete({ where: mutation._delete.where });
+		case 'update':
+			return delegate.update({ data: mutation.data, where: mutation.where });
+		case 'upsert':
+			return delegate.upsert({
+				where: mutation.update.where,
+				create: mutation.create.data,
+				update: mutation.update.data
+			});
+		case 'create':
+			return delegate.create({ data: mutation.data });
+		case 'delete':
+			return delegate.delete({ where: mutation.where });
 	}
 }
