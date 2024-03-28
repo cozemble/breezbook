@@ -14,7 +14,8 @@
     "dev": "nodemon -x \"npm run buildrun\"",
     "buildrun": "npm run compile && npm run server",
     "compile": "npx tsc -p tsconfig.json",
-    "server": "NODE_ENV=development node dist/esm/index.js"
+    "server": "NODE_ENV=development node dist/esm/index.js",
+    "db:migrate": "dotenv -e .env.production.local -- bash -c 'npx postgrator --config=migrations/schema/postgratorrc.json'"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",

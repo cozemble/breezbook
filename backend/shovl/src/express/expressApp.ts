@@ -12,5 +12,7 @@ export function expressApp(): Express {
 	app.get('/v1/connect/airtable/oauth2/authorize', onAirtableOauthRequest);
 	app.get('/v1/connect/airtable/oauth2/callback', onAirtableOauthCallback);
 
+	app.post('/v1/:env/:tenant/shovl/in', onAirtableOauthCallback);
+
 	return app;
 }

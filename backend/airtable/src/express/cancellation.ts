@@ -8,7 +8,14 @@ import { toDomainBooking, toDomainTimeslotSpec } from '../prisma/dbToDomain.js';
 import { CancellationGranted, cancellationGranted } from '@breezbook/backend-api-types';
 import { PrismaClient } from '@prisma/client';
 import { prismaMutations, PrismaMutations } from '../infra/prismaMutations.js';
-import { createBookingEvent, updateBooking, updateCancellationGrant } from '../prisma/breezPrismaMutations.js';
+import {
+	createBookingEvent,
+	prismaCreateBookingEvent,
+	prismaUpdateBooking,
+	prismaUpdateCancellationGrant,
+	updateBooking,
+	updateCancellationGrant
+} from '../prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
 
 function findBookingById(bookingId: BookingId): DbResourceFinder<DbBooking> {
@@ -102,15 +109,18 @@ export function doCommitCancellation(prisma: PrismaClient, cancellation: DbCance
 		return httpError(409, 'Cancellation too old to commit');
 	}
 	return prismaMutations([
-		updateCancellationGrant(prisma, { committed: true }, { id: cancellation.id }),
-		updateBooking(prisma, { status: 'cancelled' }, { id: cancellation.booking_id }),
-		createBookingEvent(prisma, {
-			environment_id: cancellation.environment_id,
-			tenant_id: cancellation.tenant_id,
-			booking_id: cancellation.booking_id,
-			event_type: 'cancelled',
-			event_data: {}
-		})
+		prismaUpdateCancellationGrant(prisma, updateCancellationGrant({ committed: true }, { id: cancellation.id })),
+		prismaUpdateBooking(prisma, updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id })),
+		prismaCreateBookingEvent(
+			prisma,
+			createBookingEvent({
+				environment_id: cancellation.environment_id,
+				tenant_id: cancellation.tenant_id,
+				booking_id: cancellation.booking_id,
+				event_type: 'cancelled',
+				event_data: {}
+			})
+		)
 	]);
 }
 

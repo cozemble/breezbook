@@ -6,38 +6,52 @@ import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaMutation, prismaMutations, PrismaMutations, prismaMutationToPromise } from '../infra/prismaMutations.js';
 import {
 	createBooking,
-	CreateOrder,
-	createOrder as createOrderMutation,
-	createOrderLine,
+	createOrder,
+	prismaCreateOrderLine,
 	createReservation,
+	prismaCreateBooking,
+	PrismaCreateOrder,
+	prismaCreateOrder,
+	prismaCreateReservation,
+	prismaUpsertBookingServiceFormValues,
+	prismaUpsertCustomer as upsertCustomerMutation,
+	prismaUpsertCustomerFormValues,
 	upsertBookingServiceFormValues,
-	upsertCustomer as upsertCustomerMutation,
-	upsertCustomerFormValues
+	upsertCustomer,
+	upsertCustomerFormValues,
+	createOrderLine
 } from '../prisma/breezPrismaMutations.js';
 
-function upsertCustomer(prisma: PrismaClient, tenantEnvironment: TenantEnvironment, order: Order, tenantSettings: TenantSettings): PrismaMutation[] {
+function upsertCustomerAsPrismaMutations(
+	prisma: PrismaClient,
+	tenantEnvironment: TenantEnvironment,
+	order: Order,
+	tenantSettings: TenantSettings
+): PrismaMutation[] {
 	const tenant_id = tenantEnvironment.tenantId.value;
 	const environment_id = tenantEnvironment.environmentId.value;
 	const email = order.customer.email.value;
 	const upserts: PrismaMutation[] = [
 		upsertCustomerMutation(
 			prisma,
-			{
-				id: order.customer.id.value,
-				email,
-				first_name: order.customer.firstName,
-				last_name: order.customer.lastName,
-				environment_id,
-				tenants: {
-					connect: { tenant_id }
-				}
-			},
-			{
-				first_name: order.customer.firstName,
-				last_name: order.customer.lastName,
-				tenant_id
-			},
-			{ tenant_id_environment_id_email: { tenant_id, environment_id, email } }
+			upsertCustomer(
+				{
+					id: order.customer.id.value,
+					email,
+					first_name: order.customer.firstName,
+					last_name: order.customer.lastName,
+					environment_id,
+					tenants: {
+						connect: { tenant_id }
+					}
+				},
+				{
+					first_name: order.customer.firstName,
+					last_name: order.customer.lastName,
+					tenant_id
+				},
+				{ tenant_id_environment_id_email: { tenant_id, environment_id, email } }
+			)
 		)
 	];
 	if (tenantSettings.customerFormId && order.customer.formData) {
@@ -60,27 +74,35 @@ function upsertCustomer(prisma: PrismaClient, tenantEnvironment: TenantEnvironme
 			tenant_id_environment_id_customer_id: { tenant_id, environment_id, customer_id: order.customer.id.value }
 		};
 
-		upserts.push(upsertCustomerFormValues(prisma, create, update, where));
+		upserts.push(prismaUpsertCustomerFormValues(prisma, upsertCustomerFormValues(create, update, where)));
 	}
 	return upserts;
 }
 
-function createOrder(prisma: PrismaClient, tenantEnvironment: TenantEnvironment, createOrderRequest: CreateOrderRequest, orderId: string): CreateOrder {
+function createOrderAsPrismaMutation(
+	prisma: PrismaClient,
+	tenantEnvironment: TenantEnvironment,
+	createOrderRequest: CreateOrderRequest,
+	orderId: string
+): PrismaCreateOrder {
 	const tenant_id = tenantEnvironment.tenantId.value;
 	const environment_id = tenantEnvironment.environmentId.value;
 	const email = createOrderRequest.order.customer.email.value;
-	return createOrderMutation(prisma, {
-		id: orderId,
-		environment_id,
-		total_price_in_minor_units: createOrderRequest.orderTotal.amount.value,
-		total_price_currency: createOrderRequest.orderTotal.currency.value,
-		customers: {
-			connect: { tenant_id_environment_id_email: { tenant_id, environment_id, email } }
-		},
-		tenants: {
-			connect: { tenant_id }
-		}
-	});
+	return prismaCreateOrder(
+		prisma,
+		createOrder({
+			id: orderId,
+			environment_id,
+			total_price_in_minor_units: createOrderRequest.orderTotal.amount.value,
+			total_price_currency: createOrderRequest.orderTotal.currency.value,
+			customers: {
+				connect: { tenant_id_environment_id_email: { tenant_id, environment_id, email } }
+			},
+			tenants: {
+				connect: { tenant_id }
+			}
+		})
+	);
 }
 
 function upsertServiceFormValues(
@@ -114,7 +136,7 @@ function upsertServiceFormValues(
 			booking_id: bookingId
 		}
 	};
-	return upsertBookingServiceFormValues(prisma, create, update, where);
+	return prismaUpsertBookingServiceFormValues(prisma, upsertBookingServiceFormValues(create, update, where));
 }
 
 function processOrderLines(
@@ -146,58 +168,67 @@ function processOrderLines(
 		orderLineIds.push(orderLineId);
 
 		prismaMutations.push(
-			createOrderLine(prisma, {
-				id: orderLineId,
-				tenant_id,
-				environment_id,
-				order_id: orderId,
-				service_id: line.serviceId.value,
-				time_slot_id: time_slot_id,
-				start_time_24hr: servicePeriod.from.value,
-				end_time_24hr: servicePeriod.to.value,
-				add_on_ids: line.addOns.map((a) => a.addOnId.value),
-				date: line.date.value
-			})
+			prismaCreateOrderLine(
+				prisma,
+				createOrderLine({
+					id: orderLineId,
+					tenant_id,
+					environment_id,
+					order_id: orderId,
+					service_id: line.serviceId.value,
+					time_slot_id: time_slot_id,
+					start_time_24hr: servicePeriod.from.value,
+					end_time_24hr: servicePeriod.to.value,
+					add_on_ids: line.addOns.map((a) => a.addOnId.value),
+					date: line.date.value
+				})
+			)
 		);
 		const bookingId = uuidv4();
 		bookingIds.push(bookingId);
 		prismaMutations.push(
-			createBooking(prisma, {
-				id: bookingId,
-				environment_id,
-				tenants: {
-					connect: { tenant_id }
-				},
-				services: {
-					connect: { id: line.serviceId.value }
-				},
-				orders: {
-					connect: { id: orderId }
-				},
-				customers: {
-					connect: { tenant_id_environment_id_email: { tenant_id, environment_id, email } }
-				},
-				time_slots: {
-					connect: line.slot._type === 'timeslot.spec' ? { id: line.slot.id.value } : undefined
-				},
-				date: line.date.value,
-				start_time_24hr: servicePeriod.from.value,
-				end_time_24hr: servicePeriod.to.value
-			})
+			prismaCreateBooking(
+				prisma,
+				createBooking({
+					id: bookingId,
+					environment_id,
+					tenants: {
+						connect: { tenant_id }
+					},
+					services: {
+						connect: { id: line.serviceId.value }
+					},
+					orders: {
+						connect: { id: orderId }
+					},
+					customers: {
+						connect: { tenant_id_environment_id_email: { tenant_id, environment_id, email } }
+					},
+					time_slots: {
+						connect: line.slot._type === 'timeslot.spec' ? { id: line.slot.id.value } : undefined
+					},
+					date: line.date.value,
+					start_time_24hr: servicePeriod.from.value,
+					end_time_24hr: servicePeriod.to.value
+				})
+			)
 		);
 		if (shouldMakeReservations) {
 			const reservationId = uuidv4();
 			reservationIds.push(reservationId);
 			prismaMutations.push(
-				createReservation(prisma, {
-					id: reservationId,
-					bookings: {
-						connect: { id: bookingId }
-					},
-					reservation_time: new Date(),
-					expiry_time: new Date(new Date().getTime() + 1000 * 60 * 30),
-					reservation_type: 'awaiting payment'
-				})
+				prismaCreateReservation(
+					prisma,
+					createReservation({
+						id: reservationId,
+						bookings: {
+							connect: { id: bookingId }
+						},
+						reservation_time: new Date(),
+						expiry_time: new Date(new Date().getTime() + 1000 * 60 * 30),
+						reservation_type: 'awaiting payment'
+					})
+				)
 			);
 		}
 		for (let serviceFormIndex = 0; serviceFormIndex < service.serviceFormIds.length; serviceFormIndex++) {
@@ -225,8 +256,8 @@ export function doInsertOrder(
 		orderLineIds
 	} = processOrderLines(prisma, tenantEnvironment, createOrderRequest, orderId, services);
 	const mutations = [
-		...upsertCustomer(prisma, tenantEnvironment, order, tenantSettings),
-		createOrder(prisma, tenantEnvironment, createOrderRequest, orderId),
+		...upsertCustomerAsPrismaMutations(prisma, tenantEnvironment, order, tenantSettings),
+		createOrderAsPrismaMutation(prisma, tenantEnvironment, createOrderRequest, orderId),
 		...orderLineMutations
 	];
 	return {
