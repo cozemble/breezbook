@@ -49,7 +49,7 @@ function serviceShovlOutJson(service: DbService) {
 	};
 }
 
-function customerShovlOutJson(customer: DbCustomer, maybeCustomerForm: DbForm | null) {
+export function customerShovlOutJson(customer: DbCustomer, maybeCustomerForm: DbForm | null) {
 	let coreValues = {
 		tenantId: customer.tenant_id,
 		environmentId: customer.environment_id,
@@ -61,9 +61,12 @@ function customerShovlOutJson(customer: DbCustomer, maybeCustomerForm: DbForm | 
 		updatedAt: customer.updated_at
 	};
 	if (maybeCustomerForm && (customer as any).customer_form_values) {
+		if ((customer as any).customer_form_values.length > 1) {
+			throw new Error(`More than one customer form values found for customer ${customer.id}`);
+		}
 		coreValues = {
 			...coreValues,
-			[camelCase(maybeCustomerForm.name)]: (customer as any).customer_form_values
+			[camelCase(maybeCustomerForm.name)]: (customer as any).customer_form_values[0].form_values
 		};
 	}
 	return coreValues;

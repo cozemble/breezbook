@@ -109,7 +109,7 @@ describe('Given a migrated database', async () => {
 
 	test('can price a basket', async () => {
 		const theBasket = unpricedBasket([
-			unpricedBasketLine(carwash.mediumCarWash.id, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.nineToOne)
+			unpricedBasketLine(carwash.mediumCarWash.id, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.fourToSix)
 		]);
 
 		const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/basket/price`, {
