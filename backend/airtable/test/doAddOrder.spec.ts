@@ -111,6 +111,29 @@ test('an order intending full payment on checkout should reserve the booking', (
 	expect(outcome.mutations.mutations.some((m) => m._type === 'create' && m.entity === 'reservations')).toBeDefined();
 });
 
+test('the event log for the order creation should be stored', () => {
+	const theOrder = order(goodCustomer, [
+		orderLine(
+			carwash.smallCarWash.id,
+			price(carwash.smallCarWash.price.amount.value * 1.4, carwash.smallCarWash.price.currency),
+			[],
+			today,
+			carwash.nineToOne,
+			[goodServiceFormData]
+		)
+	]);
+	const request = createOrderRequest(
+		theOrder,
+		price(carwash.smallCarWash.price.amount.value * 1.4, carwash.smallCarWash.price.currency),
+		fullPaymentOnCheckout()
+	);
+	const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request);
+	if (!outcome || outcome._type !== 'success') {
+		throw new Error('Expected success, got ' + JSON.stringify(outcome));
+	}
+	expect(outcome.mutations.mutations.some((m) => m._type === 'create' && m.entity === 'mutation_events')).toBeDefined();
+});
+
 test('an order with a non-existent timeslot by id should result in an error', () => {
 	const timeslot = { ...carwash.oneToFour, id: id('this-does-not-exist') };
 	const theOrder = order(goodCustomer, [orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], today, timeslot, [goodServiceFormData])]);

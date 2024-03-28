@@ -17,7 +17,7 @@ import {
 } from '../prisma/breezPrismaMutations.js';
 import { Mutation, Mutations, mutations as mutationsConstructor } from '../mutation/mutations.js';
 
-function upsertCustomerAsPrismaMutations(prisma: PrismaClient, tenantEnvironment: TenantEnvironment, order: Order, tenantSettings: TenantSettings): Mutation[] {
+function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, order: Order, tenantSettings: TenantSettings): Mutation[] {
 	const tenant_id = tenantEnvironment.tenantId.value;
 	const environment_id = tenantEnvironment.environmentId.value;
 	const email = order.customer.email.value;
@@ -85,7 +85,6 @@ function createOrderAsPrismaMutation(tenantEnvironment: TenantEnvironment, creat
 }
 
 function upsertServiceFormValues(
-	prisma: PrismaClient,
 	tenantEnvironment: TenantEnvironment,
 	serviceFormId: FormId,
 	serviceFormData: unknown,
@@ -119,7 +118,6 @@ function upsertServiceFormValues(
 }
 
 function processOrderLines(
-	prisma: PrismaClient,
 	tenantEnvironment: TenantEnvironment,
 	createOrderRequest: CreateOrderRequest,
 	orderId: string,
@@ -202,9 +200,7 @@ function processOrderLines(
 			);
 		}
 		for (let serviceFormIndex = 0; serviceFormIndex < service.serviceFormIds.length; serviceFormIndex++) {
-			mutations.push(
-				upsertServiceFormValues(prisma, tenantEnvironment, service.serviceFormIds[serviceFormIndex], line.serviceFormData[serviceFormIndex], bookingId)
-			);
+			mutations.push(upsertServiceFormValues(tenantEnvironment, service.serviceFormIds[serviceFormIndex], line.serviceFormData[serviceFormIndex], bookingId));
 		}
 	}
 	return { mutations, bookingIds, reservationIds, orderLineIds };
@@ -216,7 +212,6 @@ export function doInsertOrder(
 	services: Service[],
 	tenantSettings: TenantSettings
 ): { _type: 'success'; mutations: Mutations; orderCreatedResponse: OrderCreatedResponse } {
-	const prisma = prismaClient();
 	const orderId = uuidv4();
 	const order = createOrderRequest.order;
 	const {
@@ -224,9 +219,9 @@ export function doInsertOrder(
 		bookingIds,
 		reservationIds,
 		orderLineIds
-	} = processOrderLines(prisma, tenantEnvironment, createOrderRequest, orderId, services);
+	} = processOrderLines(tenantEnvironment, createOrderRequest, orderId, services);
 	const mutations = [
-		...upsertCustomerAsPrismaMutations(prisma, tenantEnvironment, order, tenantSettings),
+		...upsertCustomerAsMutations(tenantEnvironment, order, tenantSettings),
 		createOrderAsPrismaMutation(tenantEnvironment, createOrderRequest, orderId),
 		...orderLineMutations
 	];
