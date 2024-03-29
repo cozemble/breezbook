@@ -44,11 +44,7 @@ export async function onStripeWebhook(req: express.Request, res: express.Respons
 				payload: event as any,
 				environment_id: tenantEnvironment.environmentId.value,
 				webhook_id: STRIPE_WEBHOOK_ID,
-				tenants: {
-					connect: {
-						tenant_id: tenantEnvironment.tenantId.value
-					}
-				}
+				tenant_id: tenantEnvironment.tenantId.value
 			}
 		});
 		res.status(202).send({ id: postedWebhookId });

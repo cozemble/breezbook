@@ -19,6 +19,7 @@ import { CancellationGranted, cancellationGranted } from '@breezbook/backend-api
 import { createBookingEvent, updateBooking, updateCancellationGrant } from '../prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
 import { Mutations, mutations } from '../mutation/mutations.js';
+import { v4 as uuid } from 'uuid';
 
 function findBookingById(bookingId: BookingId): DbResourceFinder<DbBooking> {
 	return (prisma, tenantEnvironment) => {
@@ -51,10 +52,10 @@ async function grantCancellation(res: express.Response, db: DbExpressBridge, gra
 	await db.prisma.cancellation_grants.create({
 		data: {
 			id: grant.cancellationId,
-			tenants: { connect: { tenant_id: db.tenantEnvironment.tenantId.value } },
+			tenant_id: db.tenantEnvironment.tenantId.value,
 			environment_id: db.tenantEnvironment.environmentId.value,
 			definition: grant as any,
-			bookings: { connect: { id: grant.bookingId } }
+			booking_id: grant.bookingId
 		}
 	});
 	return sendJson(res, grant, 201);
@@ -113,14 +114,7 @@ export function doCommitCancellation(cancellation: DbCancellationGrant, clock: C
 	}
 	return mutations([
 		updateCancellationGrant({ committed: true }, { id: cancellation.id }),
-		updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id }),
-		createBookingEvent({
-			environment_id: cancellation.environment_id,
-			tenant_id: cancellation.tenant_id,
-			booking_id: cancellation.booking_id,
-			event_type: 'cancelled',
-			event_data: {}
-		})
+		updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id })
 	]);
 }
 

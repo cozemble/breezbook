@@ -1,46 +1,62 @@
 import { Prisma } from '@prisma/client';
 import { Create, Update, Upsert } from '../mutation/mutations.js';
+import { id, mandatory } from '@breezbook/packages-core';
 
 export type CreateOrder = Create<Prisma.ordersCreateArgs['data']>;
+
 export function createOrder(data: Prisma.ordersCreateArgs['data']): CreateOrder {
 	return {
 		_type: 'create',
 		data,
-		entity: 'orders'
+		entity: 'orders',
+		entityId: id(mandatory(data.id, 'Order ID'))
 	};
 }
+
 export type CreateBooking = Create<Prisma.bookingsCreateArgs['data']>;
+
 export function createBooking(data: Prisma.bookingsCreateArgs['data']): CreateBooking {
 	return {
 		_type: 'create',
 		data,
-		entity: 'bookings'
+		entity: 'bookings',
+		entityId: id(mandatory(data.id, 'Booking ID'))
 	};
 }
+
 export type CreateReservation = Create<Prisma.reservationsCreateArgs['data']>;
+
 export function createReservation(data: Prisma.reservationsCreateArgs['data']): CreateReservation {
 	return {
 		_type: 'create',
 		data,
-		entity: 'reservations'
+		entity: 'reservations',
+		entityId: id(mandatory(data.id, 'Reservation ID'))
 	};
 }
+
 export type CreateOrderLine = Create<Prisma.order_linesCreateArgs['data']>;
+
 export function createOrderLine(data: Prisma.order_linesCreateArgs['data']): CreateOrderLine {
 	return {
 		_type: 'create',
 		data,
-		entity: 'order_lines'
+		entity: 'order_lines',
+		entityId: id(mandatory(data.id, 'Order Line ID'))
 	};
 }
+
 export type CreateBookingEvent = Create<Prisma.booking_eventsCreateArgs['data']>;
+
 export function createBookingEvent(data: Prisma.booking_eventsCreateArgs['data']): CreateBookingEvent {
 	return {
 		_type: 'create',
 		data,
-		entity: 'booking_events'
+		entity: 'booking_events',
+		entityId: id(mandatory(data.id, 'Booking Event ID'))
 	};
 }
+
 type UpdateBooking = Update<Prisma.bookingsUpdateArgs['data'], Prisma.bookingsWhereUniqueInput>;
 
 export function updateBooking(data: Prisma.bookingsUpdateArgs['data'], where: Prisma.bookingsWhereUniqueInput): UpdateBooking {
@@ -48,11 +64,13 @@ export function updateBooking(data: Prisma.bookingsUpdateArgs['data'], where: Pr
 		_type: 'update',
 		data,
 		where,
-		entity: 'bookings'
+		entity: 'bookings',
+		entityId: id(mandatory(where.id, 'Booking ID'))
 	};
 }
 
 export type UpsertCustomer = Upsert<Prisma.customersCreateArgs['data'], Prisma.customersUpdateArgs['data'], Prisma.customersUpdateArgs['where']>;
+
 export function upsertCustomer(
 	create: Prisma.customersCreateArgs['data'],
 	update: Prisma.customersUpdateArgs['data'],
@@ -60,8 +78,14 @@ export function upsertCustomer(
 ): UpsertCustomer {
 	return {
 		_type: 'upsert',
-		create: { _type: 'create', data: create, entity: 'customers' },
-		update: { _type: 'update', data: update, where, entity: 'customers' }
+		create: { _type: 'create', data: create, entity: 'customers', entityId: id(mandatory(create.id, 'Customer ID')) },
+		update: {
+			_type: 'update',
+			data: update,
+			where,
+			entity: 'customers',
+			entityId: id(mandatory(create.id, 'Customer ID'))
+		}
 	};
 }
 
@@ -78,8 +102,19 @@ export function upsertCustomerFormValues(
 ): UpsertCustomerFormValues {
 	return {
 		_type: 'upsert',
-		create: { _type: 'create', data: create, entity: 'customer_form_values' },
-		update: { _type: 'update', data: update, where, entity: 'customer_form_values' }
+		create: {
+			_type: 'create',
+			data: create,
+			entity: 'customer_form_values',
+			entityId: id(mandatory(create.customer_id, 'Customer Form Values ID'))
+		},
+		update: {
+			_type: 'update',
+			data: update,
+			where,
+			entity: 'customer_form_values',
+			entityId: id(mandatory(create.customer_id, 'Customer Form Values ID'))
+		}
 	};
 }
 
@@ -96,8 +131,19 @@ export function upsertBookingServiceFormValues(
 ): UpsertBookingServiceFormValues {
 	return {
 		_type: 'upsert',
-		create: { _type: 'create', data: create, entity: 'booking_service_form_values' },
-		update: { _type: 'update', data: update, where, entity: 'booking_service_form_values' }
+		create: {
+			_type: 'create',
+			data: create,
+			entity: 'booking_service_form_values',
+			entityId: id(mandatory(create.booking_id, 'Booking Service Form Values ID'))
+		},
+		update: {
+			_type: 'update',
+			data: update,
+			where,
+			entity: 'booking_service_form_values',
+			entityId: id(mandatory(create.booking_id, 'Booking Service Form Values ID'))
+		}
 	};
 }
 
@@ -111,6 +157,7 @@ export function updateCancellationGrant(
 		_type: 'update',
 		data,
 		where,
-		entity: 'cancellation_grants'
+		entity: 'cancellation_grants',
+		entityId: id(mandatory(where.id, 'Cancellation Grant ID'))
 	};
 }

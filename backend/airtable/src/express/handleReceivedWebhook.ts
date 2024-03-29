@@ -64,9 +64,9 @@ async function handleWebhook(webhookBody: PostedWebhook): Promise<WebhookHandleR
 	await prisma.order_payments.create({
 		data: {
 			id: paymentId,
-			tenants: { connect: { tenant_id: metadata.tenantId } },
+			tenant_id: metadata.tenantId,
 			environment_id: metadata.environmentId,
-			orders: { connect: { id: orderId } },
+			order_id: orderId,
 			status: paymentStatus,
 			provider: 'Stripe',
 			provider_transaction_id: payloadPaymentIntent.id,

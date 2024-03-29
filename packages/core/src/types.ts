@@ -250,6 +250,9 @@ export interface Id extends ValueType<string> {
 }
 
 export function id(value: string): Id {
+	if (value === null || value === undefined) {
+		throw new Error('id value cannot be null or undefined');
+	}
 	return {
 		_type: 'id',
 		value

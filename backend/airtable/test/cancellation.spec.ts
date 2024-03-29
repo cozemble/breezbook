@@ -7,6 +7,7 @@ import { createBookingEvent, updateBooking, updateCancellationGrant } from '../s
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
 import { HttpError } from '../src/infra/functionalExpress.js';
 import { mutations } from '../src/mutation/mutations.js';
+import { v4 as uuid } from 'uuid';
 
 test("can't get a cancellation grant for a booking in the past", () => {
 	const theBooking = makeDbBooking(isoDateFns.addDays(isoDate(), -1));
@@ -60,14 +61,7 @@ describe('Given a cancellation grant', () => {
 		expect(outcome).toEqual(
 			mutations([
 				updateCancellationGrant({ committed: true }, { id: cancellation.id }),
-				updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id }),
-				createBookingEvent({
-					environment_id: 'environment-id',
-					tenant_id: 'tenant-id',
-					booking_id: cancellation.booking_id,
-					event_type: 'cancelled',
-					event_data: {}
-				})
+				updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id })
 			])
 		);
 	});

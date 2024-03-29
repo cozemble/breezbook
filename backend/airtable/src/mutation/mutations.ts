@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { Id } from '@breezbook/packages-core';
 
 export type Entity = keyof Prisma.TypeMap<any>['model'];
 
@@ -6,12 +7,14 @@ export interface Create<TData> {
 	_type: 'create';
 	data: TData;
 	entity: Entity;
+	entityId: Id;
 }
 
 export interface Delete<TWhereUniqueInput> {
 	_type: 'delete';
 	where: TWhereUniqueInput;
 	entity: Entity;
+	entityId: Id;
 }
 
 export interface Update<TData, TWhereUniqueInput> {
@@ -19,6 +22,7 @@ export interface Update<TData, TWhereUniqueInput> {
 	data: TData;
 	where: TWhereUniqueInput;
 	entity: Entity;
+	entityId: Id;
 }
 
 export interface Upsert<TCreateInput, TUpdateInput, TWhereUniqueInput> {
@@ -43,5 +47,11 @@ export const mutationFns = {
 			return m.update.entity;
 		}
 		return m.entity;
+	},
+	entityId: function (m: Mutation): Id {
+		if (m._type === 'upsert') {
+			return m.update.entityId;
+		}
+		return m.entityId;
 	}
 };

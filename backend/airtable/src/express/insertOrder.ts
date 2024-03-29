@@ -29,9 +29,7 @@ function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, order: 
 				first_name: order.customer.firstName,
 				last_name: order.customer.lastName,
 				environment_id,
-				tenants: {
-					connect: { tenant_id }
-				}
+				tenant_id
 			},
 			{
 				first_name: order.customer.firstName,
@@ -44,15 +42,9 @@ function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, order: 
 	if (tenantSettings.customerFormId && order.customer.formData) {
 		const create: Prisma.customer_form_valuesCreateArgs['data'] = {
 			environment_id: tenantEnvironment.environmentId.value,
-			tenants: {
-				connect: { tenant_id }
-			},
+			tenant_id: tenantEnvironment.tenantId.value,
 			form_values: order.customer.formData,
-			customers: {
-				connect: {
-					tenant_id_environment_id_email: { tenant_id, environment_id, email }
-				}
-			}
+			customer_id: order.customer.id.value
 		};
 		const update: Prisma.customer_form_valuesUpdateArgs['data'] = {
 			form_values: order.customer.formData
@@ -69,18 +61,13 @@ function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, order: 
 function createOrderAsPrismaMutation(tenantEnvironment: TenantEnvironment, createOrderRequest: CreateOrderRequest, orderId: string): CreateOrder {
 	const tenant_id = tenantEnvironment.tenantId.value;
 	const environment_id = tenantEnvironment.environmentId.value;
-	const email = createOrderRequest.order.customer.email.value;
 	return createOrder({
 		id: orderId,
 		environment_id,
 		total_price_in_minor_units: createOrderRequest.orderTotal.amount.value,
 		total_price_currency: createOrderRequest.orderTotal.currency.value,
-		customers: {
-			connect: { tenant_id_environment_id_email: { tenant_id, environment_id, email } }
-		},
-		tenants: {
-			connect: { tenant_id }
-		}
+		customer_id: createOrderRequest.order.customer.id.value,
+		tenant_id
 	});
 }
 
@@ -92,16 +79,10 @@ function upsertServiceFormValues(
 ): UpsertBookingServiceFormValues {
 	const create: Prisma.booking_service_form_valuesCreateArgs['data'] = {
 		environment_id: tenantEnvironment.environmentId.value,
-		tenants: {
-			connect: { tenant_id: tenantEnvironment.tenantId.value }
-		},
-		service_form_values: serviceFormData as any,
-		forms: {
-			connect: { id: serviceFormId.value }
-		},
-		bookings: {
-			connect: { id: bookingId }
-		}
+		booking_id: bookingId,
+		tenant_id: tenantEnvironment.tenantId.value,
+		service_form_id: serviceFormId.value,
+		service_form_values: serviceFormData as any
 	};
 	const update: Prisma.booking_service_form_valuesUpdateArgs['data'] = {
 		service_form_values: serviceFormData as any
@@ -164,21 +145,11 @@ function processOrderLines(
 			createBooking({
 				id: bookingId,
 				environment_id,
-				tenants: {
-					connect: { tenant_id }
-				},
-				services: {
-					connect: { id: line.serviceId.value }
-				},
-				orders: {
-					connect: { id: orderId }
-				},
-				customers: {
-					connect: { tenant_id_environment_id_email: { tenant_id, environment_id, email } }
-				},
-				time_slots: {
-					connect: line.slot._type === 'timeslot.spec' ? { id: line.slot.id.value } : undefined
-				},
+				tenant_id,
+				service_id: line.serviceId.value,
+				order_id: orderId,
+				customer_id: order.customer.id.value,
+				time_slot_id: line.slot._type === 'timeslot.spec' ? line.slot.id.value : undefined,
 				date: line.date.value,
 				start_time_24hr: servicePeriod.from.value,
 				end_time_24hr: servicePeriod.to.value
@@ -190,9 +161,7 @@ function processOrderLines(
 			mutations.push(
 				createReservation({
 					id: reservationId,
-					bookings: {
-						connect: { id: bookingId }
-					},
+					booking_id: bookingId,
 					reservation_time: new Date(),
 					expiry_time: new Date(new Date().getTime() + 1000 * 60 * 30),
 					reservation_type: 'awaiting payment'

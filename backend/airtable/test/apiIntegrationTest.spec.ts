@@ -170,7 +170,7 @@ describe('Given a migrated database', async () => {
 		const costInPence = randomInteger(5000);
 		const createOrderResponse = await insertOrder(
 			tenantEnv,
-			createOrderRequest(order(customer('Mike', 'Hogan', 'mike@email.com'), []), price(costInPence, currency('GBP')), fullPaymentOnCheckout()),
+			createOrderRequest(order(customer('Mike', 'Hogan', 'mike7@email.com'), []), price(costInPence, currency('GBP')), fullPaymentOnCheckout()),
 			[],
 			tenantSettings(timezone('Europe/London'), null)
 		);

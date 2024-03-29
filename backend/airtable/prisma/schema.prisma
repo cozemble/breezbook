@@ -480,6 +480,7 @@ model mutation_events {
   environment_id String
   event_type     String   @db.VarChar(255)
   entity_type    String   @db.VarChar(255)
+  entity_id      String
   event_time     DateTime @default(now()) @db.Timestamp(6)
   event_data     Json
   tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
@@ -487,7 +488,7 @@ model mutation_events {
 
 model last_change_announcements {
   id                Int      @id @default(autoincrement())
-  environment_id    Int
+  environment_id    String
   announcement_date DateTime @db.Timestamp(6)
 }
 
