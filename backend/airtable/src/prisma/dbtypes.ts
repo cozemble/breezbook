@@ -23,7 +23,8 @@ import {
 	refund_rules,
 	coupons,
 	last_shovl_out,
-	customer_form_values
+	customer_form_values,
+	mutation_events
 } from '@prisma/client';
 import { TenantEnvironment } from '@breezbook/packages-core';
 
@@ -52,7 +53,8 @@ export {
 	refund_rules as DbRefundRule,
 	coupons as DbCoupon,
 	last_shovl_out as DbLastShovlOut,
-	customer_form_values as DbCustomerFormValues
+	customer_form_values as DbCustomerFormValues,
+	mutation_events as DbMutationEvent
 };
 
 export function findManyForTenant(tenantEnvironment: TenantEnvironment) {

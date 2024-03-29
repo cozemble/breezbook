@@ -21,11 +21,11 @@
     "bounce:db": "node dist/cjs/devDb.js",
     "compile": "npx tsc -p tsconfig.json",
     "server": "NODE_ENV=development node dist/esm/index.js",
-    "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local && npm run make:schema-types && npm run db:migrate-carwash-local && npm run db:load-stripe-test-keys",
+    "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local && npm run make:schema-types && npm run db:migrate-carwash-local && npm run db:load-test-config",
     "make:schema-types": "npx prisma introspect && npx prisma generate",
     "make:prisma-client": "npx prisma generate",
     "start:inngest": "npx inngest-cli@latest dev",
-    "db:load-stripe-test-keys":  "dotenv -e .env -- bash -c ./scripts/load-stripe-test-keys.sh"
+    "db:load-test-config":  "dotenv -e .env -- bash -c ./scripts/load-test-config.sh"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",

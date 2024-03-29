@@ -9,6 +9,10 @@ export function expressApp(): Express {
 
 	app.use(cors(corsOptions));
 
+	/**
+	 * Local invoke URL will be http://localhost:3000/v1/connect/airtable/oauth2/authorize
+	 * See https://airtable.com/create/oauth
+	 */
 	app.get('/v1/connect/airtable/oauth2/authorize', onAirtableOauthRequest);
 	app.get('/v1/connect/airtable/oauth2/callback', onAirtableOauthCallback);
 

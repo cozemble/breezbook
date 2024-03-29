@@ -247,38 +247,40 @@ model tenant_settings {
 }
 
 model tenants {
-  tenant_id                   String                        @id
-  name                        String
-  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
-  updated_at                  DateTime                      @default(now()) @db.Timestamptz(6)
-  add_on                      add_on[]
-  blocked_time                blocked_time[]
-  booking_events              booking_events[]
-  booking_service_form_values booking_service_form_values[]
-  bookings                    bookings[]
-  business_hours              business_hours[]
-  cancellation_grants         cancellation_grants[]
-  coupons                     coupons[]
-  customer_form_values        customer_form_values[]
-  customers                   customers[]
-  forms                       forms[]
-  mutation_events             mutation_events[]
-  order_lines                 order_lines[]
-  order_payments              order_payments[]
-  orders                      orders[]
-  pricing_rules               pricing_rules[]
-  received_webhooks           received_webhooks[]
-  refund_rules                refund_rules[]
-  resource_availability       resource_availability[]
-  resource_blocked_time       resource_blocked_time[]
-  resource_types              resource_types[]
-  resources                   resources[]
-  service_forms               service_forms[]
-  services                    services[]
-  system_outbound_webhooks    system_outbound_webhooks[]
-  tenant_settings             tenant_settings[]
-  time_slots                  time_slots[]
-  webhook_destinations        webhook_destinations[]
+  tenant_id                        String                             @id
+  name                             String
+  created_at                       DateTime                           @default(now()) @db.Timestamptz(6)
+  updated_at                       DateTime                           @default(now()) @db.Timestamptz(6)
+  add_on                           add_on[]
+  blocked_time                     blocked_time[]
+  booking_events                   booking_events[]
+  booking_service_form_values      booking_service_form_values[]
+  bookings                         bookings[]
+  business_hours                   business_hours[]
+  cancellation_grants              cancellation_grants[]
+  coupons                          coupons[]
+  customer_form_values             customer_form_values[]
+  customers                        customers[]
+  data_synchronisation_id_mappings data_synchronisation_id_mappings[]
+  forms                            forms[]
+  mutation_events                  mutation_events[]
+  oauth_tokens                     oauth_tokens[]
+  order_lines                      order_lines[]
+  order_payments                   order_payments[]
+  orders                           orders[]
+  pricing_rules                    pricing_rules[]
+  received_webhooks                received_webhooks[]
+  refund_rules                     refund_rules[]
+  resource_availability            resource_availability[]
+  resource_blocked_time            resource_blocked_time[]
+  resource_types                   resource_types[]
+  resources                        resources[]
+  service_forms                    service_forms[]
+  services                         services[]
+  system_outbound_webhooks         system_outbound_webhooks[]
+  tenant_settings                  tenant_settings[]
+  time_slots                       time_slots[]
+  webhook_destinations             webhook_destinations[]
 }
 
 model time_slots {
@@ -490,6 +492,38 @@ model last_change_announcements {
   id                Int      @id @default(autoincrement())
   environment_id    String
   announcement_date DateTime @db.Timestamp(6)
+  channel_id        String
+}
+
+model oauth_tokens {
+  id             String   @id
+  tenant_id      String
+  environment_id String
+  owning_system  String
+  token_type     String
+  token          String
+  expires_at     DateTime @db.Timestamp(6)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenant_id, environment_id, owning_system, token_type])
+}
+
+model data_synchronisation_id_mappings {
+  id             String   @id
+  tenant_id      String
+  environment_id String
+  entity_type    String
+  from_system    String
+  to_system      String
+  from_id        String
+  to_id          String
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenant_id, environment_id, entity_type, from_system, to_system, from_id], map: "data_synchronisation_id_mappi_tenant_id_environment_id_enti_key")
 }
 
 enum payment_status {

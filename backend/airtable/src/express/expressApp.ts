@@ -15,6 +15,7 @@ import { couponValidityCheck } from './coupons/couponHandlers.js';
 import { onBasketPriceRequest } from './basket/basketHandler.js';
 import { onShovlOut } from './shovl/shovlEndpoints.js';
 import { onGetChanges } from './changes/changesHandlers.js';
+import { onGetAccessToken } from './oauth/oauthHandlers.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
 	rawBody?: string;
@@ -72,9 +73,15 @@ export function expressApp(): Express {
 	app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);
 	app.post('/internal/api/:envId/:tenantId/secret', onStoreTenantSecret);
 	app.post('/internal/api/:envId/shovl/out', onShovlOut);
-	app.get('/internal/api/:envId/changes', onGetChanges);
+	app.get(internalApiPaths.getChangesForEnvironment, onGetChanges);
+	app.get(internalApiPaths.getAccessToken, onGetAccessToken);
 
 	bindInngestToExpress(app);
 
 	return app;
 }
+
+export const internalApiPaths = {
+	getChangesForEnvironment: '/internal/api/:envId/changes',
+	getAccessToken: '/internal/api/:envId/:tenantId/oauth/:systemId/accessToken'
+};

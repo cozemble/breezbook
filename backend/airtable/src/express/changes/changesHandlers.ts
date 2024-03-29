@@ -24,7 +24,7 @@ export async function onGetChanges(req: express.Request, res: express.Response):
 					}
 				}
 			});
-			const bodies = changes.map((change) => change.event_data);
+			const bodies = changes.map((change) => ({ event: change.event_data, tenantId: change.tenant_id, environmentId: change.environment_id }));
 			res.status(200).send({ environmentId, from, to, changes: bodies });
 		}
 	);
