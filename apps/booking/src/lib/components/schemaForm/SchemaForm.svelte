@@ -41,7 +41,12 @@
 <!-- TODO fix type issue -->
 <div class="gap-x-4 flex flex-col justify-center items-center w-full">
 	{#each simpleProperties as [key, prop], i (i)}
-		<Input bind:value={value[key]} name={key} schema={prop} error={_.get(errors, key)} />
+		<Input
+			bind:value={value[key]}
+			name={prop?.title ?? key}
+			schema={prop}
+			error={_.get(errors, key)}
+		/>
 	{/each}
 
 	{#each objectProperties as [key, prop], i (i)}

@@ -12,15 +12,19 @@ export function createCustomerStore() {
 	const schema = writable<JSONSchema>({
 		type: 'object',
 		properties: {
-			firstName: { type: 'string', description: 'Your name' },
-			lastName: { type: 'string', description: 'Your last name' },
-			email: { type: 'string', description: 'Your email address' },
+			firstName: { type: 'string', description: 'Your name', title: 'First Name' },
+			lastName: { type: 'string', description: 'Your last name', title: 'Last Name' },
+			email: { type: 'string', description: 'Your email address', title: 'Email' },
 			formData: {
 				type: 'object',
 				properties: {
-					phone: { type: 'string', description: 'Your phone number' },
-					firstLineOfAddress: { type: 'string', description: 'First line of your address' },
-					postcode: { type: 'string', description: 'Your postcode' }
+					phone: { type: 'string', description: 'Your phone number', title: 'Phone' },
+					firstLineOfAddress: {
+						type: 'string',
+						description: 'First line of your address',
+						title: 'First Line of Address'
+					},
+					postcode: { type: 'string', description: 'Your postcode', title: 'Postcode' }
 				},
 				required: ['phone', 'firstLineOfAddress', 'postcode']
 			}
