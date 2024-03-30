@@ -189,9 +189,15 @@ function createCheckoutStore() {
 			core.fullPaymentOnCheckout()
 		);
 
-		const orderRes = await api.booking.placeOrder(tenant.slug, orderReq);
-		console.log(orderRes);
-		if (!orderRes?.orderId) {
+		try {
+			const orderRes = await api.booking.placeOrder(tenant.slug, orderReq);
+			console.log(orderRes);
+
+			paymentStore.createPaymentIntent(orderRes.orderId);
+			notif.remove();
+			goto('/checkout/payment');
+		} catch (err) {
+			console.error('Failed to place order', err);
 			notif.remove();
 			notifications.create({
 				title: 'Error',
@@ -201,11 +207,6 @@ function createCheckoutStore() {
 			});
 			return;
 		}
-
-		paymentStore.createPaymentIntent(orderRes.orderId);
-
-		notif.remove();
-		goto('/checkout/payment');
 	};
 
 	// ----------------------------------------------------------------

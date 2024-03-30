@@ -40,12 +40,21 @@ export const createPaymentStore = () => {
 	// ----------------------------------------------------------
 
 	const createPaymentIntent = async (orderId: string) => {
-		const res = await api.payment.createPaymentIntent(tenant.slug, orderId);
+		try {
+			const res = await api.payment.createPaymentIntent(tenant.slug, orderId);
 
-		if (!res?.clientSecret || !res?.stripePublicKey) return;
+			clientSecret.set(res.clientSecret);
+			stripePublicKey.set(res.stripePublicKey);
+		} catch {
+			notifications.create({
+				title: 'Error',
+				description: 'Failed to create payment intent',
+				type: 'error',
+				duration: 4000
+			});
 
-		clientSecret.set(res.clientSecret);
-		stripePublicKey.set(res.stripePublicKey);
+			return;
+		}
 	};
 
 	const onSubmit = async () => {
