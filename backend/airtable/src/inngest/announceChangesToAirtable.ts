@@ -166,8 +166,9 @@ export const handleOneToAirtableSynchronisation = inngest.createFunction(
 			if (synchronisation.airtableMutation._type === 'airtable.update') {
 				airtableUrl += `/${synchronisation.airtableMutation.recordId}`;
 			}
+			const method = synchronisation.airtableMutation._type === 'airtable.update' ? 'PATCH' : 'POST';
 			const airtableResponse = await fetch(airtableUrl, {
-				method: 'POST',
+				method,
 				headers: {
 					Authorization: `Bearer ${accessToken}`,
 					'Content-Type': 'application/json'
@@ -179,7 +180,7 @@ export const handleOneToAirtableSynchronisation = inngest.createFunction(
 				throw new Error(`Failed to POST to ${airtableUrl}, got status ${airtableResponse.status}, response: ${responseText}`);
 			}
 			const airtableResponseJson = await airtableResponse.json();
-			const recordId = airtableResponseJson.id;
+			const recordId = airtableResponseJson.id as string;
 			console.log(`Sent to airtable, got record id ${recordId}`);
 			return recordId;
 		});
