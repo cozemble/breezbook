@@ -98,8 +98,3 @@ test('can deal with no availability on the day', () => {
 	expect(result._type).toBe('error.response');
 	expect(result.errorCode).toBe(pricingErrorCodes.pricingError);
 });
-
-test('x', () => {
-	const c = coupon(couponCode('20-OFF'), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-05-23'));
-	console.log(JSON.stringify(c, null, 2));
-});

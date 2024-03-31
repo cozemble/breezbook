@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { PriceAdjustment } from './calculatePrice.js';
+import dayjs from 'dayjs';
 
 export interface ValueType<T> {
 	_type: unknown;
@@ -66,7 +67,7 @@ export interface IsoDate extends ValueType<string> {
 	_type: 'iso.date';
 }
 
-export function isoDate(value: string = new Date().toISOString().split('T')[0]): IsoDate {
+export function isoDate(value: string = dayjs().format('YYYY-MM-DD')): IsoDate {
 	if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) {
 		throw new Error(`Invalid date format ${value}. Expected YYYY-MM-DD`);
 	}
@@ -93,15 +94,15 @@ export const isoDateFns = {
 		const from = new Date(fromDate.value);
 		const to = new Date(toDate.value);
 		const dates: IsoDate[] = [];
-		for (let date = from; date <= to; date.setDate(date.getDate() + 1)) {
-			dates.push(isoDate(date.toISOString().split('T')[0]));
+		let currentDate = from;
+		while (currentDate <= to) {
+			dates.push(isoDate(dayjs(currentDate).format('YYYY-MM-DD')));
+			currentDate = dayjs(currentDate).add(1, 'day').toDate();
 		}
 		return dates;
 	},
 	addDays(date: IsoDate, days: number) {
-		const d = new Date(date.value);
-		d.setDate(d.getDate() + days);
-		return isoDate(d.toISOString().split('T')[0]);
+		return isoDate(dayjs(date.value).add(days, 'day').format('YYYY-MM-DD'));
 	},
 	dayOfWeek(date: IsoDate) {
 		return new Date(date.value).toLocaleDateString('en-GB', { weekday: 'long' }) as DayOfWeek;

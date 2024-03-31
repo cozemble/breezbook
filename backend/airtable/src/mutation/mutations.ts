@@ -31,6 +31,22 @@ export interface Upsert<TCreateInput, TUpdateInput, TWhereUniqueInput> {
 	update: Update<TUpdateInput, TWhereUniqueInput>;
 }
 
+export function create(entity: Entity, entityId: Id, data: any): Create<any> {
+	return { _type: 'create', entity, entityId, data };
+}
+
+export function _delete(entity: Entity, entityId: Id): Delete<any> {
+	return { _type: 'delete', entity, entityId, where: { id: entityId } };
+}
+
+export function update(entity: Entity, entityId: Id, data: any): Update<any, any> {
+	return { _type: 'update', entity, entityId, where: { id: entityId }, data };
+}
+
+export function upsert(create: Create<any>, update: Update<any, any>): Upsert<any, any, any> {
+	return { _type: 'upsert', create, update };
+}
+
 export type Mutation = Create<any> | Delete<any> | Update<any, any> | Upsert<any, any, any>;
 export interface Mutations {
 	_type: 'mutations';

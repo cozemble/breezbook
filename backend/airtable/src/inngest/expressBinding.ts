@@ -2,7 +2,13 @@ import { serve } from 'inngest/express';
 import { inngest } from './client.js';
 import * as express from 'express';
 import { onNewOutboundMessagesBatch, onOutboundWebhooksSendQueued } from './outboundMessages.js';
-import { handleBatchForOneEnvironment, handleOneAirtableChange, handleOneChange, pollChangesFunction } from './announceChangesToAirtable.js';
+import {
+	handleChangeBatchForOneEnvironment,
+	handleOneAirtableChange,
+	handleOneChange,
+	fanOutChangesInAllEnvironments,
+	handleOneToAirtableSynchronisation
+} from './announceChangesToAirtable.js';
 
 export function bindInngestToExpress(app: express.Application): void {
 	app.use(
@@ -12,10 +18,11 @@ export function bindInngestToExpress(app: express.Application): void {
 			functions: [
 				onNewOutboundMessagesBatch,
 				onOutboundWebhooksSendQueued,
-				pollChangesFunction,
-				handleBatchForOneEnvironment,
+				fanOutChangesInAllEnvironments,
+				handleChangeBatchForOneEnvironment,
 				handleOneChange,
-				handleOneAirtableChange
+				handleOneAirtableChange,
+				handleOneToAirtableSynchronisation
 			]
 		})
 	);

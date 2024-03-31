@@ -21,3 +21,14 @@ export interface AirtableMapping {
 	entityType: Entity;
 	fieldMappings: FieldMapping[];
 }
+
+export function airtableMapping(
+	airtableBaseId: string,
+	airtableTableName: string,
+	tenantId: string,
+	environmentId: string,
+	entityType: Entity,
+	fieldMappings: FieldMapping[]
+): AirtableMapping {
+	return { _type: 'airtable.mapping', airtableBaseId, airtableTableName, tenantId, environmentId, entityType, fieldMappings };
+}
