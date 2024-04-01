@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { InMemorySynchronisationIdRepository } from '../../src/inngest/dataSynchronisation.js';
 import { airtableCreate, airtableUpdate, createToAirtableSynchronisation, toAirtableSynchronisation } from '../../src/inngest/airtableSynchronisation.js';
-import { create, update, upsert } from '../../src/mutation/mutations.js';
+import { create, update, Upsert, upsert } from '../../src/mutation/mutations.js';
 import { id } from '@breezbook/packages-core';
 import { airtableMapping, byNameFieldMapping } from '../../src/airtable/mappings.js';
 

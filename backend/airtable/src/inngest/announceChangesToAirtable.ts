@@ -179,8 +179,8 @@ export const handleOneToAirtableSynchronisation = inngest.createFunction(
 				const responseText = await airtableResponse.text();
 				throw new Error(`Failed to POST to ${airtableUrl}, got status ${airtableResponse.status}, response: ${responseText}`);
 			}
-			const airtableResponseJson = await airtableResponse.json();
-			const recordId = airtableResponseJson.id as string;
+			const airtableResponseJson = (await airtableResponse.json()) as { id: string };
+			const recordId = airtableResponseJson.id;
 			console.log(`Sent to airtable, got record id ${recordId}`);
 			return recordId;
 		});

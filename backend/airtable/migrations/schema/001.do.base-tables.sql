@@ -233,6 +233,7 @@ create table bookings
     status          booking_status                      not null default 'confirmed',
     customer_id     text references customers (id)      not null,
     service_id      text references services (id)       not null,
+    add_on_ids      text[]                              not null,
     order_id        text references orders (id)         not null,
     date            text                                not null,
     start_time_24hr text                                not null,

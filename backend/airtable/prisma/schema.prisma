@@ -41,6 +41,7 @@ model bookings {
   status                      booking_status                @default(confirmed)
   customer_id                 String
   service_id                  String
+  add_on_ids                  String[]
   order_id                    String
   date                        String
   start_time_24hr             String

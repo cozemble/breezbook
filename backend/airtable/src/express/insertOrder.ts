@@ -107,7 +107,6 @@ function processOrderLines(
 	const tenant_id = tenantEnvironment.tenantId.value;
 	const environment_id = tenantEnvironment.environmentId.value;
 	const order = createOrderRequest.order;
-	const email = createOrderRequest.order.customer.email.value;
 
 	const mutations: Mutation[] = [];
 	const shouldMakeReservations =
@@ -147,6 +146,7 @@ function processOrderLines(
 				environment_id,
 				tenant_id,
 				service_id: line.serviceId.value,
+				add_on_ids: line.addOns.map((a) => a.addOnId.value),
 				order_id: orderId,
 				customer_id: order.customer.id.value,
 				time_slot_id: line.slot._type === 'timeslot.spec' ? line.slot.id.value : undefined,
