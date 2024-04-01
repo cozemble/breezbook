@@ -4,7 +4,8 @@ import type {
 	CreateOrderRequest,
 	OrderCreatedResponse,
 	PaymentIntentResponse,
-	UnpricedBasket
+	UnpricedBasket,
+	CancellationGrantResponse
 } from '@breezbook/backend-api-types';
 import { type PricedBasket } from '@breezbook/backend-api-types';
 
@@ -122,6 +123,22 @@ const booking = {
 	placeOrder: async (tenantSlug: string, order: CreateOrderRequest) =>
 		axios
 			.post<OrderCreatedResponse>(`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/orders`, order)
+			.then((res) => res.data),
+
+	requestCancellationGrant: async (tenantSlug: string, bookingId: string) =>
+		axios
+			.post<CancellationGrantResponse>(
+				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/booking/${bookingId}/cancellation/grant`
+			)
+			.then((res) => res.data),
+
+	commitCancellation: (tenantSlug: string, bookingId: string, cancellationId: string) =>
+		axios
+			.post(
+				`${PUBLIC_API_URL}/${
+					dev ? 'tenant1' : tenantSlug
+				}/booking/${bookingId}/cancellation/${cancellationId}/commit`
+			)
 			.then((res) => res.data)
 };
 
