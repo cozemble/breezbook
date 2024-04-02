@@ -7,6 +7,7 @@
 	const tenant = tenantStore.get();
 
 	export let cancellationGrant: CancellationGranted;
+	export let onSuccess: () => void;
 
 	const onConfirmCancellation = async () => {
 		const notif = notifications.create({
@@ -15,17 +16,26 @@
 			description: 'Please wait while we cancel your booking'
 		});
 
-		const res = await api.booking.commitCancellation(
-			tenant.slug,
-			cancellationGrant.bookingId,
-			cancellationGrant.cancellationId
-		);
-
-		notif.remove();
-
-		// <!-- TODO display success or error message -->
-
-		console.log(res);
+		await api.booking
+			.commitCancellation(
+				tenant.slug,
+				cancellationGrant.bookingId,
+				cancellationGrant.cancellationId
+			)
+			.then(() => {
+				onSuccess();
+			})
+			.catch((error) => {
+				notifications.create({
+					type: 'error',
+					title: 'Failed to cancel booking',
+					description: error.message,
+					canUserClose: true
+				});
+			})
+			.finally(() => {
+				notif.remove();
+			});
 	};
 </script>
 
