@@ -215,7 +215,12 @@ async function applyFieldMappings(idRepo: SynchronisationIdRepository, mutation:
 		} else if (fieldMapping._type === 'expression') {
 			fieldValues[fieldName] = jexlInstance.evalSync(fieldMapping.expression, mutation);
 		} else if (fieldMapping._type === 'lookup') {
-			fieldValues[fieldName] = await idRepo.getTargetId(fieldMapping.entity, fieldMapping.entityId, fieldMapping.table);
+			const filledEntityId = expandCompositeKey(fieldMapping.entityId, mutation);
+			const targetId = await idRepo.getTargetId(fieldMapping.entity, filledEntityId, fieldMapping.table);
+			if (!fieldMapping.nullable && !targetId) {
+				throw new Error(`No target id for entity ${fieldMapping.entity}, key ${JSON.stringify(filledEntityId)}, table ${fieldMapping.table}`);
+			}
+			fieldValues[fieldName] = targetId?.value;
 		}
 	}
 	return fieldValues;
@@ -320,6 +325,7 @@ export async function applyAirtablePlan(
 
 test('real integration from breezbook to airtable', async () => {
 	const idRepo = new InMemorySynchronisationIdRepository();
+	await idRepo.setTargetId('services', { id: 'smallCarWash' }, 'Services', id('rec1'));
 	const stubAirtableClient = new StubAirtableClient();
 
 	for (const mutation of mutationEvents) {
@@ -332,5 +338,27 @@ test('real integration from breezbook to airtable', async () => {
 		'Last name': 'Hogan',
 		Email: 'mike@email.com',
 		Phone: '23432432'
+	});
+	const bookingRecord = stubAirtableClient.records.find((record) => record.table === 'Bookings');
+	expect(bookingRecord).toBeDefined();
+	expect(bookingRecord!.fields).toEqual({
+		Customer: 'rec100',
+		'Due Date': '2024-04-02',
+		Time: '09:00 to 13:00'
+	});
+	const bookedServicesRecord = stubAirtableClient.records.find((record) => record.table === 'Booked services');
+	expect(bookedServicesRecord).toBeDefined();
+	expect(bookedServicesRecord!.fields).toEqual({
+		Bookings: 'rec101',
+		'Car details': 'rec103',
+		Service: 'rec1'
+	});
+	const carDetailsRecord = stubAirtableClient.records.find((record) => record.table === 'Car details');
+	expect(carDetailsRecord).toBeDefined();
+	expect(carDetailsRecord!.fields).toEqual({
+		Make: 'Honda',
+		Model: 'Accord',
+		Year: 2021,
+		Colour: 'Silver'
 	});
 });

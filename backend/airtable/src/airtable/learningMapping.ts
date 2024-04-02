@@ -57,8 +57,9 @@ interface Expression {
 interface Lookup {
 	_type: 'lookup';
 	entity: Entity;
-	entityId: string;
+	entityId: CompositeKey;
 	table: string;
+	nullable?: boolean;
 }
 
 export type FieldMapping = ObjectPath | Expression | Lookup;
@@ -120,7 +121,7 @@ export const carWashMapping: MappingPlan = {
 						baseId: 'appn1dysBKgmD9nhI',
 						table: 'Bookings',
 						fields: {
-							Customer: { _type: 'lookup', entity: 'customers', entityId: 'data.customer_id', table: 'Customer' },
+							Customer: { _type: 'lookup', entity: 'customers', entityId: { id: 'data.customer_id' }, table: 'Customers', nullable: false },
 							'Due Date': { _type: 'object.path', path: 'data.date' },
 							Time: { _type: 'expression', expression: 'data.start_time_24hr + " to " + data.end_time_24hr' }
 						}
@@ -128,10 +129,10 @@ export const carWashMapping: MappingPlan = {
 					{
 						_type: 'airtable.create',
 						baseId: 'appn1dysBKgmD9nhI',
-						table: 'Booking services',
+						table: 'Booked services',
 						fields: {
-							Bookings: { _type: 'lookup', entity: 'bookings', entityId: 'data.id', table: 'Bookings' },
-							Service: { _type: 'lookup', entity: 'services', entityId: 'data.service_id', table: 'Services' }
+							Bookings: { _type: 'lookup', entity: 'bookings', entityId: { id: 'data.id' }, table: 'Bookings' },
+							Service: { _type: 'lookup', entity: 'services', entityId: { id: 'data.service_id' }, table: 'Services' }
 						}
 					}
 				]
@@ -161,12 +162,12 @@ export const carWashMapping: MappingPlan = {
 					{
 						_type: 'airtable.update',
 						baseId: 'appn1dysBKgmD9nhI',
-						table: 'Booking services',
+						table: 'Booked services',
 						fields: {
 							'Car details': {
 								_type: 'lookup',
 								entity: 'bookings',
-								entityId: 'create.data.booking_id',
+								entityId: { id: 'create.data.booking_id' },
 								table: 'Car details'
 							}
 						}
