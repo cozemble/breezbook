@@ -1,140 +1,178 @@
 import { Entity } from '../mutation/mutations.js';
+import { CompositeKey } from '../inngest/dataSynchronisation.js';
 
 interface AirtableCreate {
 	_type: 'airtable.create';
 	baseId: string;
 	table: string;
-	fields: Record<string, any>;
+	fields: Record<string, FieldMapping>;
 }
 
 interface AirtableUpdate {
 	_type: 'airtable.update';
 	baseId: string;
 	table: string;
-	fields: Record<string, any>;
+	fields: Record<string, FieldMapping>;
 }
 
 interface AirtableUpsert {
 	_type: 'airtable.upsert';
 	baseId: string;
 	table: string;
-	fields: Record<string, any>;
-}
-type AirtableMutation = AirtableUpsert | AirtableCreate | AirtableUpdate;
-
-interface ObjectPath {
-	path: string;
+	fields: Record<string, FieldMapping>;
 }
 
-interface AirtableMapping {
-	_type: 'airtable.mapping';
-	sourceEntity: Entity;
-	sourceEntityId: ObjectPath;
-	airtableMutation: AirtableMutation;
+export type AirtableMutation = AirtableUpsert | AirtableCreate | AirtableUpdate;
+
+export interface AirtableRecordIdMapping {
+	mappedTo: { entity: Entity; entityId: CompositeKey };
 }
-interface Mapping {
-	when: string[];
-	airtable: AirtableMapping[];
+
+export interface AirtableMapping {
+	recordId: AirtableRecordIdMapping;
+	records: AirtableMutation[];
 }
-interface MappingPlan {
+
+export interface Mapping {
+	when: string;
+	airtable: AirtableMapping;
+}
+
+export interface MappingPlan {
 	_type: 'mapping.plan';
 	mappings: Mapping[];
 }
 
-export const mapping: MappingPlan = {
+interface ObjectPath {
+	_type: 'object.path';
+	path: string;
+	nullable?: boolean;
+}
+
+interface Expression {
+	_type: 'expression';
+	expression: string;
+}
+
+interface Lookup {
+	_type: 'lookup';
+	entity: Entity;
+	entityId: string;
+	table: string;
+}
+
+export type FieldMapping = ObjectPath | Expression | Lookup;
+
+export const carWashMapping: MappingPlan = {
 	_type: 'mapping.plan',
 	mappings: [
 		{
-			when: ['_type == "upsert" && entity == "customer"'],
-			airtable: [
-				{
-					_type: 'airtable.mapping',
-					sourceEntity: 'customers',
-					sourceEntityId: { path: 'entityId.value' },
-					airtableMutation: {
+			when: '_type == "upsert" && create.entity == "customers"',
+			airtable: {
+				recordId: { mappedTo: { entity: 'customers', entityId: { id: 'create.data.id' } } },
+				records: [
+					{
 						_type: 'airtable.upsert',
 						baseId: 'appn1dysBKgmD9nhI',
 						table: 'Customers',
 						fields: {
-							'First name': { path: 'create.data.first_name' },
-							'Last name': { path: 'create.data.last_name' },
-							Email: { path: 'create.data.email' }
+							'First name': { _type: 'object.path', path: 'create.data.first_name', nullable: false },
+							'Last name': { _type: 'object.path', path: 'create.data.last_name', nullable: false },
+							Email: { _type: 'object.path', path: 'create.data.email', nullable: false }
 						}
 					}
-				}
-			]
+				]
+			}
 		},
 		{
-			when: ['_type == "upsert" && entity == "customer_form_values"'],
-			airtable: [
-				{
-					_type: 'airtable.mapping',
-					sourceEntity: 'customers',
-					sourceEntityId: { path: 'entityId.value' },
-					airtableMutation: {
+			when: '_type == "upsert" && create.entity == "customer_form_values"',
+			airtable: {
+				recordId: {
+					mappedTo: {
+						entity: 'customers',
+						entityId: { id: 'create.data.customer_id' }
+					}
+				},
+				records: [
+					{
 						_type: 'airtable.update',
 						baseId: 'appn1dysBKgmD9nhI',
 						table: 'Customers',
 						fields: {
-							Email: { path: 'create.data.email' }
+							Phone: { _type: 'object.path', path: 'create.data.form_values.phone', nullable: false }
 						}
 					}
-				}
-			]
+				]
+			}
 		},
 		{
-			when: ['_type == "create" && entity == "bookings"'],
-			airtable: [
-				{
-					_type: 'airtable.mapping',
-					sourceEntity: 'bookings',
-					sourceEntityId: { path: 'entityId.value' },
-					airtableMutation: {
-						_type: 'airtable.create',
-						baseId: 'appn1dysBKgmD9nhI',
-						table: 'Bookings',
-						fields: {
-							Customer: { pk: 'data.customer_id' },
-							'Due Date': { path: 'data.date' },
-							Time: { expression: 'data.start_time_24hr + " to " + data.end_time_24hr' }
-						}
+			when: '_type == "create" && entity == "bookings"',
+			airtable: {
+				recordId: {
+					mappedTo: {
+						entity: 'bookings',
+						entityId: { id: 'data.id' }
 					}
 				},
-				{
-					_type: 'airtable.mapping',
-					sourceEntity: 'bookings',
-					sourceEntityId: { path: 'entityId.value' },
-					airtableMutation: {
+				records: [
+					{
 						_type: 'airtable.create',
-						baseId: 'appn1dysBKgmD9nhI',
-						table: 'Booked services',
-						fields: {
-							Bookings: [{ pk: 'data.id' }]
-						}
-					}
-				}
-			]
-		},
-		{
-			when: ['_type == "upsert" && entity == "booking_service_form_values"'],
-			airtable: [
-				{
-					_type: 'airtable.mapping',
-					sourceEntity: 'bookings',
-					sourceEntityId: { path: 'create.data.bookingId' },
-					airtableMutation: {
-						_type: 'airtable.update',
 						baseId: 'appn1dysBKgmD9nhI',
 						table: 'Bookings',
 						fields: {
-							Customer: { pk: 'data.customer_id' },
-							'Booked services': [{ pk: 'data.service_id' }],
-							'Due Date': { path: 'data.date' },
-							Time: { expression: 'data.start_time_24hr + " to " + data.end_time_24hr' }
+							Customer: { _type: 'lookup', entity: 'customers', entityId: 'data.customer_id', table: 'Customer' },
+							'Due Date': { _type: 'object.path', path: 'data.date' },
+							Time: { _type: 'expression', expression: 'data.start_time_24hr + " to " + data.end_time_24hr' }
+						}
+					},
+					{
+						_type: 'airtable.create',
+						baseId: 'appn1dysBKgmD9nhI',
+						table: 'Booking services',
+						fields: {
+							Bookings: { _type: 'lookup', entity: 'bookings', entityId: 'data.id', table: 'Bookings' },
+							Service: { _type: 'lookup', entity: 'services', entityId: 'data.service_id', table: 'Services' }
 						}
 					}
-				}
-			]
+				]
+			}
+		},
+		{
+			when: '_type == "upsert" && create.entity == "booking_service_form_values"',
+			airtable: {
+				recordId: {
+					mappedTo: {
+						entity: 'bookings',
+						entityId: { id: 'create.data.booking_id' }
+					}
+				},
+				records: [
+					{
+						_type: 'airtable.upsert',
+						baseId: 'appn1dysBKgmD9nhI',
+						table: 'Car details',
+						fields: {
+							Make: { _type: 'object.path', path: 'create.data.service_form_values.make' },
+							Model: { _type: 'object.path', path: 'create.data.service_form_values.model' },
+							Year: { _type: 'object.path', path: 'create.data.service_form_values.year' },
+							Colour: { _type: 'object.path', path: 'create.data.service_form_values.colour' }
+						}
+					},
+					{
+						_type: 'airtable.update',
+						baseId: 'appn1dysBKgmD9nhI',
+						table: 'Booking services',
+						fields: {
+							'Car details': {
+								_type: 'lookup',
+								entity: 'bookings',
+								entityId: 'create.data.booking_id',
+								table: 'Car details'
+							}
+						}
+					}
+				]
+			}
 		}
 	]
 };

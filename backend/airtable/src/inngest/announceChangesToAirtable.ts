@@ -1,11 +1,11 @@
 import { inngest } from './client.js';
 import { prismaClient } from '../prisma/client.js';
-import { mandatory } from '@breezbook/packages-core';
+import { id, mandatory } from '@breezbook/packages-core';
 import { Mutation, mutationFns } from '../mutation/mutations.js';
 import { airtableMappings } from '../airtable/hardCodedAirtableMappings.js';
 import { internalApiPaths } from '../express/expressApp.js';
 import { createToAirtableSynchronisation, ToAirtableSynchronisation } from './airtableSynchronisation.js';
-import { PrismaSynchronisationIdRepository } from './dataSynchronisation.js';
+import { compositeKeyFns, PrismaSynchronisationIdRepository } from './dataSynchronisation.js';
 import { v4 as uuid } from 'uuid';
 
 const announceChangesToAirtable = {
@@ -188,18 +188,13 @@ export const handleOneToAirtableSynchronisation = inngest.createFunction(
 		await step.run('store-airtable-record-id', async () => {
 			const prisma = prismaClient();
 			if (synchronisation.airtableMutation._type === 'airtable.create') {
-				await prisma.data_synchronisation_id_mappings.create({
-					data: {
-						id: uuid(),
-						tenant_id: tenantId,
-						environment_id: environmentId,
-						entity_type: synchronisation.sourceEntity,
-						from_system: 'breezbook',
-						to_system: 'airtable',
-						from_id: synchronisation.sourceEntityId.value,
-						to_id: airtableRecordId
-					}
-				});
+				const idRepo = new PrismaSynchronisationIdRepository(prisma, tenantId, environmentId);
+				await idRepo.setTargetId(
+					synchronisation.sourceEntity,
+					compositeKeyFns.newInstance({ id: synchronisation.sourceEntityId.value }),
+					table,
+					id(airtableRecordId)
+				);
 			}
 		});
 	}

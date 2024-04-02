@@ -292,6 +292,9 @@ importers:
       inngest:
         specifier: ^3.11.0
         version: 3.11.0(typescript@5.3.3)
+      jexl:
+        specifier: ^2.3.0
+        version: 2.3.0
       pg:
         specifier: ^8.11.3
         version: 8.11.3
@@ -317,6 +320,9 @@ importers:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21
+      '@types/jexl':
+        specifier: ^2.3.4
+        version: 2.3.4
       '@types/pg':
         specifier: ^8.10.9
         version: 8.10.9
@@ -701,7 +707,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
-    dev: true
 
   /@babel/template@7.22.15:
     resolution: {integrity: sha512-QPErUVm4uyJa60rkI73qneDacvdvzxshT3kksGqlGWYdOTIUOwJ7RDUL8sGqslY1uXWSL6xMFKEXDS3ox2uF0w==}
@@ -1740,6 +1745,10 @@ packages:
 
   /@types/http-errors@2.0.4:
     resolution: {integrity: sha512-D0CFMMtydbJAegzOyHjtiKPLlvnm3iTZyZRSZoLq2mRhDdmLfIWOCYPfQJ4cu2erKghU++QvjcUjp/5h7hESpA==}
+    dev: true
+
+  /@types/jexl@2.3.4:
+    resolution: {integrity: sha512-3BU5DbkPvwqOeW8kZcB9Bvn5bspTFY3Lo0yBS6ephuI8kVSpCjzbGtRPbWnvdbr67tMvXDxiJRcL3fwbz/6+PQ==}
     dev: true
 
   /@types/json-schema@7.0.12:
@@ -4939,6 +4948,12 @@ packages:
       set-function-name: 2.0.1
     dev: true
 
+  /jexl@2.3.0:
+    resolution: {integrity: sha512-ecqln4kTWNkMwbFvTukOMDq1jy1GcPzvshhMp/s4pxU86xdLDq7HbDRa87DfMfbSAOS8V6EwvCdfs0S+w/iycA==}
+    dependencies:
+      '@babel/runtime': 7.23.2
+    dev: false
+
   /jiti@1.21.0:
     resolution: {integrity: sha512-gFqAIbuKyyso/3G2qhiO2OM6shY6EPP/R0+mkDbyspxKazh8BXDC5FiFsUjlczgdNz/vfra0da2y+aHrusLG/Q==}
     hasBin: true
@@ -6291,7 +6306,6 @@ packages:
 
   /regenerator-runtime@0.14.0:
     resolution: {integrity: sha512-srw17NI0TUWHuGa5CFGGmhfNIeja30WMBfbslPNhf6JrqQlLN5gcrvig1oqPxiVaXb0oW0XRKtH6Nngs5lKCIA==}
-    dev: true
 
   /regexp-tree@0.1.27:
     resolution: {integrity: sha512-iETxpjK6YoRWJG5o6hXLwvjYAoW+FEZn9os0PD/b6AP6xQwsa/Y7lCVgIixBbUPMfhu+i2LtdeAqVTgGlQarfA==}

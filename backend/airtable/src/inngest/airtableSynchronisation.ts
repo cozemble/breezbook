@@ -1,6 +1,6 @@
 import { Create, Entity, Mutation, Update, Upsert } from '../mutation/mutations.js';
 import { AirtableMapping } from '../airtable/mappings.js';
-import { Id } from '@breezbook/packages-core';
+import { id, Id } from '@breezbook/packages-core';
 import { SynchronisationIdRepository } from './dataSynchronisation.js';
 
 interface AirtableCreate {
@@ -76,7 +76,8 @@ async function toAirtableUpsert(
 	event: Upsert<any, any, any>,
 	repo: SynchronisationIdRepository
 ): Promise<ToAirtableSynchronisation[]> {
-	const targetId = await repo.getTargetId(event.create.entity, event.create.entityId);
+	// const targetId = await repo.getTargetId(event.create.entity, event.create.entityId);
+	const targetId = id('to do');
 	if (targetId) {
 		return toAirtableUpdateSync(mapping, event.update, targetId);
 	}

@@ -512,19 +512,20 @@ model oauth_tokens {
 }
 
 model data_synchronisation_id_mappings {
-  id             String   @id
-  tenant_id      String
-  environment_id String
-  entity_type    String
-  from_system    String
-  to_system      String
-  from_id        String
-  to_id          String
-  created_at     DateTime @default(now()) @db.Timestamp(6)
-  updated_at     DateTime @default(now()) @db.Timestamp(6)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id               String   @id
+  tenant_id        String
+  environment_id   String
+  from_system      String
+  from_entity_type String
+  from_entity_id   String
+  to_system        String
+  to_entity_type   String
+  to_entity_id     String
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([tenant_id, environment_id, entity_type, from_system, to_system, from_id], map: "data_synchronisation_id_mappi_tenant_id_environment_id_enti_key")
+  @@unique([tenant_id, environment_id, from_system, from_entity_type, from_entity_id, to_system, to_entity_type], map: "data_synchronisation_id_mappi_tenant_id_environment_id_from_key")
 }
 
 enum payment_status {
