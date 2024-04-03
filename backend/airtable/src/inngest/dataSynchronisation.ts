@@ -77,7 +77,7 @@ export class PrismaSynchronisationIdRepository implements SynchronisationIdRepos
 				environment_id: this.environmentId,
 				from_system: 'breezbook',
 				from_entity_type: sourceEntity,
-				from_entity_id: sourceEntityId.value,
+				from_entity_id: compositeKeyFns.toString(sourceEntityId),
 				to_system: 'airtable',
 				to_entity_type: targetEntity,
 				to_entity_id: targetId.value

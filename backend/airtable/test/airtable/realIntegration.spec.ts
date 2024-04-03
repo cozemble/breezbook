@@ -1,9 +1,10 @@
 import { expect, test } from 'vitest';
 import { Mutation } from '../../src/mutation/mutations.js';
-import { CompositeKey, compositeKeyFns, InMemorySynchronisationIdRepository, SynchronisationIdRepository } from '../../src/inngest/dataSynchronisation.js';
-import { id, ValueType } from '@breezbook/packages-core';
-import { AirtableMapping, AirtableMutation, AirtableRecordIdMapping, carWashMapping, FieldMapping, MappingPlan } from '../../src/airtable/learningMapping.js';
-import jexl from 'jexl';
+import { InMemorySynchronisationIdRepository } from '../../src/inngest/dataSynchronisation.js';
+import { id } from '@breezbook/packages-core';
+import { carWashMapping } from '../../src/airtable/learningMapping.js';
+import { StubAirtableClient } from '../../src/airtable/airtableClient.js';
+import { applyAirtablePlan } from '../../src/airtable/applyAirtablePlan.js';
 
 const mutationEvents: Mutation[] = [
 	{
@@ -166,163 +167,6 @@ const mutationEvents: Mutation[] = [
 	}
 ];
 
-export interface RecordId extends ValueType<string> {
-	_type: 'recordId';
-}
-
-export interface AirtableClient {
-	createRecord(baseId: string, table: string, fields: Record<string, any>): Promise<RecordId>;
-
-	updateRecord(baseId: string, table: string, recordId: string, fields: Record<string, any>): Promise<void>;
-}
-
-export class StubAirtableClient implements AirtableClient {
-	constructor(
-		private recordIndex = 100,
-		public records: { recordId: string; baseId: string; table: string; fields: Record<string, any> }[] = []
-	) {}
-
-	async createRecord(baseId: string, table: string, fields: Record<string, any>): Promise<RecordId> {
-		const recordId = `rec` + this.recordIndex++;
-		this.records.push({ recordId, baseId, table, fields });
-		return { _type: 'recordId', value: recordId };
-	}
-
-	async updateRecord(baseId: string, table: string, recordId: string, fields: Record<string, any>): Promise<void> {
-		const record = this.records.find((record) => record.recordId === recordId);
-		if (!record) {
-			throw new Error(`No such record with id ${recordId}`);
-		}
-		record.fields = { ...record.fields, ...fields };
-		this.records = this.records.filter((record) => record.recordId !== recordId);
-		this.records.push(record);
-		return;
-	}
-}
-
-async function applyFieldMappings(idRepo: SynchronisationIdRepository, mutation: Mutation, fields: Record<string, FieldMapping>): Promise<Record<string, any>> {
-	const fieldValues: Record<string, any> = {};
-	const jexlInstance = new jexl.Jexl();
-	for (const [fieldName, fieldMapping] of Object.entries(fields)) {
-		if (fieldMapping._type === 'object.path') {
-			const value = jexlInstance.evalSync(fieldMapping.path, mutation);
-			if (!fieldMapping.nullable) {
-				if (value === undefined || value === null) {
-					throw new Error(`Path '${fieldMapping.path}' in mutation of type ${mutation._type} is undefined or null`);
-				}
-			}
-			fieldValues[fieldName] = value;
-		} else if (fieldMapping._type === 'expression') {
-			fieldValues[fieldName] = jexlInstance.evalSync(fieldMapping.expression, mutation);
-		} else if (fieldMapping._type === 'lookup') {
-			const filledEntityId = expandCompositeKey(fieldMapping.entityId, mutation);
-			const targetId = await idRepo.getTargetId(fieldMapping.entity, filledEntityId, fieldMapping.table);
-			if (!fieldMapping.nullable && !targetId) {
-				throw new Error(`No target id for entity ${fieldMapping.entity}, key ${JSON.stringify(filledEntityId)}, table ${fieldMapping.table}`);
-			}
-			fieldValues[fieldName] = targetId?.value;
-		}
-	}
-	return fieldValues;
-}
-
-async function applyAirtableCreate(
-	idRepo: SynchronisationIdRepository,
-	airtableClient: AirtableClient,
-	mutation: Mutation,
-	recordId: AirtableRecordIdMapping,
-	record: AirtableMutation
-): Promise<void> {
-	const fieldValues = await applyFieldMappings(idRepo, mutation, record.fields);
-	const recId = await airtableClient.createRecord(record.baseId, record.table, fieldValues);
-	await idRepo.setTargetId(recordId.mappedTo.entity, recordId.mappedTo.entityId, record.table, id(recId.value));
-}
-
-async function applyAirtableUpdate(
-	idRepo: SynchronisationIdRepository,
-	airtableClient: AirtableClient,
-	mutation: Mutation,
-	recordId: AirtableRecordIdMapping,
-	record: AirtableMutation
-): Promise<void> {
-	const targetId = await idRepo.getTargetId(recordId.mappedTo.entity, recordId.mappedTo.entityId, record.table);
-	if (!targetId) {
-		throw new Error(`No target id for entity ${recordId.mappedTo.entity}, key ${compositeKeyFns.toString(recordId.mappedTo.entityId)}, table ${record.table}`);
-	}
-	const fieldValues = await applyFieldMappings(idRepo, mutation, record.fields);
-	await airtableClient.updateRecord(record.baseId, record.table, targetId.value, fieldValues);
-}
-
-async function applyAirtableUpsert(
-	idRepo: SynchronisationIdRepository,
-	airtableClient: AirtableClient,
-	mutation: Mutation,
-	recordId: AirtableRecordIdMapping,
-	record: AirtableMutation
-): Promise<void> {
-	const targetId = await idRepo.getTargetId(recordId.mappedTo.entity, recordId.mappedTo.entityId, record.table);
-	if (targetId) {
-		await applyAirtableUpdate(idRepo, airtableClient, mutation, recordId, record);
-	} else {
-		await applyAirtableCreate(idRepo, airtableClient, mutation, recordId, record);
-	}
-}
-
-async function applyAirtableRecord(
-	idRepo: SynchronisationIdRepository,
-	airtableClient: AirtableClient,
-	mutation: Mutation,
-	recordId: AirtableRecordIdMapping,
-	record: AirtableMutation
-): Promise<void> {
-	if (record._type === 'airtable.upsert') {
-		return applyAirtableUpsert(idRepo, airtableClient, mutation, recordId, record);
-	} else if (record._type === 'airtable.update') {
-		return applyAirtableUpdate(idRepo, airtableClient, mutation, recordId, record);
-	} else {
-		return applyAirtableCreate(idRepo, airtableClient, mutation, recordId, record);
-	}
-}
-
-function expandCompositeKey(compositeKey: CompositeKey, mutation: Mutation): CompositeKey {
-	const jexlInstance = new jexl.Jexl();
-	const expanded: Record<string, any> = {};
-	for (const [key, value] of Object.entries(compositeKey)) {
-		const keyValue = jexlInstance.evalSync(value, mutation);
-		if (keyValue === undefined || keyValue === null) {
-			throw new Error(`Path '${value}' in mutation of type ${mutation._type} is undefined or null`);
-		}
-		expanded[key] = keyValue;
-	}
-	return expanded;
-}
-
-async function applyAirtableMapping(
-	idRepo: SynchronisationIdRepository,
-	airtableClient: AirtableClient,
-	mutation: Mutation,
-	airtable: AirtableMapping
-): Promise<void> {
-	const expandedEntityId = expandCompositeKey(airtable.recordId.mappedTo.entityId, mutation);
-	const recordId = { mappedTo: { entity: airtable.recordId.mappedTo.entity, entityId: expandedEntityId } };
-	for (const record of airtable.records) {
-		await applyAirtableRecord(idRepo, airtableClient, mutation, recordId, record);
-	}
-}
-
-export async function applyAirtablePlan(
-	idRepo: SynchronisationIdRepository,
-	airtableClient: AirtableClient,
-	mapping: MappingPlan,
-	mutation: Mutation
-): Promise<void> {
-	const jexlInstance = new jexl.Jexl();
-	const maybeMapping = mapping.mappings.find((mapping) => jexlInstance.evalSync(mapping.when, mutation));
-	if (maybeMapping) {
-		await applyAirtableMapping(idRepo, airtableClient, mutation, maybeMapping.airtable);
-	}
-}
-
 test('real integration from breezbook to airtable', async () => {
 	const idRepo = new InMemorySynchronisationIdRepository();
 	await idRepo.setTargetId('services', { id: 'smallCarWash' }, 'Services', id('rec1'));
@@ -342,23 +186,22 @@ test('real integration from breezbook to airtable', async () => {
 	const bookingRecord = stubAirtableClient.records.find((record) => record.table === 'Bookings');
 	expect(bookingRecord).toBeDefined();
 	expect(bookingRecord!.fields).toEqual({
-		Customer: 'rec100',
+		Customer: ['rec100'],
 		'Due Date': '2024-04-02',
 		Time: '09:00 to 13:00'
 	});
 	const bookedServicesRecord = stubAirtableClient.records.find((record) => record.table === 'Booked services');
 	expect(bookedServicesRecord).toBeDefined();
 	expect(bookedServicesRecord!.fields).toEqual({
-		Bookings: 'rec101',
-		'Car details': 'rec103',
-		Service: 'rec1'
+		Bookings: ['rec101'],
+		'Car details': ['rec103'],
+		Service: ['rec1']
 	});
 	const carDetailsRecord = stubAirtableClient.records.find((record) => record.table === 'Car details');
 	expect(carDetailsRecord).toBeDefined();
 	expect(carDetailsRecord!.fields).toEqual({
 		Make: 'Honda',
 		Model: 'Accord',
-		Year: 2021,
-		Colour: 'Silver'
+		'Year and colour': '2021 Silver'
 	});
 });

@@ -1,19 +1,17 @@
 import { inngest } from './client.js';
 import { prismaClient } from '../prisma/client.js';
-import { id, mandatory } from '@breezbook/packages-core';
-import { Mutation, mutationFns } from '../mutation/mutations.js';
-import { airtableMappings } from '../airtable/hardCodedAirtableMappings.js';
+import { mandatory } from '@breezbook/packages-core';
+import { Mutation } from '../mutation/mutations.js';
 import { internalApiPaths } from '../express/expressApp.js';
-import { createToAirtableSynchronisation, ToAirtableSynchronisation } from './airtableSynchronisation.js';
-import { compositeKeyFns, PrismaSynchronisationIdRepository } from './dataSynchronisation.js';
-import { v4 as uuid } from 'uuid';
+import { PrismaSynchronisationIdRepository } from './dataSynchronisation.js';
+import { AccessTokenProvider, HttpAirtableClient } from '../airtable/airtableClient.js';
+import { carWashMapping } from '../airtable/learningMapping.js';
+import { applyAirtablePlan } from '../airtable/applyAirtablePlan.js';
 
 const announceChangesToAirtable = {
 	fanOutChangesInAllEnvironments: 'announceChanges/airtable/fan-out-changes-in-all-environments',
 	handleChangeBatchForOneEnvironment: 'announceChanges/airtable/handle-change-batch-for-one-environment',
-	handleOneChange: 'announceChanges/airtable/handle-one-change',
-	handleOneAirtableChange: 'announceChanges/airtable/handle-one-airtable-change',
-	handleOneToAirtableSynchronisation: 'announceChanges/airtable/handle-one-to-airtable-synchronisation'
+	handleOneChange: 'announceChanges/airtable/handle-one-change'
 };
 
 export const fanOutChangesInAllEnvironments = inngest.createFunction(
@@ -115,90 +113,26 @@ export const handleOneChange = inngest.createFunction(
 	async ({ event, step }) => {
 		await step.run('handle-one-change', async () => {
 			const { environmentId, tenantId, event: givenEvent } = event.data;
-			await maybeSendToAirtable(environmentId, tenantId, givenEvent);
+			await applyAirtablePlan(
+				new PrismaSynchronisationIdRepository(prismaClient(), tenantId as string, environmentId as string),
+				new HttpAirtableClient('https://api.airtable.com/v0', new AirtableAccessTokenProvider(tenantId as string, environmentId as string)),
+				carWashMapping,
+				givenEvent as Mutation
+			);
 		});
 	}
 );
 
-export const handleOneAirtableChange = inngest.createFunction(
-	{
-		id: announceChangesToAirtable.handleOneAirtableChange,
-		concurrency: {
-			key: `event.data.tenantId + "-" + event.data.environmentId`,
-			limit: 1
-		}
-	},
-	{ event: announceChangesToAirtable.handleOneAirtableChange },
-	async ({ event, step }) => {
-		const { event: givenEvent, mapping, environmentId, tenantId } = event.data;
-		const airtableSynchronisations = await step.run('create-airtable-mutation', async () => {
-			return await createToAirtableSynchronisation(givenEvent, mapping, new PrismaSynchronisationIdRepository(prismaClient(), tenantId, environmentId));
-		});
-		console.log(`Created ${airtableSynchronisations.length} airtable synchronisations for ${tenantId}:${environmentId}`);
-		for (const synchronisation of airtableSynchronisations) {
-			await inngest.send({
-				name: announceChangesToAirtable.handleOneToAirtableSynchronisation,
-				data: { synchronisation, environmentId, tenantId }
-			});
-		}
+class AirtableAccessTokenProvider implements AccessTokenProvider {
+	constructor(
+		private readonly tenantId: string,
+		private readonly environmentId: string
+	) {}
+
+	async getAccessToken(): Promise<string> {
+		return getAirtableAccessToken(this.environmentId, this.tenantId);
 	}
-);
-
-export const handleOneToAirtableSynchronisation = inngest.createFunction(
-	{
-		id: announceChangesToAirtable.handleOneToAirtableSynchronisation,
-		concurrency: {
-			key: `event.data.tenantId + "-" + event.data.environmentId`,
-			limit: 1
-		}
-	},
-	{ event: announceChangesToAirtable.handleOneToAirtableSynchronisation },
-	async ({ event, step }) => {
-		const synchronisation = mandatory(event.data.synchronisation as ToAirtableSynchronisation, `Missing synchronisation in event.data.synchronisation`);
-		const tenantId = mandatory(event.data.tenantId as string, 'Missing tenantId');
-		const environmentId = mandatory(event.data.environmentId as string, `Missing environmentId`);
-		const baseId = synchronisation.airtableMutation.baseId;
-		const table = synchronisation.airtableMutation.table;
-
-		const airtableRecordId = await step.run('sync-with-airtable', async () => {
-			const accessToken = await getAirtableAccessToken(environmentId, tenantId);
-			let airtableUrl = `https://api.airtable.com/v0/${baseId}/${table}`;
-			if (synchronisation.airtableMutation._type === 'airtable.update') {
-				airtableUrl += `/${synchronisation.airtableMutation.recordId}`;
-			}
-			const method = synchronisation.airtableMutation._type === 'airtable.update' ? 'PATCH' : 'POST';
-			const airtableResponse = await fetch(airtableUrl, {
-				method,
-				headers: {
-					Authorization: `Bearer ${accessToken}`,
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ fields: synchronisation.airtableMutation.fields })
-			});
-			if (!airtableResponse.ok) {
-				const responseText = await airtableResponse.text();
-				throw new Error(`Failed to POST to ${airtableUrl}, got status ${airtableResponse.status}, response: ${responseText}`);
-			}
-			const airtableResponseJson = (await airtableResponse.json()) as { id: string };
-			const recordId = airtableResponseJson.id;
-			console.log(`Sent to airtable, got record id ${recordId}`);
-			return recordId;
-		});
-
-		await step.run('store-airtable-record-id', async () => {
-			const prisma = prismaClient();
-			if (synchronisation.airtableMutation._type === 'airtable.create') {
-				const idRepo = new PrismaSynchronisationIdRepository(prisma, tenantId, environmentId);
-				await idRepo.setTargetId(
-					synchronisation.sourceEntity,
-					compositeKeyFns.newInstance({ id: synchronisation.sourceEntityId.value }),
-					table,
-					id(airtableRecordId)
-				);
-			}
-		});
-	}
-);
+}
 
 async function getAirtableAccessToken(environmentId: string, tenantId: string): Promise<string> {
 	const breezBookUrlRoot = mandatory(process.env.BREEZBOOK_URL_ROOT, 'Missing BREEZBOOK_URL_ROOT');
@@ -216,21 +150,4 @@ async function getAirtableAccessToken(environmentId: string, tenantId: string): 
 	}
 	const accessTokenJson = await accessTokenResponse.json();
 	return accessTokenJson.token;
-}
-
-async function maybeSendToAirtable(environmentId: string, tenantId: string, event: Mutation): Promise<void> {
-	const entity = mutationFns.entity(event);
-	const maybeAirtableMapping = airtableMappings.find(
-		(mapping) => mapping.tenantId === tenantId && mapping.environmentId === environmentId && mapping.entityType === entity
-	);
-	if (!maybeAirtableMapping) {
-		console.log(`No airtable mapping for entity ${entity} in ${tenantId}:${environmentId}`);
-		return;
-	} else {
-		console.log(`Found airtable mapping for entity ${entity} in ${tenantId}:${environmentId}`);
-	}
-	await inngest.send({
-		name: announceChangesToAirtable.handleOneAirtableChange,
-		data: { tenantId, environmentId, event, mapping: maybeAirtableMapping }
-	});
 }

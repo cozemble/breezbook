@@ -5,21 +5,21 @@ interface AirtableCreate {
 	_type: 'airtable.create';
 	baseId: string;
 	table: string;
-	fields: Record<string, FieldMapping>;
+	fields: Record<string, FieldMapping | FieldMapping[]>;
 }
 
 interface AirtableUpdate {
 	_type: 'airtable.update';
 	baseId: string;
 	table: string;
-	fields: Record<string, FieldMapping>;
+	fields: Record<string, FieldMapping | FieldMapping[]>;
 }
 
 interface AirtableUpsert {
 	_type: 'airtable.upsert';
 	baseId: string;
 	table: string;
-	fields: Record<string, FieldMapping>;
+	fields: Record<string, FieldMapping | FieldMapping[]>;
 }
 
 export type AirtableMutation = AirtableUpsert | AirtableCreate | AirtableUpdate;
@@ -121,7 +121,7 @@ export const carWashMapping: MappingPlan = {
 						baseId: 'appn1dysBKgmD9nhI',
 						table: 'Bookings',
 						fields: {
-							Customer: { _type: 'lookup', entity: 'customers', entityId: { id: 'data.customer_id' }, table: 'Customers', nullable: false },
+							Customer: [{ _type: 'lookup', entity: 'customers', entityId: { id: 'data.customer_id' }, table: 'Customers', nullable: false }],
 							'Due Date': { _type: 'object.path', path: 'data.date' },
 							Time: { _type: 'expression', expression: 'data.start_time_24hr + " to " + data.end_time_24hr' }
 						}
@@ -131,8 +131,8 @@ export const carWashMapping: MappingPlan = {
 						baseId: 'appn1dysBKgmD9nhI',
 						table: 'Booked services',
 						fields: {
-							Bookings: { _type: 'lookup', entity: 'bookings', entityId: { id: 'data.id' }, table: 'Bookings' },
-							Service: { _type: 'lookup', entity: 'services', entityId: { id: 'data.service_id' }, table: 'Services' }
+							Bookings: [{ _type: 'lookup', entity: 'bookings', entityId: { id: 'data.id' }, table: 'Bookings' }],
+							Service: [{ _type: 'lookup', entity: 'services', entityId: { id: 'data.service_id' }, table: 'Services' }]
 						}
 					}
 				]
@@ -155,8 +155,7 @@ export const carWashMapping: MappingPlan = {
 						fields: {
 							Make: { _type: 'object.path', path: 'create.data.service_form_values.make' },
 							Model: { _type: 'object.path', path: 'create.data.service_form_values.model' },
-							Year: { _type: 'object.path', path: 'create.data.service_form_values.year' },
-							Colour: { _type: 'object.path', path: 'create.data.service_form_values.colour' }
+							'Year and colour': { _type: 'expression', expression: 'create.data.service_form_values.year + " " + create.data.service_form_values.colour' }
 						}
 					},
 					{
@@ -164,12 +163,14 @@ export const carWashMapping: MappingPlan = {
 						baseId: 'appn1dysBKgmD9nhI',
 						table: 'Booked services',
 						fields: {
-							'Car details': {
-								_type: 'lookup',
-								entity: 'bookings',
-								entityId: { id: 'create.data.booking_id' },
-								table: 'Car details'
-							}
+							'Car details': [
+								{
+									_type: 'lookup',
+									entity: 'bookings',
+									entityId: { id: 'create.data.booking_id' },
+									table: 'Car details'
+								}
+							]
 						}
 					}
 				]
