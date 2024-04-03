@@ -33,12 +33,14 @@
 				bind:value={$customer}
 				errors={$errors}
 				remember={{ enabled: true, key: 'customer-details' }}
-			/>
-
-			<div class="card-actions justify-end">
-				<button class="btn btn-info" on:click={onGoBack}>Back</button>
-				<button class="btn btn-primary" on:click={onSubmit}>Next</button>
-			</div>
+				let:clearValues
+			>
+				<div class="card-actions justify-end">
+					<button class="btn btn-info" on:click={onGoBack}>Back</button>
+					<button class="btn btn-warning" on:click={clearValues}>Clear</button>
+					<button class="btn btn-primary" on:click={onSubmit}>Next</button>
+				</div>
+			</SchemaForm>
 		</div>
 	</div>
 </div>

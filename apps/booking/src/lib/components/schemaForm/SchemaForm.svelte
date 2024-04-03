@@ -14,6 +14,11 @@
 		key: string;
 	} = { enabled: false, key: '' };
 
+	const clearValues = () => {
+		value = jsonSchemaUtils.initValues(schema) as ObjectValue;
+		localStorage.removeItem(remember.key);
+	};
+
 	// <!-- TODO make sure values are defined -->
 	value = jsonSchemaUtils.initValues(schema) as ObjectValue;
 
@@ -75,6 +80,8 @@
 		<svelte:self schema={prop} value={value[key]} errors={_.get(errors, key)} />
 	{/each}
 </div>
+
+<slot {clearValues} />
 
 <style>
 	/* div {
