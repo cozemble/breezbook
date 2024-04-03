@@ -18,8 +18,6 @@
 	const onGoBack = () => {
 		goto('/checkout');
 	};
-
-	$: console.log('customer', $customer);
 </script>
 
 <div class="mb-10">
@@ -30,7 +28,12 @@
 <div class="flex flex-col items-center justify-center">
 	<div class="card flex flex-col w-full max-w-lg p- bg-base-200">
 		<div class="card-body">
-			<SchemaForm schema={$schema} bind:value={$customer} errors={$errors} />
+			<SchemaForm
+				schema={$schema}
+				bind:value={$customer}
+				errors={$errors}
+				remember={{ enabled: true, key: 'customer-details' }}
+			/>
 
 			<div class="card-actions justify-end">
 				<button class="btn btn-info" on:click={onGoBack}>Back</button>

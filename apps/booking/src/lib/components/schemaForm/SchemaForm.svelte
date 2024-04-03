@@ -2,10 +2,17 @@
 	import _ from 'lodash';
 	import { jsonSchemaUtils } from '$lib/common/utils';
 	import Input from './Input.svelte';
+	import { onDestroy, onMount } from 'svelte';
+	import { browser } from '$app/environment';
 
 	export let schema: JSONSchema;
 	export let value: ObjectValue;
 	export let errors: ErrorObject;
+	/** Remember the form values with local storage */
+	export let remember: {
+		enabled: boolean;
+		key: string;
+	} = { enabled: false, key: '' };
 
 	// <!-- TODO make sure values are defined -->
 	value = jsonSchemaUtils.initValues(schema) as ObjectValue;
@@ -26,6 +33,21 @@
 	);
 
 	// <!-- TODO validation -->
+
+	onMount(() => {
+		if (remember.enabled && browser) {
+			const storedValue = localStorage.getItem(remember.key);
+			if (storedValue) {
+				value = JSON.parse(storedValue);
+			}
+		}
+	});
+
+	onDestroy(() => {
+		if (remember.enabled && browser) {
+			localStorage.setItem(remember.key, JSON.stringify(value));
+		}
+	});
 </script>
 
 <!-- 
