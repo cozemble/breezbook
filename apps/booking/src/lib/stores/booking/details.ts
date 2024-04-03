@@ -16,10 +16,10 @@ export default function createDetailsStore(service: Service) {
 	const loading = writable(false);
 	const errors = writable<ObjectError>({});
 
-	const initValue = (schema: JSONSchema) => {
-		const newVal = jsonSchemaUtils.initValues(schema) as Service.Details;
-		value.set(newVal);
-	};
+	// const initValue = (schema: JSONSchema) => {
+	// 	const newVal = jsonSchemaUtils.initValues(schema) as Service.Details;
+	// 	value.set(newVal);
+	// };
 
 	const fetchSchema = async () => {
 		loading.set(true);
@@ -28,7 +28,7 @@ export default function createDetailsStore(service: Service) {
 		const sche = res.serviceSummary.forms[0].schema as JSONSchema;
 		schema.set(sche);
 
-		initValue(sche); // init value with default values
+		// initValue(sche); // init value with default values
 
 		loading.set(false);
 	};

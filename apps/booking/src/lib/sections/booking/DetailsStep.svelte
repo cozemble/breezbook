@@ -26,7 +26,15 @@
 	disabled={!$available}
 >
 	<div class="max-w-md mx-auto">
-		<SchemaForm schema={$schema} bind:value={$value} errors={$errors} />
+		<SchemaForm
+			schema={$schema}
+			bind:value={$value}
+			errors={$errors}
+			remember={{
+				enabled: true,
+				key: 'booking-details'
+			}}
+		/>
 	</div>
 
 	<div class="flex justify-end gap-3 mt-2">
