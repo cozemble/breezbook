@@ -68,6 +68,41 @@ export const carWashMapping: MappingPlan = {
 	_type: 'mapping.plan',
 	mappings: [
 		{
+			when: '_type == "upsert" && create.entity == "add_on"',
+			airtable: {
+				recordId: { mappedTo: { entity: 'add_on', entityId: { id: 'create.data.id' } } },
+				records: [
+					{
+						_type: 'airtable.upsert',
+						baseId: 'appn1dysBKgmD9nhI',
+						table: 'Add ons',
+						fields: {
+							Name: { _type: 'object.path', path: 'create.data.name', nullable: false },
+							Price: { _type: 'expression', expression: 'create.data.price / 10' }
+						}
+					}
+				]
+			}
+		},
+		{
+			when: '_type == "upsert" && create.entity == "services"',
+			airtable: {
+				recordId: { mappedTo: { entity: 'services', entityId: { id: 'create.data.id' } } },
+				records: [
+					{
+						_type: 'airtable.upsert',
+						baseId: 'appn1dysBKgmD9nhI',
+						table: 'Services',
+						fields: {
+							Name: { _type: 'object.path', path: 'create.data.name', nullable: false },
+							Description: { _type: 'object.path', path: 'create.data.description' },
+							Price: { _type: 'expression', expression: 'create.data.price / 10' }
+						}
+					}
+				]
+			}
+		},
+		{
 			when: '_type == "upsert" && create.entity == "customers"',
 			airtable: {
 				recordId: { mappedTo: { entity: 'customers', entityId: { id: 'create.data.id' } } },
@@ -121,7 +156,15 @@ export const carWashMapping: MappingPlan = {
 						baseId: 'appn1dysBKgmD9nhI',
 						table: 'Bookings',
 						fields: {
-							Customer: [{ _type: 'lookup', entity: 'customers', entityId: { id: 'data.customer_id' }, table: 'Customers', nullable: false }],
+							Customer: [
+								{
+									_type: 'lookup',
+									entity: 'customers',
+									entityId: { id: 'data.customer_id' },
+									table: 'Customers',
+									nullable: false
+								}
+							],
 							'Due Date': { _type: 'object.path', path: 'data.date' },
 							Time: { _type: 'expression', expression: 'data.start_time_24hr + " to " + data.end_time_24hr' }
 						}
@@ -155,7 +198,10 @@ export const carWashMapping: MappingPlan = {
 						fields: {
 							Make: { _type: 'object.path', path: 'create.data.service_form_values.make' },
 							Model: { _type: 'object.path', path: 'create.data.service_form_values.model' },
-							'Year and colour': { _type: 'expression', expression: 'create.data.service_form_values.year + " " + create.data.service_form_values.colour' }
+							'Year and colour': {
+								_type: 'expression',
+								expression: 'create.data.service_form_values.year + " " + create.data.service_form_values.colour'
+							}
 						}
 					},
 					{

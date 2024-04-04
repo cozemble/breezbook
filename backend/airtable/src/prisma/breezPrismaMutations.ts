@@ -161,3 +161,42 @@ export function updateCancellationGrant(
 		entityId: id(mandatory(where.id, 'Cancellation Grant ID'))
 	};
 }
+
+type UpsertAddOn = Upsert<Prisma.add_onCreateArgs['data'], Prisma.add_onUpdateArgs['data'], Prisma.add_onWhereUniqueInput>;
+type UpsertService = Upsert<Prisma.servicesCreateArgs['data'], Prisma.servicesUpdateArgs['data'], Prisma.servicesWhereUniqueInput>;
+
+export function upsertAddOn(
+	create: Prisma.add_onCreateArgs['data'],
+	update: Prisma.add_onUpdateArgs['data'],
+	where: Prisma.add_onWhereUniqueInput
+): UpsertAddOn {
+	return {
+		_type: 'upsert',
+		create: { _type: 'create', data: create, entity: 'add_on', entityId: id(mandatory(create.id, 'Add-On ID')) },
+		update: {
+			_type: 'update',
+			data: update,
+			where,
+			entity: 'add_on',
+			entityId: id(mandatory(create.id, 'Add-On ID'))
+		}
+	};
+}
+
+export function upsertService(
+	create: Prisma.servicesCreateArgs['data'],
+	update: Prisma.servicesUpdateArgs['data'],
+	where: Prisma.servicesWhereUniqueInput
+): UpsertService {
+	return {
+		_type: 'upsert',
+		create: { _type: 'create', data: create, entity: 'services', entityId: id(mandatory(create.id, 'Service ID')) },
+		update: {
+			_type: 'update',
+			data: update,
+			where,
+			entity: 'services',
+			entityId: id(mandatory(create.id, 'Service ID'))
+		}
+	};
+}

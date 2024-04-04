@@ -16,6 +16,7 @@ import { onBasketPriceRequest } from './basket/basketHandler.js';
 import { onShovlOut } from './shovl/shovlEndpoints.js';
 import { onGetChanges } from './changes/changesHandlers.js';
 import { onGetAccessToken } from './oauth/oauthHandlers.js';
+import { onPublishReferenceDataAsMutationEvents } from './temp/onPublishReferenceDataAsMutationEvents.js';
 
 interface IncomingMessageWithBody extends IncomingMessage {
 	rawBody?: string;
@@ -75,6 +76,7 @@ export function expressApp(): Express {
 	app.post('/internal/api/:envId/shovl/out', onShovlOut);
 	app.get(internalApiPaths.getChangesForEnvironment, onGetChanges);
 	app.get(internalApiPaths.getAccessToken, onGetAccessToken);
+	app.post(internalApiPaths.publishReferenceDataAsMutationEvents, onPublishReferenceDataAsMutationEvents);
 
 	bindInngestToExpress(app);
 
@@ -83,5 +85,6 @@ export function expressApp(): Express {
 
 export const internalApiPaths = {
 	getChangesForEnvironment: '/internal/api/:envId/changes',
-	getAccessToken: '/internal/api/:envId/:tenantId/oauth/:systemId/accessToken'
+	getAccessToken: '/internal/api/:envId/:tenantId/oauth/:systemId/accessToken',
+	publishReferenceDataAsMutationEvents: '/internal/api/:envId/:tenantId/referenceData/publishAsMutationEvents'
 };
