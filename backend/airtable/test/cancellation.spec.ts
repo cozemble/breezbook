@@ -3,11 +3,10 @@ import { describe, expect, test } from 'vitest';
 import { CancellationGranted } from '@breezbook/backend-api-types';
 import { doCancellationRequest, doCommitCancellation } from '../src/express/cancellation.js';
 import { DbBooking, DbCancellationGrant } from '../src/prisma/dbtypes.js';
-import { createBookingEvent, updateBooking, updateCancellationGrant } from '../src/prisma/breezPrismaMutations.js';
+import { updateBooking, updateCancellationGrant } from '../src/prisma/breezPrismaMutations.js';
 import { jsDateFns } from '@breezbook/packages-core/dist/jsDateFns.js';
 import { HttpError } from '../src/infra/functionalExpress.js';
 import { mutations } from '../src/mutation/mutations.js';
-import { v4 as uuid } from 'uuid';
 
 test("can't get a cancellation grant for a booking in the past", () => {
 	const theBooking = makeDbBooking(isoDateFns.addDays(isoDate(), -1));
@@ -43,7 +42,7 @@ function makeDbBooking(yesterday: IsoDate) {
 }
 
 describe('Given a cancellation grant', () => {
-	const cancellation: DbCancellationGrant = {
+	const cancellationGrant: DbCancellationGrant = {
 		id: 'cancellation-id',
 		environment_id: 'environment-id',
 		tenant_id: 'tenant-id',
@@ -57,23 +56,23 @@ describe('Given a cancellation grant', () => {
 	};
 
 	test('can commit it and cancel the booking', () => {
-		const outcome = doCommitCancellation(cancellation, new SystemClock());
+		const outcome = doCommitCancellation(cancellationGrant, new SystemClock());
 		expect(outcome).toEqual(
 			mutations([
-				updateCancellationGrant({ committed: true }, { id: cancellation.id }),
-				updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id })
+				updateCancellationGrant({ committed: true }, { id: cancellationGrant.id }),
+				updateBooking({ status: 'cancelled' }, { id: cancellationGrant.booking_id })
 			])
 		);
 	});
 
 	test('returns error if already committed', () => {
-		const outcome = doCommitCancellation({ ...cancellation, committed: true }, new SystemClock());
+		const outcome = doCommitCancellation({ ...cancellationGrant, committed: true }, new SystemClock());
 		expect(outcome._type).toBe('http.error');
 	});
 	test('returns error if grant is too old', () => {
 		const outcome = doCommitCancellation(
 			{
-				...cancellation,
+				...cancellationGrant,
 				created_at: jsDateFns.addHours(new Date(), -1)
 			},
 			new SystemClock()

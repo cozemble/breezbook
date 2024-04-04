@@ -103,18 +103,18 @@ export async function requestCancellationGrant(req: express.Request, res: expres
 }
 
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-export function doCommitCancellation(cancellation: DbCancellationGrant, clock: Clock): Mutations | HttpError {
-	if (cancellation.committed) {
+export function doCommitCancellation(cancellationGrant: DbCancellationGrant, clock: Clock): Mutations | HttpError {
+	if (cancellationGrant.committed) {
 		return httpError(409, 'Cancellation already committed');
 	}
 	const now = clock.now();
 	// if the cancellation is more than 30 mins old, we can't commit it
-	if (jsDateFns.differenceInMinutes(now, cancellation.created_at) > 30) {
+	if (jsDateFns.differenceInMinutes(now, cancellationGrant.created_at) > 30) {
 		return httpError(409, 'Cancellation too old to commit');
 	}
 	return mutations([
-		updateCancellationGrant({ committed: true }, { id: cancellation.id }),
-		updateBooking({ status: 'cancelled' }, { id: cancellation.booking_id })
+		updateCancellationGrant({ committed: true }, { id: cancellationGrant.id }),
+		updateBooking({ status: 'cancelled' }, { id: cancellationGrant.booking_id })
 	]);
 }
 
