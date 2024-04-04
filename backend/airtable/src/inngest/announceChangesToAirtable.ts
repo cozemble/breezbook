@@ -16,7 +16,7 @@ const announceChangesToAirtable = {
 
 export const fanOutChangesInAllEnvironments = inngest.createFunction(
 	{ id: announceChangesToAirtable.fanOutChangesInAllEnvironments },
-	{ cron: '5 * * * *' },
+	{ cron: '*/5 * * * *' },
 	async ({ step }) => {
 		await step.run('fan-out-changes-in-all-environments', async () => {
 			const prisma = prismaClient();
