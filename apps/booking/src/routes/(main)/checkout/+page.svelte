@@ -3,44 +3,43 @@
 	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
 	import OrderSummary from '$lib/sections/checkout/OrderSummary.svelte';
 	import CouponEntry from '$lib/sections/checkout/CouponEntry.svelte';
-	import MikeTestingBasketPricingEndpoint from './MikeTestingBasketPricingEndpoint.svelte';
+	import Icon from '@iconify/svelte';
 
 	const { items } = checkoutStore.get();
-
-	$: {
-		console.log($items);
-	}
 </script>
 
-<div class="pb-8">
-	<h1 class="text-2xl font-semibold text-primary">Checkout Order</h1>
-	<p>Please review your bookings before proceeding to checkout</p>
-</div>
+{#if $items.length === 0}
+	<div class="rounded-box p-4 flex flex-col items-center">
+		<Icon icon="solar:cart-bold" class="w-10 h-10 text-accent" />
 
-<!-- TODO remove or display error if the booking is taken while in cart -->
-<!-- TODO checkout and payment -->
-<!-- TODO select bookings system for bulk operations (later) -->
-
-<div class="flex flex-col md:flex-row md:items-start gap-4">
-	<!-- bookings list -->
-	<div class="rounded-box flex flex-col flex-grow gap-4 p-4 bg-base-200">
-		{#if $items.length === 0}
-			<span></span>
-		{/if}
-
-		{#each $items as booking, i (booking.id)}
-			<BookingSummary {booking} />
-
-			<!-- {#if $items.length !== i + 1}
-			<hr />
-		{/if} -->
-		{/each}
+		<p class="text-xl font-bold mt-4">Your basket is empty</p>
+		<p class="">Start by adding a booking to your basket</p>
+		<a href="/#services" class="btn btn-primary btn-outline mt-4">Browse Services</a>
+	</div>
+{:else}
+	<div class="pb-8">
+		<h1 class="text-2xl font-semibold text-primary">Checkout Order</h1>
+		<p>Please review your bookings before proceeding to checkout</p>
 	</div>
 
-	<div class="flex flex-col gap-4">
-		<CouponEntry />
-		<OrderSummary />
-	</div>
-</div>
+	<!-- TODO remove or display error if the booking is taken while in cart -->
+	s <!-- TODO select bookings system for bulk operations (later) -->
 
-<MikeTestingBasketPricingEndpoint />
+	<div class="flex flex-col md:flex-row md:items-start gap-4">
+		<!-- bookings list -->
+		<div class="rounded-box flex flex-col flex-grow gap-4 p-4 bg-base-200">
+			{#if $items.length === 0}
+				<span></span>
+			{/if}
+
+			{#each $items as booking, i (booking.id)}
+				<BookingSummary {booking} />
+			{/each}
+		</div>
+
+		<div class="flex flex-col gap-4">
+			<CouponEntry />
+			<OrderSummary />
+		</div>
+	</div>
+{/if}
