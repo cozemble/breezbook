@@ -43,7 +43,7 @@
 		if (remember.enabled && browser) {
 			const storedValue = localStorage.getItem(remember.key);
 			if (storedValue) {
-				value = JSON.parse(storedValue);
+				value = _.merge(value, JSON.parse(storedValue));
 			}
 		}
 	});
