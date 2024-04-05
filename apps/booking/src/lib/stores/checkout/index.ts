@@ -117,11 +117,11 @@ function createCheckoutStore() {
 					console.error(err);
 					tNotif.remove();
 
-					if (err.message === 'addOrder.no.such.coupon') {
-						console.error('Invalid coupon code');
+					if (err.response.data.errorCode === 'addOrder.no.such.coupon') {
+						console.warn('Invalid coupon code');
 						notifications.create({
 							title: 'Error',
-							description: 'Invalid coupon code',
+							description: err.response.data.errorMessage,
 							type: 'error',
 							duration: 4000
 						});
