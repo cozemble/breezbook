@@ -1,10 +1,11 @@
 <script lang="ts">
+	import Loading from '$lib/components/Loading.svelte';
 	import SchemaForm from '$lib/components/schemaForm/SchemaForm.svelte';
 	import bookingStore from '$lib/stores/booking';
 	import StepWrapper from './StepWrapper.svelte';
 
 	const {
-		details: { schema, errors, value, submitWithCallback, step },
+		details: { schema, errors, loading, value, submitWithCallback, step },
 		finish
 	} = bookingStore.get();
 
@@ -27,7 +28,9 @@
 >
 	<div class="max-w-md mx-auto">
 		<!-- Schema is dynamically fetched so wait for it -->
-		{#if $schema}
+		{#if $loading}
+			<Loading />
+		{:else}
 			<SchemaForm
 				schema={$schema}
 				bind:value={$value}

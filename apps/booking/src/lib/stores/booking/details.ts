@@ -11,7 +11,7 @@ import tenantStore from '../tenant';
 export default function createDetailsStore(service: Service) {
 	const tenant = tenantStore.get();
 
-	const schema = writable<JSONSchema>({});
+	const schema = writable<JSONSchema>(undefined);
 	const value = writable<Service.Details>({}); // TODO proper typing
 	const loading = writable(false);
 	const errors = writable<ObjectError>({});
