@@ -26,21 +26,24 @@
 	disabled={!$available}
 >
 	<div class="max-w-md mx-auto">
-		<SchemaForm
-			schema={$schema}
-			bind:value={$value}
-			errors={$errors}
-			remember={{
-				enabled: true,
-				key: 'booking-details'
-			}}
-			let:clearValues
-		>
-			<div class="flex justify-end gap-3 mt-2">
-				<button class="btn btn-secondary" on:click={step.onGoBack}> Back </button>
-				<button class="btn btn-warning" on:click={clearValues}>Clear</button>
-				<button class="btn btn-primary" on:click={handleSubmit}> Finish Booking </button>
-			</div>
-		</SchemaForm>
+		<!-- Schema is dynamically fetched so wait for it -->
+		{#if $schema}
+			<SchemaForm
+				schema={$schema}
+				bind:value={$value}
+				errors={$errors}
+				remember={{
+					enabled: true,
+					key: 'booking-details'
+				}}
+				let:clearValues
+			>
+				<div class="flex justify-end gap-3 mt-2">
+					<button class="btn btn-secondary" on:click={step.onGoBack}> Back </button>
+					<button class="btn btn-warning" on:click={clearValues}>Clear</button>
+					<button class="btn btn-primary" on:click={handleSubmit}> Finish Booking </button>
+				</div>
+			</SchemaForm>
+		{/if}
 	</div>
 </StepWrapper>
