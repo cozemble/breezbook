@@ -161,6 +161,7 @@ function createCheckoutStore() {
 
 	const clearItems = () => {
 		items.set([]);
+		saveToLocalStorage([]);
 	};
 
 	const submitOrder = async () => {
