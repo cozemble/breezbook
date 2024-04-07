@@ -353,5 +353,7 @@ export async function handleOutcome(
 	await prisma.$transaction([...outcomeMutations, ...storeEvents]);
 	if (response) {
 		return sendJson(res, response.body, response.status);
+	} else {
+		res.status(200).send();
 	}
 }

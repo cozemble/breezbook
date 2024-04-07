@@ -303,13 +303,13 @@ const jsonSchema = `
 			"type": "string",
 			"description": "The manufacturer of the car."
 		},
-		"year": {
-			"type": "integer",
-			"description": "The manufacturing year of the car."
-		},
 		"model": {
 			"type": "string",
 			"description": "The model of the car."
+		},
+		"year": {
+			"type": "integer",
+			"description": "The manufacturing year of the car."
 		},
 		"colour": {
 			"type": "string",
