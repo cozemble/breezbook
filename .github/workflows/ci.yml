@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: ['main']
+    branches: ['main', 'refactor/introduce-database-package']
   pull_request:
     types: [opened, synchronize]
 
