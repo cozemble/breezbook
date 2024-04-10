@@ -265,6 +265,9 @@ importers:
       '@breezbook/backend-api-types':
         specifier: workspace:*
         version: link:../api-types
+      '@breezbook/backend-database':
+        specifier: workspace:*
+        version: link:../database
       '@breezbook/packages-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -381,6 +384,49 @@ importers:
       vitest:
         specifier: 0.33.0
         version: 0.33.0
+
+  backend/database:
+    dependencies:
+      '@prisma/client':
+        specifier: 5.9.1
+        version: 5.9.1(prisma@5.9.1)
+      child-process-promise:
+        specifier: ^2.2.1
+        version: 2.2.1
+      pg:
+        specifier: ^8.11.3
+        version: 8.11.3
+      testcontainers:
+        specifier: ^10.5.0
+        version: 10.5.0
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
+    devDependencies:
+      '@types/child-process-promise':
+        specifier: ^2.2.6
+        version: 2.2.6
+      '@types/pg':
+        specifier: ^8.10.9
+        version: 8.10.9
+      '@types/uuid':
+        specifier: ^9.0.7
+        version: 9.0.7
+      dotenv-cli:
+        specifier: ^7.3.0
+        version: 7.3.0
+      eslint:
+        specifier: ^8.28.0
+        version: 8.54.0
+      postgrator-cli:
+        specifier: ^7.0.0
+        version: 7.0.0(pg@8.11.3)
+      prisma:
+        specifier: ^5.9.1
+        version: 5.9.1
+      typescript:
+        specifier: 5.3.3
+        version: 5.3.3
 
   backend/shovl:
     dependencies:
@@ -2867,7 +2913,6 @@ packages:
       cross-spawn: 4.0.2
       node-version: 1.2.0
       promise-polyfill: 6.1.0
-    dev: true
 
   /chokidar@3.5.3:
     resolution: {integrity: sha512-Dr3sfKRP6oTcjf2JmUmFJfeVMvXBdegxB0iVQ5eb2V10uFJUCAS8OByZdVAyVb8xXNz3GjjTgj9kLWsZTqE6kw==}
@@ -3069,7 +3114,6 @@ packages:
     dependencies:
       lru-cache: 4.1.5
       which: 1.3.1
-    dev: true
 
   /cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -4936,7 +4980,6 @@ packages:
 
   /isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
-    dev: true
 
   /iterator.prototype@1.1.2:
     resolution: {integrity: sha512-DR33HMMr8EzwuRL8Y9D3u2BMj8+RqSE850jfGu59kS7tbmPLzGkZmVSfyCFSDxuZiEY6Rzt3T2NA/qU+NwVj1w==}
@@ -5182,7 +5225,6 @@ packages:
     dependencies:
       pseudomap: 1.0.2
       yallist: 2.1.2
-    dev: true
 
   /lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
@@ -5406,7 +5448,6 @@ packages:
   /node-version@1.2.0:
     resolution: {integrity: sha512-ma6oU4Sk0qOoKEAymVoTvk8EdXEobdS7m/mAGhDJ8Rouugho48crHBORAmy5BoOcv8wraPM6xumapQp5hl4iIQ==}
     engines: {node: '>=6.0.0'}
-    dev: true
 
   /nodemon@3.0.3:
     resolution: {integrity: sha512-7jH/NXbFPxVaMwmBCC2B9F/V6X1VkEdNgx3iu9jji8WxWcvhMWkmhNWhI5077zknOnZnBzba9hZP6bCPJLSReQ==}
@@ -6114,7 +6155,6 @@ packages:
 
   /promise-polyfill@6.1.0:
     resolution: {integrity: sha512-g0LWaH0gFsxovsU7R5LrrhHhWAWiHRnh1GPrhXnPgYsDkIqjRYUYSZEsej/wtleDrz5xVSIDbeKfidztp2XHFQ==}
-    dev: true
 
   /prop-types@15.8.1:
     resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
@@ -6152,7 +6192,6 @@ packages:
 
   /pseudomap@1.0.2:
     resolution: {integrity: sha512-b/YwNhb8lk1Zz2+bXXpS/LK9OisiZZ1SNsSLxN1x2OXVEhW2Ckr/7mWE5vrC1ZTiJlD9g19jWszTmJsB+oEpFQ==}
-    dev: true
 
   /pstree.remy@1.1.8:
     resolution: {integrity: sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==}
@@ -7938,7 +7977,6 @@ packages:
     hasBin: true
     dependencies:
       isexe: 2.0.0
-    dev: true
 
   /which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
@@ -7984,7 +8022,6 @@ packages:
 
   /yallist@2.1.2:
     resolution: {integrity: sha512-ncTzHV7NvsQZkYe1DW7cbDLm0YpzHmZF5r/iyP3ZnQtMiJ+pjzisCiMNI+Sj+xQF5pXhSHxSB3uDbsBTzY/c2A==}
-    dev: true
 
   /yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}

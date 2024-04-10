@@ -1,0 +1,39 @@
+{
+  "name": "@breezbook/backend-database",
+  "version": "1.0.0",
+  "module": "./dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "npx prisma generate && tsc -p tsconfig.json && cp -r migrations dist",
+    "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local && npm run make:schema-types && npm run db:migrate-carwash-local && npm run db:load-test-config-local",
+    "make:schema-types": "npx prisma db pull && npx prisma generate",
+    "make:prisma-client": "npx prisma generate",
+    "db:migrate": "npx postgrator --config=migrations/schema/postgratorrc.json",
+    "db:migrate-local": "dotenv -e .env -- bash -c 'npm run db:migrate'",
+    "db:migrate-carwash": "npx postgrator --config=migrations/data/carwash/postgratorrc.json",
+    "db:migrate-carwash-local": "dotenv -e .env -- bash -c 'npm run db:migrate-carwash'",
+    "db:load-test-config-local": "dotenv -e .env -- bash -c './scripts/load-test-config.sh'"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.10.9",
+    "@types/uuid": "^9.0.7",
+    "@types/child-process-promise": "^2.2.6",
+    "dotenv-cli": "^7.3.0",
+    "eslint": "^8.28.0",
+    "postgrator-cli": "^7.0.0",
+    "prisma": "^5.9.1",
+    "typescript": "5.3.3"
+  },
+  "dependencies": {
+    "@prisma/client": "5.9.1",
+    "child-process-promise": "^2.2.1",
+    "pg": "^8.11.3",
+    "testcontainers": "^10.5.0",
+    "uuid": "^9.0.1"
+  }
+}

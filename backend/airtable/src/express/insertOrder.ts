@@ -2,18 +2,18 @@ import { calcSlotPeriod, FormId, mandatory, Order, Service, TenantEnvironment, T
 import { CreateOrderRequest, orderCreatedResponse, OrderCreatedResponse } from '@breezbook/backend-api-types';
 import { prismaClient } from '../prisma/client.js';
 import { v4 as uuidv4 } from 'uuid';
-import { Prisma, PrismaClient } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prismaMutationToPromise } from '../infra/prismaMutations.js';
 import {
 	createBooking,
 	createOrder,
+	CreateOrder,
+	createOrderLine,
 	createReservation,
 	upsertBookingServiceFormValues,
+	UpsertBookingServiceFormValues,
 	upsertCustomer,
-	upsertCustomerFormValues,
-	createOrderLine,
-	CreateOrder,
-	UpsertBookingServiceFormValues
+	upsertCustomerFormValues
 } from '../prisma/breezPrismaMutations.js';
 import { Mutation, Mutations, mutations as mutationsConstructor } from '../mutation/mutations.js';
 

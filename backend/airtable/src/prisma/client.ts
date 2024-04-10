@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@breezbook/backend-database';
 
 let _prismaClient: PrismaClient;
 export function prismaClient(): PrismaClient {
