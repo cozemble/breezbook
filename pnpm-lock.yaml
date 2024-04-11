@@ -373,7 +373,7 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
-  backend/airtable-sync/functions/hello-world:
+  backend/airtable-sync/functions/poll-changes:
     dependencies:
       '@google-cloud/pubsub':
         specifier: ^4.3.3
@@ -390,7 +390,7 @@ importers:
         version: 0.19.9
       typescript:
         specifier: ^5.0.2
-        version: 5.3.3
+        version: 5.4.5
       vitest:
         specifier: ^0.34.1
         version: 0.34.1
