@@ -357,18 +357,6 @@ importers:
         specifier: 1.2.0
         version: 1.2.0(@types/node@20.11.28)
 
-  backend/airtable-sync:
-    devDependencies:
-      typescript:
-        specifier: 5.3.3
-        version: 5.3.3
-      vite:
-        specifier: 5.0.7
-        version: 5.0.7(@types/node@20.11.28)
-      vitest:
-        specifier: 1.2.0
-        version: 1.2.0(@types/node@20.11.28)
-
   backend/airtable-sync/airtable-sync-pulumi:
     dependencies:
       '@pulumi/gcp':

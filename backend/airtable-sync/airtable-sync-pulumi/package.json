@@ -1,5 +1,5 @@
 {
-    "name": "breezbook",
+    "name": "@breezbook/backend-airtable-sync-pulumi",
     "main": "index.ts",
     "devDependencies": {
         "@types/node": "^18",
