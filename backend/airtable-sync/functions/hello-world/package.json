@@ -12,5 +12,8 @@
     "esbuild": "^0.19.9",
     "typescript": "^5.0.2",
     "vitest": "^0.34.1"
+  },
+  "dependencies": {
+    "@google-cloud/pubsub": "^4.3.3"
   }
 }

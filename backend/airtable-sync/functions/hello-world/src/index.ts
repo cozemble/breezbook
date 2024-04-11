@@ -1,14 +1,17 @@
-// function-source/helloWorld.ts
+import { PubSub } from "@google-cloud/pubsub";
+
 /**
- * Responds to any HTTP request with a simple "Hello, World!" message.
+ * Triggered from a message on a Cloud Pub/Sub topic.
  *
- * @param req HTTP request context.
- * @param res HTTP response context.
+ * @param {PubSub.Message} message The Pub/Sub message.
+ * @param {CloudFunctions.Context} context The event metadata.
  */
-const helloWorld = (req: any, res: any) => {
-	console.log("Hello, World! Function was triggered.");
-	res.status(200).send("Hello, World!!");
+const helloWorld = (message: PubSub.Message, context: CloudFunctions.Context) => {
+	const pubsubMessage = message.data
+		? Buffer.from(message.data, 'base64').toString()
+		: 'No message payload!';
+
+	console.log(`PubSub message: ${pubsubMessage}`);
 };
 
 export { helloWorld };
-

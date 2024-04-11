@@ -1,30 +1,45 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
 
-const bucket = new gcp.storage.Bucket("hello-world-bucket", {location: "europe-west1"});
+const region = "europe-west1";
 
-const bucketObject = new gcp.storage.BucketObject("hello-world-zip", {
+const bucket = new gcp.storage.Bucket("bucket", {location: "europe-west1"});
+const bucketObject = new gcp.storage.BucketObject("bucketObject", {
     bucket: bucket.name,
     source: new pulumi.asset.AssetArchive({
         ".": new pulumi.asset.FileArchive("../functions/hello-world/dist"),
     }),
 });
 
+const topic = new gcp.pubsub.Topic('topic');
+
 const helloWorldFunction = new gcp.cloudfunctions.Function("helloWorldFunction", {
-    runtime: "nodejs14", // make sure this matches the runtime environment you need
+    runtime: "nodejs20",
     entryPoint: "helloWorld",
     sourceArchiveBucket: bucket.name,
     sourceArchiveObject: bucketObject.name,
-    triggerHttp: true,
-    availableMemoryMb: 128,
-    region: "europe-west1",
+    eventTrigger: {
+        eventType: 'google.pubsub.topic.publish',
+        resource: topic.id,
+    },
+    availableMemoryMb: 256,
+    region
 });
 
-const functionIamMemberAllUsers = new gcp.cloudfunctions.FunctionIamMember("functionIamMemberAllUsers", {
+const functionIamMember = new gcp.cloudfunctions.FunctionIamMember("functionIamMember", {
     cloudFunction: helloWorldFunction.name,
     role: "roles/cloudfunctions.invoker",
-    member: "allUsers",
-    region: "europe-west1",
+    member: "serviceAccount:cozemble@appspot.gserviceaccount.com",
+    region
+});
+
+const job = new gcp.cloudscheduler.Job("job", {
+    region,
+    schedule: "*/5 * * * *",
+    pubsubTarget: {
+        topicName: topic.id,
+        data: Buffer.from("Trigger").toString('base64'),
+    },
 });
 
 export const url = helloWorldFunction.httpsTriggerUrl;
