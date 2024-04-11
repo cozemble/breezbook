@@ -7,15 +7,15 @@ const bucket = new gcp.storage.Bucket("bucket", {location: "europe-west1"});
 const bucketObject = new gcp.storage.BucketObject("bucketObject", {
     bucket: bucket.name,
     source: new pulumi.asset.AssetArchive({
-        ".": new pulumi.asset.FileArchive("../functions/hello-world/dist"),
+        ".": new pulumi.asset.FileArchive("../functions/poll-changes/dist"),
     }),
 });
 
 const topic = new gcp.pubsub.Topic('topic');
 
-const helloWorldFunction = new gcp.cloudfunctions.Function("helloWorldFunction", {
+const pollChanges = new gcp.cloudfunctions.Function("pollChanges", {
     runtime: "nodejs20",
-    entryPoint: "helloWorld",
+    entryPoint: "pollChanges",
     sourceArchiveBucket: bucket.name,
     sourceArchiveObject: bucketObject.name,
     eventTrigger: {
@@ -27,7 +27,7 @@ const helloWorldFunction = new gcp.cloudfunctions.Function("helloWorldFunction",
 });
 
 const functionIamMember = new gcp.cloudfunctions.FunctionIamMember("functionIamMember", {
-    cloudFunction: helloWorldFunction.name,
+    cloudFunction: pollChanges.name,
     role: "roles/cloudfunctions.invoker",
     member: "serviceAccount:cozemble@appspot.gserviceaccount.com",
     region
@@ -42,4 +42,4 @@ const job = new gcp.cloudscheduler.Job("job", {
     },
 });
 
-export const url = helloWorldFunction.httpsTriggerUrl;
+export const url = pollChanges.httpsTriggerUrl;
