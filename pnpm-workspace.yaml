@@ -2,3 +2,5 @@ packages:
   - "apps/*"
   - "packages/*"
   - "backend/*"
+  - "backend/airtable-sync/airtable-sync-pulumi"
+  - "backend/airtable-sync/functions/*"

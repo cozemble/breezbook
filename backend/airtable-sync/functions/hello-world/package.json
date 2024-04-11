@@ -1,0 +1,16 @@
+{
+  "name": "@breezbook/backend-airtable-sync-functions-hello-world",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@pulumi/pulumi": "^3.0.0",
+    "@types/node": "^20.4.9",
+    "esbuild": "^0.19.9",
+    "typescript": "^5.0.2",
+    "vitest": "^0.34.1"
+  }
+}

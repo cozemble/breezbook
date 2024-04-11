@@ -1,0 +1,12 @@
+{
+    "name": "breezbook",
+    "main": "index.ts",
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^5.4.5"
+    },
+    "dependencies": {
+        "@pulumi/gcp": "^7.0.0",
+        "@pulumi/pulumi": "^3.0.0"
+    }
+}
