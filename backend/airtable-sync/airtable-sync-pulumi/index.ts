@@ -1,5 +1,8 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as gcp from "@pulumi/gcp";
+import * as dotenv from 'dotenv';
+dotenv.config({ path: "../.env", debug: true, override: true });
+
 
 const region = "europe-west1";
 
@@ -23,7 +26,11 @@ const pollChanges = new gcp.cloudfunctions.Function("pollChanges", {
         resource: topic.id,
     },
     availableMemoryMb: 256,
-    region
+    region,
+    environmentVariables: {
+        BREEZBOOK_URL_ROOT: process.env.BREEZBOOK_URL_ROOT,
+        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+    }
 });
 
 const functionIamMember = new gcp.cloudfunctions.FunctionIamMember("functionIamMember", {

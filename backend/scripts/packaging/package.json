@@ -5,6 +5,7 @@
   "module": "index.js",
   "type": "module",
   "scripts": {
+    "build": "tsc -p tsconfig.json",
     "test": "echo \"Error: no test specified\""
   },
   "author": "",
@@ -12,5 +13,8 @@
   "dependencies": {
     "@types/node": "^16.11.6",
     "strip-ansi": "~6.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.4"
   }
 }

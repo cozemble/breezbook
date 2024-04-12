@@ -200,6 +200,7 @@ function makeToplevelPackageJsonRewriter(
 }
 
 async function main() {
+  console.log(`mkdir -p ${functionDir}/staging/local_deps`)
   await shell(`mkdir -p ${functionDir}/staging/local_deps`)
   const buildOutput = await shell(`cd ../../ && pnpm run build --filter=${pkg.name}`).then(
     splitLines,

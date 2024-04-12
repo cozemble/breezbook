@@ -216,6 +216,14 @@ export async function withOneRequestParam<A>(
 	return await withErrorHandling(res, async () => await f(a));
 }
 
+export async function withNoRequestParams<A>(
+	req: express.Request,
+	res: express.Response,
+	f: () => Promise<void>
+): Promise<void> {
+	return await withErrorHandling(res, async () => await f());
+}
+
 export async function withTwoRequestParams<A, B>(
 	req: express.Request,
 	res: express.Response,

@@ -1,15 +1,15 @@
 {
-  "compilerOptions": {
+	"compilerOptions": {
 		"target": "ESNext",
-		"module": "ESNext",
+		"module": "NodeNext",
 		"strict": true,
 		"skipLibCheck": true,
 		"forceConsistentCasingInFileNames": true,
 		"outDir": "./lib",
 		"declaration": true,
 		"moduleResolution": "NodeNext"
-  },
-  "include": [
-    "."
-  ]
+	},
+	"include": [
+		"."
+	]
 }

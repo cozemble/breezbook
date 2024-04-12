@@ -359,6 +359,9 @@ importers:
 
   backend/airtable-sync/airtable-sync-pulumi:
     dependencies:
+      '@breezbook/backend-airtable-sync-functions-poll-changes':
+        specifier: workspace:*
+        version: link:../functions/poll-changes
       '@pulumi/gcp':
         specifier: ^7.0.0
         version: 7.0.0
@@ -369,12 +372,21 @@ importers:
       '@types/node':
         specifier: ^18
         version: 18.19.3
+      dotenv:
+        specifier: ^16.3.1
+        version: 16.3.1
       typescript:
         specifier: ^5.4.5
         version: 5.4.5
 
   backend/airtable-sync/functions/poll-changes:
     dependencies:
+      '@breezbook/backend-api-types':
+        specifier: workspace:^
+        version: link:../../../api-types
+      '@breezbook/packages-core':
+        specifier: workspace:*
+        version: link:../../../../packages/core
       '@google-cloud/pubsub':
         specifier: ^4.3.3
         version: 4.3.3
@@ -419,6 +431,19 @@ importers:
       vitest:
         specifier: 0.33.0
         version: 0.33.0
+
+  backend/scripts/packaging:
+    dependencies:
+      '@types/node':
+        specifier: ^16.11.6
+        version: 16.11.6
+      strip-ansi:
+        specifier: ~6.0.0
+        version: 6.0.1
+    devDependencies:
+      typescript:
+        specifier: ^5.4.4
+        version: 5.4.5
 
   backend/shovl:
     dependencies:
@@ -1973,6 +1998,10 @@ packages:
 
   /@types/node@14.18.63:
     resolution: {integrity: sha512-fAtCfv4jJg+ExtXhvCkCqUKZ+4ok/JQk01qDKhL5BDDoS3AxKXhV5/MAVUZyQnSEd2GT92fkgZl0pz0Q0AzcIQ==}
+    dev: false
+
+  /@types/node@16.11.6:
+    resolution: {integrity: sha512-ua7PgUoeQFjmWPcoo9khiPum3Pd60k4/2ZGXt18sm2Slk0W0xZTqt5Y0Ny1NyBiN1EVQ/+FaF9NcY4Qe6rwk5w==}
     dev: false
 
   /@types/node@18.19.3:

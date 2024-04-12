@@ -132,3 +132,9 @@ export function cancellationGranted(
 }
 
 export type CancellationGrantResponse = CancellationGranted | BookingIsInThePast;
+
+export interface ChangeDates {
+	environmentId: string;
+	from: string;
+	to: string;
+}
