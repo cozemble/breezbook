@@ -56,7 +56,7 @@ export async function onGetChangeDatesForAllEnvironments(req: express.Request, r
             });
 
         }
-        res.status(200).send({changeDates});
+        res.status(200).send(changeDates);
     });
 }
 
