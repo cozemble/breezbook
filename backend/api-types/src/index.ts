@@ -138,3 +138,14 @@ export interface ChangeDates {
 	from: string;
 	to: string;
 }
+
+export interface Service {
+	id: string;
+	slug: string;
+	name: string;
+	description: string;
+	priceWithNoDecimalPlaces: number;
+	priceCurrency: string;
+	hasDynamicPricing: boolean;
+	durationMinutes: number
+}
