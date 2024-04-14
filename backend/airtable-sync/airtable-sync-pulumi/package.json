@@ -9,6 +9,8 @@
     "dependencies": {
         "@pulumi/gcp": "^7.0.0",
         "@pulumi/pulumi": "^3.0.0",
-        "@breezbook/backend-airtable-sync-functions-poll-changes": "workspace:*"
+        "@breezbook/backend-airtable-sync-functions-poll-changes": "workspace:*",
+        "@breezbook/backend-airtable-sync-functions-handle-changes-for-one-environment": "workspace:*",
+        "@breezbook/backend-airtable-sync-shared": "workspace:*"
     }
 }

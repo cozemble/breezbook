@@ -359,9 +359,15 @@ importers:
 
   backend/airtable-sync/airtable-sync-pulumi:
     dependencies:
+      '@breezbook/backend-airtable-sync-functions-handle-changes-for-one-environment':
+        specifier: workspace:*
+        version: link:../functions/handle-changes-for-one-environment
       '@breezbook/backend-airtable-sync-functions-poll-changes':
         specifier: workspace:*
         version: link:../functions/poll-changes
+      '@breezbook/backend-airtable-sync-shared':
+        specifier: workspace:*
+        version: link:../shared
       '@pulumi/gcp':
         specifier: ^7.0.0
         version: 7.0.0
@@ -379,8 +385,11 @@ importers:
         specifier: ^5.4.5
         version: 5.4.5
 
-  backend/airtable-sync/functions/poll-changes:
+  backend/airtable-sync/functions/handle-changes-for-one-environment:
     dependencies:
+      '@breezbook/backend-airtable-sync-shared':
+        specifier: workspace:*
+        version: link:../../shared
       '@breezbook/backend-api-types':
         specifier: workspace:^
         version: link:../../../api-types
@@ -403,9 +412,58 @@ importers:
       typescript:
         specifier: ^5.0.2
         version: 5.4.5
+      vite:
+        specifier: 5.0.7
+        version: 5.0.7(@types/node@20.11.28)
       vitest:
         specifier: ^0.34.1
         version: 0.34.1
+
+  backend/airtable-sync/functions/poll-changes:
+    dependencies:
+      '@breezbook/backend-airtable-sync-shared':
+        specifier: workspace:*
+        version: link:../../shared
+      '@breezbook/backend-api-types':
+        specifier: workspace:^
+        version: link:../../../api-types
+      '@breezbook/packages-core':
+        specifier: workspace:*
+        version: link:../../../../packages/core
+      '@google-cloud/pubsub':
+        specifier: ^4.3.3
+        version: 4.3.3
+    devDependencies:
+      '@pulumi/pulumi':
+        specifier: ^3.0.0
+        version: 3.0.0
+      '@types/node':
+        specifier: ^20.4.9
+        version: 20.11.28
+      esbuild:
+        specifier: ^0.19.9
+        version: 0.19.9
+      typescript:
+        specifier: ^5.0.2
+        version: 5.4.5
+      vite:
+        specifier: 5.0.7
+        version: 5.0.7(@types/node@20.11.28)
+      vitest:
+        specifier: ^0.34.1
+        version: 0.34.1
+
+  backend/airtable-sync/shared:
+    devDependencies:
+      typescript:
+        specifier: 5.3.3
+        version: 5.3.3
+      vite:
+        specifier: 5.0.7
+        version: 5.0.7(@types/node@20.11.28)
+      vitest:
+        specifier: 0.33.0
+        version: 0.33.0
 
   backend/api-types:
     dependencies:

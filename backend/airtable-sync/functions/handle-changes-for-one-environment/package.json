@@ -1,5 +1,5 @@
 {
-  "name": "@breezbook/backend-airtable-sync-functions-poll-changes",
+  "name": "@breezbook/backend-airtable-sync-functions-handle-changes-for-one-environment",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
