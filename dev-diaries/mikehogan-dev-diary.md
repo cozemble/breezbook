@@ -43,3 +43,8 @@ the same tenant-environment pair, another step can fire another event to trigger
 
 So this is keeping the mutation events in the database, and replying on that for order, rather than putting them in the
 Inngest event payload.  Might be more load on the database, but we can worry about that later.
+
+---------------
+I have refactored my Inngest code to work with mutation events in the database, and now I want to write an integration 
+test for it.  I discovered `prismock`, which can act as a mock or a stub or PrismaClient.  In the stub case, I can 
+add mutation events to the database and then run my Inngest code to see if it picks them up.

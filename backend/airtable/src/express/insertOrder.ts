@@ -34,7 +34,6 @@ function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, order: 
 			{
 				first_name: order.customer.firstName,
 				last_name: order.customer.lastName,
-				tenant_id
 			},
 			{ tenant_id_environment_id_email: { tenant_id, environment_id, email } }
 		)

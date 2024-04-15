@@ -57,6 +57,12 @@ export {
 	mutation_events as DbMutationEvent
 };
 
+export interface TenantEnvironmentPair {
+	tenant_id: string;
+	environment_id: string;
+}
+
+
 export function findManyForTenant(tenantEnvironment: TenantEnvironment) {
 	return async function queryEntity<T>(
 		entity: {

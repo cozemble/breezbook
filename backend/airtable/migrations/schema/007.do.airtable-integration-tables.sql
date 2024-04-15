@@ -27,3 +27,11 @@ create table data_synchronisation_id_mappings
     updated_at       timestamp                           not null default now(),
     unique (tenant_id, environment_id, from_system, from_entity_type, from_entity_id, to_system, to_entity_type)
 );
+
+create table replicated_mutation_events
+(
+    mutation_event_id     integer references mutation_events (id) not null,
+    to_system             text                                    not null,
+    replication_timestamp timestamp                               not null default now(),
+    primary key (mutation_event_id, to_system)
+)

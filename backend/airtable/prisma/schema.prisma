@@ -478,15 +478,16 @@ model customer_form_values {
 }
 
 model mutation_events {
-  id             Int      @id @default(autoincrement())
-  tenant_id      String
-  environment_id String
-  event_type     String   @db.VarChar(255)
-  entity_type    String   @db.VarChar(255)
-  entity_id      String
-  event_time     DateTime @default(now()) @db.Timestamp(6)
-  event_data     Json
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id                         Int                          @id @default(autoincrement())
+  tenant_id                  String
+  environment_id             String
+  event_type                 String                       @db.VarChar(255)
+  entity_type                String                       @db.VarChar(255)
+  entity_id                  String
+  event_time                 DateTime                     @default(now()) @db.Timestamp(6)
+  event_data                 Json
+  tenants                    tenants                      @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  replicated_mutation_events replicated_mutation_events[]
 }
 
 model last_change_announcements {
@@ -526,6 +527,15 @@ model data_synchronisation_id_mappings {
   tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([tenant_id, environment_id, from_system, from_entity_type, from_entity_id, to_system, to_entity_type], map: "data_synchronisation_id_mappi_tenant_id_environment_id_from_key")
+}
+
+model replicated_mutation_events {
+  mutation_event_id     Int
+  to_system             String
+  replication_timestamp DateTime        @default(now()) @db.Timestamp(6)
+  mutation_events       mutation_events @relation(fields: [mutation_event_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([mutation_event_id, to_system])
 }
 
 enum payment_status {
