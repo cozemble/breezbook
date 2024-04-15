@@ -1,101 +1,73 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as gcp from "@pulumi/gcp";
+import * as aws from "@pulumi/aws";
 import * as dotenv from 'dotenv';
-import {
-    onChangeForTenantEnvironmentTopicName,
-    onChangesForEnvironmentTopicName,
-    onPollChangesTopicName
-} from "@breezbook/backend-airtable-sync-shared";
+import { onChangeForTenantEnvironmentTopicName, onChangesForEnvironmentTopicName, onPollChangesTopicName } from "@breezbook/backend-airtable-sync-shared";
+import "@pulumi/aws/serverless/function";
 
 dotenv.config({path: "../.env", debug: true, override: true});
+const region = "eu-west-1";
 
-const region = "europe-west1";
+const iamRole = new aws.iam.Role("lambdaRole", {
+    assumeRolePolicy: aws.iam.assumeRolePolicyForPrincipal({ "Service": "lambda.amazonaws.com" })
+});
 
-const bucket = new gcp.storage.Bucket("bucket", {location: "europe-west1"});
-const bucketObject = new gcp.storage.BucketObject("bucketObject", {
-    bucket: bucket.name,
-    source: new pulumi.asset.AssetArchive({
+new aws.iam.RolePolicyAttachment("lambdaFullAccess", {
+    role: iamRole.name,
+    policyArn: aws.iam.ManagedPolicies.AWSLambdaFullAccess,
+});
+
+const onPollChangesQueue = new aws.sqs.Queue("onPollChangesQueue", {
+    fifoQueue: true,
+    contentBasedDeduplication: true
+});
+
+const onChangesForEnvironmentQueue = new aws.sqs.Queue("onChangesForEnvironmentQueue", {
+    fifoQueue: true,
+    contentBasedDeduplication: true
+});
+
+const onChangeForTenantEnvironmentQueue = new aws.sqs.Queue("onChangeForTenantEnvironmentQueue", {
+    fifoQueue: true,
+    contentBasedDeduplication: true
+});
+
+const pollChanges = new aws.lambda.Function("pollChanges", {
+    runtime: aws.lambda.Nodejs10dXRuntime,
+    role: iamRole.arn,
+    code: new pulumi.asset.AssetArchive({
         ".": new pulumi.asset.FileArchive("../functions/poll-changes/dist"),
     }),
-});
-
-const onPollChangesTopic = new gcp.pubsub.Topic(onPollChangesTopicName);
-const onChangesForEnvironmentTopic = new gcp.pubsub.Topic(onChangesForEnvironmentTopicName, {
-    messageRetentionDuration: "604800s" // Retention for 7 days
-});
-const onChangeForTenantEnvironmentTopic = new gcp.pubsub.Topic(onChangeForTenantEnvironmentTopicName, {
-    messageRetentionDuration: "604800s" // Retention for 7 days
-});
-
-const pollChanges = new gcp.cloudfunctions.Function("pollChanges", {
-    runtime: "nodejs20",
-    entryPoint: "pollChanges",
-    sourceArchiveBucket: bucket.name,
-    sourceArchiveObject: bucketObject.name,
-    eventTrigger: {
-        eventType: 'google.pubsub.topic.publish',
-        resource: onPollChangesTopic.id,
-    },
-    availableMemoryMb: 256,
-    region,
-    environmentVariables: {
-        BREEZBOOK_URL_ROOT: process.env.BREEZBOOK_URL_ROOT,
-        INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
-        ON_CHANGES_FOR_ENVIRONMENT_TOPIC_ID: onChangesForEnvironmentTopic.id,
-    }
-});
-
-const functionIamMember = new gcp.cloudfunctions.FunctionIamMember("functionIamMember", {
-    cloudFunction: pollChanges.name,
-    role: "roles/cloudfunctions.invoker",
-    member: "serviceAccount:cozemble@appspot.gserviceaccount.com",
-    region
-});
-
-const job = new gcp.cloudscheduler.Job("job", {
-    region,
-    schedule: "*/5 * * * *",
-    pubsubTarget: {
-        topicName: onPollChangesTopic.id,
-        data: Buffer.from("Trigger").toString('base64'),
-    },
-});
-
-
-const bucketObject_handleChangesForOneEnvironment = new gcp.storage.BucketObject("bucketObject_handleChangesForOneEnvironment", {
-    bucket: bucket.name,
-    source: new pulumi.asset.AssetArchive({
-        // path for the new function
-        ".": new pulumi.asset.FileArchive("../functions/handle-changes-for-one-environment/dist"),
-    }),
-});
-
-const handleChangesForOneEnvironment = new gcp.cloudfunctions.Function("handleChangesForOneEnvironment", {
-    runtime: "nodejs20",
-    entryPoint: "handleChangesForOneEnvironment",
-    sourceArchiveBucket: bucket.name,
-    sourceArchiveObject: bucketObject_handleChangesForOneEnvironment.name,
-    eventTrigger: {
-        eventType: 'google.pubsub.topic.publish',
-        resource: onChangesForEnvironmentTopic.id,
-        retrySettings: {
-            retryOnFailure: true,
-            maxAttempts: 0
+    handler: "index.handler",
+    environment: {
+        variables: {
+            BREEZBOOK_URL_ROOT: process.env.BREEZBOOK_URL_ROOT,
+            INTERNAL_API_KEY: process.env.INTERNAL_API_KEY,
+            ON_CHANGES_FOR_ENVIRONMENT_TOPIC_ID: onChangesForEnvironmentQueue.id,
         }
     },
-    availableMemoryMb: 256,
-    region,
-    environmentVariables: {
-        // Add necessary environment variables
-        // Like this: VAR_NAME: process.env.VAR_NAME
-    }
-}, { dependsOn: onChangesForEnvironmentTopic });
+    events: [
+        {
+            sqs: {
+                arn: onPollChangesQueue.arn,
+            },
+        },
+    ],
+});
 
-const functionIamMember_handleChangesForOneEnvironment = new gcp.cloudfunctions.FunctionIamMember("functionIamMember_handleChangesForOneEnvironment", {
-    cloudFunction: handleChangesForOneEnvironment.name,
-    role: "roles/cloudfunctions.invoker",
-    member: "serviceAccount:cozemble@appspot.gserviceaccount.com",
-    region
-}, { dependsOn: handleChangesForOneEnvironment });
-
-// ... other code
+const handleChangesForOneEnvironment = new aws.lambda.Function("handleChangesForOneEnvironment", {
+    runtime: aws.lambda.Nodejs10dXRuntime,
+    role: iamRole.arn,
+    code: new pulumi.asset.AssetArchive({
+        ".": new pulumi.asset.FileArchive("../functions/handle-changes-for-one-environment/dist"),
+    }),
+    handler: "index.handler",
+    environment: {
+        variables: { /* Add necessary environment variables */ },
+    },
+    events: [
+        {
+            sqs: {
+                arn: onChangesForEnvironmentQueue.arn,
+            },
+        },
+    ],
+});

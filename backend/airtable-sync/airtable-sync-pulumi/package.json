@@ -2,15 +2,16 @@
     "name": "@breezbook/backend-airtable-sync-pulumi",
     "main": "index.ts",
     "devDependencies": {
+        "@pulumi/aws": "^6.30.0",
         "@types/node": "^18",
         "dotenv": "^16.3.1",
         "typescript": "^5.4.5"
     },
     "dependencies": {
-        "@pulumi/gcp": "^7.0.0",
-        "@pulumi/pulumi": "^3.0.0",
-        "@breezbook/backend-airtable-sync-functions-poll-changes": "workspace:*",
         "@breezbook/backend-airtable-sync-functions-handle-changes-for-one-environment": "workspace:*",
-        "@breezbook/backend-airtable-sync-shared": "workspace:*"
+        "@breezbook/backend-airtable-sync-functions-poll-changes": "workspace:*",
+        "@breezbook/backend-airtable-sync-shared": "workspace:*",
+        "@pulumi/gcp": "^7.0.0",
+        "@pulumi/pulumi": "^3.0.0"
     }
 }

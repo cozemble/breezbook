@@ -375,6 +375,9 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
     devDependencies:
+      '@pulumi/aws':
+        specifier: ^6.30.0
+        version: 6.30.0
       '@types/node':
         specifier: ^18
         version: 18.19.3
@@ -1604,6 +1607,15 @@ packages:
 
   /@protobufjs/utf8@1.1.0:
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
+
+  /@pulumi/aws@6.30.0:
+    resolution: {integrity: sha512-MmJpyh9qXvAvw3xA5v7BKCDo9gYBvS10VTsPhNYp/0gHAKf+MoLwyCxVbu45LcTG7Muk84JCQUVxCguWqeeC1Q==}
+    dependencies:
+      '@pulumi/pulumi': 3.0.0
+      builtin-modules: 3.0.0
+      mime: 2.6.0
+      resolve: 1.22.8
+    dev: true
 
   /@pulumi/gcp@7.0.0:
     resolution: {integrity: sha512-ygyyN1YgYj2+D3NAb/gsMCA4mI3noAtZEHmb80mVUWbPHMjyKkigHZfkUsbRTGHIc4qvTiIpL7kBRCE+SdAA8Q==}
@@ -3163,6 +3175,11 @@ packages:
     requiresBuild: true
     dev: false
     optional: true
+
+  /builtin-modules@3.0.0:
+    resolution: {integrity: sha512-hMIeU4K2ilbXV6Uv93ZZ0Avg/M91RaKXucQ+4me2Do1txxBDyDZWCBa5bJSLqoNTRpXTLwEzIk1KmloenDDjhg==}
+    engines: {node: '>=6'}
+    dev: true
 
   /builtin-modules@3.3.0:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
@@ -6009,6 +6026,12 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
     dev: false
+
+  /mime@2.6.0:
+    resolution: {integrity: sha512-USPkMeET31rOMiarsBNIHZKLGgvKc/LrjofAnBlOttf5ajRvqiRA8QsenbcooctK6d6Ts6aqZXBA+XbkKthiQg==}
+    engines: {node: '>=4.0.0'}
+    hasBin: true
+    dev: true
 
   /mime@3.0.0:
     resolution: {integrity: sha512-jSCU7/VB1loIWBZe14aEYHU/+1UMEHoaO7qxCOVJOw9GgH72VAWppxNcjU+x9a2k3GSIBXNKxXQFqRvvZ7vr3A==}
