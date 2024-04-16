@@ -172,28 +172,28 @@ values ('tenant1', 'dev', 'contact-details-form', 'Europe/London');
 insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
                      price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot)
-values ('smallCarWash', 'tenant1', 'dev', 'service#1', 'Small Car wash', 'Small Car wash', 30, 1000, 'GBP',
+values ('smallCarWash.id', 'tenant1', 'dev', 'smallCarWash', 'Small Car wash', 'Small Car wash', 30, 1000, 'GBP',
         array ['addOn-wax', 'addOn-polish'], array ['vanResourceType'], true);
 
 insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
                      price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot)
-values ('mediumCarWash', 'tenant1', 'dev', 'service#2', 'Medium Car wash', 'Medium Car wash', 45, 1500, 'GBP',
+values ('mediumCarWash.id', 'tenant1', 'dev', 'mediumCarWash', 'Medium Car wash', 'Medium Car wash', 45, 1500, 'GBP',
         array ['addOn-wax', 'addOn-polish'], array ['vanResourceType'], true);
 
 insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
                      price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot)
-values ('largeCarWash', 'tenant1', 'dev', 'service#3', 'Large Car wash', 'Large Car wash', 60, 2000, 'GBP',
+values ('largeCarWash.id', 'tenant1', 'dev', 'largeCarWash', 'Large Car wash', 'Large Car wash', 60, 2000, 'GBP',
         array ['addOn-wax', 'addOn-polish', 'addOn-clean-seats', 'addOn-clean-carpets'], array ['vanResourceType'],
         true);
 
 insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
-values ('tenant1', 'dev', 'smallCarWash', 'car-details-form', 0);
+values ('tenant1', 'dev', 'smallCarWash.id', 'car-details-form', 0);
 insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
-values ('tenant1', 'dev', 'mediumCarWash', 'car-details-form', 0);
+values ('tenant1', 'dev', 'mediumCarWash.id', 'car-details-form', 0);
 insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
-values ('tenant1', 'dev', 'largeCarWash', 'car-details-form', 0);
+values ('tenant1', 'dev', 'largeCarWash.id', 'car-details-form', 0);
 
 insert into pricing_rules(id, tenant_id, environment_id, rank, active, definition)
 values ('40% more today', 'tenant1', 'dev', 0, true, '{

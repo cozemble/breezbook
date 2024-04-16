@@ -41,9 +41,9 @@ const smallCarWash = service(
 	price(1000, GBP),
 	[wax.id, polish.id],
 	[carwashForm.id],
-	serviceId('smallCarWash')
+	serviceId('smallCarWash.id')
 );
-const mediumCarWash = service('Medium Car Wash', 'Medium Car Wash', [van], 120, true, price(1500, GBP), [wax.id, polish.id], [], serviceId('mediumCarWash'));
+const mediumCarWash = service('Medium Car Wash', 'Medium Car Wash', [van], 120, true, price(1500, GBP), [wax.id, polish.id], [], serviceId('mediumCarWash.id'));
 const largeCarWash = service(
 	'Large Car Wash',
 	'Large Car Wash',
@@ -53,7 +53,7 @@ const largeCarWash = service(
 	price(2000, GBP),
 	[wax.id, polish.id, cleanSeats.id, cleanCarpets.id],
 	[],
-	serviceId('largeCarWash')
+	serviceId('largeCarWash.id')
 );
 const nineToOne = timeslotSpec(nineAm, onePm, '09:00 - 13:00', id('timeSlot#1'));
 const oneToFour = timeslotSpec(onePm, fourPm, '13:00 - 16:00', id('timeSlot#2'));

@@ -74,7 +74,7 @@ describe('Given a migrated database', async () => {
     });
 
     test('should be able to get service availability', async () => {
-        const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/service/smallCarWash/availability?fromDate=2023-12-20&toDate=2023-12-23`, {
+        const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/service/smallCarWash.id/availability?fromDate=2023-12-20&toDate=2023-12-23`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
