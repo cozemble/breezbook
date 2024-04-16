@@ -307,3 +307,12 @@ values ('3e2217b1-1c55-4cc4-bdf3-b9be9ed667c3', 'tenant1', 'dev', '20-OFF', '202
     "value": "2021-05-23"
   }
 }');
+
+insert into service_images(service_id, tenant_id, environment_id, public_image_url, mime_type, context) values
+('smallCarWash.id', 'tenant1', 'dev', 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/tenant1/smallCarWash.id.png', 'image/png', 'thumbnail');
+
+insert into service_images(service_id, tenant_id, environment_id, public_image_url, mime_type, context) values
+('mediumCarWash.id', 'tenant1', 'dev', 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/tenant1/mediumCarWash.id.png', 'image/png', 'thumbnail');
+
+insert into service_images(service_id, tenant_id, environment_id, public_image_url, mime_type, context) values
+('largeCarWash.id', 'tenant1', 'dev', 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/tenant1/largeCarWash.id.png', 'image/png', 'thumbnail');

@@ -214,24 +214,25 @@ model schemaversion {
 }
 
 model services {
-  id                      String          @id
+  id                      String           @id
   tenant_id               String
   environment_id          String
   service_id              String
   name                    String
   description             String
   duration_minutes        Int
-  price                   Decimal         @db.Decimal
+  price                   Decimal          @db.Decimal
   price_currency          String
   permitted_add_on_ids    String[]
   resource_types_required String[]
   requires_time_slot      Boolean
-  created_at              DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime        @default(now()) @db.Timestamptz(6)
+  created_at              DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime         @default(now()) @db.Timestamptz(6)
   bookings                bookings[]
   order_lines             order_lines[]
   service_forms           service_forms[]
-  tenants                 tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  service_images          service_images[]
+  tenants                 tenants          @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model tenant_settings {
@@ -277,6 +278,7 @@ model tenants {
   resource_types                   resource_types[]
   resources                        resources[]
   service_forms                    service_forms[]
+  service_images                   service_images[]
   services                         services[]
   system_outbound_webhooks         system_outbound_webhooks[]
   tenant_settings                  tenant_settings[]
@@ -536,6 +538,21 @@ model replicated_mutation_events {
   mutation_events       mutation_events @relation(fields: [mutation_event_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([mutation_event_id, to_system])
+}
+
+model service_images {
+  service_id       String
+  tenant_id        String
+  environment_id   String
+  public_image_url String
+  mime_type        String
+  context          String
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  services         services @relation(fields: [service_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([service_id, tenant_id, environment_id, context])
 }
 
 enum payment_status {
