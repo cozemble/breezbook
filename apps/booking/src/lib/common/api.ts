@@ -70,7 +70,7 @@ const booking = {
 		axios
 			.post<AvailabilityResponse>(
 				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/service/${
-					dev ? 'smallCarWash' : serviceSlug
+					dev ? 'smallCarWash.id' : serviceSlug
 				}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
 				{
 					headers: {
@@ -91,7 +91,7 @@ const booking = {
 		axios
 			.post<AvailabilityResponse>(
 				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/service/${
-					dev ? 'smallCarWash' : serviceSlug
+					dev ? 'smallCarWash.id' : serviceSlug
 				}/availability`,
 				undefined,
 				{

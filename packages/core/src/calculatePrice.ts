@@ -10,6 +10,7 @@
  * 6. Resource type pricing: a van is more expensive than a car - never thought of this option, that a service might have resource type choices.  Add-ons will not do, because resource
  * consumption is key to scheduling
  * 7. Surge pricing - when demand is high, prices go up
+ * 8. More specifics on resource based pricing - one instructor might be more expensive than another
  *
  * This can be reduced to:
  * 1. Base Rate: Establish a standard base rate for each service, which serves as the starting point for any price adjustments.

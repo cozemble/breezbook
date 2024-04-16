@@ -147,5 +147,6 @@ export interface Service {
 	priceWithNoDecimalPlaces: number;
 	priceCurrency: string;
 	hasDynamicPricing: boolean;
-	durationMinutes: number
+	durationMinutes: number;
+	image: string;
 }

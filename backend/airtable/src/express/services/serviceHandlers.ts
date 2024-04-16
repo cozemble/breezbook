@@ -13,7 +13,8 @@ function toApiService(service: DbService, hasPricingRules: boolean): Service {
         priceWithNoDecimalPlaces: service.price.toNumber(),
         priceCurrency: service.price_currency,
         durationMinutes: service.duration_minutes,
-        hasDynamicPricing: hasPricingRules
+        hasDynamicPricing: hasPricingRules,
+        image: 'https://picsum.photos/800/450'
     };
 }
 
