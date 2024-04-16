@@ -81,3 +81,7 @@ in a booking business.
     independent of each other.  Example being Specsavers in the UK.  When I moved town, I was a new customer at my new 
     local branch.  Although they did manage some form of data migration, albeit painful.  I think it was a phone call
     and manual data re-entry
+---------------
+Looks like the new approach with Inngest is working.  I need to add some "dx assistance" code to the main app to publish
+reference data (services and add-ons) to airtable.  After that, bookings create mutation events, which are replicated
+in order, in a retriable manner, to airtable.  Sweet!!

@@ -1,7 +1,0 @@
-name: breezbook
-runtime: nodejs
-description: Sync breezbook events with airtable
-config:
-  pulumi:tags:
-    value:
-      pulumi:template: gcp-typescript
