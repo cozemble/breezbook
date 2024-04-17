@@ -1,5 +1,4 @@
 import { exec } from 'child-process-promise';
-import { closePgPool } from './postgresPool.js';
 import { expressApp } from '../express/expressApp.js';
 import { DockerComposeEnvironment, StartedDockerComposeEnvironment, Wait } from 'testcontainers';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,25 +24,19 @@ export async function withMigratedDatabase(postgresPort: number): Promise<Starte
 	const startedEnvironment = await dockerComposeEnvironment.up();
 	startedEnvironment.getContainer(`${testEnvironmentName}-supabase-db`);
 
-	process.env.PGHOST = 'localhost';
-	process.env.PGPORT = postgresPort.toString();
-	process.env.PGDATABASE = environment.POSTGRES_DB;
-	process.env.PG_ADMIN_USER = 'postgres';
-	process.env.PG_ADMIN_PASSWORD = environment.POSTGRES_PASSWORD;
 	process.env.INTERNAL_API_KEY = 'test-api-key';
 
-	process.env.DATABASE_URL = `postgres://${process.env.PG_ADMIN_USER}:${process.env.PG_ADMIN_PASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`;
+	process.env.DATABASE_URL = `postgres://postgres:${environment.POSTGRES_PASSWORD}@localhost:${postgresPort}/${environment.POSTGRES_DB}`;
 
 	console.log('Running migrations...');
 	const outcome = await exec(
-		`npx postgrator --host localhost --port ${process.env.PGPORT} --database ${process.env.PGDATABASE} --username ${process.env.PG_ADMIN_USER} --password ${process.env.PG_ADMIN_PASSWORD} -m 'migrations/schema/*'`
+		`npx postgrator --host localhost --port ${postgresPort} --database ${environment.POSTGRES_DB} --username postgres --password ${environment.POSTGRES_PASSWORD} -m 'migrations/schema/*'`
 	);
 	const prisma = prismaClient();
 	await loadTestCarWashTenant(prisma);
 	console.log(outcome.stdout);
 	console.error('STDERR:' + outcome.stderr);
 
-	await closePgPool();
 	console.log('Migrations complete.');
 
 	console.log(`psql connect string = ${process.env.DATABASE_URL}`);

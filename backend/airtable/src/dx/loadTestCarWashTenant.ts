@@ -1,5 +1,15 @@
 import {PrismaClient} from '@prisma/client';
-import {carwash, JsonSchemaForm} from "@breezbook/packages-core";
+import {
+    carwash,
+    environmentId,
+    JsonSchemaForm,
+    TenantEnvironment,
+    tenantEnvironment,
+    tenantId
+} from "@breezbook/packages-core";
+import {maybeGetTenantSecret, storeTenantSecret} from "../infra/secretsInPostgres.js";
+import {STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME} from "../express/stripeEndpoint.js";
+import {v4 as uuid} from 'uuid';
 
 export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void> {
     const tenant_id = 'tenant1';
@@ -202,6 +212,39 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
             slug: 'tenant1',
         }
     });
+}
+
+export async function ensureStripeKeys(prisma: PrismaClient, tenantEnvironment: TenantEnvironment): Promise<void> {
+    const maybeExistingSecretKey = await maybeGetTenantSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME)
+    if (!maybeExistingSecretKey && process.env.TEST_STRIPE_SECRET_KEY) {
+        await storeTenantSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME, 'Test Stripe Secret Key', process.env.TEST_STRIPE_SECRET_KEY)
+    }
+    const maybeExistingPublishableKey = await maybeGetTenantSecret(tenantEnvironment, STRIPE_PUBLIC_KEY_SECRET_NAME)
+    if (!maybeExistingPublishableKey && process.env.TEST_STRIPE_PUBLIC_KEY) {
+        await storeTenantSecret(tenantEnvironment, STRIPE_PUBLIC_KEY_SECRET_NAME, 'Test Stripe Publishable Key', process.env.TEST_STRIPE_PUBLIC_KEY)
+    }
+    const maybeAirtableRefreshToken = await prisma.oauth_tokens.findFirst({
+        where: {
+            tenant_id: tenantEnvironment.tenantId.value,
+            environment_id: tenantEnvironment.environmentId.value,
+            owning_system: 'airtable',
+            token_type: 'refresh'
+
+        }
+    })
+    if (!maybeAirtableRefreshToken && process.env.TEST_AIRTABLE_REFRESH_TOKEN) {
+        await prisma.oauth_tokens.create({
+            data: {
+                id: uuid(),
+                tenant_id: tenantEnvironment.tenantId.value,
+                environment_id: tenantEnvironment.environmentId.value,
+                owning_system: 'airtable',
+                token_type: 'refresh',
+                token: process.env.TEST_AIRTABLE_REFRESH_TOKEN,
+                expires_at: new Date('2032-01-01T00:00:00Z')
+            }
+        })
+    }
 }
 
 const carDetailsForm: JsonSchemaForm = {

@@ -1,6 +1,7 @@
 import {prismaClient} from "../prisma/client.js";
-import {loadTestCarWashTenant} from "./loadTestCarWashTenant.js";
+import {ensureStripeKeys, loadTestCarWashTenant} from "./loadTestCarWashTenant.js";
 import {maybePublishRefDataToAssistLocalDev} from "./maybePublishRefDataToAssistLocalDev.js";
+import {environmentId, tenantEnvironment, tenantId} from "@breezbook/packages-core";
 
 export async function setupDevEnvironment(expressPort: number) {
     const prisma = prismaClient();
@@ -10,4 +11,5 @@ export async function setupDevEnvironment(expressPort: number) {
     }
     await loadTestCarWashTenant(prismaClient());
     await maybePublishRefDataToAssistLocalDev(expressPort);
+    await ensureStripeKeys(prisma, tenantEnvironment(environmentId('dev'), tenantId('tenant1')));
 }

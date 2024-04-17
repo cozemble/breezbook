@@ -19,16 +19,14 @@
     "bounce:db": "node dist/cjs/devDb.js",
     "compile": "npx tsc -p tsconfig.json",
     "server": "NODE_ENV=development node dist/esm/index.js",
-    "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local && npm run make:schema-types &&  npm run db:load-test-config-local",
+    "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local && npm run make:schema-types",
     "make:schema-types": "npx prisma introspect && npx prisma generate",
     "make:prisma-client": "npx prisma generate",
     "start:inngest": "npx inngest-cli@latest dev",
-    "db:load-test-config-local": "dotenv -e .env -- bash -c ./scripts/load-test-config.sh",
-    "db:load-test-config-prod": "dotenv -e .env.production.local -- bash -c ./scripts/load-test-config.sh",
     "db:clean-public-schema-local": "dotenv -e .env -- bash -c ./scripts/clean-public-schema.sh",
     "db:clean-public-schema-prod": "dotenv -e .env.production.local -- bash -c ./scripts/clean-public-schema.sh",
-    "db:remigrate-local": "npm run db:clean-public-schema-local && npm run db:migrate-local && npm run db:load-test-config-local",
-    "db:remigrate-prod": "npm run db:clean-public-schema-prod && npm run db:migrate &&  npm run db:load-test-config-prod"
+    "db:remigrate-local": "npm run db:clean-public-schema-local && npm run db:migrate-local",
+    "db:remigrate-prod": "npm run db:clean-public-schema-prod && npm run db:migrate"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",
