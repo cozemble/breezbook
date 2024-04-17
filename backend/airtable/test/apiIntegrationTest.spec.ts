@@ -30,6 +30,7 @@ import {
     OrderCreatedResponse,
     PricedBasket,
     Service,
+    Tenant,
     unpricedBasket,
     unpricedBasketLine
 } from '@breezbook/backend-api-types';
@@ -238,6 +239,13 @@ describe('Given a migrated database', async () => {
         expect(response.status).toBe(200);
         const json = await response.json() as Service[];
         expect(json.length).toBeGreaterThan(0);
+    });
+
+    test('can get tenant details by slug', async () => {
+        const response = await fetch(`http://localhost:${expressPort}/api/dev/tenants?slug=tenant1`);
+        expect(response.status).toBe(200);
+        const json = await response.json() as Tenant;
+        expect(json.id).toBe('tenant1');
     });
 
     // test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {
