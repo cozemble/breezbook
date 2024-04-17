@@ -42,7 +42,7 @@ export function toDomainService(dbService: DbService, resourceTypes: ResourceTyp
 		)
 	);
 	const permittedAddOns = dbService.permitted_add_on_ids.map((id) => addOnId(id));
-	const forms = dbServiceForms.filter((sf) => sf.s_id === dbService.id).map((sf) => formId(sf.form_id));
+	const forms = dbServiceForms.filter((sf) => sf.service_id === dbService.id).map((sf) => formId(sf.form_id));
 	return service(
 		dbService.name,
 		dbService.description,

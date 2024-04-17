@@ -18,6 +18,7 @@ import {onGetChangeDatesForAllEnvironments, onGetChanges} from './changes/change
 import {onGetAccessToken} from './oauth/oauthHandlers.js';
 import {onPublishReferenceDataAsMutationEvents} from './temp/onPublishReferenceDataAsMutationEvents.js';
 import {onGetServicesRequest} from "./services/serviceHandlers.js";
+import {onGetTenantRequest} from "./tenants/tenantHandlers.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
@@ -71,6 +72,7 @@ export function expressApp(): Express {
     app.get('/api/:envId/:tenantId/coupon/validity', couponValidityCheck);
     app.post('/api/:envId/:tenantId/basket/price', onBasketPriceRequest);
     app.get(externalApiPaths.getServices, onGetServicesRequest);
+    app.get(externalApiPaths.getTenant, onGetTenantRequest);
 
     app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
     app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);
@@ -94,5 +96,6 @@ export const internalApiPaths = {
 };
 
 export const externalApiPaths = {
+    getTenant: '/api/:envId/tenants',
     getServices: '/api/:envId/:tenantId/services'
 }

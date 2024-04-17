@@ -1,5 +1,5 @@
-insert into tenants (tenant_id, name)
-values ('tenant1', 'carwash');
+insert into tenants (tenant_id, name, slug)
+values ('tenant1', 'carwash', 'tenant1');
 
 insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
 values ('businessHours#1', 'tenant1', 'dev', 'Monday', '09:00', '18:00');
@@ -169,30 +169,30 @@ values ('contact-details-form',
 insert into tenant_settings(tenant_id, environment_id, customer_form_id, iana_timezone)
 values ('tenant1', 'dev', 'contact-details-form', 'Europe/London');
 
-insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
+insert into services(id, tenant_id, environment_id, slug, name, description, duration_minutes, price,
                      price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot)
 values ('smallCarWash.id', 'tenant1', 'dev', 'smallCarWash', 'Small Car wash', 'Small Car wash', 30, 1000, 'GBP',
         array ['addOn-wax', 'addOn-polish'], array ['vanResourceType'], true);
 
-insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
+insert into services(id, tenant_id, environment_id, slug, name, description, duration_minutes, price,
                      price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot)
 values ('mediumCarWash.id', 'tenant1', 'dev', 'mediumCarWash', 'Medium Car wash', 'Medium Car wash', 45, 1500, 'GBP',
         array ['addOn-wax', 'addOn-polish'], array ['vanResourceType'], true);
 
-insert into services(id, tenant_id, environment_id, service_id, name, description, duration_minutes, price,
+insert into services(id, tenant_id, environment_id, slug, name, description, duration_minutes, price,
                      price_currency,
                      permitted_add_on_ids, resource_types_required, requires_time_slot)
 values ('largeCarWash.id', 'tenant1', 'dev', 'largeCarWash', 'Large Car wash', 'Large Car wash', 60, 2000, 'GBP',
         array ['addOn-wax', 'addOn-polish', 'addOn-clean-seats', 'addOn-clean-carpets'], array ['vanResourceType'],
         true);
 
-insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
+insert into service_forms(tenant_id, environment_id, service_id, form_id, rank)
 values ('tenant1', 'dev', 'smallCarWash.id', 'car-details-form', 0);
-insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
+insert into service_forms(tenant_id, environment_id, service_id, form_id, rank)
 values ('tenant1', 'dev', 'mediumCarWash.id', 'car-details-form', 0);
-insert into service_forms(tenant_id, environment_id, s_id, form_id, rank)
+insert into service_forms(tenant_id, environment_id, service_id, form_id, rank)
 values ('tenant1', 'dev', 'largeCarWash.id', 'car-details-form', 0);
 
 insert into pricing_rules(id, tenant_id, environment_id, rank, active, definition)
@@ -308,11 +308,25 @@ values ('3e2217b1-1c55-4cc4-bdf3-b9be9ed667c3', 'tenant1', 'dev', '20-OFF', '202
   }
 }');
 
-insert into service_images(service_id, tenant_id, environment_id, public_image_url, mime_type, context) values
-('smallCarWash.id', 'tenant1', 'dev', 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/tenant1/smallCarWash.id.png', 'image/png', 'thumbnail');
+insert into service_images(service_id, tenant_id, environment_id, public_image_url, mime_type, context)
+values ('smallCarWash.id', 'tenant1', 'dev',
+        'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/tenant1/smallCarWash.id.png',
+        'image/png', 'thumbnail');
 
-insert into service_images(service_id, tenant_id, environment_id, public_image_url, mime_type, context) values
-('mediumCarWash.id', 'tenant1', 'dev', 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/tenant1/mediumCarWash.id.png', 'image/png', 'thumbnail');
+insert into service_images(service_id, tenant_id, environment_id, public_image_url, mime_type, context)
+values ('mediumCarWash.id', 'tenant1', 'dev',
+        'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/tenant1/mediumCarWash.id.png',
+        'image/png', 'thumbnail');
 
-insert into service_images(service_id, tenant_id, environment_id, public_image_url, mime_type, context) values
-('largeCarWash.id', 'tenant1', 'dev', 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/tenant1/largeCarWash.id.png', 'image/png', 'thumbnail');
+insert into service_images(service_id, tenant_id, environment_id, public_image_url, mime_type, context)
+values ('largeCarWash.id', 'tenant1', 'dev',
+        'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/tenant1/largeCarWash.id.png',
+        'image/png', 'thumbnail');
+
+insert into tenant_images(tenant_id, environment_id, public_image_url, mime_type, context)
+values ('tenant1', 'dev',
+        'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/tenant1/thesmartwash-hero.png',
+        'image/png', 'hero');
+
+insert into tenant_branding(tenant_id, environment_id, slug)
+values ('tenant1', 'dev', 'tenant1');

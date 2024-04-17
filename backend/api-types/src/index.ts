@@ -150,3 +150,12 @@ export interface Service {
 	durationMinutes: number;
 	image: string;
 }
+
+export interface Tenant {
+	id: string;
+	slug: string;
+	name: string;
+	heading: string;
+	description: string;
+	heroImage: string;
+}

@@ -24,7 +24,8 @@ describe('Given a migrated database', async () => {
 		await prisma.tenants.create({
 			data: {
 				tenant_id: 'tenant-id',
-				name: 'tenant-name'
+				name: 'tenant-name',
+				slug: 'tenant-slug',
 			}
 		});
 		const repo = new PrismaSynchronisationIdRepository(prisma, 'tenant-id', 'environment-id');

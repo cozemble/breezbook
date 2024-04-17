@@ -73,7 +73,7 @@ in a booking business.
    * might have different photos
    * might have different social media links
    * etc etc - so in this case the *location* is the point of business definition.
- * Alternatively and in addition, a business might:
+ * Alternatively (and in addition) a business might:
    * offer a standard offering across all locations.
    * and also permit local customisation.
    * In which case, the main point of business definition is the business itself.

@@ -25,7 +25,9 @@ import {
 	last_shovl_out,
 	customer_form_values,
 	mutation_events,
-	service_images
+	service_images,
+	tenants,
+	tenant_images
 } from '@prisma/client';
 import { TenantEnvironment } from '@breezbook/packages-core';
 
@@ -56,7 +58,9 @@ export {
 	last_shovl_out as DbLastShovlOut,
 	customer_form_values as DbCustomerFormValues,
 	mutation_events as DbMutationEvent,
-	service_images as DbServiceImage
+	service_images as DbServiceImage,
+	tenants as DbTenant,
+	tenant_images as DbTenantImage
 };
 
 export interface TenantEnvironmentPair {

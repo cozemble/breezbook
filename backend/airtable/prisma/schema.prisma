@@ -53,7 +53,7 @@ model bookings {
   booking_service_form_values booking_service_form_values[]
   customers                   customers                     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   orders                      orders                        @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services                    services                      @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services                    services                      @relation(fields: [service_id, tenant_id, environment_id], references: [id, tenant_id, environment_id], onDelete: NoAction, onUpdate: NoAction)
   tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   time_slots                  time_slots?                   @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   cancellation_grants         cancellation_grants[]
@@ -120,7 +120,7 @@ model order_lines {
   service_form_data Json?
   created_at        DateTime    @default(now()) @db.Timestamptz(6)
   updated_at        DateTime    @default(now()) @db.Timestamptz(6)
-  services          services    @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services          services    @relation(fields: [service_id, tenant_id, environment_id], references: [id, tenant_id, environment_id], onDelete: NoAction, onUpdate: NoAction)
   tenants           tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   time_slots        time_slots? @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -214,10 +214,10 @@ model schemaversion {
 }
 
 model services {
-  id                      String           @id
+  id                      String
   tenant_id               String
   environment_id          String
-  service_id              String
+  slug                    String
   name                    String
   description             String
   duration_minutes        Int
@@ -233,6 +233,9 @@ model services {
   service_forms           service_forms[]
   service_images          service_images[]
   tenants                 tenants          @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, id])
+  @@unique([tenant_id, environment_id, slug])
 }
 
 model tenant_settings {
@@ -251,6 +254,7 @@ model tenant_settings {
 model tenants {
   tenant_id                        String                             @id
   name                             String
+  slug                             String                             @unique
   created_at                       DateTime                           @default(now()) @db.Timestamptz(6)
   updated_at                       DateTime                           @default(now()) @db.Timestamptz(6)
   add_on                           add_on[]
@@ -277,10 +281,11 @@ model tenants {
   resource_blocked_time            resource_blocked_time[]
   resource_types                   resource_types[]
   resources                        resources[]
-  service_forms                    service_forms[]
   service_images                   service_images[]
   services                         services[]
   system_outbound_webhooks         system_outbound_webhooks[]
+  tenant_branding                  tenant_branding[]
+  tenant_images                    tenant_images[]
   tenant_settings                  tenant_settings[]
   time_slots                       time_slots[]
   webhook_destinations             webhook_destinations[]
@@ -304,16 +309,15 @@ model time_slots {
 model service_forms {
   tenant_id      String
   environment_id String
-  s_id           String
+  service_id     String
   form_id        String
   rank           Int?
   created_at     DateTime @default(now()) @db.Timestamptz(6)
   updated_at     DateTime @default(now()) @db.Timestamptz(6)
   forms          forms    @relation(fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services       services @relation(fields: [s_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  services       services @relation(fields: [tenant_id, environment_id, service_id], references: [tenant_id, environment_id, id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([tenant_id, s_id, form_id])
+  @@id([tenant_id, environment_id, service_id, form_id])
 }
 
 model coupons {
@@ -549,10 +553,36 @@ model service_images {
   context          String
   created_at       DateTime @default(now()) @db.Timestamp(6)
   updated_at       DateTime @default(now()) @db.Timestamp(6)
-  services         services @relation(fields: [service_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  services         services @relation(fields: [service_id, tenant_id, environment_id], references: [id, tenant_id, environment_id], onDelete: NoAction, onUpdate: NoAction)
   tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([service_id, tenant_id, environment_id, context])
+}
+
+model tenant_branding {
+  tenant_id      String
+  environment_id String
+  slug           String
+  theme          Json?    @default("{}")
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id])
+  @@unique([environment_id, slug])
+}
+
+model tenant_images {
+  tenant_id        String
+  environment_id   String
+  public_image_url String
+  mime_type        String
+  context          String
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, context])
 }
 
 enum payment_status {

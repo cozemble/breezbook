@@ -11,7 +11,7 @@ function toApiService(service: DbService, hasPricingRules: boolean): Service {
         id: service.id,
         name: service.name,
         description: service.description,
-        slug: service.service_id,
+        slug: service.slug,
         priceWithNoDecimalPlaces: service.price.toNumber(),
         priceCurrency: service.price_currency,
         durationMinutes: service.duration_minutes,

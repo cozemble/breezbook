@@ -195,7 +195,7 @@ async function getChangedBookingsJson(changedBookings: DbBooking[], prisma: Pris
 	});
 	const jsonPayloads = changedBookings.map((booking) => {
 		const formForThisService = allServiceForms
-			.filter((form) => form.s_id === booking.service_id && form.tenant_id === booking.tenant_id && form.environment_id === booking.environment_id)
+			.filter((form) => form.service_id === booking.service_id && form.tenant_id === booking.tenant_id && form.environment_id === booking.environment_id)
 			.map((serviceForm) =>
 				allForms.find((f) => f.id === serviceForm.form_id && f.tenant_id === booking.tenant_id && f.environment_id === booking.environment_id)
 			);
