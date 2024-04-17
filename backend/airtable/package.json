@@ -13,15 +13,13 @@
     "start": "nodemon dist/esm/index.js",
     "db:migrate": "dotenv -e .env.production.local -- bash -c 'npx postgrator --config=migrations/schema/postgratorrc.json'",
     "db:migrate-local": "dotenv -e .env -- bash -c 'npx postgrator --config=migrations/schema/postgratorrc.json'",
-    "db:migrate-carwash": "dotenv -e .env.production.local -- bash -c 'npx postgrator --config=migrations/data/carwash/postgratorrc.json'",
-    "db:migrate-carwash-local": "dotenv -e .env -- bash -c 'npx postgrator --config=migrations/data/carwash/postgratorrc.json'",
     "dev": "nodemon -x \"npm run buildrun\"",
     "buildrun": "npm run compile && npm run server",
     "build-run-db": "npm run compile && npm run bounce:db",
     "bounce:db": "node dist/cjs/devDb.js",
     "compile": "npx tsc -p tsconfig.json",
     "server": "NODE_ENV=development node dist/esm/index.js",
-    "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local && npm run make:schema-types && npm run db:migrate-carwash-local && npm run db:load-test-config-local",
+    "clean:postgres": "./scripts/run-clean-postgres.sh && npm run db:migrate-local && npm run make:schema-types &&  npm run db:load-test-config-local",
     "make:schema-types": "npx prisma introspect && npx prisma generate",
     "make:prisma-client": "npx prisma generate",
     "start:inngest": "npx inngest-cli@latest dev",
@@ -29,8 +27,8 @@
     "db:load-test-config-prod": "dotenv -e .env.production.local -- bash -c ./scripts/load-test-config.sh",
     "db:clean-public-schema-local": "dotenv -e .env -- bash -c ./scripts/clean-public-schema.sh",
     "db:clean-public-schema-prod": "dotenv -e .env.production.local -- bash -c ./scripts/clean-public-schema.sh",
-    "db:remigrate-local": "npm run db:clean-public-schema-local && npm run db:migrate-local && npm run db:migrate-carwash-local && npm run db:load-test-config-local",
-    "db:remigrate-prod": "npm run db:clean-public-schema-prod && npm run db:migrate && npm run db:migrate-carwash && npm run db:load-test-config-prod"
+    "db:remigrate-local": "npm run db:clean-public-schema-local && npm run db:migrate-local && npm run db:load-test-config-local",
+    "db:remigrate-prod": "npm run db:clean-public-schema-prod && npm run db:migrate &&  npm run db:load-test-config-prod"
   },
   "devDependencies": {
     "@types/body-parser": "^1.19.5",

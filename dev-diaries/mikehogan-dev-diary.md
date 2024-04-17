@@ -201,3 +201,5 @@ I'm going add a `location_path` as an `ltree`, so I keep the door open to nested
 future, should that become a need. Actually, an ltree might be a nicer and more general way to handle the above
 example of finding all resources, global and local. Global and local is just a two node deep tree. But let's not
 go there yet.
+
+Ah bugger - prisma does not support ltree.

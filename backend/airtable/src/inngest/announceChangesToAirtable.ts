@@ -28,7 +28,6 @@ async function getTenantEnvironmentsPendingReplication(prisma: PrismaClient): Pr
 }
 
 async function getEarliestNonReplicatedMutationEvent(prisma: PrismaClient, tenantId: string, environmentId: string): Promise<DbMutationEvent | null> {
-    const result2 = await prisma.$queryRawUnsafe('SELECT * FROM mutation_events');
     const result = await prisma.$queryRawUnsafe<DbMutationEvent[]>(`
         SELECT m.*
         FROM mutation_events m

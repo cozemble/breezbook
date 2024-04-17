@@ -1,5 +1,0 @@
-{
-  "migrationPattern": "migrations/data/carwash/*",
-  "driver": "pg",
-  "schemaTable": "dataversion"
-}

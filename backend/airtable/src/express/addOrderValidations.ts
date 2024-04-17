@@ -73,6 +73,7 @@ export function validateTimeslotId(everythingForTenant: EverythingForTenant, ord
 	}
 	return null;
 }
+
 export function validateCustomerForm(everythingForTenant: EverythingForTenant, order: Order): ErrorResponse | null {
 	if (everythingForTenant.tenantSettings.customerFormId) {
 		if (!order.customer.formData) {

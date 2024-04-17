@@ -3,6 +3,8 @@ import { closePgPool } from './postgresPool.js';
 import { expressApp } from '../express/expressApp.js';
 import { DockerComposeEnvironment, StartedDockerComposeEnvironment, Wait } from 'testcontainers';
 import { v4 as uuidv4 } from 'uuid';
+import {prismaClient} from "../prisma/client.js";
+import {loadTestCarWashTenant} from "../dx/loadTestCarWashTenant.js";
 
 export async function withMigratedDatabase(postgresPort: number): Promise<StartedDockerComposeEnvironment> {
 	const composeAndFileName = 'supabase-min-docker-compose.yml';
@@ -34,9 +36,10 @@ export async function withMigratedDatabase(postgresPort: number): Promise<Starte
 
 	console.log('Running migrations...');
 	const outcome = await exec(
-		`npx postgrator --host localhost --port ${process.env.PGPORT} --database ${process.env.PGDATABASE} --username ${process.env.PG_ADMIN_USER} --password ${process.env.PG_ADMIN_PASSWORD} -m 'migrations/schema/*'` +
-			` && npx postgrator --host localhost --port ${process.env.PGPORT} --database ${process.env.PGDATABASE} --username ${process.env.PG_ADMIN_USER} --password ${process.env.PG_ADMIN_PASSWORD} -m 'migrations/data/carwash/*' -t dataversion`
+		`npx postgrator --host localhost --port ${process.env.PGPORT} --database ${process.env.PGDATABASE} --username ${process.env.PG_ADMIN_USER} --password ${process.env.PG_ADMIN_PASSWORD} -m 'migrations/schema/*'`
 	);
+	const prisma = prismaClient();
+	await loadTestCarWashTenant(prisma);
 	console.log(outcome.stdout);
 	console.error('STDERR:' + outcome.stderr);
 
