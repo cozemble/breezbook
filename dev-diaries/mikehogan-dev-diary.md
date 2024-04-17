@@ -148,23 +148,23 @@ But I want Prisma, and this is what it said:
 
 ```typescript
 const businessHours = await prisma.businessHours.findMany({
-  where: {
-    tenant_id: 'tenant_id_value',
-    environment_id: 'environment_id_value',
-    OR: [
-      { location_id: 'location_id_value' },
-      { location_id: null },
-    ],
-  },
-  orderBy: {
-    location_id: 'desc',
-  },
+    where: {
+        tenant_id: 'tenant_id_value',
+        environment_id: 'environment_id_value',
+        OR: [
+            {location_id: 'location_id_value'},
+            {location_id: null},
+        ],
+    },
+    orderBy: {
+        location_id: 'desc',
+    },
 });
 ```
 
 Nice.
 
-And let's look at resources.  Here is the amended table:
+And let's look at resources. Here is the amended table:
 
 ```sql
 create table resources
@@ -186,13 +186,18 @@ Here is how we find all resources that are either global or at location X:
 const locationId = 'location_X_id';
 
 const resources = await prisma.resources.findMany({
-  where: {
-    tenant_id: 'tenant_id_value',
-    environment_id: 'environment_id_value',
-    OR: [
-      { location_id: locationId },
-      { location_id: null },
-    ],
-  },
+    where: {
+        tenant_id: 'tenant_id_value',
+        environment_id: 'environment_id_value',
+        OR: [
+            {location_id: locationId},
+            {location_id: null},
+        ],
+    },
 });
 ```
+
+I'm going add a `location_path` as an `ltree`, so I keep the door open to nested organisational structures in the
+future, should that become a need. Actually, an ltree might be a nicer and more general way to handle the above
+example of finding all resources, global and local. Global and local is just a two node deep tree. But let's not
+go there yet.

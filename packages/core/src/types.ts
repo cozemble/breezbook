@@ -35,6 +35,17 @@ export function tenantId(value: string): TenantId {
 	};
 }
 
+export interface Location extends ValueType<string> {
+	_type: 'location';
+}
+
+export function location(value: string): Location {
+	return {
+		_type: 'location',
+		value
+	};
+}
+
 export interface TenantEnvironment {
 	_type: 'tenant.environment';
 	environmentId: EnvironmentId;

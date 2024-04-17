@@ -1,6 +1,7 @@
 create extension if not exists "uuid-ossp";
 create extension if not exists pgcrypto;
 create extension if not exists pg_net;
+create extension if not exists ltree;
 
 create table tenants
 (
@@ -17,6 +18,7 @@ create table locations
     id             text primary key,
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
+    location_path  ltree                               not null,
     slug           text                                not null,
     name           text                                not null,
     created_at     timestamp with time zone            not null default current_timestamp,
