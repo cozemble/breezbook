@@ -2,7 +2,6 @@ create extension if not exists "uuid-ossp";
 create extension if not exists pgcrypto;
 create extension if not exists pg_net;
 
-
 create table tenants
 (
     tenant_id  text primary key,
@@ -13,11 +12,26 @@ create table tenants
     unique (slug)
 );
 
+create table locations
+(
+    id             text primary key,
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    slug           text                                not null,
+    name           text                                not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    unique (tenant_id, environment_id, slug)
+);
+
+create unique index locations_tenant_environment_slug_idx on locations (tenant_id, environment_id, slug);
+
 create table business_hours
 (
     id              text primary key,
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
+    location_id     text references locations (id),
     day_of_week     varchar(10)                         not null,
     start_time_24hr varchar(10)                         not null,
     end_time_24hr   varchar(10)                         not null,
@@ -30,6 +44,7 @@ create table blocked_time
     id              text primary key,
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
+    location_id     text references locations (id),
     date            text                                not null,
     start_time_24hr text                                not null,
     end_time_24hr   text                                not null,
@@ -52,6 +67,7 @@ create table resources
     id             text primary key,
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
+    location_id    text references locations (id),
     resource_type  text references resource_types (id) not null,
     name           text                                not null,
     created_at     timestamp with time zone            not null default current_timestamp,
@@ -118,6 +134,7 @@ create table services
     id                      text                                not null,
     tenant_id               text references tenants (tenant_id) not null,
     environment_id          text                                not null,
+    location_id             text references locations (id),
     slug                    text                                not null,
     name                    text                                not null,
     description             text                                not null,
@@ -151,6 +168,7 @@ create table time_slots
     id              text primary key,
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
+    location_id     text references locations (id),
     description     text                                not null,
     start_time_24hr varchar(10)                         not null,
     end_time_24hr   varchar(10)                         not null,
@@ -164,6 +182,7 @@ create table pricing_rules
     id             text primary key,
     environment_id text                                not null,
     tenant_id      text references tenants (tenant_id) not null,
+    location_id    text references locations (id),
     definition     jsonb                               not null,
     rank           integer                             not null,
     active         boolean                             not null,
@@ -380,6 +399,7 @@ create table refund_rules
     id             text primary key,
     environment_id text                                not null,
     tenant_id      text references tenants (tenant_id) not null,
+    location_id    text references locations (id),
     definition     jsonb                               not null,
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp

@@ -1,6 +1,9 @@
 insert into tenants (tenant_id, name, slug)
 values ('tenant1', 'carwash', 'tenant1');
 
+insert into locations(id, tenant_id, environment_id, name, slug)
+values ('1edbefef-a98a-499c-9621-431e19cc422f', 'tenant1', 'dev', 'London', 'london');
+
 insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
 values ('businessHours#1', 'tenant1', 'dev', 'Monday', '09:00', '18:00');
 insert into business_hours(id, tenant_id, environment_id, day_of_week, start_time_24hr, end_time_24hr)
