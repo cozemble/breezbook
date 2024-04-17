@@ -620,6 +620,7 @@ model locations {
 
   @@unique([tenant_id, environment_id, slug], map: "locations_tenant_environment_slug_idx")
   @@unique([tenant_id, environment_id, slug])
+  @@unique([tenant_id, environment_id, location_path])
 }
 
 enum payment_status {
