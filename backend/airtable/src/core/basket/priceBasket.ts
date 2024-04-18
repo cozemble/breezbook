@@ -1,4 +1,4 @@
-import { EverythingForTenant } from '../../express/getEverythingForTenant.js';
+import { EverythingForTenant } from '../../express/getEverythingForAvailability.js';
 import {
 	errorResponse,
 	pricedAddOn,

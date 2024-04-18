@@ -29,7 +29,7 @@ import {
 	unlimited
 } from '@breezbook/packages-core';
 import { createOrderRequest } from '@breezbook/backend-api-types';
-import { everythingForTenant } from '../src/express/getEverythingForTenant.js';
+import { everythingForTenant } from '../src/express/getEverythingForAvailability.js';
 import { percentageBasedPriceAdjustment, timeBasedPriceAdjustment } from '@breezbook/packages-core/dist/calculatePrice.js';
 
 export const today = isoDate();

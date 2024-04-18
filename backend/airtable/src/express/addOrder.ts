@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { createOrderRequest, handleOutcome, httpJsonResponse, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { customerId, Order, orderFns, Price } from '@breezbook/packages-core';
-import { EverythingForTenant, getEverythingForTenant } from './getEverythingForTenant.js';
+import { EverythingForTenant, getEverythingForAvailability } from './getEverythingForAvailability.js';
 import {
 	validateAvailability,
 	validateCoupon,
@@ -70,8 +70,8 @@ export function doAddOrder(
 export async function addOrder(req: express.Request, res: express.Response): Promise<void> {
 	await withTwoRequestParams(req, res, tenantEnvironmentParam(), createOrderRequest(), async (tenantEnvironment, createOrderRequest) => {
 		const { fromDate, toDate } = orderFns.getOrderDateRange(createOrderRequest.order);
-		const everythingForTenant = await getEverythingForTenant(tenantEnvironment, fromDate, toDate);
 		const prisma = prismaClient();
+		const everythingForTenant = await getEverythingForAvailability(prisma,tenantEnvironment, fromDate, toDate);
 		let maybeExistingCustomer = await prisma.customers.findUnique({
 			where: {
 				tenant_id_environment_id_email: {

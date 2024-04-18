@@ -13,7 +13,7 @@ import {
 	Price,
 	priceFns
 } from '@breezbook/packages-core';
-import { EverythingForTenant } from './getEverythingForTenant.js';
+import { EverythingForTenant } from './getEverythingForAvailability.js';
 import { Availability, errorResponse, ErrorResponse } from '@breezbook/backend-api-types';
 import { calculateOrderTotal } from '@breezbook/packages-core/dist/calculateOrderTotal.js';
 import { applyBookingsToResourceAvailability } from '@breezbook/packages-core/dist/applyBookingsToResourceAvailability.js';
