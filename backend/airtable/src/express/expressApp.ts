@@ -19,6 +19,9 @@ import {onGetAccessToken} from './oauth/oauthHandlers.js';
 import {onPublishReferenceDataAsMutationEvents} from './temp/onPublishReferenceDataAsMutationEvents.js';
 import {onGetServicesRequest} from "./services/serviceHandlers.js";
 import {onGetTenantRequest} from "./tenants/tenantHandlers.js";
+import {environmentIdParam, withNoRequestParams, withTwoRequestParams} from "../infra/functionalExpress.js";
+import {prismaClient} from "../prisma/client.js";
+import {setupDevEnvironment} from "../dx/setupDevEnvironment.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
@@ -82,6 +85,7 @@ export function expressApp(): Express {
     app.get(internalApiPaths.getChangesForEnvironment, onGetChanges);
     app.get(internalApiPaths.getAccessToken, onGetAccessToken);
     app.post(internalApiPaths.publishReferenceDataAsMutationEvents, onPublishReferenceDataAsMutationEvents);
+    app.post(internalApiPaths.onAppStart, onAppStartRequest);
 
     bindInngestToExpress(app);
 
@@ -92,10 +96,18 @@ export const internalApiPaths = {
     getChangeDatesForAllEnvironments: '/internal/api/changes/dates',
     getChangesForEnvironment: '/internal/api/:envId/changes',
     getAccessToken: '/internal/api/:envId/:tenantId/oauth/:systemId/accessToken',
-    publishReferenceDataAsMutationEvents: '/internal/api/:envId/:tenantId/referenceData/publishAsMutationEvents'
+    publishReferenceDataAsMutationEvents: '/internal/api/:envId/:tenantId/referenceData/publishAsMutationEvents',
+    onAppStart: '/internal/api/onAppStart',
 };
 
 export const externalApiPaths = {
     getTenant: '/api/:envId/tenants',
-    getServices: '/api/:envId/:tenantId/services'
+    getServices: '/api/:envId/:tenantId/services',
+}
+
+async function onAppStartRequest(req: express.Request, res: express.Response): Promise<void> {
+    await withNoRequestParams(req, res,  async () => {
+        await setupDevEnvironment().catch(e => console.error(e));
+        res.status(200).send({status: 'ok'});
+    });
 }

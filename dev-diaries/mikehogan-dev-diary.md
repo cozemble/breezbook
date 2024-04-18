@@ -203,3 +203,30 @@ example of finding all resources, global and local. Global and local is just a t
 go there yet.
 
 Ah bugger - prisma does not support ltree.
+
+# Thu 18 Apr 2024
+
+I added code into the app yesterday to set-up a test tenant when it boots against an empty database.  All works fine
+when running it using node, and when running the docker image locally, but it fails with: 
+
+```
+PrismaClientInitializationError: 
+Invalid `prisma.tenants.findFirst()` invocation:
+Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 5)
+    at ai.handleRequestError (/app/node_modules/.pnpm/@prisma+client@5.9.1_prisma@5.12.1/node_modules/@prisma/client/runtime/library.js:126:7075)
+    at ai.handleAndLogRequestError (/app/node_modules/.pnpm/@prisma+client@5.9.1_prisma@5.12.1/node_modules/@prisma/client/runtime/library.js:126:6109)
+    at ai.request (/app/node_modules/.pnpm/@prisma+client@5.9.1_prisma@5.12.1/node_modules/@prisma/client/runtime/library.js:126:5817)
+    at async l (/app/node_modules/.pnpm/@prisma+client@5.9.1_prisma@5.12.1/node_modules/@prisma/client/runtime/library.js:131:9709)
+    at async setupDevEnvironment (file:///app/dist/esm/dx/setupDevEnvironment.js:9:9) {
+  clientVersion: '5.9.1',
+  errorCode: undefined
+}
+```
+
+when the image is run on Google Cloud Run.  The env vars seem the same to me.  So am now adding a 20 sec delay between the app booting
+and attempting to acquire a pooled connection, to see if that makes a difference.  It did not.  Neither did adding `?pgBouncer=true` to the
+database connection url.  Turning on prisma logging at `info` level revealed nothing.  Now adding an endpoint to do the
+setup, to see why endpoints work and this auto-setup does not.  So when I call the same code in an endpoint, it works fine.
+Going to try calling the endpoint after the app boots, and see if that solves the issue.  So calling the endpoint right after the app
+boots also fails with the same error.  This time trying to call it using the public endpoint, rather than the internal one.
+That worked.  WTF?
