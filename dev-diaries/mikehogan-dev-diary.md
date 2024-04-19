@@ -230,3 +230,12 @@ setup, to see why endpoints work and this auto-setup does not.  So when I call t
 Going to try calling the endpoint after the app boots, and see if that solves the issue.  So calling the endpoint right after the app
 boots also fails with the same error.  This time trying to call it using the public endpoint, rather than the internal one.
 That worked.  WTF?
+
+# Fri 19 Apr 2024
+The work I did a few days ago, adding an optional `location_id` to `services` and other tables, means I can have a 
+service at global space shared by all locations, or a service at one local space.  But I can't have a service at two 
+of three locations.  I think this is a better way to model the domain.  So now we're talking about a mapping between
+services and locations.  So it sounds like a `service_locations` table is calling.
+
+My mind finds it easier to work with examples, so I'm going to model a gym in several locations, offering different 
+services, some of them global, some of them local, and others in several locations.

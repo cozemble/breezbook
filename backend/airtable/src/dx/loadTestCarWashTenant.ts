@@ -1,12 +1,5 @@
 import {PrismaClient} from '@prisma/client';
-import {
-    carwash,
-    environmentId,
-    JsonSchemaForm,
-    TenantEnvironment,
-    tenantEnvironment,
-    tenantId
-} from "@breezbook/packages-core";
+import {carwash, JsonSchemaForm, TenantEnvironment} from "@breezbook/packages-core";
 import {maybeGetTenantSecret, storeTenantSecret} from "../infra/secretsInPostgres.js";
 import {STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME} from "../express/stripeEndpoint.js";
 import {v4 as uuid} from 'uuid';
@@ -92,7 +85,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
         }))
     });
     await prisma.resource_availability.createMany({
-        data: vans.flatMap((van, index) => daysOfWeek.map((day, dayIndex) => ({
+        data: vans.flatMap((_van, index) => daysOfWeek.map((day, dayIndex) => ({
             id: `resourceAvailability#${index + 1}#${dayIndex + 1}`,
             tenant_id,
             environment_id,

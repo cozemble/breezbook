@@ -27,7 +27,8 @@ import {
 	mutation_events,
 	service_images,
 	tenants,
-	tenant_images
+	tenant_images,
+	locations, service_locations
 } from '@prisma/client';
 import { TenantEnvironment } from '@breezbook/packages-core';
 
@@ -60,7 +61,9 @@ export {
 	mutation_events as DbMutationEvent,
 	service_images as DbServiceImage,
 	tenants as DbTenant,
-	tenant_images as DbTenantImage
+	tenant_images as DbTenantImage,
+	locations as DbLocation,
+	service_locations as DbServiceLocation
 };
 
 export interface TenantEnvironmentPair {

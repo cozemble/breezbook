@@ -72,11 +72,7 @@ export async function onPublishReferenceDataAsMutationEvents(req: express.Reques
                     requires_time_slot: service.requires_time_slot
                 },
                 {
-                    tenant_id_environment_id_id: {
-                        id: service.id,
-                        tenant_id: service.tenant_id,
-                        environment_id: service.environment_id
-                    }
+                    id: service.id
                 }
             )
         );

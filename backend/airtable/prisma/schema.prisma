@@ -36,6 +36,31 @@ model blocked_time {
   tenants         tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
+model booking_events {
+  id             String             @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  tenant_id      String
+  environment_id String
+  booking_id     String
+  event_type     booking_event_type
+  event_data     Json
+  created_at     DateTime           @default(now()) @db.Timestamptz(6)
+  bookings       bookings           @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants            @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model booking_service_form_values {
+  tenant_id           String
+  environment_id      String
+  booking_id          String
+  service_form_id     String
+  service_form_values Json
+  bookings            bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  forms               forms    @relation(fields: [service_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants             tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, booking_id, service_form_id])
+}
+
 model bookings {
   id                          String                        @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id                   String
@@ -55,7 +80,7 @@ model bookings {
   booking_service_form_values booking_service_form_values[]
   customers                   customers                     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   orders                      orders                        @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services                    services                      @relation(fields: [service_id, tenant_id, environment_id], references: [id, tenant_id, environment_id], onDelete: NoAction, onUpdate: NoAction)
+  services                    services                      @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   time_slots                  time_slots?                   @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   cancellation_grants         cancellation_grants[]
@@ -74,6 +99,43 @@ model business_hours {
   updated_at      DateTime   @default(now()) @db.Timestamptz(6)
   locations       locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants         tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model cancellation_grants {
+  id             String   @id
+  environment_id String
+  tenant_id      String
+  booking_id     String
+  definition     Json
+  committed      Boolean  @default(false)
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  bookings       bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model coupons {
+  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  tenant_id      String
+  environment_id String
+  code           String
+  definition     Json
+  start_date     String
+  end_date       String?
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model customer_form_values {
+  tenant_id      String
+  environment_id String
+  customer_id    String
+  form_values    Json
+  customers      customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, customer_id])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -95,6 +157,23 @@ model customers {
   @@unique([tenant_id, environment_id, email])
 }
 
+model data_synchronisation_id_mappings {
+  id               String   @id
+  tenant_id        String
+  environment_id   String
+  from_system      String
+  from_entity_type String
+  from_entity_id   String
+  to_system        String
+  to_entity_type   String
+  to_entity_id     String
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenant_id, environment_id, from_system, from_entity_type, from_entity_id, to_system, to_entity_type], map: "data_synchronisation_id_mappi_tenant_id_environment_id_from_key")
+}
+
 model forms {
   id                          String                        @id
   tenant_id                   String
@@ -108,6 +187,79 @@ model forms {
   tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   service_forms               service_forms[]
   tenant_settings             tenant_settings[]
+}
+
+model last_change_announcements {
+  id                Int      @id @default(autoincrement())
+  environment_id    String
+  announcement_date DateTime @db.Timestamp(6)
+  channel_id        String
+}
+
+model last_shovl_out {
+  environment_id String
+  entity_type    String
+  last_shovl_out DateTime @db.Timestamp(6)
+
+  @@id([environment_id, entity_type])
+}
+
+model locations {
+  id                String              @id
+  tenant_id         String
+  environment_id    String
+  slug              String
+  name              String
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
+  blocked_time      blocked_time[]
+  business_hours    business_hours[]
+  tenants           tenants             @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  pricing_rules     pricing_rules[]
+  refund_rules      refund_rules[]
+  resources         resources[]
+  service_locations service_locations[]
+  time_slots        time_slots[]
+
+  @@unique([tenant_id, environment_id, slug], map: "locations_tenant_environment_slug_idx")
+  @@unique([tenant_id, environment_id, slug])
+}
+
+model log_messages {
+  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
+  environment_id String
+  message        String
+  level          String   @default("info")
+  correlation_id String?
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model mutation_events {
+  id                         Int                          @id @default(autoincrement())
+  tenant_id                  String
+  environment_id             String
+  event_type                 String                       @db.VarChar(255)
+  entity_type                String                       @db.VarChar(255)
+  entity_id                  String
+  event_time                 DateTime                     @default(now()) @db.Timestamp(6)
+  event_data                 Json
+  tenants                    tenants                      @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  replicated_mutation_events replicated_mutation_events[]
+}
+
+model oauth_tokens {
+  id             String   @id
+  tenant_id      String
+  environment_id String
+  owning_system  String
+  token_type     String
+  token          String
+  expires_at     DateTime @db.Timestamp(6)
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenant_id, environment_id, owning_system, token_type])
 }
 
 model order_lines {
@@ -124,9 +276,25 @@ model order_lines {
   service_form_data Json?
   created_at        DateTime    @default(now()) @db.Timestamptz(6)
   updated_at        DateTime    @default(now()) @db.Timestamptz(6)
-  services          services    @relation(fields: [service_id, tenant_id, environment_id], references: [id, tenant_id, environment_id], onDelete: NoAction, onUpdate: NoAction)
+  services          services    @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants           tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   time_slots        time_slots? @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model order_payments {
+  id                      String         @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  tenant_id               String
+  environment_id          String
+  order_id                String
+  status                  payment_status
+  amount_in_minor_units   Int
+  amount_currency         String
+  provider                String
+  provider_transaction_id String
+  created_at              DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime       @default(now()) @db.Timestamptz(6)
+  orders                  orders         @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                 tenants        @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model orders {
@@ -157,6 +325,49 @@ model pricing_rules {
   updated_at     DateTime   @default(now()) @db.Timestamptz(6)
   locations      locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants        tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model received_webhooks {
+  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  tenant_id      String
+  environment_id String
+  webhook_id     String
+  payload        Json
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model refund_rules {
+  id             String     @id
+  environment_id String
+  tenant_id      String
+  location_id    String?
+  definition     Json
+  created_at     DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime   @default(now()) @db.Timestamptz(6)
+  locations      locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model replicated_mutation_events {
+  mutation_event_id     Int
+  to_system             String
+  replication_timestamp DateTime        @default(now()) @db.Timestamp(6)
+  mutation_events       mutation_events @relation(fields: [mutation_event_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([mutation_event_id, to_system])
+}
+
+model reservations {
+  id               String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  booking_id       String
+  reservation_time DateTime @db.Timestamp(6)
+  expiry_time      DateTime @db.Timestamp(6)
+  reservation_type String
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+  bookings         bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model resource_availability {
@@ -221,31 +432,120 @@ model schemaversion {
   run_at  DateTime? @db.Timestamptz(6)
 }
 
+model service_forms {
+  tenant_id      String
+  environment_id String
+  service_id     String
+  form_id        String
+  rank           Int
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  forms          forms    @relation(fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services       services @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, service_id, form_id])
+}
+
+model service_images {
+  service_id       String
+  tenant_id        String
+  environment_id   String
+  public_image_url String
+  mime_type        String
+  context          String
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  services         services @relation(fields: [service_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([service_id, tenant_id, environment_id, context])
+}
+
+model service_locations {
+  tenant_id      String
+  environment_id String
+  service_id     String
+  location_id    String
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  locations      locations @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services       services  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, service_id, location_id])
+}
+
 model services {
-  id                      String
+  id                      String              @id
   tenant_id               String
   environment_id          String
-  location_id             String?
   slug                    String
   name                    String
   description             String
   duration_minutes        Int
-  price                   Decimal          @db.Decimal
+  price                   Decimal             @db.Decimal
   price_currency          String
   permitted_add_on_ids    String[]
   resource_types_required String[]
   requires_time_slot      Boolean
-  created_at              DateTime         @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime         @default(now()) @db.Timestamptz(6)
+  created_at              DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime            @default(now()) @db.Timestamptz(6)
   bookings                bookings[]
   order_lines             order_lines[]
   service_forms           service_forms[]
   service_images          service_images[]
-  locations               locations?       @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                 tenants          @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  service_locations       service_locations[]
+  tenants                 tenants             @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([tenant_id, environment_id, id])
   @@unique([tenant_id, environment_id, slug])
+}
+
+model system_config {
+  environment_id String
+  config_key     String
+  config_value   String
+
+  @@id([environment_id, config_key])
+}
+
+model system_outbound_webhooks {
+  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
+  environment_id String
+  tenant_id      String
+  action         String
+  status         String   @default("pending")
+  payload_type   String
+  payload        Json
+  batch_id       String?  @db.Uuid
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model tenant_branding {
+  tenant_id      String
+  environment_id String
+  slug           String
+  theme          Json?    @default("{}")
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  updated_at     DateTime @default(now()) @db.Timestamp(6)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id])
+  @@unique([environment_id, slug])
+}
+
+model tenant_images {
+  tenant_id        String
+  environment_id   String
+  public_image_url String
+  mime_type        String
+  context          String
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, context])
 }
 
 model tenant_settings {
@@ -292,6 +592,7 @@ model tenants {
   resource_blocked_time            resource_blocked_time[]
   resource_types                   resource_types[]
   resources                        resources[]
+  service_forms                    service_forms[]
   service_images                   service_images[]
   services                         services[]
   system_outbound_webhooks         system_outbound_webhooks[]
@@ -319,93 +620,6 @@ model time_slots {
   tenants         tenants       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model service_forms {
-  tenant_id      String
-  environment_id String
-  service_id     String
-  form_id        String
-  rank           Int?
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime @default(now()) @db.Timestamptz(6)
-  forms          forms    @relation(fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services       services @relation(fields: [tenant_id, environment_id, service_id], references: [tenant_id, environment_id, id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([tenant_id, environment_id, service_id, form_id])
-}
-
-model coupons {
-  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
-  tenant_id      String
-  environment_id String
-  code           String
-  definition     Json
-  start_date     String
-  end_date       String?
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime @default(now()) @db.Timestamptz(6)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model reservations {
-  id               String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
-  booking_id       String
-  reservation_time DateTime @db.Timestamp(6)
-  expiry_time      DateTime @db.Timestamp(6)
-  reservation_type String
-  created_at       DateTime @default(now()) @db.Timestamptz(6)
-  updated_at       DateTime @default(now()) @db.Timestamptz(6)
-  bookings         bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model order_payments {
-  id                      String         @id @default(dbgenerated("extensions.uuid_generate_v4()"))
-  tenant_id               String
-  environment_id          String
-  order_id                String
-  status                  payment_status
-  amount_in_minor_units   Int
-  amount_currency         String
-  provider                String
-  provider_transaction_id String
-  created_at              DateTime       @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime       @default(now()) @db.Timestamptz(6)
-  orders                  orders         @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                 tenants        @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model received_webhooks {
-  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
-  tenant_id      String
-  environment_id String
-  webhook_id     String
-  payload        Json
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime @default(now()) @db.Timestamptz(6)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model system_config {
-  environment_id String
-  config_key     String
-  config_value   String
-
-  @@id([environment_id, config_key])
-}
-
-model system_outbound_webhooks {
-  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
-  environment_id String
-  tenant_id      String
-  action         String
-  status         String   @default("pending")
-  payload_type   String
-  payload        Json
-  batch_id       String?  @db.Uuid
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime @default(now()) @db.Timestamptz(6)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
 model webhook_destinations {
   id                 String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
   tenant_id          String
@@ -420,211 +634,11 @@ model webhook_destinations {
   tenants            tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model log_messages {
-  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
-  environment_id String
-  message        String
-  level          String   @default("info")
-  correlation_id String?
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-}
-
-model cancellation_grants {
-  id             String   @id
-  environment_id String
-  tenant_id      String
-  booking_id     String
-  definition     Json
-  committed      Boolean  @default(false)
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime @default(now()) @db.Timestamptz(6)
-  bookings       bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model refund_rules {
-  id             String     @id
-  environment_id String
-  tenant_id      String
-  location_id    String?
-  definition     Json
-  created_at     DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime   @default(now()) @db.Timestamptz(6)
-  locations      locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants        tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model booking_events {
-  id             String             @id @default(dbgenerated("extensions.uuid_generate_v4()"))
-  tenant_id      String
-  environment_id String
-  booking_id     String
-  event_type     booking_event_type
-  event_data     Json
-  created_at     DateTime           @default(now()) @db.Timestamptz(6)
-  bookings       bookings           @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants        tenants            @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model last_shovl_out {
-  environment_id String
-  entity_type    String
-  last_shovl_out DateTime @db.Timestamp(6)
-
-  @@id([environment_id, entity_type])
-}
-
-model booking_service_form_values {
-  tenant_id           String
-  environment_id      String
-  booking_id          String
-  service_form_id     String
-  service_form_values Json
-  bookings            bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  forms               forms    @relation(fields: [service_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants             tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([tenant_id, environment_id, booking_id, service_form_id])
-}
-
-model customer_form_values {
-  tenant_id      String
-  environment_id String
-  customer_id    String
-  form_values    Json
-  customers      customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([tenant_id, environment_id, customer_id])
-}
-
-model mutation_events {
-  id                         Int                          @id @default(autoincrement())
-  tenant_id                  String
-  environment_id             String
-  event_type                 String                       @db.VarChar(255)
-  entity_type                String                       @db.VarChar(255)
-  entity_id                  String
-  event_time                 DateTime                     @default(now()) @db.Timestamp(6)
-  event_data                 Json
-  tenants                    tenants                      @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  replicated_mutation_events replicated_mutation_events[]
-}
-
-model last_change_announcements {
-  id                Int      @id @default(autoincrement())
-  environment_id    String
-  announcement_date DateTime @db.Timestamp(6)
-  channel_id        String
-}
-
-model oauth_tokens {
-  id             String   @id
-  tenant_id      String
-  environment_id String
-  owning_system  String
-  token_type     String
-  token          String
-  expires_at     DateTime @db.Timestamp(6)
-  created_at     DateTime @default(now()) @db.Timestamp(6)
-  updated_at     DateTime @default(now()) @db.Timestamp(6)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@unique([tenant_id, environment_id, owning_system, token_type])
-}
-
-model data_synchronisation_id_mappings {
-  id               String   @id
-  tenant_id        String
-  environment_id   String
-  from_system      String
-  from_entity_type String
-  from_entity_id   String
-  to_system        String
-  to_entity_type   String
-  to_entity_id     String
-  created_at       DateTime @default(now()) @db.Timestamp(6)
-  updated_at       DateTime @default(now()) @db.Timestamp(6)
-  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@unique([tenant_id, environment_id, from_system, from_entity_type, from_entity_id, to_system, to_entity_type], map: "data_synchronisation_id_mappi_tenant_id_environment_id_from_key")
-}
-
-model replicated_mutation_events {
-  mutation_event_id     Int
-  to_system             String
-  replication_timestamp DateTime        @default(now()) @db.Timestamp(6)
-  mutation_events       mutation_events @relation(fields: [mutation_event_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@id([mutation_event_id, to_system])
-}
-
-model service_images {
-  service_id       String
-  tenant_id        String
-  environment_id   String
-  public_image_url String
-  mime_type        String
-  context          String
-  created_at       DateTime @default(now()) @db.Timestamp(6)
-  updated_at       DateTime @default(now()) @db.Timestamp(6)
-  services         services @relation(fields: [service_id, tenant_id, environment_id], references: [id, tenant_id, environment_id], onDelete: NoAction, onUpdate: NoAction)
-  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([service_id, tenant_id, environment_id, context])
-}
-
-model tenant_branding {
-  tenant_id      String
-  environment_id String
-  slug           String
-  theme          Json?    @default("{}")
-  created_at     DateTime @default(now()) @db.Timestamp(6)
-  updated_at     DateTime @default(now()) @db.Timestamp(6)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([tenant_id, environment_id])
-  @@unique([environment_id, slug])
-}
-
-model tenant_images {
-  tenant_id        String
-  environment_id   String
-  public_image_url String
-  mime_type        String
-  context          String
-  created_at       DateTime @default(now()) @db.Timestamp(6)
-  updated_at       DateTime @default(now()) @db.Timestamp(6)
-  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
-
-  @@id([tenant_id, environment_id, context])
-}
-
-model locations {
-  id             String           @id
-  tenant_id      String
-  environment_id String
-  slug           String
-  name           String
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
-  blocked_time   blocked_time[]
-  business_hours business_hours[]
-  tenants        tenants          @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  pricing_rules  pricing_rules[]
-  refund_rules   refund_rules[]
-  resources      resources[]
-  services       services[]
-  time_slots     time_slots[]
-
-  @@unique([tenant_id, environment_id, slug], map: "locations_tenant_environment_slug_idx")
-  @@unique([tenant_id, environment_id, slug])
-}
-
-enum payment_status {
-  succeeded
-  pending
-  failed
+enum booking_event_type {
+  cancelled
+  amended
+  completed
+  no_show
 }
 
 enum booking_status {
@@ -632,9 +646,8 @@ enum booking_status {
   cancelled
 }
 
-enum booking_event_type {
-  cancelled
-  amended
-  completed
-  no_show
+enum payment_status {
+  succeeded
+  pending
+  failed
 }
