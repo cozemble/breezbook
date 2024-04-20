@@ -239,3 +239,8 @@ services and locations.  So it sounds like a `service_locations` table is callin
 
 My mind finds it easier to work with examples, so I'm going to model a gym in several locations, offering different 
 services, some of them global, some of them local, and others in several locations.
+
+In doing this, setting up a multi-location gym model, it became obvious that location needs to be on 
+`resource_availability`, rather on `resources`.  This is because a resource can be available at one location for one
+period of time, and at another location for another period of time.  So I'm going to move `location_id` to 
+`resource_availability`.

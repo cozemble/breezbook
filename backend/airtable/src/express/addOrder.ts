@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { createOrderRequest, handleOutcome, httpJsonResponse, tenantEnvironmentParam, withTwoRequestParams } from '../infra/functionalExpress.js';
 import { customerId, Order, orderFns, Price } from '@breezbook/packages-core';
-import { EverythingForTenant, getEverythingForAvailability } from './getEverythingForAvailability.js';
+import { EverythingForAvailability, getEverythingForAvailability } from './getEverythingForAvailability.js';
 import {
 	validateAvailability,
 	validateCoupon,
@@ -27,7 +27,7 @@ export const addOrderErrorCodes = {
 	noSuchTimeslotId: 'addOrder.no.such.timeslot.id'
 };
 
-function withValidationsPerformed<T>(everythingForTenant: EverythingForTenant, order: Order, orderTotal: Price, fn: () => T): ErrorResponse | T {
+function withValidationsPerformed<T>(everythingForTenant: EverythingForAvailability, order: Order, orderTotal: Price, fn: () => T): ErrorResponse | T {
 	const validationFns = [
 		() => validateTimeslotId(everythingForTenant, order),
 		() => validateCustomerForm(everythingForTenant, order),
@@ -48,7 +48,7 @@ function withValidationsPerformed<T>(everythingForTenant: EverythingForTenant, o
 }
 
 export function doAddOrder(
-	everythingForTenant: EverythingForTenant,
+	everythingForTenant: EverythingForAvailability,
 	createOrderRequest: CreateOrderRequest
 ):
 	| ErrorResponse

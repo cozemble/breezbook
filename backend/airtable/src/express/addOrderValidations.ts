@@ -13,7 +13,7 @@ import {
 	Price,
 	priceFns
 } from '@breezbook/packages-core';
-import { EverythingForTenant } from './getEverythingForAvailability.js';
+import { EverythingForAvailability } from './getEverythingForAvailability.js';
 import { Availability, errorResponse, ErrorResponse } from '@breezbook/backend-api-types';
 import { calculateOrderTotal } from '@breezbook/packages-core/dist/calculateOrderTotal.js';
 import { applyBookingsToResourceAvailability } from '@breezbook/packages-core/dist/applyBookingsToResourceAvailability.js';
@@ -41,7 +41,7 @@ function validateForm(forms: Form[], formId: FormId, formData: unknown): string 
 	}
 }
 
-export function validateOrderTotal(everythingForTenant: EverythingForTenant, givenOrder: Order, postedOrderTotal: Price): ErrorResponse | null {
+export function validateOrderTotal(everythingForTenant: EverythingForAvailability, givenOrder: Order, postedOrderTotal: Price): ErrorResponse | null {
 	const recalcedOrderLines = givenOrder.lines.map((line) => {
 		const orderedSlot = line.slot;
 		if (orderedSlot._type === 'exact.time.availability') {
@@ -65,7 +65,7 @@ export function validateOrderTotal(everythingForTenant: EverythingForTenant, giv
 	return null;
 }
 
-export function validateTimeslotId(everythingForTenant: EverythingForTenant, order: Order): ErrorResponse | null {
+export function validateTimeslotId(everythingForTenant: EverythingForAvailability, order: Order): ErrorResponse | null {
 	const timeslotIds = order.lines.flatMap((line) => (line.slot._type === 'timeslot.spec' ? [line.slot.id] : []));
 	const invalidTimeslotIds = timeslotIds.filter((id) => !everythingForTenant.businessConfiguration.timeslots.some((ts) => ts.id.value === id.value));
 	if (invalidTimeslotIds.length > 0) {
@@ -74,7 +74,7 @@ export function validateTimeslotId(everythingForTenant: EverythingForTenant, ord
 	return null;
 }
 
-export function validateCustomerForm(everythingForTenant: EverythingForTenant, order: Order): ErrorResponse | null {
+export function validateCustomerForm(everythingForTenant: EverythingForAvailability, order: Order): ErrorResponse | null {
 	if (everythingForTenant.tenantSettings.customerFormId) {
 		if (!order.customer.formData) {
 			return errorResponse(addOrderErrorCodes.customerFormMissing);
@@ -92,7 +92,7 @@ export function validateCustomerForm(everythingForTenant: EverythingForTenant, o
 	return null;
 }
 
-export function validateServiceForms(everythingForTenant: EverythingForTenant, order: Order): ErrorResponse | null {
+export function validateServiceForms(everythingForTenant: EverythingForAvailability, order: Order): ErrorResponse | null {
 	for (let i = 0; i < order.lines.length; i++) {
 		const line = order.lines[i];
 		const service = mandatory(
@@ -114,7 +114,7 @@ export function validateServiceForms(everythingForTenant: EverythingForTenant, o
 	return null;
 }
 
-export function validateAvailability(everythingForTenant: EverythingForTenant, order: Order) {
+export function validateAvailability(everythingForTenant: EverythingForAvailability, order: Order) {
 	const projectedBookings: Booking[] = [...everythingForTenant.bookings];
 	for (let i = 0; i < order.lines.length; i++) {
 		const line = order.lines[i];
@@ -133,7 +133,7 @@ export function validateAvailability(everythingForTenant: EverythingForTenant, o
 	return null;
 }
 
-export function validateCouponCode(everythingForTenant: EverythingForTenant, couponCode: CouponCode | undefined) {
+export function validateCouponCode(everythingForTenant: EverythingForAvailability, couponCode: CouponCode | undefined) {
 	if (couponCode) {
 		const coupon = everythingForTenant.coupons.find((c) => c.code.value === couponCode.value);
 		if (!coupon) {
@@ -148,6 +148,6 @@ export function validateCouponCode(everythingForTenant: EverythingForTenant, cou
 	return null;
 }
 
-export function validateCoupon(everythingForTenant: EverythingForTenant, order: Order) {
+export function validateCoupon(everythingForTenant: EverythingForAvailability, order: Order) {
 	return validateCouponCode(everythingForTenant, order.couponCode);
 }

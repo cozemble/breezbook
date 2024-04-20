@@ -57,8 +57,8 @@ import {
 } from '../prisma/dbToDomain.js';
 import {PrismaClient} from "@prisma/client";
 
-export interface EverythingForTenant {
-    _type: 'everything.for.tenant';
+export interface EverythingForAvailability {
+    _type: 'everything.for.availability';
     businessConfiguration: BusinessConfiguration;
     pricingRules: PricingRule[];
     bookings: Booking[];
@@ -67,16 +67,16 @@ export interface EverythingForTenant {
     tenantEnvironment: TenantEnvironment;
 }
 
-export function everythingForTenant(
+export function everythingForAvailability(
     businessConfiguration: BusinessConfiguration,
     pricingRules: PricingRule[],
     bookings: Booking[],
     coupons: Coupon[],
     tenantSettings: TenantSettings,
     tenantEnvironment: TenantEnvironment
-): EverythingForTenant {
+): EverythingForAvailability {
     return {
-        _type: 'everything.for.tenant',
+        _type: 'everything.for.availability',
         businessConfiguration,
         pricingRules,
         bookings,
@@ -214,11 +214,9 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
         tenantSettings,
         coupons
     };
-
 }
 
-export async function getEverythingForAvailability(prisma: PrismaClient, tenantEnvironment: TenantEnvironment, fromDate: IsoDate, toDate: IsoDate): Promise<EverythingForTenant> {
-    const availabilityData = await gatherAvailabilityData(prisma, tenantEnvironment, fromDate, toDate);
+export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvironment: TenantEnvironment, fromDate: IsoDate, toDate: IsoDate, availabilityData: AvailabilityData,) {
     const coupons = availabilityData.coupons.map((c) => c.definition as unknown as Coupon);
 
     const dates = isoDateFns.listDays(fromDate, toDate);
@@ -234,7 +232,7 @@ export async function getEverythingForAvailability(prisma: PrismaClient, tenantE
         : undefined;
     const mappedTimeSlots = availabilityData.timeSlots.map(toDomainTimeslotSpec);
 
-    return everythingForTenant(
+    return everythingForAvailability(
         businessConfiguration(
             makeBusinessAvailability(availabilityData.businessHours, availabilityData.blockedTime, dates),
             makeResourceAvailability(mappedResourceTypes, availabilityData.resources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates),
@@ -251,4 +249,9 @@ export async function getEverythingForAvailability(prisma: PrismaClient, tenantE
         toDomainTenantSettings(availabilityData.tenantSettings),
         tenantEnvironment
     );
+}
+
+export async function getEverythingForAvailability(prisma: PrismaClient, tenantEnvironment: TenantEnvironment, fromDate: IsoDate, toDate: IsoDate): Promise<EverythingForAvailability> {
+    const availabilityData = await gatherAvailabilityData(prisma, tenantEnvironment, fromDate, toDate);
+    return convertAvailabilityDataIntoEverythingForAvailability(tenantEnvironment, fromDate, toDate, availabilityData);
 }

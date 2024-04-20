@@ -29,7 +29,7 @@ import {
 	unlimited
 } from '@breezbook/packages-core';
 import { createOrderRequest } from '@breezbook/backend-api-types';
-import { everythingForTenant } from '../src/express/getEverythingForAvailability.js';
+import { everythingForAvailability } from '../src/express/getEverythingForAvailability.js';
 import { percentageBasedPriceAdjustment, timeBasedPriceAdjustment } from '@breezbook/packages-core/dist/calculatePrice.js';
 
 export const today = isoDate();
@@ -76,7 +76,7 @@ const tenPercentMoreTwoDaysFromNow = timeBasedPriceAdjustment(
 );
 
 export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[] = [], today = isoDate()) {
-	return everythingForTenant(
+	return everythingForAvailability(
 		businessConfiguration(
 			businessAvailability([dayAndTimePeriod(today, carwash.nineToSix)]),
 			[resourceDayAvailability(carwash.van1, [dayAndTimePeriod(today, carwash.nineToSix)])],

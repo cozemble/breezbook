@@ -205,21 +205,21 @@ model last_shovl_out {
 }
 
 model locations {
-  id                String              @id
-  tenant_id         String
-  environment_id    String
-  slug              String
-  name              String
-  created_at        DateTime            @default(now()) @db.Timestamptz(6)
-  updated_at        DateTime            @default(now()) @db.Timestamptz(6)
-  blocked_time      blocked_time[]
-  business_hours    business_hours[]
-  tenants           tenants             @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  pricing_rules     pricing_rules[]
-  refund_rules      refund_rules[]
-  resources         resources[]
-  service_locations service_locations[]
-  time_slots        time_slots[]
+  id                    String                  @id
+  tenant_id             String
+  environment_id        String
+  slug                  String
+  name                  String
+  created_at            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
+  blocked_time          blocked_time[]
+  business_hours        business_hours[]
+  tenants               tenants                 @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  pricing_rules         pricing_rules[]
+  refund_rules          refund_rules[]
+  resource_availability resource_availability[]
+  service_locations     service_locations[]
+  time_slots            time_slots[]
 
   @@unique([tenant_id, environment_id, slug], map: "locations_tenant_environment_slug_idx")
   @@unique([tenant_id, environment_id, slug])
@@ -374,13 +374,15 @@ model resource_availability {
   id              String     @id
   tenant_id       String?
   environment_id  String
-  resource_id     String?
+  resource_id     String
+  location_id     String?
   day_of_week     String     @db.VarChar(10)
   start_time_24hr String     @db.VarChar(10)
   end_time_24hr   String     @db.VarChar(10)
   created_at      DateTime   @default(now()) @db.Timestamptz(6)
   updated_at      DateTime   @default(now()) @db.Timestamptz(6)
-  resources       resources? @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations       locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resources       resources  @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants         tenants?   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -413,14 +415,12 @@ model resources {
   id                    String                  @id
   tenant_id             String
   environment_id        String
-  location_id           String?
   resource_type         String
   name                  String
   created_at            DateTime                @default(now()) @db.Timestamptz(6)
   updated_at            DateTime                @default(now()) @db.Timestamptz(6)
   resource_availability resource_availability[]
   resource_blocked_time resource_blocked_time[]
-  locations             locations?              @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   resource_types        resource_types          @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants               tenants                 @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }

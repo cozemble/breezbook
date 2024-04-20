@@ -1,18 +1,6 @@
 import {PrismaClient} from '@prisma/client';
 import {makeTestId} from "./testIds.js";
 
-function allDayAvailability(tenant_id: string, environment_id: string, index: number, dayIndex: number, day: string, resourceAbbreviation: string) {
-    return {
-        id: makeTestId(tenant_id, environment_id, `${resourceAbbreviation}Availability#${index + 1}#${dayIndex + 1}`),
-        tenant_id,
-        environment_id,
-        resource_id: makeTestId(tenant_id, environment_id, `${resourceAbbreviation}#${index + 1}`),
-        day_of_week: day,
-        start_time_24hr: '09:00',
-        end_time_24hr: '18:00'
-    };
-}
-
 const tenant_id = 'breezbook.multi.location.gym';
 const environment_id = 'dev';
 const locationHarlow = makeTestId(tenant_id, environment_id, 'europe.uk.harlow')
@@ -72,18 +60,37 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             slug: 'ware',
         }
     });
-    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    const mondayToFriday = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    const satSun = ['Saturday', 'Sunday']
+    const daysOfWeek = [...mondayToFriday, ...satSun]
+    const start_time_24hr = '09:00';
+    const end_time_24hr = '18:00';
     await prisma.business_hours.createMany({
         data: daysOfWeek.map((day, index) => ({
             id: makeTestId(tenant_id, environment_id, `businessHours#${index + 1}`),
             tenant_id,
             environment_id,
             day_of_week: day,
-            start_time_24hr: '09:00',
-            end_time_24hr: '18:00'
+            start_time_24hr,
+            end_time_24hr
 
         }))
     });
+    // Let's make harlow closed on Wednesdays
+    const daysLessWednesday = daysOfWeek.filter(day => day !== 'Wednesday')
+    await prisma.business_hours.createMany({
+        data: daysLessWednesday.map((day, index) => ({
+            id: makeTestId(tenant_id, environment_id, `harlowBusinessHours#${index + 1}`),
+            tenant_id,
+            environment_id,
+            day_of_week: day,
+            start_time_24hr,
+            end_time_24hr,
+            location_id: locationHarlow
+        }))
+    });
+
+
     const resourceTypes = ['personal.trainer', 'massage.therapist', 'yoga.instructor']
     await prisma.resource_types.createMany({
         data: resourceTypes.map((resourceType) => ({
@@ -104,7 +111,45 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             resource_type: makeTestId(tenant_id, environment_id, `resource.personal.trainer`)
         }))
     });
-    const massageTherapists = ['mtMike', 'mtMete']
+    // ptMike is at harlow Mon-Fri and ware Sat-Sun
+    await prisma.resource_availability.createMany({
+        data: mondayToFriday.map((day, dayIndex) => ({
+            id: makeTestId(tenant_id, environment_id, `ptMikeAvailability.harlow#${dayIndex + 1}`),
+            tenant_id,
+            environment_id,
+            resource_id: makeTestId(tenant_id, environment_id, `pt#1`),
+            location_id: locationHarlow,
+            day_of_week: day,
+            start_time_24hr,
+            end_time_24hr
+        }))
+    });
+    await prisma.resource_availability.createMany({
+        data: satSun.map((day, dayIndex) => ({
+            id: makeTestId(tenant_id, environment_id, `ptMikeAvailability.ware#${dayIndex + 1}`),
+            tenant_id,
+            environment_id,
+            resource_id: makeTestId(tenant_id, environment_id, `pt#1`),
+            location_id: locationWare,
+            day_of_week: day,
+            start_time_24hr,
+            end_time_24hr
+        }))
+    });
+    // ptMete is at harlow on Tue
+    await prisma.resource_availability.createMany({
+        data: [{
+            id: makeTestId(tenant_id, environment_id, `ptMeteAvailability.harlow#1`),
+            tenant_id,
+            environment_id,
+            resource_id: makeTestId(tenant_id, environment_id, `pt#2`),
+            location_id: locationHarlow,
+            day_of_week: 'Tuesday',
+            start_time_24hr,
+            end_time_24hr
+        }]
+    });
+    const massageTherapists = ['mtMete']
     await prisma.resources.createMany({
         data: massageTherapists.map((masseur, index) => ({
             id: makeTestId(tenant_id, environment_id, `masseur#${index + 1}`),
@@ -114,22 +159,32 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             resource_type: makeTestId(tenant_id, environment_id, `massage.therapist`)
         }))
     });
+    // mtMete is at harlow Mon-Fri
+    await prisma.resource_availability.createMany({
+        data: mondayToFriday.map((day, dayIndex) => ({
+            id: makeTestId(tenant_id, environment_id, `mtMeteAvailability.harlow#${dayIndex + 1}`),
+            tenant_id,
+            environment_id,
+            resource_id: makeTestId(tenant_id, environment_id, `masseur#1`),
+            location_id: locationHarlow,
+            day_of_week: day,
+            start_time_24hr,
+            end_time_24hr
+        }))
+    });
+    // yiMike is at stortford all the time
     const yogaInstructors = ['yiMike']
     await prisma.resources.createMany({
         data: yogaInstructors.map((yt, index) => ({
-            id: makeTestId(tenant_id, environment_id, `yt#${index + 1}`),
+            id: makeTestId(tenant_id, environment_id, `yi#${index + 1}`),
             tenant_id,
             environment_id,
             name: yt,
-            resource_type: makeTestId(tenant_id, environment_id, `yoga.instructor`)
+            resource_type: makeTestId(tenant_id, environment_id, `yoga.instructor`),
+            location_id: locationStortford,
+            start_time_24hr,
+            end_time_24hr
         }))
-    });
-    await prisma.resource_availability.createMany({
-        data: [
-            ...personalTrainers.flatMap((_staff, index) => daysOfWeek.map((day, dayIndex) => allDayAvailability(tenant_id, environment_id, index, dayIndex, day, 'pt'))),
-            ...massageTherapists.flatMap((_staff, index) => daysOfWeek.map((day, dayIndex) => allDayAvailability(tenant_id, environment_id, index, dayIndex, day, 'mt'))),
-            ...yogaInstructors.flatMap((_staff, index) => daysOfWeek.map((day, dayIndex) => allDayAvailability(tenant_id, environment_id, index, dayIndex, day, 'yi')))
-        ]
     });
     await prisma.tenant_settings.create({
         data: {

@@ -1,4 +1,4 @@
-import { EverythingForTenant } from '../../express/getEverythingForAvailability.js';
+import { EverythingForAvailability } from '../../express/getEverythingForAvailability.js';
 import {
 	errorResponse,
 	pricedAddOn,
@@ -18,7 +18,7 @@ export const pricingErrorCodes = {
 	pricingError: 'pricing.error'
 };
 
-function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: EverythingForTenant) {
+function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: EverythingForAvailability) {
 	return unpricedLines.map((line) => {
 		const availability = getAvailabilityForService(everythingForTenant, line.serviceId, line.date, line.date);
 		const availableSlot = (availability.slots[line.date.value] ?? []).find((slot) => slot.timeslotId === line.timeslot.id.value);
@@ -39,7 +39,7 @@ function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: Eve
 	});
 }
 
-function priceLines(everythingForTenant: EverythingForTenant, unpricedLines: UnpricedBasket['lines']): ErrorResponse | Success<PricedBasketLine[]> {
+function priceLines(everythingForTenant: EverythingForAvailability, unpricedLines: UnpricedBasket['lines']): ErrorResponse | Success<PricedBasketLine[]> {
 	try {
 		return success(priceLine(unpricedLines, everythingForTenant));
 	} catch (e: any) {
@@ -47,7 +47,7 @@ function priceLines(everythingForTenant: EverythingForTenant, unpricedLines: Unp
 	}
 }
 
-export function priceBasket(everythingForTenant: EverythingForTenant, unpricedBasket: UnpricedBasket): PricedBasket | ErrorResponse {
+export function priceBasket(everythingForTenant: EverythingForAvailability, unpricedBasket: UnpricedBasket): PricedBasket | ErrorResponse {
 	const pricedLines = priceLines(everythingForTenant, unpricedBasket.lines);
 	if (pricedLines._type === 'error.response') {
 		return pricedLines;

@@ -1,4 +1,4 @@
-import { EverythingForTenant } from '../express/getEverythingForAvailability.js';
+import { EverythingForAvailability } from '../express/getEverythingForAvailability.js';
 import {
 	AddOn as DomainAddOn,
 	calculateAvailability,
@@ -13,14 +13,14 @@ import {
 import { AddOnSummary, AvailabilityResponse, emptyAvailabilityResponse, ServiceSummary, timeSlotAvailability } from '@breezbook/backend-api-types';
 
 export function getAvailabilityForService(
-	everythingForTenant: EverythingForTenant,
+	everythingForAvailability: EverythingForAvailability,
 	serviceId: ServiceId,
 	fromDate: IsoDate,
 	toDate: IsoDate
 ): AvailabilityResponse {
 	const availability = calculateAvailability(
-		everythingForTenant.businessConfiguration,
-		everythingForTenant.bookings.filter((b) => b.status === 'confirmed'),
+		everythingForAvailability.businessConfiguration,
+		everythingForAvailability.bookings.filter((b) => b.status === 'confirmed'),
 		serviceId,
 		fromDate,
 		toDate
@@ -29,7 +29,7 @@ export function getAvailabilityForService(
 		if (a._type === 'bookable.times') {
 			return a;
 		}
-		return calculatePrice(a, everythingForTenant.pricingRules);
+		return calculatePrice(a, everythingForAvailability.pricingRules);
 	});
 	return priced.reduce(
 		(acc, curr) => {
@@ -52,8 +52,8 @@ export function getAvailabilityForService(
 			return acc;
 		},
 		emptyAvailabilityResponse(
-			getServiceSummary(everythingForTenant.businessConfiguration.services, serviceId, everythingForTenant.businessConfiguration.forms),
-			getAddOnSummaries(everythingForTenant.businessConfiguration.services, everythingForTenant.businessConfiguration.addOns, serviceId)
+			getServiceSummary(everythingForAvailability.businessConfiguration.services, serviceId, everythingForAvailability.businessConfiguration.forms),
+			getAddOnSummaries(everythingForAvailability.businessConfiguration.services, everythingForAvailability.businessConfiguration.addOns, serviceId)
 		)
 	);
 }
