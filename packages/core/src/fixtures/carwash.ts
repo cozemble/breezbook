@@ -8,6 +8,7 @@ import {
     GBP,
     id,
     isoDate,
+    locationId,
     percentageAsRatio,
     percentageCoupon,
     price,
@@ -72,6 +73,9 @@ const tenPercentMoreDayAfterTomorrow = timeBasedPriceAdjustmentSpec(daysFromToda
 const expired20PercentOffCoupon = coupon(couponCode("expired-20-percent-off"), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2020-01-01'), isoDate('2020-12-31'), couponId('expired-20-percent-off'));
 const twentyPercentOffCoupon = coupon(couponCode("20-percent-off"), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-01-01'), undefined, couponId('20-OFF'));
 
+const london = locationId('breezbook.carwash.locations.london');
+const liverpool = locationId('breezbook.carwash.locations.liverpool');
+
 export const carwash = {
     tenantId: tenantIdCarwash,
     nineAm: nineAm,
@@ -101,4 +105,8 @@ export const carwash = {
     largeCarWash: largeCarWash,
     services: [smallCarWash, mediumCarWash, largeCarWash],
     coupons: [expired20PercentOffCoupon, twentyPercentOffCoupon],
+    locations: {
+        london,
+        liverpool
+    }
 };

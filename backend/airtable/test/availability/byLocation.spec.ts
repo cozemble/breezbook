@@ -26,6 +26,7 @@ import {
     convertAvailabilityDataIntoEverythingForAvailability,
     EverythingForAvailability
 } from "../../src/express/getEverythingForAvailability.js";
+import {v4 as uuid} from 'uuid';
 
 const tenant = tenantId(multiLocationGym.tenant_id)
 const env = environmentId(multiLocationGym.environment_id)
@@ -35,7 +36,7 @@ const ware = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGym.
 
 export type LocationAndServices = DbLocation & {
     service_locations: (DbServiceLocation & {
-        service: DbService
+        services: DbService
     })[]
 }
 
@@ -48,7 +49,7 @@ export const byLocation = {
             where: {
                 tenant_id: location.tenantId.value,
                 environment_id: location.environmentId.value,
-                id: location.location.value
+                id: location.locationId.value
             },
             include: {
                 service_locations: {
@@ -65,14 +66,14 @@ export const byLocation = {
                 environment_id: location.environmentId.value,
                 OR: [
                     {
-                        location_id: location.location.value
+                        location_id: location.locationId.value
                     }, {
                         location_id: null
                     }]
             }
         })
-        if (hours.some(h => h.location_id === location.location.value)) {
-            return hours.filter(h => h.location_id === location.location.value)
+        if (hours.some(h => h.location_id === location.locationId.value)) {
+            return hours.filter(h => h.location_id === location.locationId.value)
         }
         return hours
 
@@ -88,7 +89,7 @@ export const byLocation = {
                 },
                 OR: [
                     {
-                        location_id: location.location.value
+                        location_id: location.locationId.value
                     }, {
                         location_id: null
                     }]
@@ -104,7 +105,7 @@ export const byLocation = {
                 environment_id: location.environmentId.value,
                 OR: [
                     {
-                        location_id: location.location.value
+                        location_id: location.locationId.value
                     }, {
                         location_id: null
                     }]
@@ -114,37 +115,54 @@ export const byLocation = {
 
     async gatherAvailabilityData(prisma: PrismaClient, location: TenantEnvironmentLocation, fromDate: IsoDate, toDate: IsoDate): Promise<AvailabilityData> {
         const tenantEnv = tenantEnvironment(location.environmentId, location.tenantId)
-        const services = await byLocation.findServices(prisma, location).then(l => l.service_locations.map(s => s.services)) as DbService[]
+        const dateWhereOpts = {date: {gte: fromDate.value, lte: toDate.value}};
+
+        const services = await byLocation.findServices(prisma, location).then(l => l.service_locations.map(s => s.services))
         const findMany = findManyForTenant(tenantEnv);
         const resourceTypes = await findMany(prisma.resource_types, {});
         const businessHours = await byLocation.findBusinessHours(prisma, location);
         const blockedTime = await byLocation.findBlockedime(prisma, location, fromDate, toDate);
         const resources = await findMany(prisma.resources, {});
         const resourceAvailability = await byLocation.findResourceAvailability(prisma, location);
+        const resourceOutage = await findMany(prisma.resource_blocked_time, dateWhereOpts)
+        const timeSlots = await findMany(prisma.time_slots, {});
+        const pricingRules = await findMany(prisma.pricing_rules, {});
+        const addOns = await findMany(prisma.add_on, {});
+        const serviceForms = await findMany(prisma.service_forms, {}, {rank: 'asc'});
+        const forms = await findMany(prisma.forms, {});
+        const tenantSettings = await prisma.tenant_settings.findFirstOrThrow({
+            where: {
+                tenant_id: tenantEnv.tenantId.value,
+                environment_id: tenantEnv.environmentId.value
+            }
+        });
+        const coupons = await findMany(prisma.coupons, {});
+        const bookings = await prisma.bookings.findMany({
+            where: {
+                tenant_id: location.tenantId.value,
+                environment_id: location.environmentId.value,
+                location_id: location.locationId.value,
+                ...dateWhereOpts,
+            }
+        });
+
 
         return {
             businessHours,
             blockedTime,
             resources,
             resourceAvailability,
-            resourceOutage: [],
+            resourceOutage,
             services,
-            timeSlots: [],
-            pricingRules: [],
+            timeSlots,
+            pricingRules,
             resourceTypes,
-            addOns: [],
-            serviceForms: [],
-            bookings: [],
-            forms: [],
-            tenantSettings: {
-                iana_timezone: 'Europe/London',
-                customer_form_id: null,
-                tenant_id: location.tenantId.value,
-                environment_id: location.environmentId.value,
-                created_at: new Date(),
-                updated_at: new Date(),
-            },
-            coupons: []
+            addOns,
+            serviceForms,
+            bookings,
+            forms,
+            tenantSettings,
+            coupons
         };
     },
 
@@ -227,5 +245,52 @@ describe("Given a gym with services at various locations", async () => {
         const ptMeteDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMete).flatMap(ra => ra.availability.map(a => a.day.value))
         expect(ptMeteDays).toEqual(['2024-04-23'])
     })
+
+    test("if a resource has blocked out time, they are not available", async () => {
+        await prisma.resource_blocked_time.create({
+            data: {
+                id: uuid(),
+                tenant_id: multiLocationGym.tenant_id,
+                environment_id: multiLocationGym.environment_id,
+                resource_id: multiLocationGym.ptMike,
+                date: '2024-04-22',
+                start_time_24hr: "09:00",
+                end_time_24hr: "18:00",
+            }
+        });
+        const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        const ptMikeDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.day.value))
+        expect(ptMikeDays).toEqual(['2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26'])
+    });
+
+    test("bookings are returned, but only those for the given location", async () => {
+        await prisma.bookings.createMany({
+            data: [{
+                id: uuid(),
+                tenant_id: multiLocationGym.tenant_id,
+                environment_id: multiLocationGym.environment_id,
+                service_id: multiLocationGym.pt1Hr,
+                location_id: multiLocationGym.locationHarlow,
+                add_on_ids: [],
+                order_id: "order1",
+                date: '2024-04-22',
+                start_time_24hr: "09:00",
+                end_time_24hr: "18:00",
+            }, {
+                id: uuid(),
+                tenant_id: multiLocationGym.tenant_id,
+                environment_id: multiLocationGym.environment_id,
+                service_id: multiLocationGym.pt1Hr,
+                location_id: multiLocationGym.locationWare,
+                add_on_ids: [],
+                order_id: "order1",
+                date: '2024-04-22',
+                start_time_24hr: "09:00",
+                end_time_24hr: "18:00",
+            }]
+        });
+        const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        expect(everythingHarlow.bookings).toHaveLength(1)
+    });
 })
 

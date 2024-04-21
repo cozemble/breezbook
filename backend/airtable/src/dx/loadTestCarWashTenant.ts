@@ -16,7 +16,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
     })
     await prisma.locations.create({
         data: {
-            id: "tenant1.dev.europe.uk.london",
+            id: carwash.locations.london.value,
             tenant_id,
             environment_id,
             name: 'London',
@@ -25,7 +25,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
     });
     await prisma.locations.create({
         data: {
-            id: "tenant1.dev.europe.uk.liverpool",
+            id: carwash.locations.liverpool.value,
             tenant_id,
             environment_id,
             name: 'Liverpool',
@@ -63,7 +63,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
             description: '11:00 to 13:00',
             start_time_24hr: '11:00',
             end_time_24hr: '13:00',
-            location_id: 'tenant1.dev.europe.uk.liverpool'
+            location_id: 'breezbook.carwash.locations.liverpool'
         }
     });
     await prisma.resource_types.create({

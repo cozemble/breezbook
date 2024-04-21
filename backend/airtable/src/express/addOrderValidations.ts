@@ -55,7 +55,7 @@ export function validateOrderTotal(everythingForTenant: EverythingForAvailabilit
 			throw new Error(`Slot ${orderedSlot.slot.from.value}-${orderedSlot.slot.to.value} not found in availability`);
 		}
 		const slotPrice = price(pricedOrderedSlot.priceWithNoDecimalPlaces, currency(pricedOrderedSlot.priceCurrency));
-		return orderLine(line.serviceId, slotPrice, line.addOns, line.date, line.slot, line.serviceFormData);
+		return orderLine(line.serviceId, line.locationId,slotPrice, line.addOns, line.date, line.slot, line.serviceFormData);
 	});
 	const recalcedOrder = { ...givenOrder, lines: recalcedOrderLines };
 	const calcedOrderTotal = calculateOrderTotal(recalcedOrder, everythingForTenant.businessConfiguration.addOns, everythingForTenant.coupons);

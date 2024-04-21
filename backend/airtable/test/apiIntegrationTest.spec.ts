@@ -81,6 +81,7 @@ describe('Given a migrated database', async () => {
                 'Content-Type': 'application/json'
             }
         });
+        expect(fetched.status).toBe(200);
         const json = (await fetched.json()) as AvailabilityResponse;
 
         expect(json.slots['2023-12-19']).toBeUndefined();
@@ -91,11 +92,30 @@ describe('Given a migrated database', async () => {
         expect(json.slots['2023-12-24']).toBeUndefined();
     });
 
+    // test('should be able to get service availability for a location', async () => {
+    //     const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/breezbook.carwash.locations.london/service/smallCarWash.id/availability?fromDate=2023-12-20&toDate=2023-12-23`, {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         }
+    //     });
+    //     expect(fetched.status).toBe(200);
+    //     const json = (await fetched.json()) as AvailabilityResponse;
+    //
+    //     expect(json.slots['2023-12-19']).toBeUndefined();
+    //     expect(json.slots['2023-12-20']).toHaveLength(3);
+    //     expect(json.slots['2023-12-21']).toHaveLength(3);
+    //     expect(json.slots['2023-12-22']).toHaveLength(3);
+    //     expect(json.slots['2023-12-23']).toHaveLength(3);
+    //     expect(json.slots['2023-12-24']).toBeUndefined();
+    // });
+
     test('can add an order for two car washes, each with different add-ons', async () => {
         const twoServices = order(goodCustomer, [
-            orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], fourDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
+            orderLine(carwash.smallCarWash.id, carwash.locations.london,carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], fourDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
             orderLine(
                 carwash.mediumCarWash.id,
+                carwash.locations.london,
                 carwash.mediumCarWash.price,
                 [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)],
                 fourDaysFromNow,
@@ -158,7 +178,7 @@ describe('Given a migrated database', async () => {
         const createOrderResponse = await insertOrder(
             tenantEnv,
             createOrderRequest(
-                order(goodCustomer, [orderLine(carwash.mediumCarWash.id, carwash.mediumCarWash.price, [], isoDate(), carwash.nineToOne, [])]),
+                order(goodCustomer, [orderLine(carwash.mediumCarWash.id, carwash.locations.london,carwash.mediumCarWash.price, [], isoDate(), carwash.nineToOne, [])]),
                 carwash.mediumCarWash.price,
                 fullPaymentOnCheckout()
             ),
@@ -246,6 +266,7 @@ describe('Given a migrated database', async () => {
         expect(response.status).toBe(200);
         const json = await response.json() as Tenant;
         expect(json.id).toBe('tenant1');
+        expect(json.locations.map(l => l.slug)).toEqual(['london', 'liverpool']);
     });
 
     // test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {
@@ -313,7 +334,7 @@ async function createBooking(date: IsoDate): Promise<string> {
     const createOrderResponse = await insertOrder(
         tenantEnv,
         createOrderRequest(
-            order(goodCustomer, [orderLine(carwash.mediumCarWash.id, carwash.mediumCarWash.price, [], date, carwash.nineToOne, [])]),
+            order(goodCustomer, [orderLine(carwash.mediumCarWash.id,carwash.locations.london, carwash.mediumCarWash.price, [], date, carwash.nineToOne, [])]),
             carwash.mediumCarWash.price,
             fullPaymentOnCheckout()
         ),

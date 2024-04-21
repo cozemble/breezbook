@@ -151,6 +151,12 @@ export interface Service {
 	image: string;
 }
 
+export interface Location {
+	id: string;
+	slug: string;
+	name: string;
+}
+
 export interface Tenant {
 	id: string;
 	slug: string;
@@ -158,4 +164,5 @@ export interface Tenant {
 	heading: string;
 	description: string;
 	heroImage: string;
+	locations: Location[]
 }

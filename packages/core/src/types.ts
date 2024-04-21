@@ -64,15 +64,15 @@ export interface TenantEnvironmentLocation {
     _type: 'tenant.environment.location';
     environmentId: EnvironmentId;
     tenantId: TenantId;
-    location: LocationId;
+    locationId: LocationId;
 }
 
-export function tenantEnvironmentLocation(environmentId: EnvironmentId, tenantId: TenantId, location: LocationId): TenantEnvironmentLocation {
+export function tenantEnvironmentLocation(environmentId: EnvironmentId, tenantId: TenantId, locationId: LocationId): TenantEnvironmentLocation {
     return {
         _type: 'tenant.environment.location',
         environmentId,
         tenantId,
-        location
+        locationId
     };
 }
 
@@ -776,6 +776,7 @@ export function addOnOrder(addOnId: AddOnId, quantity = 1): AddOnOrder {
 export interface OrderLine {
     _type: 'order.line';
     serviceId: ServiceId;
+    locationId: LocationId
     servicePrice: number;
     servicePriceCurrency: string;
     addOns: AddOnOrder[];
@@ -894,6 +895,7 @@ export function percentageCoupon(percentage: PercentageAsRatio): PercentageCoupo
 
 export function orderLine(
     serviceId: ServiceId,
+    locationId: LocationId,
     servicePrice: Price,
     addOns: AddOnOrder[],
     date: IsoDate,
@@ -903,6 +905,7 @@ export function orderLine(
     return {
         _type: 'order.line',
         serviceId,
+        locationId,
         servicePrice: servicePrice.amount.value,
         servicePriceCurrency: servicePrice.currency.value,
         addOns,

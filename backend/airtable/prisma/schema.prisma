@@ -68,6 +68,7 @@ model bookings {
   status                      booking_status                @default(confirmed)
   customer_id                 String
   service_id                  String
+  location_id                 String
   add_on_ids                  String[]
   order_id                    String
   date                        String
@@ -79,6 +80,7 @@ model bookings {
   booking_events              booking_events[]
   booking_service_form_values booking_service_form_values[]
   customers                   customers                     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations                   locations                     @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   orders                      orders                        @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services                    services                      @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
@@ -213,8 +215,10 @@ model locations {
   created_at            DateTime                @default(now()) @db.Timestamptz(6)
   updated_at            DateTime                @default(now()) @db.Timestamptz(6)
   blocked_time          blocked_time[]
+  bookings              bookings[]
   business_hours        business_hours[]
   tenants               tenants                 @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  order_lines           order_lines[]
   pricing_rules         pricing_rules[]
   refund_rules          refund_rules[]
   resource_availability resource_availability[]
@@ -268,6 +272,7 @@ model order_lines {
   environment_id    String
   order_id          String
   service_id        String
+  location_id       String
   add_on_ids        String[]    @default([])
   date              String
   time_slot_id      String?
@@ -276,6 +281,7 @@ model order_lines {
   service_form_data Json?
   created_at        DateTime    @default(now()) @db.Timestamptz(6)
   updated_at        DateTime    @default(now()) @db.Timestamptz(6)
+  locations         locations   @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services          services    @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants           tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   time_slots        time_slots? @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
