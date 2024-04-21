@@ -51,7 +51,7 @@ function createCheckoutStore() {
 			const lines = $items.map((item) =>
 				core.orderLine(
 					core.serviceId(item.service.id),
-					core.locationId('breezbook.carwash.locations.london'),
+					core.locationId('breezbook.carwash.locations.london'), // TODO correct this
 					core.price(item.time.price, core.currency('GBP')), // TODO correct this
 					item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
 					core.isoDate(item.time.day),

@@ -226,10 +226,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             tenant_id,
             environment_id,
             name: yt,
-            resource_type: makeTestId(tenant_id, environment_id, `resource.yoga.instructor`),
-            location_id: locationStortford,
-            start_time_24hr,
-            end_time_24hr
+            resource_type: makeTestId(tenant_id, environment_id, `resource.yoga.instructor`)
         }))
     });
     await prisma.tenant_settings.create({
