@@ -11,6 +11,8 @@ const pt1Hr = makeTestId(tenant_id, environment_id, 'pt.service.1hr');
 const yoga1Hr = makeTestId(tenant_id, environment_id, 'yoga.1to1.1hr');
 const massage30mins = makeTestId(tenant_id, environment_id, 'massage.30mins');
 const swim30mins = makeTestId(tenant_id, environment_id, 'swim.30mins');
+const ptMike = makeTestId(tenant_id, environment_id, `resource.ptMike`)
+const ptMete = makeTestId(tenant_id, environment_id, `resource.ptMete`)
 
 export const multiLocationGym = {
     tenant_id,
@@ -22,7 +24,9 @@ export const multiLocationGym = {
     pt1Hr,
     yoga1Hr,
     massage30mins,
-    swim30mins
+    swim30mins,
+    ptMike,
+    ptMete
 }
 
 export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<void> {
@@ -90,6 +94,48 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
         }))
     });
 
+    // everywhere is closed on Christmas day, and Harlow on the 26th in addition
+    await prisma.blocked_time.createMany({
+        data: [
+            {
+                id: makeTestId(tenant_id, environment_id, `blockedChristmasDay.harlow`),
+                tenant_id,
+                environment_id,
+                location_id: locationHarlow,
+                date: '2024-12-25',
+                start_time_24hr,
+                end_time_24hr
+            },
+            {
+                id: makeTestId(tenant_id, environment_id, `blockedBoxingDay.harlow`),
+                tenant_id,
+                environment_id,
+                location_id: locationHarlow,
+                date: '2024-12-26',
+                start_time_24hr,
+                end_time_24hr
+            },
+            {
+                id: makeTestId(tenant_id, environment_id, `blockedChristmasDay.stortford`),
+                tenant_id,
+                environment_id,
+                location_id: locationStortford,
+                date: '2024-12-25',
+                start_time_24hr,
+                end_time_24hr
+            },
+            {
+                id: makeTestId(tenant_id, environment_id, `blockedChristmasDay.ware`),
+                tenant_id,
+                environment_id,
+                location_id: locationWare,
+                date: '2024-12-25',
+                start_time_24hr,
+                end_time_24hr
+            }
+        ]
+    });
+
 
     const resourceTypes = ['personal.trainer', 'massage.therapist', 'yoga.instructor']
     await prisma.resource_types.createMany({
@@ -103,8 +149,8 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
     });
     const personalTrainers = ['ptMike', 'ptMete']
     await prisma.resources.createMany({
-        data: personalTrainers.map((pt, index) => ({
-            id: makeTestId(tenant_id, environment_id, `pt#${index + 1}`),
+        data: personalTrainers.map((pt) => ({
+            id: makeTestId(tenant_id, environment_id, `resource.${pt}`),
             tenant_id,
             environment_id,
             name: pt,
@@ -117,7 +163,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             id: makeTestId(tenant_id, environment_id, `ptMikeAvailability.harlow#${dayIndex + 1}`),
             tenant_id,
             environment_id,
-            resource_id: makeTestId(tenant_id, environment_id, `pt#1`),
+            resource_id: ptMike,
             location_id: locationHarlow,
             day_of_week: day,
             start_time_24hr,
@@ -129,7 +175,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             id: makeTestId(tenant_id, environment_id, `ptMikeAvailability.ware#${dayIndex + 1}`),
             tenant_id,
             environment_id,
-            resource_id: makeTestId(tenant_id, environment_id, `pt#1`),
+            resource_id: ptMike,
             location_id: locationWare,
             day_of_week: day,
             start_time_24hr,
@@ -142,7 +188,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             id: makeTestId(tenant_id, environment_id, `ptMeteAvailability.harlow#1`),
             tenant_id,
             environment_id,
-            resource_id: makeTestId(tenant_id, environment_id, `pt#2`),
+            resource_id: ptMete,
             location_id: locationHarlow,
             day_of_week: 'Tuesday',
             start_time_24hr,
@@ -156,7 +202,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             tenant_id,
             environment_id,
             name: masseur,
-            resource_type: makeTestId(tenant_id, environment_id, `massage.therapist`)
+            resource_type: makeTestId(tenant_id, environment_id, `resource.massage.therapist`)
         }))
     });
     // mtMete is at harlow Mon-Fri
@@ -180,7 +226,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             tenant_id,
             environment_id,
             name: yt,
-            resource_type: makeTestId(tenant_id, environment_id, `yoga.instructor`),
+            resource_type: makeTestId(tenant_id, environment_id, `resource.yoga.instructor`),
             location_id: locationStortford,
             start_time_24hr,
             end_time_24hr

@@ -13,8 +13,10 @@ import {
     tenantId
 } from "@breezbook/packages-core";
 import {
+    DbBlockedTime,
     DbBusinessHours,
     DbLocation,
+    DbResourceAvailability,
     DbService,
     DbServiceLocation,
     findManyForTenant
@@ -75,6 +77,40 @@ export const byLocation = {
         return hours
 
     },
+    async findBlockedime(prisma: PrismaClient, location: TenantEnvironmentLocation, fromDate: IsoDate, toDate: IsoDate): Promise<DbBlockedTime[]> {
+        return await prisma.blocked_time.findMany({
+            where: {
+                tenant_id: location.tenantId.value,
+                environment_id: location.environmentId.value,
+                date: {
+                    gte: fromDate.value,
+                    lte: toDate.value
+                },
+                OR: [
+                    {
+                        location_id: location.location.value
+                    }, {
+                        location_id: null
+                    }]
+
+            }
+        })
+    },
+
+    async findResourceAvailability(prisma: PrismaClient, location: TenantEnvironmentLocation): Promise<DbResourceAvailability[]> {
+        return await prisma.resource_availability.findMany({
+            where: {
+                tenant_id: location.tenantId.value,
+                environment_id: location.environmentId.value,
+                OR: [
+                    {
+                        location_id: location.location.value
+                    }, {
+                        location_id: null
+                    }]
+            }
+        })
+    },
 
     async gatherAvailabilityData(prisma: PrismaClient, location: TenantEnvironmentLocation, fromDate: IsoDate, toDate: IsoDate): Promise<AvailabilityData> {
         const tenantEnv = tenantEnvironment(location.environmentId, location.tenantId)
@@ -82,13 +118,15 @@ export const byLocation = {
         const findMany = findManyForTenant(tenantEnv);
         const resourceTypes = await findMany(prisma.resource_types, {});
         const businessHours = await byLocation.findBusinessHours(prisma, location);
-
+        const blockedTime = await byLocation.findBlockedime(prisma, location, fromDate, toDate);
+        const resources = await findMany(prisma.resources, {});
+        const resourceAvailability = await byLocation.findResourceAvailability(prisma, location);
 
         return {
             businessHours,
-            blockedTime: [],
-            resources: [],
-            resourceAvailability: [],
+            blockedTime,
+            resources,
+            resourceAvailability,
             resourceOutage: [],
             services,
             timeSlots: [],
@@ -168,4 +206,26 @@ describe("Given a gym with services at various locations", async () => {
         expect(daysAtStortford).toEqual(['2024-04-20', '2024-04-21', '2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26', '2024-04-27'])
     });
 
+    test("everywhere is closed for christmas day, but harlow is also closed on dec 26th", async () => {
+        const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-12-24'), isoDate('2024-12-27'));
+        const daysAtHarlow = everythingHarlow.businessConfiguration.availability.availability.map(a => a.day.value)
+        expect(daysAtHarlow).toEqual(['2024-12-24', '2024-12-27'])
+
+        const everythingWare = await byLocation.getEverythingForAvailability(prisma, ware, isoDate('2024-12-24'), isoDate('2024-12-27'));
+        const daysAtWare = everythingWare.businessConfiguration.availability.availability.map(a => a.day.value)
+        expect(daysAtWare).toEqual(['2024-12-24', '2024-12-26', '2024-12-27'])
+
+        const everythingStortford = await byLocation.getEverythingForAvailability(prisma, ware, isoDate('2024-12-24'), isoDate('2024-12-27'));
+        const daysAtStortford = everythingStortford.businessConfiguration.availability.availability.map(a => a.day.value)
+        expect(daysAtStortford).toEqual(['2024-12-24', '2024-12-26', '2024-12-27'])
+    });
+
+    test("ptMike is at harlow mon-friday, and ptMete is there on tue", async () => {
+        const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        const ptMikeDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.day.value))
+        expect(ptMikeDays).toEqual(['2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26'])
+        const ptMeteDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMete).flatMap(ra => ra.availability.map(a => a.day.value))
+        expect(ptMeteDays).toEqual(['2024-04-23'])
+    })
 })
+

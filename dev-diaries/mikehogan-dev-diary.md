@@ -244,3 +244,9 @@ In doing this, setting up a multi-location gym model, it became obvious that loc
 `resource_availability`, rather on `resources`.  This is because a resource can be available at one location for one
 period of time, and at another location for another period of time.  So I'm going to move `location_id` to 
 `resource_availability`.
+
+# Sun 21 Apr 2024
+Still working through the multi-location model of a gym, testing as I go.  It's fun :)  My tests are against a massive
+fixture that models the gym with three locations, which is a bit hard for newcomers to follow, I expect.  But the 
+reason I am pursuing it is that the fixture is prisma code, that uses prismock in my tests, but real prisma when 
+inserting into the database a test tenant.  Is this a sensible trade-off?  Let's see how it plays out.
