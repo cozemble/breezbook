@@ -250,3 +250,7 @@ Still working through the multi-location model of a gym, testing as I go.  It's 
 fixture that models the gym with three locations, which is a bit hard for newcomers to follow, I expect.  But the 
 reason I am pursuing it is that the fixture is prisma code, that uses prismock in my tests, but real prisma when 
 inserting into the database a test tenant.  Is this a sensible trade-off?  Let's see how it plays out.
+
+Anyway, first cut of location support done.  Here is the fixture that sets up 
+[a multi-location gym](https://github.com/cozemble/breezbook/blob/9262682c14520974299c2aca0bb4cf706228306e/backend/airtable/src/dx/loadMultiLocationGymTenant.ts#L1)
+and here are [the tests for it](https://github.com/cozemble/breezbook/blob/8accf91e4e909aacc226d1b791d539afba1a8de0/backend/airtable/test/availability/byLocation.spec.ts#L15) 
