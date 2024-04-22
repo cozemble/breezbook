@@ -12,6 +12,8 @@ import { type PricedBasket } from '@breezbook/backend-api-types';
 import mock from '$lib/common/mock';
 
 import { env } from '$env/dynamic/public';
+import {locationId} from "$lib/stores/location";
+import {get} from "svelte/store";
 
 const PUBLIC_API_URL = env.PUBLIC_API_URL;
 const dev = env?.PUBLIC_DEV_MODE || false;
@@ -69,7 +71,7 @@ const booking = {
 	getDetails: async (tenantSlug: string, serviceSlug: string) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/service/${
+				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/${get(locationId)}/service/${
 					dev ? 'smallCarWash.id' : serviceSlug
 				}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
 				{
@@ -90,7 +92,7 @@ const booking = {
 	) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/service/${
+				`${PUBLIC_API_URL}/${dev ? 'tenant1' : tenantSlug}/${get(locationId)}/service/${
 					dev ? 'smallCarWash.id' : serviceSlug
 				}/availability`,
 				undefined,

@@ -16,6 +16,7 @@ import notifications from '../notifications';
 import { unpricedBasket, unpricedBasketLine } from '@breezbook/backend-api-types';
 import { addOnId, addOnOrder } from '@breezbook/packages-core';
 import tenantStore from '../tenant';
+import {locationId} from "../location";
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -51,7 +52,7 @@ function createCheckoutStore() {
 			const lines = $items.map((item) =>
 				core.orderLine(
 					core.serviceId(item.service.id),
-					core.locationId('breezbook.carwash.locations.london'), // TODO correct this
+					core.locationId(get(locationId)), // TODO correct the hard-coded location
 					core.price(item.time.price, core.currency('GBP')), // TODO correct this
 					item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
 					core.isoDate(item.time.day),
@@ -86,6 +87,7 @@ function createCheckoutStore() {
 			const basketItems = $items.map((item) => {
 				return unpricedBasketLine(
 					core.serviceId(item.service.id),
+					core.locationId(get(locationId)), // TODO correct the hard-coded location
 					item.extras.map((extra) => addOnOrder(addOnId(extra.id))),
 					core.isoDate(item.time.day),
 					core.timeslotSpec(

@@ -253,4 +253,5 @@ inserting into the database a test tenant.  Is this a sensible trade-off?  Let's
 
 Anyway, first cut of location support done.  Here is the fixture that sets up 
 [a multi-location gym](https://github.com/cozemble/breezbook/blob/9262682c14520974299c2aca0bb4cf706228306e/backend/airtable/src/dx/loadMultiLocationGymTenant.ts#L1)
-and here are [the tests for it](https://github.com/cozemble/breezbook/blob/8accf91e4e909aacc226d1b791d539afba1a8de0/backend/airtable/test/availability/byLocation.spec.ts#L15) 
+and here are [the tests for it](https://github.com/cozemble/breezbook/blob/8accf91e4e909aacc226d1b791d539afba1a8de0/backend/airtable/test/availability/byLocation.spec.ts#L15)
+
