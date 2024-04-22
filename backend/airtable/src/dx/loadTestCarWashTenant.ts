@@ -148,6 +148,14 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
             requires_time_slot: true
         }))
     });
+    await prisma.service_locations.createMany({
+        data: carwash.services.map(service => ({
+            tenant_id,
+            environment_id,
+            service_id: service.id.value,
+            location_id: carwash.locations.london.value
+        }))
+    });
     await prisma.service_forms.createMany({
         data: carwash.services.map((service) => ({
             tenant_id,

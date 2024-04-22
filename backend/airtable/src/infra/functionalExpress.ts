@@ -5,7 +5,7 @@ import {
 	EnvironmentId,
 	environmentId,
 	isoDate,
-	IsoDate,
+	IsoDate, locationId, LocationId,
 	OrderId,
 	orderId,
 	serviceId,
@@ -137,6 +137,10 @@ export function tenantEnvironmentParam(
 
 export function serviceIdParam(requestValue: RequestValueExtractor = path('serviceId')): ParamExtractor<ServiceId | null> {
 	return paramExtractor('serviceId', requestValue.extractor, serviceId);
+}
+
+export function locationIdParam(requestValue: RequestValueExtractor = path('locationId')): ParamExtractor<LocationId | null> {
+	return paramExtractor('locationId', requestValue.extractor, locationId);
 }
 
 export function orderIdParam(requestValue: RequestValueExtractor = path('orderId')): ParamExtractor<OrderId | null> {

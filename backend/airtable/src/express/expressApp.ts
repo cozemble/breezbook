@@ -22,6 +22,7 @@ import {onGetTenantRequest} from "./tenants/tenantHandlers.js";
 import {environmentIdParam, withNoRequestParams, withTwoRequestParams} from "../infra/functionalExpress.js";
 import {prismaClient} from "../prisma/client.js";
 import {setupDevEnvironment} from "../dx/setupDevEnvironment.js";
+import {getServiceAvailabilityForLocation} from "./availability/getServiceAvailabilityForLocation.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
@@ -67,6 +68,7 @@ export function expressApp(): Express {
     });
 
     app.post('/api/:envId/:tenantId/service/:serviceId/availability/', getServiceAvailability);
+    app.post(externalApiPaths.getAvailabilityForLocation, getServiceAvailabilityForLocation);
     app.post('/api/:envId/:tenantId/orders', addOrder);
     app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
     app.post('/api/:envId/:tenantId/stripe/webhook', onStripeWebhook);
@@ -103,6 +105,7 @@ export const internalApiPaths = {
 export const externalApiPaths = {
     getTenant: '/api/:envId/tenants',
     getServices: '/api/:envId/:tenantId/services',
+    getAvailabilityForLocation: '/api/:envId/:tenantId/:locationId/service/:serviceId/availability'
 }
 
 async function onAppStartRequest(req: express.Request, res: express.Response): Promise<void> {
