@@ -1,3 +1,4 @@
+import { get } from 'svelte/store';
 import axios from 'axios';
 import type {
 	AvailabilityResponse,
@@ -5,15 +6,15 @@ import type {
 	OrderCreatedResponse,
 	PaymentIntentResponse,
 	UnpricedBasket,
-	CancellationGrantResponse
+	CancellationGrantResponse,
+	Tenant as ApiTenant,
+	Service as ApiService
 } from '@breezbook/backend-api-types';
 import { type PricedBasket } from '@breezbook/backend-api-types';
 
-import mock from '$lib/common/mock';
-
 import { env } from '$env/dynamic/public';
-import {locationId} from "$lib/stores/location";
-import {get} from "svelte/store";
+import mock from '$lib/common/mock';
+import { locationId } from '$lib/stores/location';
 
 const PUBLIC_API_URL = env.PUBLIC_API_URL;
 const dev = env?.PUBLIC_DEV_MODE || false;
@@ -23,9 +24,14 @@ const dev = env?.PUBLIC_DEV_MODE || false;
 
 const tenant = {
 	getOne: async (slug: string) => {
-		const tenant = mock.tenants.find((tenant) => tenant.slug === slug);
+		const res = await axios
+			.get<ApiTenant>(`${PUBLIC_API_URL}/tenants?slug=${slug}`)
+			.then((res) => res.data as Tenant)
+			.catch(() => null);
 
-		return tenant || null;
+		const mockTenant = dev ? mock.tenants.find((tenant) => tenant.slug === slug) : undefined;
+
+		return res || mockTenant || null;
 	},
 
 	getAll: async () => {
@@ -59,11 +65,34 @@ const service = {
 	},
 
 	getAll: async (tenantSlug: string) => {
+		// TODO use tenant id instead of slug
 		const tenant = await api.tenant.getOne(tenantSlug);
 		if (!tenant) return null;
 
-		const tenantServices = mock.services.filter((service) => service.tenantId === tenant.id);
-		return tenantServices || null;
+		const res = await axios
+			.get<ApiService[]>(`${PUBLIC_API_URL}/${tenantSlug}/services`)
+			.then((res) =>
+				res.data.map(
+					(service): Service => ({
+						...service,
+						tenantId: tenant.id,
+						id: service.id,
+						slug: service.slug,
+						name: service.name,
+						description: service.description,
+						image: service.image,
+						approximateDuration: service.durationMinutes,
+						approximatePrice: service.priceWithNoDecimalPlaces
+					})
+				)
+			)
+			.catch(() => null);
+
+		const tenantServices = dev
+			? mock.services.filter((service) => service.tenantId === tenant.id)
+			: undefined;
+
+		return res || tenantServices || null;
 	}
 };
 
