@@ -45,23 +45,21 @@ const service = {
 		if (!tenant) return null;
 
 		// TODO remove mock
-		const service = await booking
-			.getDetails(tenantSlug, serviceSlug)
-			.then((res): Service => {
-				return {
-					id: res.serviceSummary.id,
-					name: res.serviceSummary.name,
-					description: res.serviceSummary.description,
-					tenantId: tenant.id,
-					approximateDuration: res.serviceSummary.durationMinutes,
-					image: 'https://picsum.photos/400/203',
-					approximatePrice: Object.values(res.slots)[0][0].priceWithNoDecimalPlaces,
-					slug: serviceSlug
-				};
+		const res = await service
+			.getAll(tenantSlug)
+			.then((res): Service | null => {
+				if (!res) return null;
+
+				const ser = res.find((service) => service.slug === serviceSlug);
+				return ser || null;
 			})
 			.catch(() => null);
-		const mockService = mock.services.find((service) => service.slug === serviceSlug);
-		return service || mockService || null;
+
+		const mockService = dev
+			? mock.services.find((service) => service.slug === serviceSlug)
+			: undefined;
+
+		return res || mockService || null;
 	},
 
 	getAll: async (tenantSlug: string) => {
