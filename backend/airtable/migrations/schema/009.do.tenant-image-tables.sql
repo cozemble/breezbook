@@ -16,6 +16,8 @@ create table tenant_branding
     environment_id text                                                  not null,
     slug           text                                                  not null,
     theme          jsonb                                                          default '{}'::jsonb,
+    headline       text                                                  not null,
+    description    text                                                  not null,
     created_at     timestamp                                             not null default current_timestamp,
     updated_at     timestamp                                             not null default current_timestamp,
     primary key (tenant_id, environment_id),

@@ -164,5 +164,6 @@ export interface Tenant {
 	heading: string;
 	description: string;
 	heroImage: string;
-	locations: Location[]
+	locations: Location[];
+	theme: any;
 }

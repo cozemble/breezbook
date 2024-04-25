@@ -267,6 +267,9 @@ describe('Given a migrated database', async () => {
         const json = await response.json() as Tenant;
         expect(json.id).toBe('tenant1');
         expect(json.locations.map(l => l.slug)).toEqual(['london', 'liverpool']);
+        expect(json.theme).toBeDefined();
+        expect(json.heading).toBeDefined();
+        expect(json.description).toBeDefined();
     });
 
     // test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {

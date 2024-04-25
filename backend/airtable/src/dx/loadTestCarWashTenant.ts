@@ -211,9 +211,12 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
             tenant_id,
             environment_id,
             slug: 'tenant1',
+            headline: 'The Smart Wash',
+            description: 'The Smart Wash is the best car wash in the world',
         }
     });
 }
+
 
 export async function ensureStripeKeys(prisma: PrismaClient, tenantEnvironment: TenantEnvironment): Promise<void> {
     const maybeExistingSecretKey = await maybeGetTenantSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME)

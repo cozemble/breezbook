@@ -255,3 +255,12 @@ Anyway, first cut of location support done.  Here is the fixture that sets up
 [a multi-location gym](https://github.com/cozemble/breezbook/blob/9262682c14520974299c2aca0bb4cf706228306e/backend/airtable/src/dx/loadMultiLocationGymTenant.ts#L1)
 and here are [the tests for it](https://github.com/cozemble/breezbook/blob/8accf91e4e909aacc226d1b791d539afba1a8de0/backend/airtable/test/availability/byLocation.spec.ts#L15)
 
+# Mon 22 Apr 2024
+Deploying location stuff now.
+
+Had a thought about IDs in this multi-environment infra we've got.  Right now, a service has its own `service_id` as a primary key.
+It also has a `tenant_id` and an `environment_id`.  Having a `service_id` is kinda nice, because it makes foreign key management easy.
+But if I used a compound key of `tenant_id`,`environment_id` and `service_id`, then it would be really easy to copy data
+from environment to environment.  There would be no need to worry about tracking primary key re-mapping between services
+and locations and orders etc - just change the `environment_id`.  It would make testing out data changes in an environment almost
+trivial.  And it would make pulling data down from production to a test environment almost trivial. One of those to stew on.
