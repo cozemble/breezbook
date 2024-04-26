@@ -264,3 +264,8 @@ But if I used a compound key of `tenant_id`,`environment_id` and `service_id`, t
 from environment to environment.  There would be no need to worry about tracking primary key re-mapping between services
 and locations and orders etc - just change the `environment_id`.  It would make testing out data changes in an environment almost
 trivial.  And it would make pulling data down from production to a test environment almost trivial. One of those to stew on.
+
+# Fri 26 Apr 2024
+
+Loaded all the services for the car wash business.  There are many services.  So it looks like we'll need to provide
+some kind of categorisation ability.

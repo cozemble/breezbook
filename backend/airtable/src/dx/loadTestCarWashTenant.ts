@@ -210,7 +210,6 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
         data: {
             tenant_id,
             environment_id,
-            slug: 'tenant1',
             headline: 'The Smart Wash',
             description: 'The Smart Wash is the best car wash in the world',
         }

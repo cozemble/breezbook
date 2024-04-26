@@ -531,7 +531,6 @@ model system_outbound_webhooks {
 model tenant_branding {
   tenant_id      String
   environment_id String
-  slug           String
   theme          Json?    @default("{}")
   headline       String
   description    String
@@ -540,7 +539,6 @@ model tenant_branding {
   tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id])
-  @@unique([environment_id, slug])
 }
 
 model tenant_images {
