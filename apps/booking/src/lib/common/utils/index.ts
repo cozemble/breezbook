@@ -12,7 +12,9 @@ export const formatPrice = (price: number) => {
 	const priceInteger = priceStr.substring(0, priceStr.length - 2);
 	const priceDecimal = priceStr.substring(priceStr.length - 2);
 
-	const formattedPrice = `${priceInteger}.${priceDecimal}`;
+	const isPriceDecimalEmpty = priceDecimal === '00';
+
+	const formattedPrice = isPriceDecimalEmpty ? priceInteger : `${priceInteger}.${priceDecimal}`;
 	return formattedPrice;
 };
 
