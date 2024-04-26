@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { formatPrice } from '$lib/common/utils';
+
 	export let service: Service;
 	export let tenant: Tenant;
 </script>
@@ -15,7 +17,7 @@
 
 		<span class="text-xs font-light opacity-60"> starting at: </span>
 		<span class="text-4xl font-bold">
-			£{service.approximatePrice}
+			£{formatPrice(service.approximatePrice)}
 			<span class="text-base font-thin opacity-60 whitespace-nowrap text-base-content"
 				>/ {service.approximateDuration} mins</span
 			>
