@@ -4,7 +4,7 @@ import {prismaClient} from "../../prisma/client.js";
 import {DbService, DbServiceImage} from "../../prisma/dbtypes.js";
 import {Service} from "@breezbook/backend-api-types";
 
-function toApiService(service: DbService, hasPricingRules: boolean): Service {
+export function toApiService(service: DbService, hasPricingRules: boolean): Service {
     const allImages = ((service as any).service_images ?? []) as DbServiceImage[]
     const image = allImages.length > 0 ? allImages[0].public_image_url : 'https://picsum.photos/800/450'
     return {

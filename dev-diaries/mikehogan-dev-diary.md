@@ -269,3 +269,25 @@ trivial.  And it would make pulling data down from production to a test environm
 
 Loaded all the services for the car wash business.  There are many services.  So it looks like we'll need to provide
 some kind of categorisation ability.
+
+# Sat 27 Apr 2024
+In terms of onboarding our first customer, I'm writing scripts to import their data from excel files.  Do things that
+don't scale they say.  While I decided that replicating booking data into Airtable was the way to go to give this
+client extensibilty in terms of automation of their business, I decided to not implement import of configuration data
+from Airtable.
+
+Where this goes ultimately, I'm not sure.  I thought my blinding insight was to not make a database this time, to focus
+instead on making an excellent booking experience backed by Airtable/SmartSuite etc.  I'm continually back and forth on
+this.  Taking this approach might be nice to get started, but is it something people are looking for?  Would 
+"the shopify of bookings" be a better long term offering?  Shopify does everything an ecommerce business could want.
+Should breezbook take the same line for booking based businesses?
+
+To be honest, I think the real reason I felt excited about using Airtable was the backend, was that it enabled my client
+to set-up Gmail automations, and I am fearful of adding any Google integrations into my apps due to the expense of the
+security reviews that are seemingly required to get my app verified.  So this is a decision based on fear and
+ignorance.  I need to find someone who has been down this road before.
+
+I just did a search on perplexity.ai, and it seems that what I fear is the case.  I can understand why Google have put 
+this in place, but gosh it's a pita to get a small side project started.  
+[This person](https://www.reddit.com/r/GoogleAppsScript/comments/os2kap/oauth_scope_verification_for_publishing_an_app_to/) 
+says that unless your product is going to make $25k a year, don't bother.

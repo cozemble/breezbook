@@ -266,10 +266,12 @@ describe('Given a migrated database', async () => {
         expect(response.status).toBe(200);
         const json = await response.json() as Tenant;
         expect(json.id).toBe('tenant1');
-        expect(json.locations.map(l => l.slug)).toEqual(['london', 'liverpool']);
+        expect(json.locations.map(l => l.slug)).toEqual(expect.arrayContaining(['london', 'liverpool']));
         expect(json.theme).toBeDefined();
         expect(json.heading).toBeDefined();
         expect(json.description).toBeDefined();
+        expect(json.services.length).toBeGreaterThan(1);
+        expect(json.serviceLocations.length).toBeGreaterThan(1);
     });
 
     // test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {

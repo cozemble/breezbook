@@ -157,6 +157,11 @@ export interface Location {
 	name: string;
 }
 
+export interface ServiceLocation {
+	serviceId: string;
+	locationId: string;
+}
+
 export interface Tenant {
 	id: string;
 	slug: string;
@@ -165,5 +170,7 @@ export interface Tenant {
 	description: string;
 	heroImage: string;
 	locations: Location[];
+	services: Service[];
+	serviceLocations: ServiceLocation[]
 	theme: any;
 }

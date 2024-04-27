@@ -150,12 +150,12 @@ create table services
 
 create table service_locations
 (
-    tenant_id      text                           not null,
-    environment_id text                           not null,
-    service_id     text references services (id)  not null,
-    location_id    text references locations (id) not null,
-    created_at     timestamp with time zone       not null default current_timestamp,
-    updated_at     timestamp with time zone       not null default current_timestamp,
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    service_id     text references services (id)       not null,
+    location_id    text references locations (id)      not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
     primary key (tenant_id, environment_id, service_id, location_id)
 );
 
