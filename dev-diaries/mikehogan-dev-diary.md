@@ -291,3 +291,29 @@ I just did a search on perplexity.ai, and it seems that what I fear is the case.
 this in place, but gosh it's a pita to get a small side project started.  
 [This person](https://www.reddit.com/r/GoogleAppsScript/comments/os2kap/oauth_scope_verification_for_publishing_an_app_to/) 
 says that unless your product is going to make $25k a year, don't bother.
+
+# Mon 29 Apr 2024
+
+It's time to make my Airtable OAuth Application be a production version.  For that, I need a Privacy Policy and Terms of
+Service.  I asked Claude 
+
+_What questions would you ask me if I wanted you to generate a privacy policy for my new booking/appointmenting SaaS?_
+
+and it returned:
+
+1. What types of personal data do you collect from users (e.g., name, email address, phone number, payment information)?
+2. How do you collect this personal data (e.g., user registration, booking/appointment forms, third-party integrations)?
+3. What is the purpose of collecting this personal data (e.g., providing the service, communication, marketing)?
+4. Do you share any personal data with third parties? If so, who are they, and for what purpose?
+5. How do you protect the personal data you collect (e.g., encryption, access controls, security measures)?
+6. How long do you retain the personal data, and what is your data deletion policy?
+7. Do you use cookies or similar tracking technologies on your website/platform? If so, what types of cookies and for what purpose?
+8. Do you transfer any personal data internationally? If so, to which countries and under what legal mechanisms?
+9. How can users access, update, or delete their personal data?
+10. How do you handle personal data of minors (if applicable)?
+11. How do you communicate changes to your privacy policy to users?
+12. What is your process for handling data breaches or security incidents?
+13. Are there any industry-specific regulations or compliance requirements that apply to your SaaS (e.g., HIPAA for healthcare-related services)?
+14. In which jurisdictions do you operate, and are there any specific privacy laws that apply (e.g., GDPR, CCPA)?
+
+So I'm going to turn my privacy policy into a file in github (the benefit of open source) and then link to it from my website
