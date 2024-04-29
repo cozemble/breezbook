@@ -28,7 +28,7 @@ import {
 	service_images,
 	tenants,
 	tenant_images,
-	locations, service_locations, tenant_branding
+	locations, service_locations, tenant_branding, simple_kv_store
 } from '@prisma/client';
 import { TenantEnvironment } from '@breezbook/packages-core';
 
@@ -64,7 +64,8 @@ export {
 	tenant_images as DbTenantImage,
 	locations as DbLocation,
 	service_locations as DbServiceLocation,
-	tenant_branding as DbTenantBranding
+	tenant_branding as DbTenantBranding,
+	simple_kv_store as DbSimpleKvStore
 };
 
 export interface TenantEnvironmentPair {

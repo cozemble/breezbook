@@ -23,6 +23,7 @@ import {environmentIdParam, withNoRequestParams, withTwoRequestParams} from "../
 import {prismaClient} from "../prisma/client.js";
 import {setupDevEnvironment} from "../dx/setupDevEnvironment.js";
 import {getServiceAvailabilityForLocation} from "./availability/getServiceAvailabilityForLocation.js";
+import {onAirtableOauthBegin, onAirtableOauthCallback} from "./oauth/airtableConnect.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
@@ -78,6 +79,8 @@ export function expressApp(): Express {
     app.post('/api/:envId/:tenantId/basket/price', onBasketPriceRequest);
     app.get(externalApiPaths.getServices, onGetServicesRequest);
     app.get(externalApiPaths.getTenant, onGetTenantRequest);
+    app.get(externalApiPaths.airtableOauthBegin, onAirtableOauthBegin);
+    app.get(externalApiPaths.airtableOauthCallback, onAirtableOauthCallback);
 
     app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
     app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);
@@ -105,7 +108,9 @@ export const internalApiPaths = {
 export const externalApiPaths = {
     getTenant: '/api/:envId/tenants',
     getServices: '/api/:envId/:tenantId/services',
-    getAvailabilityForLocation: '/api/:envId/:tenantId/:locationId/service/:serviceId/availability'
+    getAvailabilityForLocation: '/api/:envId/:tenantId/:locationId/service/:serviceId/availability',
+    airtableOauthBegin: '/v1/connect/airtable/oauth2/authorize',
+    airtableOauthCallback: '/v1/connect/airtable/oauth2/callback',
 }
 
 async function onAppStartRequest(req: express.Request, res: express.Response): Promise<void> {

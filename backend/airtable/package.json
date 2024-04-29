@@ -14,6 +14,7 @@
     "db:migrate": "dotenv -e .env.production.local -- bash -c 'npx postgrator --config=migrations/schema/postgratorrc.json'",
     "db:migrate-local": "dotenv -e .env -- bash -c 'npx postgrator --config=migrations/schema/postgratorrc.json'",
     "dev": "nodemon -x \"npm run buildrun\"",
+    "prod": "ENV_PATH=.env.production.local nodemon -x \"npm run buildrun\"",
     "buildrun": "npm run compile && npm run server",
     "build-run-db": "npm run compile && npm run bounce:db",
     "bounce:db": "node dist/cjs/devDb.js",
@@ -36,6 +37,8 @@
     "@types/jexl": "^2.3.4",
     "@types/pg": "^8.10.9",
     "@types/uuid": "^9.0.7",
+    "@types/qs": "^6.9.12",
+
     "child-process-promise": "^2.2.1",
     "dotenv-cli": "^7.3.0",
     "eslint": "^8.28.0",
@@ -62,6 +65,7 @@
     "pg": "^8.11.3",
     "stripe": "^14.11.0",
     "testcontainers": "^10.5.0",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "qs": "^6.12.0"
   }
 }

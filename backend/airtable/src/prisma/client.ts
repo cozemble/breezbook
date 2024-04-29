@@ -6,6 +6,7 @@ export function prismaClient(): PrismaClient {
 		_prismaClient = new PrismaClient({
 			log: ['info'],
 		});
+		console.log('Prisma client created using database url: ' + process.env.DATABASE_URL);
 	}
 	return _prismaClient;
 }

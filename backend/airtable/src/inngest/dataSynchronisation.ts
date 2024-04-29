@@ -2,6 +2,7 @@ import { id, Id } from '@breezbook/packages-core';
 import { Entity } from '../mutation/mutations.js';
 import { PrismaClient } from '@prisma/client';
 import { v4 as uuid } from 'uuid';
+import {airtableSystemName} from "../express/oauth/airtableConnect.js";
 
 export type CompositeKey = Record<string, string>;
 
@@ -49,7 +50,7 @@ export class PrismaSynchronisationIdRepository implements SynchronisationIdRepos
 					from_system: 'breezbook',
 					from_entity_type: sourceEntity,
 					from_entity_id: compositeKeyFns.toString(sourceEntityId),
-					to_system: 'airtable',
+					to_system: airtableSystemName,
 					to_entity_type: targetEntity
 				}
 			}
@@ -66,7 +67,7 @@ export class PrismaSynchronisationIdRepository implements SynchronisationIdRepos
 					from_system: 'breezbook',
 					from_entity_type: sourceEntity,
 					from_entity_id: compositeKeyFns.toString(sourceEntityId),
-					to_system: 'airtable',
+					to_system: airtableSystemName,
 					to_entity_type: targetEntity
 				}
 			},
@@ -78,7 +79,7 @@ export class PrismaSynchronisationIdRepository implements SynchronisationIdRepos
 				from_system: 'breezbook',
 				from_entity_type: sourceEntity,
 				from_entity_id: compositeKeyFns.toString(sourceEntityId),
-				to_system: 'airtable',
+				to_system: airtableSystemName,
 				to_entity_type: targetEntity,
 				to_entity_id: targetId.value
 			}

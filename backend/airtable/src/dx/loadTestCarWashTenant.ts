@@ -3,6 +3,7 @@ import {carwash, JsonSchemaForm, TenantEnvironment} from "@breezbook/packages-co
 import {maybeGetTenantSecret, storeTenantSecret} from "../infra/secretsInPostgres.js";
 import {STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME} from "../express/stripeEndpoint.js";
 import {v4 as uuid} from 'uuid';
+import {airtableSystemName, refreshTokenName} from "../express/oauth/airtableConnect.js";
 
 export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void> {
     const tenant_id = 'tenant1';
@@ -230,8 +231,8 @@ export async function ensureStripeKeys(prisma: PrismaClient, tenantEnvironment: 
         where: {
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value,
-            owning_system: 'airtable',
-            token_type: 'refresh'
+            owning_system: airtableSystemName,
+            token_type: refreshTokenName
 
         }
     })
@@ -241,8 +242,8 @@ export async function ensureStripeKeys(prisma: PrismaClient, tenantEnvironment: 
                 id: uuid(),
                 tenant_id: tenantEnvironment.tenantId.value,
                 environment_id: tenantEnvironment.environmentId.value,
-                owning_system: 'airtable',
-                token_type: 'refresh',
+                owning_system: airtableSystemName,
+                token_type: refreshTokenName,
                 token: process.env.TEST_AIRTABLE_REFRESH_TOKEN,
                 expires_at: new Date('2032-01-01T00:00:00Z')
             }

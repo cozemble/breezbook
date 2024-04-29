@@ -9,6 +9,7 @@ import {
 } from '../../infra/functionalExpress.js';
 import {prismaClient} from '../../prisma/client.js';
 import { ChangeDates } from '@breezbook/backend-api-types';
+import {airtableSystemName} from "../oauth/airtableConnect.js";
 
 function now() {
     return new Date().toISOString();
@@ -30,7 +31,7 @@ export async function onGetChangeDatesForAllEnvironments(req: express.Request, r
             let lastPollForEnvironment = await prisma.last_change_announcements.findFirst({
                 where: {
                     environment_id: environmentId,
-                    channel_id: 'airtable'
+                    channel_id: airtableSystemName
                 },
                 orderBy: {
                     announcement_date: 'desc'
@@ -41,7 +42,7 @@ export async function onGetChangeDatesForAllEnvironments(req: express.Request, r
                     announcement_date: new Date(0),
                     environment_id: environmentId,
                     id: 0,
-                    channel_id: 'airtable'
+                    channel_id: airtableSystemName
                 };
             }
             const lastPollDate = lastPollForEnvironment.announcement_date;
@@ -51,7 +52,7 @@ export async function onGetChangeDatesForAllEnvironments(req: express.Request, r
                 data: {
                     announcement_date: now,
                     environment_id: environmentId,
-                    channel_id: 'airtable'
+                    channel_id: airtableSystemName
                 }
             });
 

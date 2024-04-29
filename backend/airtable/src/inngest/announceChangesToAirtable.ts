@@ -8,6 +8,7 @@ import {applyAirtablePlan} from '../airtable/applyAirtablePlan.js';
 import {AirtableAccessTokenProvider} from './airtableAccessTokenProvider.js';
 import {PrismaClient} from "@prisma/client";
 import {DbMutationEvent, TenantEnvironmentPair} from "../prisma/dbtypes.js";
+import {airtableSystemName} from "../express/oauth/airtableConnect.js";
 
 const announceChangesToAirtable = {
     fanOutChangesInTenantEnvironments: 'announceChanges/airtable/fanOutChangesInTenantEnvironments',
@@ -22,7 +23,7 @@ async function getTenantEnvironmentsPendingReplication(prisma: PrismaClient): Pr
         SELECT DISTINCT m.tenant_id, m.environment_id
         FROM mutation_events m
                  LEFT JOIN replicated_mutation_events r
-                           ON m.id = r.mutation_event_id AND r.to_system = 'airtable'
+                           ON m.id = r.mutation_event_id AND r.to_system = '${airtableSystemName}'
         WHERE r.mutation_event_id IS NULL
     `);
 }
@@ -31,7 +32,7 @@ async function getEarliestNonReplicatedMutationEvent(prisma: PrismaClient, tenan
     const result = await prisma.$queryRawUnsafe<DbMutationEvent[]>(`
         SELECT m.*
         FROM mutation_events m
-                 LEFT JOIN replicated_mutation_events r on m.id = r.mutation_event_id AND r.to_system = 'airtable'
+                 LEFT JOIN replicated_mutation_events r on m.id = r.mutation_event_id AND r.to_system = '${airtableSystemName}'
         WHERE r.mutation_event_id IS NULL
           AND m.tenant_id = '${tenantId}'
           AND m.environment_id = '${environmentId}'
@@ -107,7 +108,7 @@ export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClien
             await prisma.replicated_mutation_events.create({
                 data: {
                     mutation_event_id: maybePendingEvent.id,
-                    to_system: 'airtable'
+                    to_system: airtableSystemName
                 }
             });
         });

@@ -12,6 +12,7 @@ const port = process.env.PORT ? parseInt(process.env.PORT) : DEFAULT_PORT;
 
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}/`);
+    console.log(`Airtable OAuth2 URL: http://localhost:${port}/v1/connect/airtable/oauth2/authorize`);
 
     callOnAppStartEndpoint().catch(e => console.error(e));
 });
