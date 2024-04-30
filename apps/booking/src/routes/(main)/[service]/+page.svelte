@@ -2,6 +2,7 @@
 	import Icon from '@iconify/svelte';
 	import type { PageData } from './$types';
 	import tenantStore from '$lib/stores/tenant';
+	import { formatPrice } from '$lib/common/utils';
 
 	export let data: PageData;
 	const service = data.service;
@@ -27,7 +28,7 @@
 				<span class="text-xs font-light opacity-60"> starting at: </span>
 				<div class="text-2xl font-bold">
 					<span class="text-4xl font-bold">
-						£{service.approximatePrice}
+						£{formatPrice(service.approximatePrice)}
 						<span class="text-base font-thin opacity-60 whitespace-nowrap"
 							>/
 							{service.approximateDuration} mins
