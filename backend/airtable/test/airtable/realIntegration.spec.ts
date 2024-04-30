@@ -2,9 +2,9 @@ import { expect, test } from 'vitest';
 import { Mutation } from '../../src/mutation/mutations.js';
 import { InMemorySynchronisationIdRepository } from '../../src/inngest/dataSynchronisation.js';
 import { id } from '@breezbook/packages-core';
-import { carWashMapping } from '../../src/airtable/learningMapping.js';
 import { StubAirtableClient } from '../../src/airtable/airtableClient.js';
 import { applyAirtablePlan } from '../../src/airtable/applyAirtablePlan.js';
+import {carWashMapping} from "../../src/airtable/carWashMapping.js";
 
 const mutationEvents: Mutation[] = [
 	{

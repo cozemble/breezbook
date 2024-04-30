@@ -3,12 +3,12 @@ import {prismaClient} from '../prisma/client.js';
 import {Mutation} from '../mutation/mutations.js';
 import {PrismaSynchronisationIdRepository, SynchronisationIdRepository} from './dataSynchronisation.js';
 import {AirtableClient, HttpAirtableClient} from '../airtable/airtableClient.js';
-import {carWashMapping} from '../airtable/learningMapping.js';
 import {applyAirtablePlan} from '../airtable/applyAirtablePlan.js';
 import {AirtableAccessTokenProvider} from './airtableAccessTokenProvider.js';
 import {PrismaClient} from "@prisma/client";
 import {DbMutationEvent, TenantEnvironmentPair} from "../prisma/dbtypes.js";
 import {airtableSystemName} from "../express/oauth/airtableConnect.js";
+import {carWashMapping} from "../airtable/carWashMapping.js";
 
 const announceChangesToAirtable = {
     fanOutChangesInTenantEnvironments: 'announceChanges/airtable/fanOutChangesInTenantEnvironments',

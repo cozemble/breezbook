@@ -317,3 +317,18 @@ and it returned:
 14. In which jurisdictions do you operate, and are there any specific privacy laws that apply (e.g., GDPR, CCPA)?
 
 So I'm going to turn my privacy policy into a file in github (the benefit of open source) and then link to it from my website
+
+# Tue 30 Apr 2024
+
+Turning attention to airtable integration again.  Nat has provided me the Airtable base and tables that he wants to map
+Breebook bookings into.  At this stage I feel the need for a tool that does this:
+
+ * Connects to an airtable base and inspects the tables
+ * Connects to my postgres database, and allows me to filter down to source tables, and from there down to source records,
+   by specifying a filter query (by tenant id and environment id in this case).  This might be impractical in the general
+   case, but what I'm after is some means of stating what my source record payloads are.  Pasting a bunch of exemplar 
+   payloads into textboxes would also be ok.
+ * Define my mapping plan and see which source records it selects, and what airtable mutations it emits
+
+I'm going to do this in a unit test for now, which might be the better engineering approach.  But I can't help but think
+that there is a generic product sitting under this need.

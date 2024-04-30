@@ -1,6 +1,6 @@
 import { CompositeKey, compositeKeyFns, SynchronisationIdRepository } from '../inngest/dataSynchronisation.js';
 import { AirtableClient } from './airtableClient.js';
-import { AirtableMapping, AirtableMutation, AirtableRecordIdMapping, FieldMapping, MappingPlan } from './learningMapping.js';
+import { AirtableMapping, AirtableMutation, AirtableRecordIdMapping, FieldMapping, MappingPlan } from './airtableMappingTypes.js';
 import { Mutation } from '../mutation/mutations.js';
 import { id } from '@breezbook/packages-core';
 import jexl from 'jexl';
