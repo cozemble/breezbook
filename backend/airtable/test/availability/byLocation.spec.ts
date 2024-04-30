@@ -2,9 +2,18 @@ import {beforeEach, describe, expect, test} from "vitest";
 import {PrismockClient} from 'prismock';
 import {PrismaClient} from "@prisma/client";
 import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMultiLocationGymTenant.js";
-import {environmentId, isoDate, locationId, tenantEnvironmentLocation, tenantId} from "@breezbook/packages-core";
+import {
+    carwash,
+    environmentId,
+    isoDate,
+    locationId, serviceId,
+    tenantEnvironmentLocation,
+    tenantId
+} from "@breezbook/packages-core";
 import {v4 as uuid} from 'uuid';
 import {byLocation} from "../../src/availability/byLocation.js";
+import {loadTestCarWashTenant} from "../../src/dx/loadTestCarWashTenant.js";
+import {getAvailabilityForService} from "../../src/core/getAvailabilityForService.js";
 
 const tenant = tenantId(multiLocationGym.tenant_id)
 const env = environmentId(multiLocationGym.environment_id)
@@ -127,4 +136,25 @@ describe("Given a gym with services at various locations", async () => {
         expect(everythingHarlow.bookings).toHaveLength(1)
     });
 })
+
+describe("Given the test car wash tenant", async () => {
+    const tenant = tenantId('tenant1')
+    const env = environmentId("dev")
+    const london = tenantEnvironmentLocation(env, tenant, carwash.locations.london);
+
+    let prisma: PrismaClient;
+
+    beforeEach(async () => {
+        prisma = new PrismockClient()
+        await loadTestCarWashTenant(prisma)
+    })
+
+    test("there are two forms, one for customer details and another for service details", async () => {
+        const everythingLondon = await byLocation.getEverythingForAvailability(prisma, london, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        expect(everythingLondon.businessConfiguration.forms).toHaveLength(2)
+        const customerForm = everythingLondon.businessConfiguration.forms.find(f => f.id.value === everythingLondon.tenantSettings.customerFormId?.value)
+        expect(customerForm).toBeDefined()
+        const availability = getAvailabilityForService(everythingLondon, carwash.smallCarWash.id, isoDate('2024-04-20'), isoDate('2024-04-27'))
+    });
+});
 

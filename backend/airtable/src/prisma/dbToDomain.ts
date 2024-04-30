@@ -72,7 +72,8 @@ export function toDomainBooking(b: DbBooking, timeslots: TimeslotSpec[]): Bookin
 }
 
 export function toDomainAddOn(a: DbAddOn): DomainAddOn {
-	return addOn(a.name, price(a.price.toNumber(), currency(a.price_currency)), a.expect_quantity, a.description, addOnId(a.id));
+	const priceAmount = (typeof a.price === "object" && "toNumber" in a.price) ? a.price.toNumber() : a.price;
+	return addOn(a.name, price(priceAmount, currency(a.price_currency)), a.expect_quantity, a.description, addOnId(a.id));
 }
 
 export function toDomainForm(f: DbForm): Form {

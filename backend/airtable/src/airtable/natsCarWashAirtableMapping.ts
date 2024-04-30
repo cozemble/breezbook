@@ -1,6 +1,6 @@
 import {AirtableMappingPlan} from "./airtableMappingTypes.js";
 
-export const carWashMapping: AirtableMappingPlan = {
+export const natsCarWashAirtableMapping: AirtableMappingPlan = {
     _type: 'airtable.mapping.plan',
     mappings: [
         {
@@ -10,7 +10,7 @@ export const carWashMapping: AirtableMappingPlan = {
                 records: [
                     {
                         _type: 'airtable.upsert',
-                        baseId: 'appn1dy',
+                        baseId: 'appn1dys',
                         table: 'Add ons',
                         fields: {
                             Name: {_type: 'object.path', path: 'create.data.name', nullable: false},
@@ -105,20 +105,7 @@ export const carWashMapping: AirtableMappingPlan = {
                             Time: {
                                 _type: 'expression',
                                 expression: 'data.start_time_24hr + " to " + data.end_time_24hr'
-                            }
-                        }
-                    },
-                    {
-                        _type: 'airtable.create',
-                        baseId: 'appn1dys',
-                        table: 'Booked services',
-                        fields: {
-                            Bookings: [{
-                                _type: 'lookup',
-                                entity: 'bookings',
-                                entityId: {id: 'data.id'},
-                                table: 'Bookings'
-                            }],
+                            },
                             Service: [{
                                 _type: 'lookup',
                                 entity: 'services',
@@ -156,8 +143,13 @@ export const carWashMapping: AirtableMappingPlan = {
                     {
                         _type: 'airtable.update',
                         baseId: 'appn1dys',
-                        table: 'Booked services',
+                        table: 'Bookings',
                         fields: {
+                            'First line of address': {
+                                _type: 'object.path',
+                                path: 'create.data.service_form_values.firstLineOfAddress'
+                            },
+                            Postcode: {_type: 'object.path', path: 'create.data.service_form_values.postcode'},
                             'Car details': [
                                 {
                                     _type: 'lookup',

@@ -1,6 +1,6 @@
 import { CompositeKey, compositeKeyFns, SynchronisationIdRepository } from '../inngest/dataSynchronisation.js';
 import { AirtableClient } from './airtableClient.js';
-import { AirtableMapping, AirtableMutation, AirtableRecordIdMapping, FieldMapping, MappingPlan } from './airtableMappingTypes.js';
+import { AirtableMapping, AirtableMutation, AirtableRecordIdMapping, FieldMapping, AirtableMappingPlan } from './airtableMappingTypes.js';
 import { Mutation } from '../mutation/mutations.js';
 import { id } from '@breezbook/packages-core';
 import jexl from 'jexl';
@@ -8,7 +8,7 @@ import jexl from 'jexl';
 export async function applyAirtablePlan(
 	idRepo: SynchronisationIdRepository,
 	airtableClient: AirtableClient,
-	mapping: MappingPlan,
+	mapping: AirtableMappingPlan,
 	mutation: Mutation
 ): Promise<void> {
 	const jexlInstance = new jexl.Jexl();

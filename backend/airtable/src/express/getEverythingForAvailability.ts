@@ -227,7 +227,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
     const customerForm = customerFormId
         ? mandatory(
             mappedForms.find((f) => values.isEqual(f.id, formId(customerFormId))),
-            `No customer form ${availabilityData.tenantSettings.customer_form_id}`
+            `No customer form ${availabilityData.tenantSettings.customer_form_id}, options are ${mappedForms.map(f => f.id.value).join(",")}`
         )
         : undefined;
     const mappedTimeSlots = availabilityData.timeSlots.map(toDomainTimeslotSpec);
