@@ -25,7 +25,7 @@ So this privacy policy is going to be a file in github (the benefit of open sour
 breezbook website.  Edit history will then come for free, helping with transparency.
 
 ## 1. What types of personal data do you collect from users (e.g., name, email address, phone number, payment information)?
-There is two categories of user in breezbook:
+There are two categories of users in breezbook:
 
 ### 1.1 Users of Breezbook
 This class of "person" belongs to a business of some sort that is based on bookings and appointments.  To define terms, 
