@@ -6,10 +6,12 @@ import _ from 'lodash';
 import api from '$lib/common/api';
 import { jsonSchemaUtils, ajvUtils } from '$lib/common/utils';
 import tenantStore from '../tenant';
+import { locationStore } from '../location';
 
 /** Setup stores to manage details */
 export default function createDetailsStore(service: Service) {
 	const tenant = tenantStore.get();
+	const tenantLocation = locationStore.get();
 
 	const schema = writable<JSONSchema>(undefined);
 	const value = writable<Service.Details>({}); // TODO proper typing
@@ -24,7 +26,7 @@ export default function createDetailsStore(service: Service) {
 	const fetchSchema = async () => {
 		loading.set(true);
 
-		const res = await api.booking.getDetails(tenant.slug, service.slug);
+		const res = await api.booking.getDetails(tenant.slug, tenantLocation.id, service.slug);
 		const sche = res.serviceSummary.forms[0].schema as JSONSchema;
 		schema.set(sche);
 

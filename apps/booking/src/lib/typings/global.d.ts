@@ -11,6 +11,13 @@ declare interface Tenant {
 	// createdAt: string;
 	// updatedAt: string;
 	theme?: Theme;
+	locations: TenantLocation[];
+}
+
+declare interface TenantLocation {
+	id: string;
+	slug: string;
+	name: string;
 }
 
 declare interface Theme {

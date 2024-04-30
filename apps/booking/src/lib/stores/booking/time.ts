@@ -1,6 +1,7 @@
 import { get, writable } from 'svelte/store';
 import api from '$lib/common/api';
 import tenantStore from '../tenant';
+import { locationStore } from '../location';
 
 type TimeSlotFilter = {
 	fromDate: Date;
@@ -27,6 +28,7 @@ const isSlotWithinFilters = (slot: TimeSlot, filter: TimeSlotFilter) => {
  */
 export default function createTimeStore(service: Service) {
 	const tenant = tenantStore.get();
+	const tenantLocation = locationStore.get();
 
 	const daySlots = writable<DaySlot[]>([]);
 	const filters = writable<TimeSlotFilter>(DEFAULT_TIME_SLOT_FILTER);
@@ -36,7 +38,12 @@ export default function createTimeStore(service: Service) {
 	const fetchTimeSlots = async () => {
 		loading.set(true);
 
-		const res = await api.booking.getTimeSlots(tenant.slug, service.slug, get(filters));
+		const res = await api.booking.getTimeSlots(
+			tenant.slug,
+			tenantLocation.id,
+			service.slug,
+			get(filters)
+		);
 		daySlots.set(res);
 
 		loading.set(false);

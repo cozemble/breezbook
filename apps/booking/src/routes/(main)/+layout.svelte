@@ -10,11 +10,13 @@
 	import Header from '$lib/sections/home/Header.svelte';
 	import orderHistoryStore from '$lib/stores/orderHistory';
 	import { settingsStore } from '$lib/stores/settings';
+	import { locationStore } from '$lib/stores/location';
 
 	export let data: PageData;
 	const tenant = data.tenant;
 
 	tenantStore.init(tenant);
+	locationStore.init('london');
 	settingsStore.init();
 	checkoutStore.init();
 	orderHistoryStore.init();

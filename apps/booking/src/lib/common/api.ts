@@ -14,7 +14,6 @@ import { type PricedBasket } from '@breezbook/backend-api-types';
 
 import { env } from '$env/dynamic/public';
 import mock from '$lib/common/mock';
-import { locationId } from '$lib/stores/location';
 
 const PUBLIC_API_URL = env.PUBLIC_API_URL;
 const dev = env?.PUBLIC_DEV_MODE || false;
@@ -95,12 +94,10 @@ const service = {
 };
 
 const booking = {
-	getDetails: async (tenantSlug: string, serviceSlug: string) =>
+	getDetails: async (tenantSlug: string, locationId: string, serviceSlug: string) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/${get(
-					locationId
-				)}/service/${serviceSlug}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
+				`${PUBLIC_API_URL}/${tenantSlug}/${locationId}/service/${serviceSlug}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
 				{
 					headers: {
 						'Content-Type': 'application/json'
@@ -111,6 +108,7 @@ const booking = {
 
 	getTimeSlots: async (
 		tenantSlug: string,
+		locationId: string,
 		serviceSlug: string,
 		filters: {
 			fromDate: Date;
@@ -119,7 +117,7 @@ const booking = {
 	) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/${get(locationId)}/service/${serviceSlug}/availability`,
+				`${PUBLIC_API_URL}/${tenantSlug}/${locationId}/service/${serviceSlug}/availability`,
 				undefined,
 				{
 					params: {
