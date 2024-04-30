@@ -90,3 +90,10 @@ declare namespace Service {
 // 	| { value: import('svelte/store').Writable<Service.Extra[] | null>; name: 'extras' }
 // 	| { value: import('svelte/store').Writable<Service.Details | null>; name: 'details' }
 // );
+
+declare interface Settings {
+	checkout: {
+		/** Return to this URL when Stripe payment succeeds */
+		successReturnUrl: import('svelte/store').Writable<string>;
+	};
+}

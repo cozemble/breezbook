@@ -5,9 +5,11 @@ import { get, writable } from 'svelte/store';
 import notifications from '../notifications';
 import tenantStore from '../tenant';
 import orderHistoryStore from '../orderHistory';
+import { settingsStore } from '../settings';
 
 export const createPaymentStore = () => {
 	const tenant = tenantStore.get();
+	const settings = settingsStore.get();
 
 	const clientSecret = writable<string | null>(null);
 	const stripePublicKey = writable<string | null>(null);
@@ -73,7 +75,7 @@ export const createPaymentStore = () => {
 			elements: elem,
 			confirmParams: {
 				// Make sure to change this to your payment completion page
-				return_url: window.location.origin + '/checkout/success'
+				return_url: get(settings.checkout.successReturnUrl)
 			}
 		});
 

@@ -1,4 +1,8 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { pushState } from '$app/navigation';
+	import { page } from '$app/stores';
+
 	import type { PageData } from './$types';
 	import { formatPrice } from '$lib/common/utils';
 
@@ -8,13 +12,27 @@
 	import PickTimeStep from '$lib/sections/booking/PickTimeStep.svelte';
 	import ExtrasStep from '$lib/sections/booking/ExtrasStep.svelte';
 	import DetailsStep from '$lib/sections/booking/DetailsStep.svelte';
+	import { settingsStore } from '$lib/stores/settings';
 
 	export let data: PageData;
 	const service = data.service;
 
 	const tenant = tenantStore.get();
-
+	const settings = settingsStore.get();
 	const { total } = bookingStore.init(service);
+
+	onMount(() => {
+		// <!-- TODO make a global function and document this functionality -->
+		// Get if there is a custom success return url parameter in the URL
+		const urlParams = new URLSearchParams(window.location.search);
+		const successReturnUrl = urlParams.get('success-return-url');
+
+		if (successReturnUrl) {
+			console.log('success return url:', successReturnUrl);
+			settings.checkout.successReturnUrl.set(successReturnUrl);
+			// <!-- TODO clear the URL parameter, couldn't implement yet because history.replaceState breaks Kit routing and SvelteKit replaceState throws error -->
+		}
+	});
 </script>
 
 <svelte:head>
