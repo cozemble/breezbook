@@ -14,9 +14,10 @@
 
 	export let data: PageData;
 	const tenant = data.tenant;
+	const tenantLocation = data.location;
 
 	tenantStore.init(tenant);
-	locationStore.init('london');
+	locationStore.init(tenantLocation);
 	settingsStore.init();
 	checkoutStore.init();
 	orderHistoryStore.init();

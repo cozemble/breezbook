@@ -7,7 +7,14 @@ const SETTINGS_CTX_KEY = 'app-settings';
 const createSettingsStore = () => {
 	const settings: Settings = {
 		checkout: {
-			successReturnUrl: writable(browser ? window.location.origin + '/checkout/success' : '') // TODO improve this so won't be weird
+			successReturnUrl: writable(
+				browser
+					? window.location.origin +
+							'/' +
+							window.location.pathname.split('/')[1] +
+							'/checkout/success'
+					: ''
+			) // TODO improve this so won't be weird
 		}
 	};
 

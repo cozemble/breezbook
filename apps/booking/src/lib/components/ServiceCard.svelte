@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { formatPrice } from '$lib/common/utils';
+	import { locationStore } from '$lib/stores/location';
 
 	export let service: Service;
 	export let tenant: Tenant;
+
+	const location = locationStore.get();
 </script>
 
 <!-- TODO finish the design -->
@@ -23,6 +26,6 @@
 			>
 		</span>
 
-		<a href="/{service.slug}" class="btn btn-primary mt-4">Details</a>
+		<a href="/{location.slug}/{service.slug}" class="btn btn-primary mt-4">Details</a>
 	</div>
 </li>

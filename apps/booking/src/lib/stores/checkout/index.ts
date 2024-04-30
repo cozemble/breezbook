@@ -200,7 +200,7 @@ function createCheckoutStore() {
 
 			paymentStore.createPaymentIntent(orderRes.orderId);
 			notif.remove();
-			goto('/checkout/payment');
+			goto(`/${tenantLocation.slug}/checkout/payment`);
 		} catch (err) {
 			console.error('Failed to place order', err);
 			notif.remove();

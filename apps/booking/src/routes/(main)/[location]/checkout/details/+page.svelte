@@ -2,7 +2,9 @@
 	import { goto } from '$app/navigation';
 	import SchemaForm from '$lib/components/schemaForm/SchemaForm.svelte';
 	import checkoutStore from '$lib/stores/checkout';
+	import { locationStore } from '$lib/stores/location';
 
+	const tenantLocation = locationStore.get();
 	const {
 		customerStore: { customer, schema, errors, submitWithCallback },
 		submitOrder
@@ -16,7 +18,7 @@
 	};
 
 	const onGoBack = () => {
-		goto('/checkout');
+		goto(`${tenantLocation.slug}/checkout`);
 	};
 </script>
 

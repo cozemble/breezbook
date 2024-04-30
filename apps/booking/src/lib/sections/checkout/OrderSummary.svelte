@@ -4,7 +4,9 @@
 	import notifications from '$lib/stores/notifications';
 	import { formatPrice } from '$lib/common/utils';
 	import Loading from '$lib/components/Loading.svelte';
+	import { locationStore } from '$lib/stores/location';
 
+	const tenantLocation = locationStore.get();
 	const { total, items, submitOrder } = checkoutStore.get();
 
 	const handleSubmit = () => {
@@ -14,7 +16,7 @@
 			return;
 		}
 
-		goto('/checkout/details');
+		goto(`/${tenantLocation.slug}/checkout/details`);
 	};
 
 	$: discount = $total?.discount?.amount.value || 0;
