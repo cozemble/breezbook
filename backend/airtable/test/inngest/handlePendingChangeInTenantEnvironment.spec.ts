@@ -12,6 +12,7 @@ import {StubAirtableClient} from "../../src/airtable/airtableClient.js";
 import {upsertCustomer} from "../../src/prisma/breezPrismaMutations.js";
 import {DbMutationEvent} from "../../src/prisma/dbtypes.js";
 import {id} from "@breezbook/packages-core";
+import {carWashMapping} from "../../src/airtable/carWashMapping.js";
 
 class StubStep implements InngestStep {
     constructor(public readonly stepsRun: string[] = [], public readonly eventsSent: InngestInvocation[] = []) {
@@ -31,7 +32,7 @@ class StubStep implements InngestStep {
 test("does nothing when no pending event", async () => {
     const prismock = new PrismockClient();
     const stubStep = new StubStep();
-    await handlePendingChangeInTenantEnvironment(prismock, consoleLogger(), async () => null, new InMemorySynchronisationIdRepository(),
+    await handlePendingChangeInTenantEnvironment(prismock, consoleLogger(), () => carWashMapping, async () => null, new InMemorySynchronisationIdRepository(),
         new StubAirtableClient(), "tenantId", "environmentId", stubStep);
     expect(stubStep.stepsRun).toEqual([
         "acquireLock",
@@ -77,7 +78,7 @@ test("applies airtable plan when pending event", async () => {
         environment_id: "environmentId",
         event_time: new Date(),
     };
-    await handlePendingChangeInTenantEnvironment(prismock, consoleLogger(), async () => mutationEvent, synchronisationIdRepository,
+    await handlePendingChangeInTenantEnvironment(prismock, consoleLogger(), () => carWashMapping, async () => mutationEvent, synchronisationIdRepository,
         airtableClient, "tenantId", "environmentId", stubStep);
     expect(stubStep.stepsRun).toEqual([
         "acquireLock",

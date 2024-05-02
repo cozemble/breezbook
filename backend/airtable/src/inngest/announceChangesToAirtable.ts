@@ -8,8 +8,11 @@ import {AirtableAccessTokenProvider} from './airtableAccessTokenProvider.js';
 import {PrismaClient} from "@prisma/client";
 import {DbMutationEvent, TenantEnvironmentPair} from "../prisma/dbtypes.js";
 import {airtableSystemName} from "../express/oauth/airtableConnect.js";
-import {carWashMapping} from "../airtable/carWashMapping.js";
+// import {carWashMapping} from "../airtable/carWashMapping.js";
 import {acquireLock, releaseLock} from "./tenantEnvironmentLock.js";
+import {AirtableMappingPlan, MappingPlanFinder} from "../airtable/airtableMappingTypes.js";
+import {natsCarWashAirtableMapping} from "../airtable/natsCarWashAirtableMapping.js";
+import {carWashMapping} from "../airtable/carWashMapping.js";
 
 const announceChangesToAirtable = {
     fanOutChangesInTenantEnvironments: 'announceChanges/airtable/fanOutChangesInTenantEnvironments',
@@ -120,12 +123,18 @@ export function consoleLogger(): Logger {
 
 export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClient,
                                                              logger: Logger,
+                                                             mappingFinder: MappingPlanFinder,
                                                              nextPendingReplicationFinder: (prisma: PrismaClient, tenantId: string, environmentId: string) => Promise<DbMutationEvent | null>,
                                                              synchronisationIdRepository: SynchronisationIdRepository,
                                                              airtableClient: AirtableClient,
                                                              tenantId: string,
                                                              environmentId: string,
                                                              inngestStep: InngestStep) {
+    const mapping = await mappingFinder(tenantId, environmentId);
+    if (!mapping) {
+        logger.info(`No mapping found for tenant ${tenantId} environment ${environmentId}, skipping`);
+        return;
+    }
     const locked = await inngestStep.run('acquireLock', async () => {
         return await acquireLock(prisma, tenantId, environmentId)
     });
@@ -142,7 +151,7 @@ export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClien
             const outcomes = await applyAirtablePlan(
                 synchronisationIdRepository,
                 airtableClient,
-                carWashMapping,
+                mapping,
                 maybePendingEvent.event_data as any as Mutation
             );
             for (const outcome of outcomes) {
@@ -184,6 +193,45 @@ export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClien
     });
 }
 
+const hardCodedMappingFinder: MappingPlanFinder = async (tenantId: string, environmentId: string) => {
+    if (tenantId === 'tenant1' && environmentId === 'dev') {
+        return carWashMapping;
+    }
+    if (tenantId === 'thesmartwashltd' && environmentId === 'dev') {
+        return carWashMapping;
+    }
+    if (tenantId === 'thesmartwashltd' && environmentId === 'prod') {
+        return natsCarWashAirtableMapping
+    }
+    return null;
+}
+
+// const baseIdReplacingMappingFinder: MappingPlanFinder = async (delegate: MappingPlanFinder) => {
+//     return async (tenantId: string, environmentId: string) => {
+//         const mapping = await delegate(tenantId, environmentId);
+//         if (mapping) {
+//             let asString = JSON.stringify(mapping);
+//             asString = asString.replace('ENV.TEST_CARWASH_BASE_ID', process.env.TEST_CARWASH_BASE_ID);
+//             asString = asString.replace('ENV.SMARTWASH_BASE_ID', process.env.SMARTWASH_BASE_ID);
+//             return JSON.parse(asString) as AirtableMappingPlan;
+//         }
+//         return null;
+//     }
+// }
+
+function baseIdReplacingMappingFinder(delegate: MappingPlanFinder): MappingPlanFinder {
+    return async (tenantId: string, environmentId: string) => {
+        const mapping = await delegate(tenantId, environmentId);
+        if (mapping) {
+            let asString = JSON.stringify(mapping);
+            asString = asString.replace('ENV.TEST_CARWASH_BASE_ID', process.env.TEST_CARWASH_BASE_ID ?? '');
+            asString = asString.replace('ENV.SMARTWASH_BASE_ID', process.env.SMARTWASH_BASE_ID ?? '');
+            return JSON.parse(asString) as AirtableMappingPlan;
+        }
+        return null;
+    }
+}
+
 export const onPendingChangeInTenantEnvironment = inngest.createFunction(
     {
         id: announceChangesToAirtable.onPendingChangeInTenantEnvironment,
@@ -200,6 +248,6 @@ export const onPendingChangeInTenantEnvironment = inngest.createFunction(
         const prismaSynchronisationIdRepository = new PrismaSynchronisationIdRepository(prisma, tenantId, environmentId);
         const httpAirtableClient = new HttpAirtableClient('https://api.airtable.com/v0', new AirtableAccessTokenProvider(tenantId, environmentId));
         const inngestStep = new DelegatingInngestStep(inngest, step);
-        await handlePendingChangeInTenantEnvironment(prisma, logger, getEarliestNonReplicatedMutationEvent, prismaSynchronisationIdRepository, httpAirtableClient, tenantId, environmentId, inngestStep);
+        await handlePendingChangeInTenantEnvironment(prisma, logger, baseIdReplacingMappingFinder(hardCodedMappingFinder), getEarliestNonReplicatedMutationEvent, prismaSynchronisationIdRepository, httpAirtableClient, tenantId, environmentId, inngestStep);
     }
 );
