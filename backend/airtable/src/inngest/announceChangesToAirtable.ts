@@ -2,19 +2,18 @@ import {inngest} from './client.js';
 import {prismaClient} from '../prisma/client.js';
 import {Mutation} from '../mutation/mutations.js';
 import {PrismaSynchronisationIdRepository, SynchronisationIdRepository} from './dataSynchronisation.js';
-import {AirtableClient, HttpAirtableClient} from '../airtable/airtableClient.js';
-import {applyAirtablePlan} from '../airtable/applyAirtablePlan.js';
+import {AirtableClient, AirtableClientFailure, HttpAirtableClient} from '../airtable/airtableClient.js';
+import {applyAirtablePlan, FailedAppliedAirtableMapping} from '../airtable/applyAirtablePlan.js';
 import {AirtableAccessTokenProvider} from './airtableAccessTokenProvider.js';
 import {PrismaClient} from "@prisma/client";
 import {DbMutationEvent, TenantEnvironmentPair} from "../prisma/dbtypes.js";
 import {airtableSystemName} from "../express/oauth/airtableConnect.js";
 import {carWashMapping} from "../airtable/carWashMapping.js";
+import {acquireLock, releaseLock} from "./tenantEnvironmentLock.js";
 
 const announceChangesToAirtable = {
     fanOutChangesInTenantEnvironments: 'announceChanges/airtable/fanOutChangesInTenantEnvironments',
     onPendingChangeInTenantEnvironment: 'announceChanges/airtable/onPendingChangeInTenantEnvironment',
-    // handleChangeBatchForOneEnvironment: 'announceChanges/airtable/handle-change-batch-for-one-environment',
-    // handleOneChange: 'announceChanges/airtable/handle-one-change'
 };
 
 
@@ -32,7 +31,8 @@ async function getEarliestNonReplicatedMutationEvent(prisma: PrismaClient, tenan
     const result = await prisma.$queryRawUnsafe<DbMutationEvent[]>(`
         SELECT m.*
         FROM mutation_events m
-                 LEFT JOIN replicated_mutation_events r on m.id = r.mutation_event_id AND r.to_system = '${airtableSystemName}'
+                 LEFT JOIN replicated_mutation_events r
+                           on m.id = r.mutation_event_id AND r.to_system = '${airtableSystemName}'
         WHERE r.mutation_event_id IS NULL
           AND m.tenant_id = '${tenantId}'
           AND m.environment_id = '${environmentId}'
@@ -56,8 +56,8 @@ export const fanOutChangesInAllEnvironments = inngest.createFunction(
                     name: announceChangesToAirtable.onPendingChangeInTenantEnvironment,
                     data: {tenantId: tenantEnvironment.tenant_id, environmentId: tenantEnvironment.environment_id}
                 });
-
             }
+            return tenantEnvironmentsWithChanges
         });
     }
 );
@@ -69,6 +69,7 @@ export interface InngestInvocation {
 
 export interface InngestStep {
     run<T>(name: string, f: () => Promise<T>): Promise<T>
+
     send(payload: InngestInvocation): Promise<void>
 }
 
@@ -85,32 +86,89 @@ class DelegatingInngestStep implements InngestStep {
     }
 }
 
+interface Logger {
+    info(...args: any[]): void;
+
+    warn(...args: any[]): void;
+
+    error(...args: any[]): void;
+
+    debug(...args: any[]): void;
+}
+
+export class ConsoleLogger implements Logger {
+    info(...args: any[]): void {
+        console.log(...args);
+    }
+
+    warn(...args: any[]): void {
+        console.warn(...args);
+    }
+
+    error(...args: any[]): void {
+        console.error(...args);
+    }
+
+    debug(...args: any[]): void {
+        console.debug(...args);
+    }
+}
+
+export function consoleLogger(): Logger {
+    return new ConsoleLogger();
+}
+
 export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClient,
+                                                             logger: Logger,
                                                              nextPendingReplicationFinder: (prisma: PrismaClient, tenantId: string, environmentId: string) => Promise<DbMutationEvent | null>,
                                                              synchronisationIdRepository: SynchronisationIdRepository,
                                                              airtableClient: AirtableClient,
                                                              tenantId: string,
                                                              environmentId: string,
                                                              inngestStep: InngestStep) {
+    const locked = await inngestStep.run('acquireLock', async () => {
+        return await acquireLock(prisma, tenantId, environmentId)
+    });
+    if (!locked) {
+        logger.info(`Tenant ${tenantId} environment ${environmentId} already locked, skipping`);
+        return;
+    }
     const maybePendingEvent = await inngestStep.run('findNextEvent', async () => {
         return nextPendingReplicationFinder(prisma, tenantId, environmentId);
     });
     if (maybePendingEvent) {
+        logger.info(`Replicating event ${maybePendingEvent.id} (${maybePendingEvent.event_type}:${maybePendingEvent.entity_type}) for tenant ${tenantId} environment ${environmentId}`)
         await inngestStep.run('replicateEvent', async () => {
-            await applyAirtablePlan(
+            const outcomes = await applyAirtablePlan(
                 synchronisationIdRepository,
                 airtableClient,
                 carWashMapping,
                 maybePendingEvent.event_data as any as Mutation
             );
+            for (const outcome of outcomes) {
+                if (outcome._type === 'successful.applied.airtable.mapping') {
+                    logger.info(`Successfully replicated event ${maybePendingEvent.id} as ${outcome.airtableOutcome.action} to ${airtableSystemName} ${outcome.airtableOutcome.baseId}/${outcome.airtableOutcome.table}/${outcome.airtableOutcome.recordId.value}`);
+                } else if (outcome._type === 'airtable.client.failure') {
+                    logger.error(`Failed to replicate event ${maybePendingEvent.id} to ${airtableSystemName} (${outcome.baseId}/${outcome.table}): ${outcome.error}`);
+                } else {
+                    logger.error(`Failed to replicate event ${maybePendingEvent.id} to ${airtableSystemName}: ${outcome.error}`);
+                }
+            }
+            const firstError = outcomes.find((outcome) => outcome._type !== 'successful.applied.airtable.mapping') as AirtableClientFailure | FailedAppliedAirtableMapping | undefined;
+            if (firstError) {
+                throw new Error(`Failed to replicate event ${maybePendingEvent.id} to ${airtableSystemName}: ${firstError.error}`);
+            }
+            return outcomes
         });
         await inngestStep.run('markEventAsReplicated', async () => {
+            logger.info(`Marking event ${maybePendingEvent.id} as replicated to ${airtableSystemName}`)
             await prisma.replicated_mutation_events.create({
                 data: {
                     mutation_event_id: maybePendingEvent.id,
                     to_system: airtableSystemName
                 }
             });
+            logger.info(`Marked event ${maybePendingEvent.id} as replicated to ${airtableSystemName}`)
         });
         await inngestStep.run('queueAnotherPendingChange', async () => {
             await inngestStep.send({
@@ -118,25 +176,30 @@ export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClien
                 data: {tenantId, environmentId}
             });
         });
+    } else {
+        logger.info(`No more pending changes for tenant ${tenantId} environment ${environmentId}`);
     }
-
+    await inngestStep.run('releaseLock', async () => {
+        await releaseLock(prisma, tenantId, environmentId);
+    });
 }
 
 export const onPendingChangeInTenantEnvironment = inngest.createFunction(
     {
         id: announceChangesToAirtable.onPendingChangeInTenantEnvironment,
         concurrency: {
+            scope: 'env',
             key: `event.data.tenantId + "-" + event.data.environmentId`,
             limit: 1
         }
     },
     {event: announceChangesToAirtable.onPendingChangeInTenantEnvironment},
-    async ({event, step}) => {
+    async ({event, step, logger}) => {
         const {environmentId, tenantId} = event.data;
         const prisma = prismaClient();
         const prismaSynchronisationIdRepository = new PrismaSynchronisationIdRepository(prisma, tenantId, environmentId);
         const httpAirtableClient = new HttpAirtableClient('https://api.airtable.com/v0', new AirtableAccessTokenProvider(tenantId, environmentId));
         const inngestStep = new DelegatingInngestStep(inngest, step);
-        await handlePendingChangeInTenantEnvironment(prisma, getEarliestNonReplicatedMutationEvent, prismaSynchronisationIdRepository, httpAirtableClient, tenantId, environmentId, inngestStep);
+        await handlePendingChangeInTenantEnvironment(prisma, logger, getEarliestNonReplicatedMutationEvent, prismaSynchronisationIdRepository, httpAirtableClient, tenantId, environmentId, inngestStep);
     }
 );

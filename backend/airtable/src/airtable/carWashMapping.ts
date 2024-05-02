@@ -10,7 +10,7 @@ export const carWashMapping: AirtableMappingPlan = {
                 records: [
                     {
                         _type: 'airtable.upsert',
-                        baseId: 'appn1dy',
+                        baseId: 'appn1dysBKgmD9nhI',
                         table: 'Add ons',
                         fields: {
                             Name: {_type: 'object.path', path: 'create.data.name', nullable: false},
@@ -27,7 +27,7 @@ export const carWashMapping: AirtableMappingPlan = {
                 records: [
                     {
                         _type: 'airtable.upsert',
-                        baseId: 'appn1dys',
+                        baseId: 'appn1dysBKgmD9nhI',
                         table: 'Services',
                         fields: {
                             Name: {_type: 'object.path', path: 'create.data.name', nullable: false},
@@ -45,7 +45,7 @@ export const carWashMapping: AirtableMappingPlan = {
                 records: [
                     {
                         _type: 'airtable.upsert',
-                        baseId: 'appn1dys',
+                        baseId: 'appn1dysBKgmD9nhI',
                         table: 'Customers',
                         fields: {
                             'First name': {_type: 'object.path', path: 'create.data.first_name', nullable: false},
@@ -68,7 +68,7 @@ export const carWashMapping: AirtableMappingPlan = {
                 records: [
                     {
                         _type: 'airtable.update',
-                        baseId: 'appn1dys',
+                        baseId: 'appn1dysBKgmD9nhI',
                         table: 'Customers',
                         fields: {
                             Phone: {_type: 'object.path', path: 'create.data.form_values.phone', nullable: false}
@@ -89,7 +89,7 @@ export const carWashMapping: AirtableMappingPlan = {
                 records: [
                     {
                         _type: 'airtable.create',
-                        baseId: 'appn1dys',
+                        baseId: 'appn1dysBKgmD9nhI',
                         table: 'Bookings',
                         fields: {
                             Customer: [
@@ -110,7 +110,7 @@ export const carWashMapping: AirtableMappingPlan = {
                     },
                     {
                         _type: 'airtable.create',
-                        baseId: 'appn1dys',
+                        baseId: 'appn1dysBKgmD9nhI',
                         table: 'Booked services',
                         fields: {
                             Bookings: [{
@@ -142,7 +142,7 @@ export const carWashMapping: AirtableMappingPlan = {
                 records: [
                     {
                         _type: 'airtable.upsert',
-                        baseId: 'appn1dys',
+                        baseId: 'appn1dysBKgmD9nhI',
                         table: 'Car details',
                         fields: {
                             Make: {_type: 'object.path', path: 'create.data.service_form_values.make'},
@@ -155,7 +155,7 @@ export const carWashMapping: AirtableMappingPlan = {
                     },
                     {
                         _type: 'airtable.update',
-                        baseId: 'appn1dys',
+                        baseId: 'appn1dysBKgmD9nhI',
                         table: 'Booked services',
                         fields: {
                             'Car details': [

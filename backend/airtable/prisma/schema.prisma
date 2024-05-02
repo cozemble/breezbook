@@ -650,6 +650,11 @@ model simple_kv_store {
   expires_at DateTime? @db.Timestamp(6)
 }
 
+model locks {
+  lock_key    String    @id @db.VarChar(255)
+  acquired_at DateTime? @default(now()) @db.Timestamp(6)
+}
+
 enum booking_event_type {
   cancelled
   amended

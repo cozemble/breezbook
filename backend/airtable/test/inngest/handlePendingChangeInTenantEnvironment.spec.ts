@@ -1,5 +1,6 @@
 import {expect, test} from 'vitest';
 import {
+    consoleLogger,
     handlePendingChangeInTenantEnvironment,
     InngestInvocation,
     InngestStep
@@ -30,9 +31,13 @@ class StubStep implements InngestStep {
 test("does nothing when no pending event", async () => {
     const prismock = new PrismockClient();
     const stubStep = new StubStep();
-    await handlePendingChangeInTenantEnvironment(prismock, async () => null, new InMemorySynchronisationIdRepository(),
+    await handlePendingChangeInTenantEnvironment(prismock, consoleLogger(), async () => null, new InMemorySynchronisationIdRepository(),
         new StubAirtableClient(), "tenantId", "environmentId", stubStep);
-    expect(stubStep.stepsRun).toEqual(["findNextEvent"])
+    expect(stubStep.stepsRun).toEqual([
+        "acquireLock",
+        "findNextEvent",
+        "releaseLock",
+    ])
 });
 
 test("applies airtable plan when pending event", async () => {
@@ -72,9 +77,16 @@ test("applies airtable plan when pending event", async () => {
         environment_id: "environmentId",
         event_time: new Date(),
     };
-    await handlePendingChangeInTenantEnvironment(prismock, async () => mutationEvent, synchronisationIdRepository,
+    await handlePendingChangeInTenantEnvironment(prismock, consoleLogger(), async () => mutationEvent, synchronisationIdRepository,
         airtableClient, "tenantId", "environmentId", stubStep);
-    expect(stubStep.stepsRun).toEqual(["findNextEvent", "replicateEvent", "markEventAsReplicated", "queueAnotherPendingChange"]);
+    expect(stubStep.stepsRun).toEqual([
+        "acquireLock",
+        "findNextEvent",
+        "replicateEvent",
+        "markEventAsReplicated",
+        "queueAnotherPendingChange",
+        "releaseLock",
+    ]);
     expect(airtableClient.records).toHaveLength(1);
     expect(airtableClient.records[0].fields).toEqual({
         "Email": "mike@email.com",

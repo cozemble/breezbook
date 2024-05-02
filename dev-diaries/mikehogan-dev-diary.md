@@ -332,3 +332,113 @@ Breebook bookings into.  At this stage I feel the need for a tool that does this
 
 I'm going to do this in a unit test for now, which might be the better engineering approach.  But I can't help but think
 that there is a generic product sitting under this need.
+
+# Wed 1 May 2024
+
+Wow, I still have Inngest concurrency misunderstood.  Concurrency applies to steps, not to functions.  So if I have
+a function with three steps and a concurrency of 1, then I launch 3 instances of the function, Instance 1 step 1 will
+run, and Instance 2 and 3 will pause.  But then when Instance 1 step 1 finishes, it is not clear to me if Instance 2
+step 1 will run, or if Instance 1 step 2 will run.  
+
+I have asked [here](https://discord.com/channels/842170679536517141/1235217182137389057)
+
+So my replication steps for airtable replication have a race condition in them.  Here are my Inngest steps:
+
+1. I find the next event to replicate,
+2. I replicate it to airtable,
+3. I record the airtable record id against the source record id, (so subsequent updates can address the
+   same record)
+4. I mark the event as replicated.
+
+So if I have two instances of the function running, and they both find the same event to replicate, then they will both
+replicate it to airtable, and I will end up with two records in airtable.
+
+Even if I mark the event as replicated (or locked) as soon as my function grabs it, I can end up with race conditions.
+
+Let's say the order of events is:
+
+1. upsert customer
+2. upsert booking
+
+In function 1 runs and eagerly grabs event 1, then function 2 runs and grabs event 2, then function 1 fails to 
+send the customer to airtable, function 2 could be scheduled next and send the booking to airtable without the
+customer having made it first.
+
+So one option is to put all the work of the function into one step.  That is, find the next event, send it to airtable,
+record the airtable record id, then mark the event as done.  The issue here is that unit of work will be retried as a 
+whole if any issue happens in it.  If an error happens when recording the airtable record id for a create action, and
+then the entire unit of work is retried, then the record will be created again in airtable.  Not acceptable.
+
+So the next thing I am going to try is to implement a locking mechanism as the first step in the Inngest function.
+
+Here is pseudo code:
+
+```typescript
+const inngest = require("inngest");
+
+const replicateEventsFunction = inngest.createFunction(
+  { name: "Replicate Events" },
+  { tenantId, environmentId },
+  async () => {
+    const lockKey = `${tenantId}_${environmentId}`;
+
+    // Step 1: Acquire the lock
+    await inngest.step("Acquire Lock", async () => {
+      const lockAcquired = await acquireLock(lockKey);
+      if (!lockAcquired) {
+        throw new Error("Failed to acquire lock");
+      }
+    });
+
+    // Step 2: Find the next event to replicate
+    const event = await inngest.step("Find Next Event", async () => {
+      return findNextEvent(tenantId, environmentId);
+    });
+
+    if (event) {
+      // Step 3: Replicate the event to Airtable
+      const airtableRecordId = await inngest.step("Replicate to Airtable", async () => {
+        return replicateToAirtable(event);
+      });
+
+      // Step 4: Record the Airtable record ID against the source record ID
+      await inngest.step("Record Airtable ID", async () => {
+        await recordAirtableId(event, airtableRecordId);
+      });
+
+      // Step 5: Mark the event as replicated
+      await inngest.step("Mark Event as Replicated", async () => {
+        await markEventAsReplicated(event);
+      });
+    }
+
+    // Step 6: Release the lock
+    await inngest.step("Release Lock", async () => {
+      await releaseLock(lockKey);
+    });
+  }
+);
+```
+
+And I will use a simple table in postgres to house the lock:
+
+```postgresql
+CREATE TABLE locks (
+  lock_key VARCHAR(255) PRIMARY KEY,
+  acquired_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+There may be some down-side to this with Inngests "fair" queueing system. If a function with the lock has a failure, 
+and there are 20 other functions queued, Inngest will give time to those other 20 functions, not knowing that they are 
+destined to fail. So it will take some time for a retry to come around to the function with the lock.  But I am open to 
+correction on this.
+
+In any case, this is a theoretical issue, because there will seldom be more than two functions running at a time.  
+
+Actually, I could code it so that if a function fails to acquire a lock, it exits early as a success, because the given 
+tenant-environment combination is being handled.
+
+That seems to work ok-ish.  The problem now is when a function acquires the lock, but then fails to complete, the lock 
+remains.  To be honest tho, I think I prefer this, because it stops the line for the given tenant-environment pair, 
+allowing other pairs to progress.  When it comes to fixing replication issues, I prefer a stop-the-line approach.
