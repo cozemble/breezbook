@@ -41,7 +41,7 @@ export default function createTimeStore(service: Service) {
 		const res = await api.booking.getTimeSlots(
 			tenant.slug,
 			tenantLocation.id,
-			service.slug,
+			service.id,
 			get(filters)
 		);
 		daySlots.set(res);

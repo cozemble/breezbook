@@ -18,7 +18,7 @@ export default function createExtrasStore(service: Service) {
 	const fetchExtras = async () => {
 		loading.set(true);
 
-		const res = await api.booking.getDetails(tenant.slug, tenantLocation.id, service.slug);
+		const res = await api.booking.getDetails(tenant.slug, tenantLocation.id, service.id);
 
 		const addOns = res.addOns.map(
 			(addOn): Service.Extra => ({

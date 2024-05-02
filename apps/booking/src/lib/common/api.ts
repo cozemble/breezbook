@@ -94,10 +94,10 @@ const service = {
 };
 
 const booking = {
-	getDetails: async (tenantSlug: string, locationId: string, serviceSlug: string) =>
+	getDetails: async (tenantSlug: string, locationId: string, serviceId: string) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/${locationId}/service/${serviceSlug}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
+				`${PUBLIC_API_URL}/${tenantSlug}/${locationId}/service/${serviceId}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
 				{
 					headers: {
 						'Content-Type': 'application/json'
@@ -109,7 +109,7 @@ const booking = {
 	getTimeSlots: async (
 		tenantSlug: string,
 		locationId: string,
-		serviceSlug: string,
+		serviceId: string,
 		filters: {
 			fromDate: Date;
 			toDate: Date;
@@ -117,7 +117,7 @@ const booking = {
 	) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/${locationId}/service/${serviceSlug}/availability`,
+				`${PUBLIC_API_URL}/${tenantSlug}/${locationId}/service/${serviceId}/availability`,
 				undefined,
 				{
 					params: {
