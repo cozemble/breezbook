@@ -11,10 +11,10 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                     {
                         _type: 'airtable.upsert',
                         baseId: 'ENV.SMARTWASH_BASE_ID',
-                        table: 'Add ons',
+                        table: 'Add-ons',
                         fields: {
                             Name: {_type: 'object.path', path: 'create.data.name', nullable: false},
-                            Price: {_type: 'expression', expression: 'create.data.price / 10'}
+                            Price: {_type: 'expression', expression: 'create.data.price / 100'}
                         }
                     }
                 ]
@@ -32,7 +32,7 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                         fields: {
                             Name: {_type: 'object.path', path: 'create.data.name', nullable: false},
                             Description: {_type: 'object.path', path: 'create.data.description'},
-                            Price: {_type: 'expression', expression: 'create.data.price / 10'}
+                            Price: {_type: 'expression', expression: 'create.data.price / 100'}
                         }
                     }
                 ]

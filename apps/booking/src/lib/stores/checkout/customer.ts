@@ -19,14 +19,8 @@ export function createCustomerStore() {
 				type: 'object',
 				properties: {
 					phone: { type: 'string', description: 'Your phone number', title: 'Phone' },
-					firstLineOfAddress: {
-						type: 'string',
-						description: 'First line of your address',
-						title: 'First Line of Address'
-					},
-					postcode: { type: 'string', description: 'Your postcode', title: 'Postcode' }
 				},
-				required: ['phone', 'firstLineOfAddress', 'postcode']
+				required: ['phone']
 			}
 		},
 		required: ['firstName', 'lastName', 'email', 'formData']

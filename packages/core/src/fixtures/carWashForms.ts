@@ -23,9 +23,17 @@ export const carwashForm: JsonSchemaForm = {
 			year: {
 				type: 'integer',
 				description: 'The year of the car.'
+			},
+			firstLineOfAddress: {
+				type: 'string',
+				description: 'The first line of the address the car will be at'
+			},
+			postcode: {
+				type: 'string',
+				description: 'The postcode the car will be at'
 			}
 		},
-		required: ['make', 'model', 'colour', 'year'],
+		required: ['make', 'model', 'colour', 'year','firstLineOfAddress','postcode'],
 		additionalProperties: false
 	}
 };
@@ -44,16 +52,8 @@ export const customerForm: JsonSchemaForm = {
 				type: 'string',
 				description: 'Your phone number.'
 			},
-			firstLineOfAddress: {
-				type: 'string',
-				description: 'The first line of your address.'
-			},
-			postcode: {
-				type: 'string',
-				description: 'Your postcode.'
-			}
 		},
-		required: ['phone', 'firstLineOfAddress', 'postcode'],
+		required: ['phone'],
 		additionalProperties: false
 	}
 };

@@ -313,7 +313,7 @@ const jsonSchema = `
 		},
 		"colour": {
 			"type": "string",
-			"description": "The color of the car."
+			"description": "The colour of the car."
 		}
 	},
 	"additionalProperties": false

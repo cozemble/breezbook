@@ -197,35 +197,25 @@ const hardCodedMappingFinder: MappingPlanFinder = async (tenantId: string, envir
     if (tenantId === 'tenant1' && environmentId === 'dev') {
         return carWashMapping;
     }
-    if (tenantId === 'thesmartwashltd' && environmentId === 'dev') {
-        return carWashMapping;
-    }
-    if (tenantId === 'thesmartwashltd' && environmentId === 'prod') {
-        return natsCarWashAirtableMapping
+    if (tenantId === 'thesmartwashltd') {
+        return natsCarWashAirtableMapping;
     }
     return null;
 }
-
-// const baseIdReplacingMappingFinder: MappingPlanFinder = async (delegate: MappingPlanFinder) => {
-//     return async (tenantId: string, environmentId: string) => {
-//         const mapping = await delegate(tenantId, environmentId);
-//         if (mapping) {
-//             let asString = JSON.stringify(mapping);
-//             asString = asString.replace('ENV.TEST_CARWASH_BASE_ID', process.env.TEST_CARWASH_BASE_ID);
-//             asString = asString.replace('ENV.SMARTWASH_BASE_ID', process.env.SMARTWASH_BASE_ID);
-//             return JSON.parse(asString) as AirtableMappingPlan;
-//         }
-//         return null;
-//     }
-// }
 
 function baseIdReplacingMappingFinder(delegate: MappingPlanFinder): MappingPlanFinder {
     return async (tenantId: string, environmentId: string) => {
         const mapping = await delegate(tenantId, environmentId);
         if (mapping) {
             let asString = JSON.stringify(mapping);
-            asString = asString.replace('ENV.TEST_CARWASH_BASE_ID', process.env.TEST_CARWASH_BASE_ID ?? '');
-            asString = asString.replace('ENV.SMARTWASH_BASE_ID', process.env.SMARTWASH_BASE_ID ?? '');
+            if(asString.includes('ENV.TEST_CARWASH_BASE_ID') && !process.env.TEST_CARWASH_BASE_ID) {
+                throw new Error('Missing TEST_CARWASH_BASE_ID');
+            }
+            if(asString.includes('ENV.SMARTWASH_BASE_ID') && !process.env.SMARTWASH_BASE_ID) {
+                throw new Error('Missing SMARTWASH_BASE_ID');
+            }
+            asString = asString.replaceAll('ENV.TEST_CARWASH_BASE_ID', process.env.TEST_CARWASH_BASE_ID ?? '');
+            asString = asString.replaceAll('ENV.SMARTWASH_BASE_ID', process.env.SMARTWASH_BASE_ID ?? '');
             return JSON.parse(asString) as AirtableMappingPlan;
         }
         return null;
