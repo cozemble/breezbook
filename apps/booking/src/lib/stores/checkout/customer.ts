@@ -30,9 +30,7 @@ export function createCustomerStore() {
 
 	const customer = writable<core.Customer>(
 		core.customer('', '', '', {
-			phone: '',
-			firstLineOfAddress: '',
-			postcode: ''
+			phone: ''
 		})
 	);
 
