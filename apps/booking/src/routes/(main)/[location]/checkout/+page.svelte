@@ -4,7 +4,9 @@
 	import OrderSummary from '$lib/sections/checkout/OrderSummary.svelte';
 	import CouponEntry from '$lib/sections/checkout/CouponEntry.svelte';
 	import Icon from '@iconify/svelte';
+	import { locationStore } from '$lib/stores/location';
 
+	const location = locationStore.get();
 	const { items } = checkoutStore.get();
 </script>
 
@@ -14,7 +16,8 @@
 
 		<p class="text-xl font-bold mt-4">Your basket is empty</p>
 		<p class="">Start by adding a booking to your basket</p>
-		<a href="/#services" class="btn btn-primary btn-outline mt-4">Browse Services</a>
+		<a href="/{location.slug}/#services" class="btn btn-primary btn-outline mt-4">Browse Services</a
+		>
 	</div>
 {:else}
 	<div class="pb-8">
