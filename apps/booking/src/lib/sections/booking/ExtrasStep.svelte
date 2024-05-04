@@ -2,6 +2,7 @@
 	import bookingStore from '$lib/stores/booking';
 	import { formatPrice } from '$lib/common/utils';
 	import StepWrapper from './StepWrapper.svelte';
+	import Icon from '@iconify/svelte';
 
 	const {
 		extras: { extras, loading, value, step }
@@ -31,9 +32,22 @@
 
 	{#each $extras as extra, i (i)}
 		<div class="form-control">
-			<label class="cursor-pointer label">
+			<label
+				class="cursor-pointer label
+			{extra.selected ? 'bg-red' : 'bg-base-100'}
+			"
+				for={extra.id}
+			>
 				<span class="label-text">
-					{extra?.description || extra.name}
+					{extra.name}
+
+					{#if extra?.description}
+						<div class="tooltip tooltip-info" data-tip={extra.description}>
+							<button class="btn btn-circle btn-xs">
+								<Icon icon="carbon:information" class="w-4 h-4" />
+							</button>
+						</div>
+					{/if}
 				</span>
 
 				<span class="flex items-center">
@@ -43,6 +57,7 @@
 						type="checkbox"
 						bind:checked={extra.selected}
 						class="checkbox checkbox-secondary"
+						id={extra.id}
 					/>
 				</span>
 			</label>
