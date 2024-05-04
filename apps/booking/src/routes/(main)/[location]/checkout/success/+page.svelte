@@ -8,8 +8,10 @@
 	import notifications from '$lib/stores/notifications';
 	import orderHistoryStore from '$lib/stores/orderHistory';
 	import tenantStore from '$lib/stores/tenant';
+	import { locationStore } from '$lib/stores/location';
 
 	const tenant = tenantStore.get();
+	const location = locationStore.get();
 	const checkout = checkoutStore.get();
 	const orderHistory = orderHistoryStore.get();
 
@@ -72,7 +74,7 @@
 			<p>You will receive an email with the details. Thank you for booking with us!</p>
 
 			<div class="card-actions">
-				<a href="/" class="btn btn-ghost mt-8">Go to home page</a>
+				<a href="/{location.slug}" class="btn btn-ghost mt-8">Go to home page</a>
 			</div>
 		</div>
 	</div>
@@ -85,7 +87,8 @@
 		</p>
 		<p class="text-sm opacity-50">
 			<!-- TODO mailto or contact link -->
-			If you have any questions, please contact us at <a href={`/`} class="link">{tenant.name}</a>.
+			If you have any questions, please contact us at
+			<a href="/{location.slug}" class="link">{tenant.name}</a>.
 		</p>
 	</div>
 </div>
