@@ -41,3 +41,8 @@ export const link = {
 		return url.protocol + '//' + domain;
 	}
 };
+
+export const splitCamelCase = (str: string) => {
+	const words = str.split(/(?=[A-Z])/);
+	return words.join(' ');
+};

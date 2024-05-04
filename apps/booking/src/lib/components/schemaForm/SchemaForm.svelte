@@ -1,6 +1,6 @@
 <script lang="ts">
 	import _ from 'lodash';
-	import { jsonSchemaUtils } from '$lib/common/utils';
+	import { jsonSchemaUtils, splitCamelCase } from '$lib/common/utils';
 	import Input from './Input.svelte';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
@@ -70,7 +70,7 @@
 	{#each simpleProperties as [key, prop], i (i)}
 		<Input
 			bind:value={value[key]}
-			name={prop?.title ?? key}
+			name={prop?.title ?? splitCamelCase(key)}
 			schema={prop}
 			error={_.get(errors, key)}
 		/>
