@@ -1,4 +1,3 @@
-import { get } from 'svelte/store';
 import axios from 'axios';
 import type {
 	AvailabilityResponse,
@@ -12,11 +11,8 @@ import type {
 } from '@breezbook/backend-api-types';
 import { type PricedBasket } from '@breezbook/backend-api-types';
 
-import { env } from '$env/dynamic/public';
 import mock from '$lib/common/mock';
-
-const PUBLIC_API_URL = env.PUBLIC_API_URL;
-const dev = env?.PUBLIC_DEV_MODE || false;
+import config from './config';
 
 // TODO: remove mock
 // TODO: enable real tenant and service slugs
@@ -24,11 +20,13 @@ const dev = env?.PUBLIC_DEV_MODE || false;
 const tenant = {
 	getOne: async (slug: string) => {
 		const res = await axios
-			.get<ApiTenant>(`${PUBLIC_API_URL}/tenants?slug=${slug}`)
+			.get<ApiTenant>(`${config.apiUrl}/tenants?slug=${slug}`)
 			.then((res) => res.data as Tenant)
 			.catch(() => null);
 
-		const mockTenant = dev ? mock.tenants.find((tenant) => tenant.slug === slug) : undefined;
+		const mockTenant = config.devMode
+			? mock.tenants.find((tenant) => tenant.slug === slug)
+			: undefined;
 
 		return res || mockTenant || null;
 	},
@@ -54,7 +52,7 @@ const service = {
 			})
 			.catch(() => null);
 
-		const mockService = dev
+		const mockService = config.devMode
 			? mock.services.find((service) => service.slug === serviceSlug)
 			: undefined;
 
@@ -67,7 +65,7 @@ const service = {
 		if (!tenant) return null;
 
 		const res = await axios
-			.get<ApiService[]>(`${PUBLIC_API_URL}/${tenantSlug}/services`)
+			.get<ApiService[]>(`${config.apiUrl}/${tenantSlug}/services`)
 			.then((res) =>
 				res.data.map(
 					(service): Service => ({
@@ -85,7 +83,7 @@ const service = {
 			)
 			.catch(() => null);
 
-		const tenantServices = dev
+		const tenantServices = config.devMode
 			? mock.services.filter((service) => service.tenantId === tenant.id)
 			: undefined;
 
@@ -97,7 +95,11 @@ const booking = {
 	getDetails: async (tenantSlug: string, locationId: string, serviceId: string) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/${locationId}/service/${serviceId}/availability?fromDate=2024-02-01&toDate=2024-02-07`,
+				`${config.apiUrl}/${tenantSlug}/${locationId}/service/${serviceId}/availability?fromDate=${
+					new Date().toISOString().split('T')[0]
+				}&toDate=${
+					new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+				}`,
 				{
 					headers: {
 						'Content-Type': 'application/json'
@@ -117,7 +119,7 @@ const booking = {
 	) =>
 		axios
 			.post<AvailabilityResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/${locationId}/service/${serviceId}/availability`,
+				`${config.apiUrl}/${tenantSlug}/${locationId}/service/${serviceId}/availability`,
 				undefined,
 				{
 					params: {
@@ -147,20 +149,20 @@ const booking = {
 
 	placeOrder: async (tenantSlug: string, order: CreateOrderRequest) =>
 		axios
-			.post<OrderCreatedResponse>(`${PUBLIC_API_URL}/${tenantSlug}/orders`, order)
+			.post<OrderCreatedResponse>(`${config.apiUrl}/${tenantSlug}/orders`, order)
 			.then((res) => res.data),
 
 	requestCancellationGrant: async (tenantSlug: string, bookingId: string) =>
 		axios
 			.post<CancellationGrantResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/booking/${bookingId}/cancellation/grant`
+				`${config.apiUrl}/${tenantSlug}/booking/${bookingId}/cancellation/grant`
 			)
 			.then((res) => res.data),
 
 	commitCancellation: (tenantSlug: string, bookingId: string, cancellationId: string) =>
 		axios
 			.post(
-				`${PUBLIC_API_URL}/${tenantSlug}/booking/${bookingId}/cancellation/${cancellationId}/commit`
+				`${config.apiUrl}/${tenantSlug}/booking/${bookingId}/cancellation/${cancellationId}/commit`
 			)
 			.then((res) => res.data)
 };
@@ -168,16 +170,14 @@ const booking = {
 const payment = {
 	createPaymentIntent: async (tenantSlug: string, orderId: string) =>
 		axios
-			.post<PaymentIntentResponse>(
-				`${PUBLIC_API_URL}/${tenantSlug}/orders/${orderId}/paymentIntent`
-			)
+			.post<PaymentIntentResponse>(`${config.apiUrl}/${tenantSlug}/orders/${orderId}/paymentIntent`)
 			.then((res) => res.data)
 };
 
 const basket = {
 	pricing: async (tenantSlug: string, basket: UnpricedBasket) =>
 		axios
-			.post<PricedBasket>(`${PUBLIC_API_URL}/${tenantSlug}/basket/price`, basket)
+			.post<PricedBasket>(`${config.apiUrl}/${tenantSlug}/basket/price`, basket)
 			.then((res) => res.data)
 };
 
