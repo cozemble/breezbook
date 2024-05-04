@@ -43,7 +43,7 @@
 
 					{#if extra?.description}
 						<div class="tooltip tooltip-info" data-tip={extra.description}>
-							<button class="btn btn-circle btn-xs">
+							<button class="btn btn-circle btn-ghost btn-xs">
 								<Icon icon="carbon:information" class="w-4 h-4" />
 							</button>
 						</div>
