@@ -4,9 +4,12 @@ export * as jsonSchemaUtils from './jsonSchema';
 // TODO add the unit to the price
 /** Format a price that consists of an integer and a decimal
  * @example
- * formatPrice(1000) // 10.00
+ * formatPrice(1000) // 10
+ * formatPrice(1050) // 10.50
+ * formatPrice(0) // 0
  */
 export const formatPrice = (price: number) => {
+	if (price === 0) return '0';
 	const priceStr = price.toString();
 
 	const priceInteger = priceStr.substring(0, priceStr.length - 2);
