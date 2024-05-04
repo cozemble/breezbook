@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import checkoutStore from '$lib/stores/checkout';
-	import notifications from '$lib/stores/notifications';
 	import { formatPrice } from '$lib/common/utils';
 	import Loading from '$lib/components/Loading.svelte';
 

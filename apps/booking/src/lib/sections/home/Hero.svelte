@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 	import tenantStore from '$lib/stores/tenant';
+	import routeStore from '$lib/stores/routes';
 
+	const routes = routeStore.get();
 	const tenant = tenantStore.get();
 </script>
 
@@ -19,7 +21,7 @@
 				{tenant.description}
 			</p>
 
-			<a class="btn btn-primary" href="#services">
+			<a class="btn btn-primary" href={routes.servicesList()}>
 				Discover Our Services
 
 				<Icon icon="mdi:arrow-down" class="w-5 h-5" />

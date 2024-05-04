@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+
+	import routeStore from '$lib/stores/routes';
 	import checkoutStore from '$lib/stores/checkout';
 	import notifications from '$lib/stores/notifications';
 	import { formatPrice } from '$lib/common/utils';
-	import Loading from '$lib/components/Loading.svelte';
-	import { locationStore } from '$lib/stores/location';
 
-	const tenantLocation = locationStore.get();
+	import Loading from '$lib/components/Loading.svelte';
+
+	const routes = routeStore.get();
 	const { total, items, submitOrder } = checkoutStore.get();
 
 	const handleSubmit = () => {
@@ -16,7 +18,7 @@
 			return;
 		}
 
-		goto(`/${tenantLocation.slug}/checkout/details`);
+		goto(routes.checkout.details());
 	};
 
 	$: discount = $total?.discount?.amount.value || 0;

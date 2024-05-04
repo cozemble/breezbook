@@ -4,7 +4,9 @@
 	import { page } from '$app/stores';
 	import BreezbookLogo from '$lib/components/BreezbookLogo.svelte';
 	import * as utils from '$lib/common/utils';
+	import routeStore from '$lib/stores/routes';
 
+	const routes = routeStore.get();
 	onMount(() => {
 		console.error('Error loading page', $page.status, $page.error?.message);
 		console.log('Error page', $page);
@@ -21,7 +23,7 @@
 
 <div class="p-10">
 	<header class="">
-		<a href={utils.link.removeSubdomain($page.url)}>
+		<a href={routes.breezbook()}>
 			<BreezbookLogo />
 		</a>
 	</header>

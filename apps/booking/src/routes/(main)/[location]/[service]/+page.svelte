@@ -3,10 +3,12 @@
 	import type { PageData } from './$types';
 	import tenantStore from '$lib/stores/tenant';
 	import { formatPrice } from '$lib/common/utils';
+	import routeStore from '$lib/stores/routes';
 
 	export let data: PageData;
 	const service = data.service;
 
+	const routes = routeStore.get();
 	const tenant = tenantStore.get();
 </script>
 
@@ -36,9 +38,8 @@
 					</span>
 				</div>
 			</div>
-			<a href="./{service.slug}/booking" class="btn btn-primary mt-8"
-				>Book Now
-
+			<a href={routes.booking(service.slug)} class="btn btn-primary mt-8">
+				Book Now
 				<Icon icon="mdi:arrow-right" class="w-5 h-5" />
 			</a>
 		</div>

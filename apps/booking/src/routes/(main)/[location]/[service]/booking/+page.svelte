@@ -1,22 +1,21 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { pushState } from '$app/navigation';
-	import { page } from '$app/stores';
-
 	import type { PageData } from './$types';
 	import { formatPrice } from '$lib/common/utils';
 
 	import tenantStore from '$lib/stores/tenant';
 	import bookingStore from '$lib/stores/booking';
+	import { settingsStore } from '$lib/stores/settings';
+	import routeStore from '$lib/stores/routes';
 
 	import PickTimeStep from '$lib/sections/booking/PickTimeStep.svelte';
 	import ExtrasStep from '$lib/sections/booking/ExtrasStep.svelte';
 	import DetailsStep from '$lib/sections/booking/DetailsStep.svelte';
-	import { settingsStore } from '$lib/stores/settings';
 
 	export let data: PageData;
 	const service = data.service;
 
+	const routes = routeStore.get();
 	const tenant = tenantStore.get();
 	const settings = settingsStore.get();
 	const { total } = bookingStore.init(service);
@@ -44,7 +43,7 @@
 	<div>
 		<span class="text-base font-bold"> Booking: </span>
 		<h1 class="text-2xl font-semibold">
-			<a href="./" class="link-hover link-accent">{service.name}</a>
+			<a href={routes.service(service.slug)} class="link-hover link-accent">{service.name}</a>
 		</h1>
 	</div>
 

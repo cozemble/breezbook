@@ -2,6 +2,8 @@
 	import tenantStore from '$lib/stores/tenant';
 	import type { CancellationGranted } from '@breezbook/backend-api-types';
 
+	import { routeStore } from '$lib/stores/routes';
+	const routes = routeStore.get();
 	const tenant = tenantStore.get();
 
 	export let cancellationGrant: CancellationGranted;
@@ -20,14 +22,16 @@
 			</p>
 
 			<div class="card-actions mt-8">
-				<a href="/" class="btn btn-ghost">Go to home page</a>
+				<a href={routes.home()} class="btn btn-ghost">Go to home page</a>
 			</div>
 		</div>
 	</div>
 
 	<div>
 		<p class="text-sm opacity-50">
-			If you have any questions, please contact us at <a href={`/`} class="link">{tenant.name}</a>.
+			If you have any questions, please contact us at <a href={routes.home()} class="link"
+				>{tenant.name}</a
+			>.
 		</p>
 	</div>
 </div>

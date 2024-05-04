@@ -1,10 +1,12 @@
 <script lang="ts">
 	import api from '$lib/common/api';
 	import notifications from '$lib/stores/notifications';
+	import { routeStore } from '$lib/stores/routes';
 	import tenantStore from '$lib/stores/tenant';
 	import type { CancellationGranted } from '@breezbook/backend-api-types';
 
 	const tenant = tenantStore.get();
+	const routes = routeStore.get();
 
 	export let cancellationGrant: CancellationGranted;
 	export let onSuccess: () => void;
@@ -55,7 +57,7 @@
 				<button class="btn btn-neutral" on:click={onConfirmCancellation}>
 					Confirm Cancellation
 				</button>
-				<a href="/" class="btn btn-ghost">Go to home page</a>
+				<a href={routes.home()} class="btn btn-ghost">Go to home page</a>
 			</div>
 		</div>
 	</div>
