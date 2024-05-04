@@ -28,7 +28,7 @@
 	<!-- TODO remove or display error if the booking is taken while in cart -->
 	<!-- TODO select bookings system for bulk operations (later) -->
 
-	<div class="flex flex-col md:flex-row md:items-start gap-4">
+	<div class="flex flex-col lg:flex-row md:items-start gap-4">
 		<!-- bookings list -->
 		<div class="rounded-box flex flex-col flex-grow gap-4 p-4 bg-base-200">
 			{#if $items.length === 0}

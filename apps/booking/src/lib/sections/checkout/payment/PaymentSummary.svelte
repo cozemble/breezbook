@@ -18,14 +18,14 @@
 	$: isTotalLoading = !$total;
 </script>
 
-<div class="flex flex-col items-end p-6 gap-6 rounded-box bg-base-200">
+<div class="flex flex-col items-end p-4 sm:p-8 gap-6 rounded-box bg-base-200">
 	{#if isTotalLoading}
 		<Loading />
 	{:else}
 		<div class="flex flex-col w-full">
 			<!-- subtotal before discount -->
 
-			<div class="flex justify-between">
+			<div class="flex justify-between gap-6">
 				<span class="text-sm font-semibold opacity-60">
 					Subtotal ({$items.length})
 				</span>

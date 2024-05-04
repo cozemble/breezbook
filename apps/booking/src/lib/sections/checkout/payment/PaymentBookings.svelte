@@ -6,7 +6,7 @@
 </script>
 
 <div class="card bg-base-200">
-	<ul class="card-body flex flex-col">
+	<ul class="card-body flex flex-col p-4 sm:p-8">
 		<h1 class="text-xl font-bold mb-2">Bookings</h1>
 
 		{#each $items as item}

@@ -16,7 +16,7 @@
 	<p>Your card details are safe and secure with us. We use Stripe to process payments.</p>
 </div>
 
-<div class="flex gap-4 w-full">
+<div class="flex flex-col md:flex-row gap-4 w-full">
 	<div class="flex flex-col flex-grow gap-4">
 		<CustomerSummary />
 
@@ -24,7 +24,7 @@
 			{#if $loading}
 				<Loading />
 			{:else if $stripe && $clientSecret}
-				<div class="card-body">
+				<div class="card-body p-4 sm:p-8">
 					<h1 class="text-xl font-bold">Card Details</h1>
 
 					<Elements stripe={$stripe}>
