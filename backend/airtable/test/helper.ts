@@ -50,16 +50,16 @@ export async function postOrder(order: Order, total: Price, port: number) {
 }
 
 export const goodCustomer = customer('Mike', 'Hogan', 'mike@email.com', {
-	phone: '23678482376',
-	firstLineOfAddress: '1 Main Street',
-	postcode: 'SW1'
+	phone: '23678482376'
 });
 
 export const goodServiceFormData = {
 	make: 'Ford',
 	model: 'Focus',
 	colour: 'Black',
-	year: 2021
+	year: 2021,
+	firstLineOfAddress: '1 Main Street',
+	postcode: 'SW1'
 };
 
 const fortyPercentMoreToday = timeBasedPriceAdjustment(

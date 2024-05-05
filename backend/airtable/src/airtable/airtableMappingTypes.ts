@@ -65,3 +65,37 @@ interface Lookup {
 export type FieldMapping = ObjectPath | Expression | Lookup;
 
 export type MappingPlanFinder = (tenantId: string, environmentId: string) => Promise<AirtableMappingPlan | null>
+
+interface AirtableCreateCommand {
+    _type: 'airtable.create.command';
+    baseId: string;
+    table: string;
+    fields: Record<string, any>;
+}
+
+interface AirtableUpdateCommand {
+    _type: 'airtable.update.command';
+    baseId: string;
+    table: string;
+    fields: Record<string, any>;
+}
+
+interface AirtableUpsertCommand {
+    _type: 'airtable.upsert.command';
+    baseId: string;
+    table: string;
+    fields: Record<string, any>;
+}
+
+export function airtableCreateCommand(baseId: string, table: string, fields: Record<string, any>): AirtableCreateCommand {
+    return {_type: 'airtable.create.command', baseId, table, fields};
+}
+export function airtableUpdateCommand(baseId: string, table: string, fields: Record<string, any>): AirtableUpdateCommand {
+    return {_type: 'airtable.update.command', baseId, table, fields};
+}
+
+export function airtableUpsertCommand(baseId: string, table: string, fields: Record<string, any>): AirtableUpsertCommand {
+    return {_type: 'airtable.upsert.command', baseId, table, fields};
+}
+
+export type AirtableMutationCommand = AirtableUpsertCommand | AirtableCreateCommand | AirtableUpdateCommand;

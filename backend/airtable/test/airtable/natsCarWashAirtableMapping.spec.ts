@@ -26,7 +26,7 @@ test('integrating from breezbook to Nats airtable tables', async () => {
     expect(bookingRecord).toBeDefined();
     expect(bookingRecord!.fields).toEqual({
         Customer: ['rec100'],
-        Service: ['rec1'],
+        "Service ID": ['rec1'],
         "Car details": [
             "rec102"
         ],

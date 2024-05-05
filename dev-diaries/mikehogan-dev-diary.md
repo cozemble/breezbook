@@ -464,3 +464,73 @@ push changes in airtable back to my app.  But I have the following requirements:
 
 Zapier and make.com do not seem to solve this well, and I'm not aware of any existing product that does all of the above
 in a way that I like.  Whalesync is expensive.
+
+# Fri 3 May 2024
+
+Important mini-lesson today.  The replicateEvent step in my Inngest airtable integration converts a breezbook mutation
+into one or more airtable mutations.  The airtable mutations are then sent to airtable.  I had an error just now
+about "422 Unprocessable Entity".  But because I combined the conversion and the sending into one step, I had no natural
+inspection point of what payload I was sending to airtable. So, I'm refactoring now to separate the conversion and the
+sending into two steps.  I can easily inspect the return value of the conversion step to see what I'm sending to airtable.
+
+# Sat 4 May 2024
+
+I made a mistake yesterday in extracting the prep of airtable mutation commands as its own step.  One of the mappings
+from breezbook mutations to airtable mutations, involved a one to many, specifically 
+[this mapping](https://github.com/cozemble/breezbook/blob/a681501e322cc841eeddde849f1e6a1990529fbb/backend/airtable/src/airtable/natsCarWashAirtableMapping.ts#L120).
+
+This mapping converts an `upsert` on `booking_service_form_values` to a `Car details` airtable record, and updates the
+`Bookings` record with new information, and a reference to the `Car details`.  You will notice that the `Car details`
+reference (from `Bookings`) is a `lookup`.
+
+But of course at the time of planning the mutations, we don't yet know the airtable record of the upserted `Car details`
+record, so the lookup will fail.  So: when planning the airtable mutations, the `lookup` fields must be left as they are,
+and dereferenced only when the airtable record ids are known i.e. at application time.
+
+---------------------------------------
+
+Need to start thinking about getting notified when a replication to airtable message fails.  Asked perplexity, and got
+this:
+
+Yes, Inngest does indeed offer built-in functionality to handle failures and send notifications, including to Slack, 
+without requiring you to manually code this into each step of your functions. According to the Inngest documentation, 
+you can utilize the `inngest/function.failed` event to handle all failed functions in a centralized manner. This 
+feature allows you to set up notifications to external systems like Slack whenever a function fails.
+
+Here’s how you can set up a function in Inngest to send a Slack notification when a function fails:
+
+1.Create a Slack App and Incoming Webhook:
+ * First, create a Slack app and enable incoming webhooks to receive notifications. You will get a webhook URL which you will use to send messages from Inngest.
+2. Set Up the Inngest Function:
+ * You can define a function in Inngest that triggers on the inngest/function.failed event. This function will execute when any of your other functions fail.
+3. Configure the Function to Send Notifications to Slack:
+ * Within this function, you can use the Slack Web API to send a notification to your designated Slack channel. You will need to use the webhook URL obtained from Slack.
+
+Here is an example of how you might define this in Inngest:
+```javascript
+import {client} from "@slack/web-api";
+
+export default inngest.createFunction({
+    id: "notify-on-failure",
+    name: "Send failure notifications to Slack",
+    event: "inngest/function.failed"
+}, async ({event, step}) => {
+    const slackToken = process.env.SLACK_TOKEN; // Ensure you have set your Slack token in your environment variables
+    const channel = "C12345"; // Replace with your Slack channel ID
+
+    const originalEvent = event.data.event;
+    const error = event.data.error;
+
+    const slackClient = new client.WebClient(slackToken);
+    const result = await slackClient.chat.postMessage({
+        channel: channel,
+        text: `Function failed: ${originalEvent.name} with error: ${error.message}`
+    });
+
+    return result;
+});
+```
+
+This function listens for the `inngest/function.failed` event and sends a message to a Slack channel with details 
+about the failure. This setup allows you to centralize error handling and notification, enhancing the operability and 
+monitoring of your functions without embedding notification logic directly into each function.

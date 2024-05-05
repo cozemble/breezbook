@@ -1,10 +1,14 @@
 import {CompositeKey, compositeKeyFns, SynchronisationIdRepository} from '../inngest/dataSynchronisation.js';
 import {AirtableClient, AirtableClientFailure, AirtableClientSuccess} from './airtableClient.js';
 import {
+    airtableCreateCommand,
     AirtableMapping,
     AirtableMappingPlan,
     AirtableMutation,
+    AirtableMutationCommand,
     AirtableRecordIdMapping,
+    airtableUpdateCommand,
+    airtableUpsertCommand,
     FieldMapping
 } from './airtableMappingTypes.js';
 import {Mutation} from '../mutation/mutations.js';
@@ -21,6 +25,19 @@ export async function applyAirtablePlan(
     const maybeMapping = mapping.mappings.find((mapping) => jexlInstance.evalSync(mapping.when, mutation));
     if (maybeMapping) {
         return await applyAirtableMapping(idRepo, airtableClient, mutation, maybeMapping.airtable);
+    }
+    return []
+}
+
+export async function planAirtableMutations(
+    idRepo: SynchronisationIdRepository,
+    mapping: AirtableMappingPlan,
+    mutation: Mutation
+): Promise<AirtableMutationCommand[]> {
+    const jexlInstance = new jexl.Jexl();
+    const maybeMapping = mapping.mappings.find((mapping) => jexlInstance.evalSync(mapping.when, mutation));
+    if (maybeMapping) {
+        return await planSingleMutation(idRepo,  mutation, maybeMapping.airtable);
     }
     return []
 }
@@ -89,11 +106,12 @@ export function successfulAppliedAirtableMapping(airtableOutcome: AirtableClient
 
 export interface FailedAppliedAirtableMapping {
     _type: 'failed.applied.airtable.mapping'
-    error: string
+    error: string,
+    fieldValues: any
 }
 
-export function failedAppliedAirtableMapping(error: string): FailedAppliedAirtableMapping {
-    return {_type: 'failed.applied.airtable.mapping', error};
+export function failedAppliedAirtableMapping(error: string, fieldValues: any): FailedAppliedAirtableMapping {
+    return {_type: 'failed.applied.airtable.mapping', error, fieldValues};
 }
 
 export type AppliedAirtableOutcome =
@@ -117,6 +135,17 @@ async function applyAirtableCreate(
     return successfulAppliedAirtableMapping(outcome, recordId)
 }
 
+export async function mutationPlanToMutationCommand(idRepo: SynchronisationIdRepository, mutation: Mutation, mutationPlan: AirtableMutation): Promise<AirtableMutationCommand> {
+    const fieldValues = await applyFieldMappings(idRepo, mutation, mutationPlan.fields);
+    if (mutationPlan._type === 'airtable.create') {
+        return airtableCreateCommand(mutationPlan.baseId, mutationPlan.table, fieldValues);
+    } else if (mutationPlan._type === 'airtable.update') {
+        return airtableUpdateCommand(mutationPlan.baseId, mutationPlan.table, fieldValues);
+    } else {
+        return airtableUpsertCommand(mutationPlan.baseId, mutationPlan.table, fieldValues);
+    }
+}
+
 async function applyAirtableUpdate(
     idRepo: SynchronisationIdRepository,
     airtableClient: AirtableClient,
@@ -124,13 +153,13 @@ async function applyAirtableUpdate(
     recordId: AirtableRecordIdMapping,
     record: AirtableMutation
 ): Promise<AppliedAirtableOutcome> {
+    const fieldValues = await applyFieldMappings(idRepo, mutation, record.fields);
     const targetId = await idRepo.getTargetId(recordId.mappedTo.entity, recordId.mappedTo.entityId, record.table);
     if (!targetId) {
         return failedAppliedAirtableMapping(`While applying  ${record._type} to table '${record.table}', no target id for entity '${recordId.mappedTo.entity}', key '${compositeKeyFns.toString(
             recordId.mappedTo.entityId
-        )}', table '${record.table}'`)
+        )}', table '${record.table}'`, fieldValues)
     }
-    const fieldValues = await applyFieldMappings(idRepo, mutation, record.fields);
     const outcome = await airtableClient.updateRecord(record.baseId, record.table, targetId.value, fieldValues);
     if (outcome._type === 'airtable.client.failure') {
         return outcome;
@@ -196,4 +225,12 @@ async function applyAirtableMapping(
         outcomes.push(outcome);
     }
     return outcomes;
+}
+
+async function planSingleMutation(
+    idRepo: SynchronisationIdRepository,
+    mutation: Mutation,
+    airtable: AirtableMapping
+): Promise<AirtableMutationCommand[]> {
+    return await Promise.all(airtable.records.map(async (record) => await mutationPlanToMutationCommand(idRepo, mutation, record)));
 }

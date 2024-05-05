@@ -3,7 +3,11 @@ import {prismaClient} from '../prisma/client.js';
 import {Mutation} from '../mutation/mutations.js';
 import {PrismaSynchronisationIdRepository, SynchronisationIdRepository} from './dataSynchronisation.js';
 import {AirtableClient, AirtableClientFailure, HttpAirtableClient} from '../airtable/airtableClient.js';
-import {applyAirtablePlan, FailedAppliedAirtableMapping} from '../airtable/applyAirtablePlan.js';
+import {
+    applyAirtablePlan,
+    FailedAppliedAirtableMapping,
+    mutationPlanToMutationCommand, planAirtableMutations
+} from '../airtable/applyAirtablePlan.js';
 import {AirtableAccessTokenProvider} from './airtableAccessTokenProvider.js';
 import {PrismaClient} from "@prisma/client";
 import {DbMutationEvent, TenantEnvironmentPair} from "../prisma/dbtypes.js";
@@ -158,7 +162,7 @@ export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClien
                 if (outcome._type === 'successful.applied.airtable.mapping') {
                     logger.info(`Successfully replicated event ${maybePendingEvent.id} as ${outcome.airtableOutcome.action} to ${airtableSystemName} ${outcome.airtableOutcome.baseId}/${outcome.airtableOutcome.table}/${outcome.airtableOutcome.recordId.value}`);
                 } else if (outcome._type === 'airtable.client.failure') {
-                    logger.error(`Failed to replicate event ${maybePendingEvent.id} to ${airtableSystemName} (${outcome.baseId}/${outcome.table}): ${outcome.error}`);
+                    logger.error(`Failed to replicate event ${maybePendingEvent.id} to ${airtableSystemName} (${outcome.baseId}/${outcome.table}): ${outcome.error}. Fields were ${JSON.stringify(outcome.fields)}`);
                 } else {
                     logger.error(`Failed to replicate event ${maybePendingEvent.id} to ${airtableSystemName}: ${outcome.error}`);
                 }

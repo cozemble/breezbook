@@ -277,13 +277,23 @@ const carDetailsForm: JsonSchemaForm = {
             "year": {
                 "type": "integer",
                 "description": "The manufacturing year of the car."
+            },
+            "firstLineOfAddress": {
+                "type": "string",
+                "description": "The first line of your address."
+            },
+            "postcode": {
+                "type": "string",
+                "description": "Your postcode."
             }
         },
         "required": [
             "make",
             "model",
             "colour",
-            "year"
+            "year",
+            "firstLineOfAddress",
+            "postcode"
         ],
         "additionalProperties": false
     }
@@ -302,20 +312,10 @@ const contactDetailsForm: JsonSchemaForm = {
             "phone": {
                 "type": "string",
                 "description": "Your phone number."
-            },
-            "firstLineOfAddress": {
-                "type": "string",
-                "description": "The first line of your address."
-            },
-            "postcode": {
-                "type": "string",
-                "description": "Your postcode."
             }
         },
         "required": [
-            "phone",
-            "firstLineOfAddress",
-            "postcode"
+            "phone"
         ],
         "additionalProperties": false
     }

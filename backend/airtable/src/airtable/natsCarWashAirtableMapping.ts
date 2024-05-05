@@ -106,7 +106,7 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                                 _type: 'expression',
                                 expression: 'data.start_time_24hr + " to " + data.end_time_24hr'
                             },
-                            Service: [{
+                            "Service ID": [{
                                 _type: 'lookup',
                                 entity: 'services',
                                 entityId: {id: 'data.service_id'},
