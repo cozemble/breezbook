@@ -1,11 +1,3 @@
-create table last_shovl_out
-(
-    environment_id text                                not null,
-    entity_type    text                                not null,
-    last_shovl_out timestamp                           not null,
-    primary key (environment_id, entity_type)
-);
-
 create table customer_form_values
 (
     tenant_id      text references tenants (tenant_id) not null,

@@ -191,21 +191,6 @@ model forms {
   tenant_settings             tenant_settings[]
 }
 
-model last_change_announcements {
-  id                Int      @id @default(autoincrement())
-  environment_id    String
-  announcement_date DateTime @db.Timestamp(6)
-  channel_id        String
-}
-
-model last_shovl_out {
-  environment_id String
-  entity_type    String
-  last_shovl_out DateTime @db.Timestamp(6)
-
-  @@id([environment_id, entity_type])
-}
-
 model locations {
   id                    String                  @id
   tenant_id             String
@@ -227,15 +212,6 @@ model locations {
 
   @@unique([tenant_id, environment_id, slug], map: "locations_tenant_environment_slug_idx")
   @@unique([tenant_id, environment_id, slug])
-}
-
-model log_messages {
-  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
-  environment_id String
-  message        String
-  level          String   @default("info")
-  correlation_id String?
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
 }
 
 model mutation_events {
@@ -515,20 +491,6 @@ model system_config {
   @@id([environment_id, config_key])
 }
 
-model system_outbound_webhooks {
-  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
-  environment_id String
-  tenant_id      String
-  action         String
-  status         String   @default("pending")
-  payload_type   String
-  payload        Json
-  batch_id       String?  @db.Uuid
-  created_at     DateTime @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime @default(now()) @db.Timestamptz(6)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
 model tenant_branding {
   tenant_id      String
   environment_id String
@@ -603,12 +565,10 @@ model tenants {
   service_images                   service_images[]
   service_locations                service_locations[]
   services                         services[]
-  system_outbound_webhooks         system_outbound_webhooks[]
   tenant_branding                  tenant_branding[]
   tenant_images                    tenant_images[]
   tenant_settings                  tenant_settings[]
   time_slots                       time_slots[]
-  webhook_destinations             webhook_destinations[]
 }
 
 model time_slots {
@@ -626,20 +586,6 @@ model time_slots {
   order_lines     order_lines[]
   locations       locations?    @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants         tenants       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model webhook_destinations {
-  id                 String   @id @default(dbgenerated("extensions.uuid_generate_v4()")) @db.Uuid
-  tenant_id          String
-  environment_id     String
-  payload_type       String
-  method             String   @default("post")
-  destination_system String
-  destination_url    String
-  headers            Json?
-  created_at         DateTime @default(now()) @db.Timestamptz(6)
-  updated_at         DateTime @default(now()) @db.Timestamptz(6)
-  tenants            tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model simple_kv_store {

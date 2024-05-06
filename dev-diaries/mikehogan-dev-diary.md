@@ -534,3 +534,14 @@ export default inngest.createFunction({
 This function listens for the `inngest/function.failed` event and sends a message to a Slack channel with details 
 about the failure. This setup allows you to centralize error handling and notification, enhancing the operability and 
 monitoring of your functions without embedding notification logic directly into each function.
+
+
+# Mon 6 May 2024
+
+Deleted a bunch of database migration scripts that I played around with when trying to find a solution for airtable
+migration.  I'm continually zapping the "prod" database because we have no users yet.  Nice situation, but that will 
+soon change.
+
+Today's main focus is getting payment confirmation stripe webhooks correctly integrated.  What they will need to do
+is record the amount paid against the order, and that amount will be replicated to airtable.  Then airtable knows the
+booking has been paid for, and can send out the confirmation email.

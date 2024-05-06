@@ -174,31 +174,6 @@ describe('Given a migrated database', async () => {
         expect(response.status).toBe(401);
     });
 
-    test('inserting a new booking queues up an outbound webhook', async () => {
-        const createOrderResponse = await insertOrder(
-            tenantEnv,
-            createOrderRequest(
-                order(goodCustomer, [orderLine(carwash.mediumCarWash.id, carwash.locations.london,carwash.mediumCarWash.price, [], isoDate(), carwash.nineToOne, [])]),
-                carwash.mediumCarWash.price,
-                fullPaymentOnCheckout()
-            ),
-            carwash.services,
-            tenantSettings(timezone('Europe/London'), null)
-        );
-        expect(createOrderResponse.bookingIds).toHaveLength(1);
-        expect(createOrderResponse.bookingIds[0]).toBeDefined();
-        const prisma = prismaClient();
-        const found = await prisma.$queryRaw`SELECT *
-                                             FROM system_outbound_webhooks
-                                             WHERE payload ->> 'id' = ${createOrderResponse.bookingIds[0]}`;
-        expect(found).toHaveLength(1);
-        const outboundWebhook = found[0];
-        expect(outboundWebhook.action).toBe('create');
-        expect(outboundWebhook.payload_type).toBe('booking');
-        expect(outboundWebhook.status).toBe('pending');
-        expect(outboundWebhook.payload.id).toEqual(createOrderResponse.bookingIds[0]);
-    });
-
     test('on receipt of a successful payment for an order, a payment record for the order is created', async () => {
         const costInPence = randomInteger(5000);
         const createOrderResponse = await insertOrder(

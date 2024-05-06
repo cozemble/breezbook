@@ -7,20 +7,16 @@ import {createStripePaymentIntent, onStripeWebhook} from './stripeEndpoint.js';
 import bodyParser from 'body-parser';
 import {IncomingMessage} from 'http';
 import {handleReceivedWebhook} from './handleReceivedWebhook.js';
-import {onOutboundWebhooksBatch} from './onOutboundWebhooksBatch.js';
 import {bindInngestToExpress} from '../inngest/expressBinding.js';
 import {commitCancellation, requestCancellationGrant} from './cancellation.js';
 import {onStoreTenantSecret} from './secretManagement.js';
 import {couponValidityCheck} from './coupons/couponHandlers.js';
 import {onBasketPriceRequest} from './basket/basketHandler.js';
-import {onShovlOut} from './shovl/shovlEndpoints.js';
-import {onGetChangeDatesForAllEnvironments, onGetChanges} from './changes/changesHandlers.js';
 import {onGetAccessToken} from './oauth/oauthHandlers.js';
 import {onPublishReferenceDataAsMutationEvents} from './temp/onPublishReferenceDataAsMutationEvents.js';
 import {onGetServicesRequest} from "./services/serviceHandlers.js";
 import {onGetTenantRequest} from "./tenants/tenantHandlers.js";
-import {environmentIdParam, withNoRequestParams, withTwoRequestParams} from "../infra/functionalExpress.js";
-import {prismaClient} from "../prisma/client.js";
+import {withNoRequestParams} from "../infra/functionalExpress.js";
 import {setupDevEnvironment} from "../dx/setupDevEnvironment.js";
 import {getServiceAvailabilityForLocation} from "./availability/getServiceAvailabilityForLocation.js";
 import {onAirtableOauthBegin, onAirtableOauthCallback} from "./oauth/airtableConnect.js";
@@ -83,11 +79,7 @@ export function expressApp(): Express {
     app.get(externalApiPaths.airtableOauthCallback, onAirtableOauthCallback);
 
     app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
-    app.post('/internal/api/:envId/system_outbound_webhooks/batch', onOutboundWebhooksBatch);
     app.post('/internal/api/:envId/:tenantId/secret', onStoreTenantSecret);
-    app.post('/internal/api/:envId/shovl/out', onShovlOut);
-    app.get(internalApiPaths.getChangeDatesForAllEnvironments, onGetChangeDatesForAllEnvironments);
-    app.get(internalApiPaths.getChangesForEnvironment, onGetChanges);
     app.get(internalApiPaths.getAccessToken, onGetAccessToken);
     app.post(internalApiPaths.publishReferenceDataAsMutationEvents, onPublishReferenceDataAsMutationEvents);
     app.post(internalApiPaths.onAppStart, onAppStartRequest);
@@ -98,8 +90,6 @@ export function expressApp(): Express {
 }
 
 export const internalApiPaths = {
-    getChangeDatesForAllEnvironments: '/internal/api/changes/dates',
-    getChangesForEnvironment: '/internal/api/:envId/changes',
     getAccessToken: '/internal/api/:envId/:tenantId/oauth/:systemId/accessToken',
     publishReferenceDataAsMutationEvents: '/internal/api/:envId/:tenantId/referenceData/publishAsMutationEvents',
     onAppStart: '/internal/api/onAppStart',
@@ -114,7 +104,7 @@ export const externalApiPaths = {
 }
 
 async function onAppStartRequest(req: express.Request, res: express.Response): Promise<void> {
-    await withNoRequestParams(req, res,  async () => {
+    await withNoRequestParams(req, res, async () => {
         await setupDevEnvironment().catch(e => console.error(e));
         res.status(200).send({status: 'ok'});
     });

@@ -1,6 +1,7 @@
 create extension if not exists "uuid-ossp";
 create extension if not exists pgcrypto;
 create extension if not exists pg_net;
+create extension if not exists pg_cron;
 
 create table tenants
 (
@@ -349,58 +350,6 @@ create table received_webhooks
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp
 );
-
-create or replace function call_received_webhook_handler()
-    returns trigger as
-$$
-declare
-    v_url        text;
-    v_auth_token text;
-    v_payload    jsonb;
-    v_headers    jsonb;
-begin
-    select into v_url config_value
-    from system_config
-    where config_key = 'received_webhook_handler_url'
-      and environment_id = new.environment_id;
-
-    select into v_auth_token decrypted_secret
-    from vault.decrypted_secrets
-    where name = new.environment_id || ':internal_bb_api_key';
-
-    -- construct the json payload with webhook_id and payload
-    v_payload := jsonb_build_object(
-            'webhook_id', new.webhook_id,
-            'payload', new.payload
-                 );
-    v_headers = jsonb_build_object(
-            'Content-Type', 'application/json',
-            'Authorization', v_auth_token
-                );
-
-    -- check if url and auth token are not null
-    if v_url is not null and v_auth_token is not null then
-        -- call the endpoint with pg_net
-        perform net.http_post(
-                v_url,
-                v_payload,
-                '{}'::jsonb,
-                v_headers
-                );
-    else
-        raise exception 'Url or Auth token is missing in system_config for environment %', new.environment_id;
-    end if;
-
-    return new;
-end;
-$$ language plpgsql;
-
--- trigger on received_webhooks table
-create trigger trigger_received_webhook
-    after insert
-    on received_webhooks
-    for each row
-execute function call_received_webhook_handler();
 
 create table refund_rules
 (
