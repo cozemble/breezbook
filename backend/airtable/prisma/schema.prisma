@@ -48,6 +48,22 @@ model booking_events {
   tenants        tenants            @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
+model booking_payments {
+  id                      String         @id
+  tenant_id               String
+  environment_id          String
+  booking_id              String
+  status                  payment_status
+  amount_in_minor_units   Int
+  amount_currency         String
+  provider                String
+  provider_transaction_id String
+  created_at              DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime       @default(now()) @db.Timestamptz(6)
+  bookings                bookings       @relation(fields: [booking_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenants                 tenants        @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+}
+
 model booking_service_form_values {
   tenant_id           String
   environment_id      String
@@ -79,6 +95,7 @@ model bookings {
   created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
   updated_at                  DateTime                      @default(now()) @db.Timestamptz(6)
   booking_events              booking_events[]
+  booking_payments            booking_payments[]
   booking_service_form_values booking_service_form_values[]
   customers                   customers                     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   locations                   locations                     @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -214,6 +231,11 @@ model locations {
 
   @@unique([tenant_id, environment_id, slug], map: "locations_tenant_environment_slug_idx")
   @@unique([tenant_id, environment_id, slug])
+}
+
+model locks {
+  lock_key    String    @id @db.VarChar(255)
+  acquired_at DateTime? @default(now()) @db.Timestamp(6)
 }
 
 model mutation_events {
@@ -488,6 +510,14 @@ model services {
   @@unique([tenant_id, environment_id, slug])
 }
 
+model simple_kv_store {
+  key        String    @id
+  value      String
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  updated_at DateTime  @default(now()) @db.Timestamp(6)
+  expires_at DateTime? @db.Timestamp(6)
+}
+
 model system_config {
   environment_id String
   config_key     String
@@ -544,6 +574,7 @@ model tenants {
   add_on                           add_on[]
   blocked_time                     blocked_time[]
   booking_events                   booking_events[]
+  booking_payments                 booking_payments[]
   booking_service_form_values      booking_service_form_values[]
   bookings                         bookings[]
   business_hours                   business_hours[]
@@ -591,19 +622,6 @@ model time_slots {
   order_lines     order_lines[]
   locations       locations?    @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants         tenants       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-}
-
-model simple_kv_store {
-  key        String    @id
-  value      String
-  created_at DateTime  @default(now()) @db.Timestamp(6)
-  updated_at DateTime  @default(now()) @db.Timestamp(6)
-  expires_at DateTime? @db.Timestamp(6)
-}
-
-model locks {
-  lock_key    String    @id @db.VarChar(255)
-  acquired_at DateTime? @default(now()) @db.Timestamp(6)
 }
 
 enum booking_event_type {

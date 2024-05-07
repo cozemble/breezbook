@@ -5,8 +5,11 @@ import {DelegatingInngestStep, InngestStep, Logger} from "./inngestTypes.js";
 import {PaymentIntentWebhookBody} from "../stripe.js";
 import {v4 as uuid} from 'uuid';
 import {STRIPE_WEBHOOK_ID} from "../express/stripeEndpoint.js";
+import {environmentId, mandatory, tenantEnvironment, tenantId} from "@breezbook/packages-core";
+import {createBookingPayment, createOrderPayment} from "../prisma/breezPrismaMutations.js";
+import {applyMutations} from "../prisma/applyMutations.js";
 
-const stripePaymentEvents = {
+export const stripePaymentEvents = {
     onPaymentIntentSucceeded: 'stripePaymentEvents/onPaymentIntentSucceeded'
 };
 
@@ -18,7 +21,7 @@ export const onPaymentIntentSucceeded = inngest.createFunction(
     async ({event, step, logger}) => {
         const {webhookId} = event.data;
         const prisma = prismaClient();
-        await handlePaymentIntentSucceeded(prisma, new DelegatingInngestStep(inngest,step), logger, webhookId);
+        await handlePaymentIntentSucceeded(prisma, new DelegatingInngestStep(inngest, step), logger, webhookId);
     }
 );
 
@@ -34,14 +37,15 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
         logger.error(`Webhook ${webhookId} is not a stripe.payment.intent.webhook.body`);
         return;
     }
-    const paymentIntent:PaymentIntentWebhookBody = webhook.payload as any;
-    if(!paymentIntent.metadata.tenantId || !paymentIntent.metadata.orderId || !paymentIntent.metadata.environmentId) {
+    const paymentIntent: PaymentIntentWebhookBody = webhook.payload as any;
+    if (!paymentIntent.metadata.tenantId || !paymentIntent.metadata.orderId || !paymentIntent.metadata.environmentId) {
         logger.error(`Webhook ${webhookId} is missing metadata`);
         return;
     }
+    const theTenantEnvironment = tenantEnvironment(environmentId(paymentIntent.metadata.environmentId as string), tenantId(paymentIntent.metadata.tenantId as string))
+
     await step.run('createOrderPayment', async () => {
-        return await prisma.order_payments.create({
-            data: {
+        const mutation = createOrderPayment({
                 id: uuid(),
                 tenant_id: paymentIntent.metadata.tenantId as string,
                 environment_id: paymentIntent.metadata.environmentId as string,
@@ -52,7 +56,9 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
                 provider: STRIPE_WEBHOOK_ID,
                 provider_transaction_id: paymentIntent.id,
             }
-        });
+        )
+        await applyMutations(prismaClient(), theTenantEnvironment, [mutation])
+        return mutation
     });
     const orderLines = await step.run('findOrderLines', async () => {
         return await prisma.order_lines.findMany({where: {order_id: paymentIntent.metadata.orderId as string}});
@@ -60,5 +66,29 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
     const bookings = await step.run('findBookings', async () => {
         return await prisma.bookings.findMany({where: {order_id: paymentIntent.metadata.orderId as string}});
     });
-    // const bookingTotal = bookings.reduce((total, booking) => total + booking.total, 0);
+    const bookingTotalInMinorUnits = bookings.reduce((total, booking) => {
+        const orderLine = mandatory(orderLines.find(ol => ol.id === booking.order_line_id), `Order line not found for booking ${booking.id}`);
+        return total + orderLine.total_price_in_minor_units;
+    }, 0);
+
+    await step.run('createBookingPayments', async () => {
+        const mutations = orderLines.map(orderLine => {
+            const booking = mandatory(bookings.find(b => b.order_line_id === orderLine.id), `Booking not found for order line ${orderLine.id}`)
+            const bookingPercentageOfTotal = bookingTotalInMinorUnits / orderLine.total_price_in_minor_units
+            const bookingPayment = paymentIntent.amount * bookingPercentageOfTotal
+            return createBookingPayment({
+                id: uuid(),
+                tenant_id: paymentIntent.metadata.tenantId as string,
+                environment_id: paymentIntent.metadata.environmentId as string,
+                booking_id: booking.id,
+                status: "succeeded",
+                provider: STRIPE_WEBHOOK_ID,
+                provider_transaction_id: paymentIntent.id,
+                amount_in_minor_units: bookingPayment,
+                amount_currency: paymentIntent.currency,
+            })
+        })
+        await applyMutations(prismaClient(), theTenantEnvironment, mutations)
+        return mutations
+    })
 }

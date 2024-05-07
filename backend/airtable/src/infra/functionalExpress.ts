@@ -18,9 +18,9 @@ import {
     TenantId
 } from '@breezbook/packages-core';
 import {ErrorResponse, PricedCreateOrderRequest} from '@breezbook/backend-api-types';
-import {prismaMutationToPromise} from './prismaMutations.js';
 import {PrismaClient} from '@prisma/client';
-import {Mutation, mutationFns, Mutations} from '../mutation/mutations.js';
+import {Mutations} from '../mutation/mutations.js';
+import {applyMutations} from "../prisma/applyMutations.js";
 
 export interface RequestValueExtractor {
     name: string;
@@ -334,18 +334,6 @@ export function httpJsonResponse(status: number, body: unknown): HttpJsonRespons
     return {_type: 'http.json.response', status, body};
 }
 
-function storeEvent(tenantEnvironment: TenantEnvironment, prisma: PrismaClient, mutation: Mutation) {
-    return prisma.mutation_events.create({
-        data: {
-            tenant_id: tenantEnvironment.tenantId.value,
-            environment_id: tenantEnvironment.environmentId.value,
-            event_type: mutation._type,
-            entity_type: mutationFns.entity(mutation),
-            entity_id: mutationFns.entityId(mutation).value,
-            event_data: mutation as any
-        }
-    });
-}
 
 export async function handleOutcome(
     res: express.Response,
@@ -362,12 +350,11 @@ export async function handleOutcome(
         res.status(400).send(outcome);
         return;
     }
-    const outcomeMutations = outcome.mutations.map((mutation) => prismaMutationToPromise(prisma, mutation));
-    const storeEvents = outcome.mutations.map((m) => storeEvent(tenantEnvironment, prisma, m));
-    await prisma.$transaction([...outcomeMutations, ...storeEvents]);
+    await applyMutations(prisma, tenantEnvironment, outcome.mutations)
     if (response) {
         return sendJson(res, response.body, response.status);
     } else {
         res.status(200).send();
     }
 }
+
