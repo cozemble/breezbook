@@ -2,7 +2,8 @@ import {
     AddOnId,
     AddOnOrder,
     CouponCode,
-    IsoDate, locationId,
+    IsoDate,
+    locationId,
     LocationId,
     Price,
     serviceId,
@@ -17,6 +18,7 @@ export interface UnpricedBasketLine {
     addOnIds: AddOnOrder[];
     date: IsoDate;
     timeslot: TimeslotSpec;
+    serviceFormData: unknown[];
 }
 
 export interface UnpricedBasket {
@@ -33,7 +35,7 @@ export function unpricedBasket(lines: UnpricedBasketLine[], couponCode?: CouponC
     };
 }
 
-export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, timeslot: TimeslotSpec): UnpricedBasketLine {
+export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, timeslot: TimeslotSpec, serviceFormData: unknown[]): UnpricedBasketLine {
     const theServiceId = typeof serviceIdValue === 'string' ? serviceId(serviceIdValue) : serviceIdValue;
     const theLocationId = typeof locationIdValue === 'string' ? locationId(locationIdValue) : locationIdValue;
     return {
@@ -42,7 +44,8 @@ export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationI
         locationId: theLocationId,
         addOnIds,
         date,
-        timeslot
+        timeslot,
+        serviceFormData
     };
 }
 
@@ -55,9 +58,13 @@ export interface PricedAddOn {
 export interface PricedBasketLine {
     _type: 'priced.basket.line';
     serviceId: ServiceId;
+    locationId: LocationId;
     addOnIds: PricedAddOn[];
     servicePrice: Price;
     total: Price;
+    date: IsoDate;
+    timeslot: TimeslotSpec;
+    serviceFormData: unknown[];
 }
 
 export interface PricedBasket {
@@ -78,13 +85,19 @@ export function pricedBasket(lines: PricedBasketLine[], total: Price, couponCode
     };
 }
 
-export function pricedBasketLine(serviceIdValue: ServiceId, addOnIds: PricedAddOn[], servicePrice: Price, total: Price): PricedBasketLine {
+export function pricedBasketLine(locationId: LocationId, serviceIdValue: ServiceId, addOnIds: PricedAddOn[], servicePrice: Price, total: Price, date: IsoDate,
+                                 timeslot: TimeslotSpec, serviceFormData: unknown[]
+): PricedBasketLine {
     return {
         _type: 'priced.basket.line',
+        locationId,
         serviceId: serviceIdValue,
         addOnIds,
         total,
-        servicePrice
+        servicePrice,
+        date,
+        timeslot,
+        serviceFormData
     };
 }
 
@@ -102,5 +115,13 @@ export const unpricedBasketFns = {
         const fromDate = dates.reduce((acc, curr) => (acc < curr ? acc : curr));
         const toDate = dates.reduce((acc, curr) => (acc > curr ? acc : curr));
         return {fromDate, toDate};
+    }
+};
+
+export const pricedBasketFns = {
+    toUnpricedBasket(pricedBasket: PricedBasket): UnpricedBasket {
+        return unpricedBasket(pricedBasket.lines.map((line) => {
+            return unpricedBasketLine(line.serviceId, line.locationId, line.addOnIds, line.date, line.timeslot, line.serviceFormData);
+        }), pricedBasket.couponCode);
     }
 };

@@ -3,20 +3,16 @@ import {prismaClient} from '../prisma/client.js';
 import {Mutation} from '../mutation/mutations.js';
 import {PrismaSynchronisationIdRepository, SynchronisationIdRepository} from './dataSynchronisation.js';
 import {AirtableClient, AirtableClientFailure, HttpAirtableClient} from '../airtable/airtableClient.js';
-import {
-    applyAirtablePlan,
-    FailedAppliedAirtableMapping,
-    mutationPlanToMutationCommand, planAirtableMutations
-} from '../airtable/applyAirtablePlan.js';
+import {applyAirtablePlan, FailedAppliedAirtableMapping,} from '../airtable/applyAirtablePlan.js';
 import {AirtableAccessTokenProvider} from './airtableAccessTokenProvider.js';
 import {PrismaClient} from "@prisma/client";
 import {DbMutationEvent, TenantEnvironmentPair} from "../prisma/dbtypes.js";
 import {airtableSystemName} from "../express/oauth/airtableConnect.js";
-// import {carWashMapping} from "../airtable/carWashMapping.js";
 import {acquireLock, releaseLock} from "./tenantEnvironmentLock.js";
 import {AirtableMappingPlan, MappingPlanFinder} from "../airtable/airtableMappingTypes.js";
 import {natsCarWashAirtableMapping} from "../airtable/natsCarWashAirtableMapping.js";
 import {carWashMapping} from "../airtable/carWashMapping.js";
+import {DelegatingInngestStep, InngestStep, Logger} from "./inngestTypes.js";
 
 const announceChangesToAirtable = {
     fanOutChangesInTenantEnvironments: 'announceChanges/airtable/fanOutChangesInTenantEnvironments',
@@ -47,7 +43,6 @@ async function getEarliestNonReplicatedMutationEvent(prisma: PrismaClient, tenan
         LIMIT 1
     `);
 
-    // If there is a result, return it. Otherwise, return null.
     return result.length > 0 ? result[0] : null;
 }
 
@@ -68,62 +63,6 @@ export const fanOutChangesInAllEnvironments = inngest.createFunction(
         });
     }
 );
-
-export interface InngestInvocation {
-    name: string;
-    data: any;
-}
-
-export interface InngestStep {
-    run<T>(name: string, f: () => Promise<T>): Promise<T>
-
-    send(payload: InngestInvocation): Promise<void>
-}
-
-class DelegatingInngestStep implements InngestStep {
-    constructor(private readonly inngest: any, private readonly step: any) {
-    }
-
-    async run<T>(name: string, f: () => Promise<T>): Promise<T> {
-        return await this.step.run(name, f);
-    }
-
-    async send(payload: InngestInvocation): Promise<void> {
-        await this.inngest.send(payload);
-    }
-}
-
-interface Logger {
-    info(...args: any[]): void;
-
-    warn(...args: any[]): void;
-
-    error(...args: any[]): void;
-
-    debug(...args: any[]): void;
-}
-
-export class ConsoleLogger implements Logger {
-    info(...args: any[]): void {
-        console.log(...args);
-    }
-
-    warn(...args: any[]): void {
-        console.warn(...args);
-    }
-
-    error(...args: any[]): void {
-        console.error(...args);
-    }
-
-    debug(...args: any[]): void {
-        console.debug(...args);
-    }
-}
-
-export function consoleLogger(): Logger {
-    return new ConsoleLogger();
-}
 
 export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClient,
                                                              logger: Logger,

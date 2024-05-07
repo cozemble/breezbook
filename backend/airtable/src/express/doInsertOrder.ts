@@ -1,17 +1,22 @@
 import {
     calcSlotPeriod,
+    Customer,
     FormId,
     mandatory,
-    Order,
+    orderId,
+    PaymentIntent,
     Service,
     TenantEnvironment,
     TenantSettings
 } from '@breezbook/packages-core';
-import {CreateOrderRequest, orderCreatedResponse, OrderCreatedResponse} from '@breezbook/backend-api-types';
-import {prismaClient} from '../prisma/client.js';
+import {
+    orderCreatedResponse,
+    OrderCreatedResponse,
+    PricedBasketLine,
+    PricedCreateOrderRequest
+} from '@breezbook/backend-api-types';
 import {v4 as uuidv4} from 'uuid';
 import {Prisma} from '@prisma/client';
-import {prismaMutationToPromise} from '../infra/prismaMutations.js';
 import {
     createBooking,
     createOrder,
@@ -25,39 +30,39 @@ import {
 } from '../prisma/breezPrismaMutations.js';
 import {Mutation, Mutations, mutations as mutationsConstructor} from '../mutation/mutations.js';
 
-function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, order: Order, tenantSettings: TenantSettings): Mutation[] {
+function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, customer: Customer, tenantSettings: TenantSettings): Mutation[] {
     const tenant_id = tenantEnvironment.tenantId.value;
     const environment_id = tenantEnvironment.environmentId.value;
-    const email = order.customer.email.value;
+    const email = customer.email.value;
     const upserts: Mutation[] = [
         upsertCustomer(
             {
-                id: order.customer.id.value,
+                id: customer.id.value,
                 email,
-                first_name: order.customer.firstName,
-                last_name: order.customer.lastName,
+                first_name: customer.firstName,
+                last_name: customer.lastName,
                 environment_id,
                 tenant_id
             },
             {
-                first_name: order.customer.firstName,
-                last_name: order.customer.lastName,
+                first_name: customer.firstName,
+                last_name: customer.lastName,
             },
             {tenant_id_environment_id_email: {tenant_id, environment_id, email}}
         )
     ];
-    if (tenantSettings.customerFormId && order.customer.formData) {
+    if (tenantSettings.customerFormId && customer.formData) {
         const create: Prisma.customer_form_valuesCreateArgs['data'] = {
             environment_id: tenantEnvironment.environmentId.value,
             tenant_id: tenantEnvironment.tenantId.value,
-            form_values: order.customer.formData,
-            customer_id: order.customer.id.value
+            form_values: customer.formData,
+            customer_id: customer.id.value
         };
         const update: Prisma.customer_form_valuesUpdateArgs['data'] = {
-            form_values: order.customer.formData
+            form_values: customer.formData
         };
         const where: Prisma.customer_form_valuesWhereUniqueInput = {
-            tenant_id_environment_id_customer_id: {tenant_id, environment_id, customer_id: order.customer.id.value}
+            tenant_id_environment_id_customer_id: {tenant_id, environment_id, customer_id: customer.id.value}
         };
 
         upserts.push(upsertCustomerFormValues(create, update, where));
@@ -65,15 +70,15 @@ function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, order: 
     return upserts;
 }
 
-function createOrderAsPrismaMutation(tenantEnvironment: TenantEnvironment, createOrderRequest: CreateOrderRequest, orderId: string): CreateOrder {
+function createOrderAsPrismaMutation(tenantEnvironment: TenantEnvironment, pricedCreateOrderRequest: PricedCreateOrderRequest, orderId: string): CreateOrder {
     const tenant_id = tenantEnvironment.tenantId.value;
     const environment_id = tenantEnvironment.environmentId.value;
     return createOrder({
         id: orderId,
         environment_id,
-        total_price_in_minor_units: createOrderRequest.orderTotal.amount.value,
-        total_price_currency: createOrderRequest.orderTotal.currency.value,
-        customer_id: createOrderRequest.order.customer.id.value,
+        total_price_in_minor_units: pricedCreateOrderRequest.basket.total.amount.value,
+        total_price_currency: pricedCreateOrderRequest.basket.total.currency.value,
+        customer_id: pricedCreateOrderRequest.customer.id.value,
         tenant_id
     });
 }
@@ -107,27 +112,29 @@ function upsertServiceFormValues(
 
 function processOrderLines(
     tenantEnvironment: TenantEnvironment,
-    createOrderRequest: CreateOrderRequest,
+    paymentIntent: PaymentIntent,
+    customer: Customer,
+    lines: PricedBasketLine[],
     orderId: string,
     services: Service[]
 ): { mutations: Mutation[]; bookingIds: string[]; reservationIds: string[]; orderLineIds: string[] } {
     const tenant_id = tenantEnvironment.tenantId.value;
     const environment_id = tenantEnvironment.environmentId.value;
-    const order = createOrderRequest.order;
+    // const order = createOrderRequest.order;
 
     const mutations: Mutation[] = [];
     const shouldMakeReservations =
-        createOrderRequest.paymentIntent._type === 'full.payment.on.checkout' || createOrderRequest.paymentIntent._type === 'deposit.and.balance';
+        paymentIntent._type === 'full.payment.on.checkout' || paymentIntent._type === 'deposit.and.balance';
     const orderLineIds = [] as string[];
     const reservationIds = [] as string[];
     const bookingIds = [] as string[];
-    for (const line of order.lines) {
+    for (const line of lines) {
         const service = mandatory(
             services.find((s) => s.id.value === line.serviceId.value),
             `Service with id ${line.serviceId.value} not found`
         );
-        const servicePeriod = calcSlotPeriod(line.slot, service.duration);
-        const time_slot_id = line.slot._type === 'timeslot.spec' ? line.slot.id.value : null;
+        const servicePeriod = calcSlotPeriod(line.timeslot, service.duration);
+        const time_slot_id = line.timeslot._type === 'timeslot.spec' ? line.timeslot.id.value : null;
         const orderLineId = uuidv4();
         orderLineIds.push(orderLineId);
 
@@ -142,8 +149,10 @@ function processOrderLines(
                 time_slot_id: time_slot_id,
                 start_time_24hr: servicePeriod.from.value,
                 end_time_24hr: servicePeriod.to.value,
-                add_on_ids: line.addOns.map((a) => a.addOnId.value),
-                date: line.date.value
+                add_on_ids: line.addOnIds.map((a) => a.addOnId.value),
+                date: line.date.value,
+                total_price_in_minor_units: line.total.amount.value,
+                total_price_currency: line.total.currency.value
             })
         );
         const bookingId = uuidv4();
@@ -155,13 +164,14 @@ function processOrderLines(
                 tenant_id,
                 service_id: line.serviceId.value,
                 location_id: line.locationId.value,
-                add_on_ids: line.addOns.map((a) => a.addOnId.value),
+                add_on_ids: line.addOnIds.map((a) => a.addOnId.value),
                 order_id: orderId,
-                customer_id: order.customer.id.value,
-                time_slot_id: line.slot._type === 'timeslot.spec' ? line.slot.id.value : undefined,
+                customer_id: customer.id.value,
+                time_slot_id: line.timeslot._type === 'timeslot.spec' ? line.timeslot.id.value : undefined,
                 date: line.date.value,
                 start_time_24hr: servicePeriod.from.value,
-                end_time_24hr: servicePeriod.to.value
+                end_time_24hr: servicePeriod.to.value,
+                order_line_id: orderLineId
             })
         );
         if (shouldMakeReservations) {
@@ -186,41 +196,29 @@ function processOrderLines(
 
 export function doInsertOrder(
     tenantEnvironment: TenantEnvironment,
-    createOrderRequest: CreateOrderRequest,
+    pricedCreateOrderRequest: PricedCreateOrderRequest,
     services: Service[],
     tenantSettings: TenantSettings
 ): { _type: 'success'; mutations: Mutations; orderCreatedResponse: OrderCreatedResponse } {
-    const orderId = uuidv4();
-    const order = createOrderRequest.order;
+    const theId = orderId()
+    // const basket = createOrderRequest.basket;
+    // const lines:OrderLine[] = createOrderRequest.basket.lines.map((line) => orderLine(line.serviceId,line.locationId,));
+    // const theOrder = order(createOrderRequest.customer, lines, theId)
     const {
         mutations: orderLineMutations,
         bookingIds,
         reservationIds,
         orderLineIds
-    } = processOrderLines(tenantEnvironment, createOrderRequest, orderId, services);
+    } = processOrderLines(tenantEnvironment, pricedCreateOrderRequest.paymentIntent, pricedCreateOrderRequest.customer, pricedCreateOrderRequest.basket.lines, theId.value, services);
     const mutations = [
-        ...upsertCustomerAsMutations(tenantEnvironment, order, tenantSettings),
-        createOrderAsPrismaMutation(tenantEnvironment, createOrderRequest, orderId),
+        ...upsertCustomerAsMutations(tenantEnvironment, pricedCreateOrderRequest.customer, tenantSettings),
+        createOrderAsPrismaMutation(tenantEnvironment, pricedCreateOrderRequest, theId.value),
         ...orderLineMutations
     ];
     return {
         _type: 'success',
         mutations: mutationsConstructor(mutations),
-        orderCreatedResponse: orderCreatedResponse(orderId, order.customer.id.value, bookingIds, reservationIds, orderLineIds)
+        orderCreatedResponse: orderCreatedResponse(theId.value, pricedCreateOrderRequest.customer.id.value, bookingIds, reservationIds, orderLineIds)
     };
 }
 
-export async function insertOrder(
-    tenantEnvironment: TenantEnvironment,
-    createOrderRequest: CreateOrderRequest,
-    services: Service[],
-    tenantSettings: TenantSettings
-): Promise<OrderCreatedResponse> {
-    const {
-        mutations,
-        orderCreatedResponse
-    } = doInsertOrder(tenantEnvironment, createOrderRequest, services, tenantSettings);
-    const prisma = prismaClient();
-    await prisma.$transaction(mutations.mutations.map((mutation) => prismaMutationToPromise(prisma, mutation)));
-    return orderCreatedResponse;
-}

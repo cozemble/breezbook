@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export * from './secrets.js';
 export * from './pricingTypes.js';
+export * from './orderTypes.js';
 
 export interface TimeSlotAvailability {
 	_type: 'time.slot.availability';
@@ -90,24 +91,20 @@ export interface ErrorResponse {
 	errorMessage?: string;
 }
 
-export function isErrorResponse(response: unknown): response is ErrorResponse {
-	return (response as ErrorResponse)._type === 'error.response';
-}
-
 export function errorResponse(errorCode: string, errorMessage?: string): ErrorResponse {
 	return { _type: 'error.response', errorCode, errorMessage };
 }
 
-export interface CreateOrderRequest {
-	_type: 'create.order.request';
-	order: Order;
-	orderTotal: Price;
-	paymentIntent: PaymentIntent;
-}
-
-export function createOrderRequest(order: Order, orderTotal: Price, paymentIntent: PaymentIntent): CreateOrderRequest {
-	return { _type: 'create.order.request', order, orderTotal, paymentIntent };
-}
+// export interface CreateOrderRequest {
+// 	_type: 'create.order.request';
+// 	order: Order;
+// 	orderTotal: Price;
+// 	paymentIntent: PaymentIntent;
+// }
+//
+// export function createOrderRequest(order: Order, orderTotal: Price, paymentIntent: PaymentIntent): CreateOrderRequest {
+// 	return { _type: 'create.order.request', order, orderTotal, paymentIntent };
+// }
 
 export interface PaymentIntentResponse {
 	stripePublicKey: string;

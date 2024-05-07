@@ -1,6 +1,7 @@
 import {v4 as uuidv4} from 'uuid';
 import {PriceAdjustment} from './calculatePrice.js';
 import dayjs from 'dayjs';
+import {v4 as uuid} from 'uuid'
 
 export interface ValueType<T> {
     _type: unknown;
@@ -156,6 +157,12 @@ export const isoDateFns = {
         const [year, month, day] = date.value.split('-').map((s) => parseInt(s, 10));
         const [hours, minutes] = time.value.split(':').map((s) => parseInt(s, 10));
         return new Date(year, month - 1, day, hours, minutes);
+    },
+    getDateRange(dates: IsoDate[]): { fromDate: IsoDate; toDate: IsoDate } {
+        return {
+            fromDate: this.min(...dates),
+            toDate: this.max(...dates)
+        };
     }
 };
 
@@ -277,7 +284,7 @@ export interface Id extends ValueType<string> {
     _type: 'id';
 }
 
-export function id(value: string): Id {
+export function id(value = uuid()): Id {
     if (value === null || value === undefined) {
         throw new Error('id value cannot be null or undefined');
     }
@@ -919,7 +926,7 @@ export interface OrderId extends ValueType<string> {
     _type: 'order.id';
 }
 
-export function orderId(value: string): OrderId {
+export function orderId(value = uuid()): OrderId {
     return {
         _type: 'order.id',
         value

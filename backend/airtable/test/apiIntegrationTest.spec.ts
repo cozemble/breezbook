@@ -28,13 +28,15 @@ import {
     CancellationGranted,
     createOrderRequest,
     OrderCreatedResponse,
+    pricedAddOn,
+    pricedBasket,
     PricedBasket,
+    pricedBasketLine, pricedCreateOrderRequest,
     Service,
     Tenant,
     unpricedBasket,
     unpricedBasketLine
 } from '@breezbook/backend-api-types';
-import {insertOrder} from '../src/express/insertOrder.js';
 import {prismaClient} from '../src/prisma/client.js';
 import {PaymentIntentWebhookBody} from '../src/stripe.js';
 import {
@@ -45,6 +47,7 @@ import {
 import {OrderPaymentCreatedResponse} from '../src/express/handleReceivedWebhook.js';
 import {setSystemConfig} from '../src/prisma/setSystemConfig.js';
 import {storeSystemSecret, storeTenantSecret} from '../src/infra/secretsInPostgres.js';
+import {insertOrder} from "./insertOrder.js";
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
@@ -111,22 +114,16 @@ describe('Given a migrated database', async () => {
     });
 
     test('can add an order for two car washes, each with different add-ons', async () => {
-        const twoServices = order(goodCustomer, [
-            orderLine(carwash.smallCarWash.id, carwash.locations.london,carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], fourDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
-            orderLine(
-                carwash.mediumCarWash.id,
-                carwash.locations.london,
-                carwash.mediumCarWash.price,
-                [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)],
-                fourDaysFromNow,
-                carwash.nineToOne,
-                [goodServiceFormData]
-            )
-        ]);
+        const twoServicesPricedBasket = pricedBasket([
+            pricedBasketLine(carwash.locations.london, carwash.smallCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price)], carwash.smallCarWash.price, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), fourDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
+            pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price), pricedAddOn(carwash.polish.id, 1, carwash.polish.price)], carwash.mediumCarWash.price, priceFns.add(carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price), fourDaysFromNow, carwash.nineToOne, [goodServiceFormData])
+        ], priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price))
+
 
         const fetched = await postOrder(
-            twoServices,
-            priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price),
+            twoServicesPricedBasket,
+            goodCustomer,
+            fullPaymentOnCheckout(),
             expressPort
         );
         if (!fetched.ok) {
@@ -142,7 +139,7 @@ describe('Given a migrated database', async () => {
 
     test('can price a basket', async () => {
         const theBasket = unpricedBasket([
-            unpricedBasketLine(carwash.mediumCarWash.id,carwash.locations.london, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.fourToSix)
+            unpricedBasketLine(carwash.mediumCarWash.id, carwash.locations.london, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.fourToSix)
         ]);
 
         const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/basket/price`, {
@@ -178,7 +175,7 @@ describe('Given a migrated database', async () => {
         const costInPence = randomInteger(5000);
         const createOrderResponse = await insertOrder(
             tenantEnv,
-            createOrderRequest(order(customer('Mike', 'Hogan', 'mike7@email.com'), []), price(costInPence, currency('GBP')), fullPaymentOnCheckout()),
+            pricedCreateOrderRequest(pricedBasket([], price(costInPence, currency('GBP'))),customer('Mike', 'Hogan', 'mike7@email.com'), fullPaymentOnCheckout()),
             [],
             tenantSettings(timezone('Europe/London'), null)
         );
@@ -311,11 +308,12 @@ async function completeCancellationGrant() {
 }
 
 async function createBooking(date: IsoDate): Promise<string> {
+    const theBasket = pricedBasket([pricedBasketLine(carwash.locations.london,carwash.mediumCarWash.id,[], carwash.mediumCarWash.price, carwash.mediumCarWash.price, date,carwash.nineToOne, [])], carwash.mediumCarWash.price)
     const createOrderResponse = await insertOrder(
         tenantEnv,
-        createOrderRequest(
-            order(goodCustomer, [orderLine(carwash.mediumCarWash.id,carwash.locations.london, carwash.mediumCarWash.price, [], date, carwash.nineToOne, [])]),
-            carwash.mediumCarWash.price,
+        pricedCreateOrderRequest(
+            theBasket,
+            goodCustomer,
             fullPaymentOnCheckout()
         ),
         carwash.services,

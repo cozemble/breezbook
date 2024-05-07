@@ -1,9 +1,6 @@
 import {expect, test} from 'vitest';
 import {
-    consoleLogger,
-    handlePendingChangeInTenantEnvironment,
-    InngestInvocation,
-    InngestStep
+    handlePendingChangeInTenantEnvironment
 } from "../../src/inngest/announceChangesToAirtable.js";
 
 import {PrismockClient} from 'prismock';
@@ -13,6 +10,7 @@ import {upsertCustomer} from "../../src/prisma/breezPrismaMutations.js";
 import {DbMutationEvent} from "../../src/prisma/dbtypes.js";
 import {id} from "@breezbook/packages-core";
 import {carWashMapping} from "../../src/airtable/carWashMapping.js";
+import {consoleLogger, InngestInvocation, InngestStep} from "../../src/inngest/inngestTypes.js";
 
 class StubStep implements InngestStep {
     constructor(public readonly stepsRun: string[] = [], public readonly eventsSent: InngestInvocation[] = []) {

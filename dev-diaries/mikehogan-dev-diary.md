@@ -545,3 +545,18 @@ soon change.
 Today's main focus is getting payment confirmation stripe webhooks correctly integrated.  What they will need to do
 is record the amount paid against the order, and that amount will be replicated to airtable.  Then airtable knows the
 booking has been paid for, and can send out the confirmation email.
+
+# Tue 7 May 2024
+
+When looking into marking stripe payment against bookings, I rediscovered that a booking comes from an order, and an 
+order can have many bookings.  So I only had an order to associate a payment against.  Which is fine, but the issue is
+that the unit of replication to airtable is the booking.  So, I decided I needed the total cost of a booking to be 
+recorded against the booking.  Which meand changing what comes from the front end in terms of order placement.
+
+We had a CreateOrderRequest that was build just for the needs of placing an order.  At the same time, we had 
+PricedBasket, which supports the UI render line item details on costs.  And this is what I now need at the backend. So
+I refactored CreateOrderRequest our of the codebase, in favour of using PricedBasket as the means of placing an order.
+
+All thats needed in addition to the PricedBasket is the Customer and the payment method.  Actually feels more natural.
+
+And all of the existing validations have been ported over to the PricedBasket.

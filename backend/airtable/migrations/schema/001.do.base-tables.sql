@@ -241,20 +241,22 @@ create table orders
 
 create table order_lines
 (
-    id                text primary key                             default uuid_generate_v4(),
-    tenant_id         text references tenants (tenant_id) not null,
-    environment_id    text                                not null,
-    order_id          text                                not null,
-    service_id        text references services (id)       not null,
-    location_id       text references locations (id)      not null,
-    add_on_ids        text[]                              not null default '{}',
-    date              text                                not null,
-    time_slot_id      text                                null     default null references time_slots (id),
-    start_time_24hr   varchar(10)                         not null,
-    end_time_24hr     varchar(10)                         not null,
-    service_form_data jsonb                               null     default null,
-    created_at        timestamp with time zone            not null default current_timestamp,
-    updated_at        timestamp with time zone            not null default current_timestamp
+    id                         text primary key                             default uuid_generate_v4(),
+    tenant_id                  text references tenants (tenant_id) not null,
+    environment_id             text                                not null,
+    order_id                   text                                not null,
+    service_id                 text references services (id)       not null,
+    location_id                text references locations (id)      not null,
+    add_on_ids                 text[]                              not null default '{}',
+    date                       text                                not null,
+    time_slot_id               text                                null     default null references time_slots (id),
+    start_time_24hr            varchar(10)                         not null,
+    end_time_24hr              varchar(10)                         not null,
+    service_form_data          jsonb                               null     default null,
+    total_price_in_minor_units integer                             not null,
+    total_price_currency       text                                not null,
+    created_at                 timestamp with time zone            not null default current_timestamp,
+    updated_at                 timestamp with time zone            not null default current_timestamp
 );
 
 create type booking_status as enum ('confirmed', 'cancelled');
@@ -270,6 +272,7 @@ create table bookings
     location_id     text references locations (id)      not null,
     add_on_ids      text[]                              not null,
     order_id        text references orders (id)         not null,
+    order_line_id   text references order_lines (id)    not null,
     date            text                                not null,
     start_time_24hr text                                not null,
     end_time_24hr   text                                not null,
