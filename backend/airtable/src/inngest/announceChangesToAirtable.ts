@@ -39,7 +39,7 @@ async function getEarliestNonReplicatedMutationEvent(prisma: PrismaClient, tenan
         WHERE r.mutation_event_id IS NULL
           AND m.tenant_id = '${tenantId}'
           AND m.environment_id = '${environmentId}'
-        ORDER BY m.event_time ASC
+        ORDER BY m.id ASC
         LIMIT 1
     `);
 
