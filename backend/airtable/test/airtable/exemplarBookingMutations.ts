@@ -167,5 +167,21 @@ export const exemplarBookingMutations: Mutation[] = [
             entity: 'booking_service_form_values',
             entityId: {_type: 'id', value: '050da0be-01f1-4246-8a2e-dd3f691f73fd'}
         }
+    },
+    {
+        _type: 'create',
+        entity: 'booking_payments',
+        entityId: {_type: 'id', value: '27d3388b-3b0c-4972-b2b8-970dbca8740e'},
+        data: {
+            "id": "27d3388b-3b0c-4972-b2b8-970dbca8740e",
+            "status": "succeeded",
+            "provider": "stripe",
+            "tenant_id": "tenant1",
+            "booking_id": "050da0be-01f1-4246-8a2e-dd3f691f73fd",
+            "environment_id": "dev",
+            "amount_currency": "gbp",
+            "amount_in_minor_units": 6500,
+            "provider_transaction_id": "pi_3PDnrNH2RPqITCMj0vUw0P3K"
+        },
     }
 ];

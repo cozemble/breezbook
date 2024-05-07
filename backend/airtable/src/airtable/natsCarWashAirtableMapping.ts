@@ -162,6 +162,36 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                     }
                 ]
             }
+        },
+        {
+            when: '_type == "create" && entity == "booking_payments"',
+            airtable: {
+                recordId: {
+                    mappedTo: {
+                        entity: 'booking_payments',
+                        entityId: {id: 'data.id'}
+                    }
+                },
+                records: [
+                    {
+                        _type: 'airtable.create',
+                        baseId: 'ENV.SMARTWASH_BASE_ID',
+                        table: 'Booking payments',
+                        fields: {
+                            'Booking': [
+                                {
+                                    _type: 'lookup',
+                                    entity: 'bookings',
+                                    entityId: {id: 'data.booking_id'},
+                                    table: 'Bookings'
+                                }
+                            ],
+                            Amount: {_type: 'expression', expression: 'data.amount_in_minor_units / 100'},
+                            "Stripe Payment ID": {_type: 'expression', expression: 'data.provider_transaction_id'},
+                        }
+                    }
+                ]
+            }
         }
     ]
 };

@@ -12,7 +12,9 @@ test('integrating from breezbook to Nats airtable tables', async () => {
     const stubAirtableClient = new StubAirtableClient();
 
     for (const mutation of exemplarBookingMutations) {
-        await applyAirtablePlan(idRepo, stubAirtableClient, natsCarWashAirtableMapping, mutation);
+        const outcome = await applyAirtablePlan(idRepo, stubAirtableClient, natsCarWashAirtableMapping, mutation);
+        const firstNonSuccess = outcome.find((outcome) => outcome._type !== 'successful.applied.airtable.mapping');
+        expect(firstNonSuccess).toBeUndefined()
     }
     const customerRecord = stubAirtableClient.records.find((record) => record.table === 'Customers');
     expect(customerRecord).toBeDefined();
@@ -41,5 +43,12 @@ test('integrating from breezbook to Nats airtable tables', async () => {
         Make: 'Honda',
         Model: 'Accord',
         'Year and colour': '2021 Silver'
+    });
+    const bookingPaymentRecord = stubAirtableClient.records.find((record) => record.table === 'Booking payments');
+    expect(bookingPaymentRecord).toBeDefined();
+    expect(bookingPaymentRecord!.fields).toEqual({
+        Booking: ['rec101'],
+        Amount: 65.00,
+        "Stripe Payment ID":"pi_3PDnrNH2RPqITCMj0vUw0P3K"
     });
 });
