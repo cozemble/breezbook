@@ -29,6 +29,7 @@ import {
     upsertCustomerFormValues
 } from '../prisma/breezPrismaMutations.js';
 import {Mutation, Mutations, mutations as mutationsConstructor} from '../mutation/mutations.js';
+import {DbPaymentMethod} from "../prisma/dbtypes.js";
 
 function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, customer: Customer, tenantSettings: TenantSettings): Mutation[] {
     const tenant_id = tenantEnvironment.tenantId.value;
@@ -70,6 +71,17 @@ function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, custome
     return upserts;
 }
 
+function toDbPaymentMethod(paymentIntent: PaymentIntent): DbPaymentMethod {
+    switch (paymentIntent._type) {
+        case 'full.payment.on.checkout':
+            return 'upfront';
+        case 'deposit.and.balance':
+            return 'deposit_and_balance_on_delivery';
+        case 'payment.on.service.delivery':
+            return 'on_delivery';
+    }
+}
+
 function createOrderAsPrismaMutation(tenantEnvironment: TenantEnvironment, pricedCreateOrderRequest: PricedCreateOrderRequest, orderId: string): CreateOrder {
     const tenant_id = tenantEnvironment.tenantId.value;
     const environment_id = tenantEnvironment.environmentId.value;
@@ -79,7 +91,8 @@ function createOrderAsPrismaMutation(tenantEnvironment: TenantEnvironment, price
         total_price_in_minor_units: pricedCreateOrderRequest.basket.total.amount.value,
         total_price_currency: pricedCreateOrderRequest.basket.total.currency.value,
         customer_id: pricedCreateOrderRequest.customer.id.value,
-        tenant_id
+        tenant_id,
+        payment_method: toDbPaymentMethod(pricedCreateOrderRequest.paymentIntent),
     });
 }
 

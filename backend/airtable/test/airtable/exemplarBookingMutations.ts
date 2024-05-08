@@ -70,7 +70,8 @@ export const exemplarBookingMutations: Mutation[] = [
             customer_id: '1e2e743d-d35d-494a-a8fc-572b6c0610df',
             environment_id: 'dev',
             total_price_currency: 'GBP',
-            total_price_in_minor_units: 1400
+            total_price_in_minor_units: 1400,
+            payment_method: 'upfront'
         },
         _type: 'create',
         entity: 'orders',
@@ -87,7 +88,9 @@ export const exemplarBookingMutations: Mutation[] = [
             time_slot_id: 'timeSlot#1',
             end_time_24hr: '13:00',
             environment_id: 'dev',
-            start_time_24hr: '09:00'
+            start_time_24hr: '09:00',
+            total_price_currency: "GBP",
+            total_price_in_minor_units: 1400
         },
         _type: 'create',
         entity: 'order_lines',

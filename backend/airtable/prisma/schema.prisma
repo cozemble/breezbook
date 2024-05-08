@@ -314,6 +314,7 @@ model orders {
   customer_form_data         Json?
   total_price_in_minor_units Int
   total_price_currency       String
+  payment_method             payment_method
   created_at                 DateTime         @default(now()) @db.Timestamptz(6)
   updated_at                 DateTime         @default(now()) @db.Timestamptz(6)
   bookings                   bookings[]
@@ -640,4 +641,10 @@ enum payment_status {
   succeeded
   pending
   failed
+}
+
+enum payment_method {
+  upfront
+  on_delivery
+  deposit_and_balance_on_delivery
 }

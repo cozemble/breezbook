@@ -79,6 +79,27 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
         },
 
         {
+            when: '_type == "create" && entity == "orders"',
+            airtable: {
+                recordId: {
+                    mappedTo: {
+                        entity: 'orders',
+                        entityId: {id: 'data.id'}
+                    }
+                },
+                records: [
+                    {
+                        _type: 'airtable.create',
+                        baseId: 'ENV.SMARTWASH_BASE_ID',
+                        table: 'Orders',
+                        fields: {
+                            "Payment method": {_type: 'object.path', path: 'data.payment_method'},
+                        }
+                    }
+                ]
+            }
+        },
+        {
             when: '_type == "create" && entity == "order_lines"',
             airtable: {
                 recordId: {
@@ -93,6 +114,7 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                         baseId: 'ENV.SMARTWASH_BASE_ID',
                         table: 'Order lines',
                         fields: {
+                            Order: [{_type:'lookup', entity: 'orders', entityId: {id: 'data.order_id'}, table: 'Orders'}],
                             Price: {_type: 'expression', expression: 'data.total_price_in_minor_units / 100'},
                         }
                     }

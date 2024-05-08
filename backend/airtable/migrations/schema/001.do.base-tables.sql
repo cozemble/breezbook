@@ -226,6 +226,8 @@ create table customers
 alter table customers
     add constraint customers_tenant_id_email_key unique (tenant_id, environment_id, email);
 
+create type payment_method as enum ('upfront', 'on_delivery','deposit_and_balance_on_delivery');
+
 create table orders
 (
     id                         text primary key                             default uuid_generate_v4(),
@@ -235,6 +237,7 @@ create table orders
     customer_form_data         jsonb                               null     default null,
     total_price_in_minor_units integer                             not null,
     total_price_currency       text                                not null,
+    payment_method             payment_method                      not null,
     created_at                 timestamp with time zone            not null default current_timestamp,
     updated_at                 timestamp with time zone            not null default current_timestamp
 );
