@@ -57,12 +57,19 @@ interface Expression {
 interface Lookup {
     _type: 'lookup';
     entity: Entity;
-    entityId: CompositeKey;
+    entityId: CompositeKey | Record<string,any>;
     table: string;
     nullable?: boolean;
 }
 
-export type FieldMapping = ObjectPath | Expression | Lookup;
+interface MappedMapping {
+    _type: 'map';
+    list: ObjectPath;
+    variableName: string;
+    fn: Lookup
+}
+
+export type FieldMapping = ObjectPath | Expression | Lookup | MappedMapping;
 
 export type MappingPlanFinder = (tenantId: string, environmentId: string) => Promise<AirtableMappingPlan | null>
 

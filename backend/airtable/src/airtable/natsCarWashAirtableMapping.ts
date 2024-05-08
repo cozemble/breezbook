@@ -114,7 +114,12 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                         baseId: 'ENV.SMARTWASH_BASE_ID',
                         table: 'Order lines',
                         fields: {
-                            Order: [{_type:'lookup', entity: 'orders', entityId: {id: 'data.order_id'}, table: 'Orders'}],
+                            Order: [{
+                                _type: 'lookup',
+                                entity: 'orders',
+                                entityId: {id: 'data.order_id'},
+                                table: 'Orders'
+                            }],
                             Price: {_type: 'expression', expression: 'data.total_price_in_minor_units / 100'},
                         }
                     }
@@ -145,6 +150,19 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                                     nullable: false
                                 }
                             ],
+                            "Add-ons": {
+                                _type: 'map',
+                                list: {_type: 'object.path', path: 'data.add_on_ids'},
+                                variableName: "add_on_id",
+                                fn: {
+                                    _type: 'lookup',
+                                    entity: 'add_on',
+                                    entityId: {id: {variable: 'add_on_id'}},
+                                    table: 'Add-ons',
+                                    nullable: false
+                                }
+
+                            },
                             "Order line": [
                                 {
                                     _type: 'lookup',

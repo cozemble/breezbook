@@ -37,9 +37,18 @@ export async function planAirtableMutations(
     const jexlInstance = new jexl.Jexl();
     const maybeMapping = mapping.mappings.find((mapping) => jexlInstance.evalSync(mapping.when, mutation));
     if (maybeMapping) {
-        return await planSingleMutation(idRepo,  mutation, maybeMapping.airtable);
+        return await planSingleMutation(idRepo, mutation, maybeMapping.airtable);
     }
     return []
+}
+
+function applyVariables(compositeKey: Record<string, any>, variables: Record<string, any>): CompositeKey {
+    return Object.fromEntries(Object.entries(compositeKey).map(([key, value]) => {
+        if (typeof value === 'object' && "variable" in value) {
+            return [key, variables[value.variable]];
+        }
+        return [key, value];
+    }));
 }
 
 async function dereferenceFieldMapping(
@@ -77,6 +86,29 @@ async function dereferenceFieldMapping(
             );
         }
         return targetId?.value;
+    } else if (fieldMapping._type === 'map') {
+        const list = jexlInstance.evalSync(fieldMapping.list.path, mutation);
+        if (!list) {
+            throw new Error(`Path '${fieldMapping.list.path}' in mutation of type ${mutation._type} is undefined or null`);
+        }
+        return await Promise.all(
+            list.map(async (item: any) => {
+                const variableName = fieldMapping.variableName;
+                const lookup = fieldMapping.fn;
+                const variables = {[variableName]: item}
+                const compositeKey = applyVariables(lookup.entityId, variables);
+                const filledEntityId = expandCompositeKey(lookup.entityId, item, variables);
+                const targetId = await idRepo.getTargetId(lookup.entity, filledEntityId, lookup.table);
+                if (!lookup.nullable && !targetId) {
+                    throw new Error(
+                        `While processing map ${JSON.stringify(fieldMapping)},no target id for entity ${lookup.entity}, key ${JSON.stringify(filledEntityId)}, table ${
+                            lookup.table
+                        }`
+                    );
+                }
+                return targetId?.value;
+            })
+        );
     } else {
         throw new Error(`Unknown field mapping type ${JSON.stringify(fieldMapping)}`);
     }
@@ -197,15 +229,19 @@ async function applyAirtableRecord(
         } else {
             return await applyAirtableCreate(idRepo, airtableClient, mutation, recordId, record);
         }
-    } catch (e:any) {
-        return failedAppliedAirtableMapping(`While processing airtable mutation '${record._type}' on '${record.baseId}/${record.table}': ${e.message}`, {"airtableFields":"unknown"});
+    } catch (e: any) {
+        return failedAppliedAirtableMapping(`While processing airtable mutation '${record._type}' on '${record.baseId}/${record.table}': ${e.message}`, {"airtableFields": "unknown"});
     }
 }
 
-function expandCompositeKey(compositeKey: CompositeKey, mutation: Mutation): CompositeKey {
+function expandCompositeKey(compositeKey: Record<string,any>, mutation: Mutation, variables: Record<string, string> = {}): CompositeKey {
     const jexlInstance = new jexl.Jexl();
     const expanded: Record<string, any> = {};
     for (const [key, value] of Object.entries(compositeKey)) {
+        if (typeof value === 'object' && "variable" in value) {
+            expanded[key] = variables[value.variable];
+            continue;
+        }
         const keyValue = jexlInstance.evalSync(value, mutation);
         if (keyValue === undefined || keyValue === null) {
             throw new Error(`Path '${value}' in mutation of type ${mutation._type} is undefined or null`);

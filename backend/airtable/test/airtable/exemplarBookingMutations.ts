@@ -103,7 +103,10 @@ export const exemplarBookingMutations: Mutation[] = [
             order_id: 'a5b8c4b2-b9d2-4b73-bed5-ac5078d7f58f',
             order_line_id: 'd3dab4e6-e569-461d-a4f7-21b06ccfce35',
             tenant_id: 'tenant1',
-            add_on_ids: [],
+            "add_on_ids": [
+                "screenwash_refill_oil_fluids_check",
+                "shampoo_headlining"
+            ],
             service_id: 'smallCarWash',
             customer_id: '1e2e743d-d35d-494a-a8fc-572b6c0610df',
             time_slot_id: 'timeSlot#1',

@@ -9,6 +9,8 @@ import {natsCarWashAirtableMapping} from "../../src/airtable/natsCarWashAirtable
 test('integrating from breezbook to Nats airtable tables', async () => {
     const idRepo = new InMemorySynchronisationIdRepository();
     await idRepo.setTargetId('services', {id: 'smallCarWash'}, 'Services', id('rec1'));
+    await idRepo.setTargetId('add_on', {id: 'screenwash_refill_oil_fluids_check'}, 'Add-ons', id('rec2'));
+    await idRepo.setTargetId('add_on', {id: 'shampoo_headlining'}, 'Add-ons', id('rec3'));
     const stubAirtableClient = new StubAirtableClient();
 
     for (const mutation of exemplarBookingMutations) {
@@ -38,7 +40,8 @@ test('integrating from breezbook to Nats airtable tables', async () => {
         'Due Date': '2024-04-02',
         Time: '09:00 to 13:00',
         'First line of address': '11 Main Street',
-        Postcode: 'X1Y2'
+        Postcode: 'X1Y2',
+        "Add-ons": ['rec2', 'rec3']
     });
     const carDetailsRecord = stubAirtableClient.records.find((record) => record.table === 'Car details');
     expect(carDetailsRecord).toBeDefined();

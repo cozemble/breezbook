@@ -557,9 +557,9 @@ We had a CreateOrderRequest that was build just for the needs of placing an orde
 PricedBasket, which supports the UI render line item details on costs.  And this is what I now need at the backend. So
 I refactored CreateOrderRequest our of the codebase, in favour of using PricedBasket as the means of placing an order.
 
-All thats needed in addition to the PricedBasket is the Customer and the payment method.  Actually feels more natural.
+All that's needed in addition to the PricedBasket is the Customer and the payment method.  Actually feels more natural.
 
-And all of the existing validations have been ported over to the PricedBasket.
+And all the existing validations have been ported over to the PricedBasket.
 
 # Wed 8 May 2024
 
@@ -583,5 +583,8 @@ Booking record.
 So what crossed my mind is that the replication engine permits the marking of certain tables as "shadow tables", meaning
 that the engine maintains their state, and enables the necessary lookups into these shadow tables.  The right values
 get to airtable, but the noise is hidden.
+
+It is possible to hide tables in airtable, but nevertheless, in the spirit of removing friction, I think we should shoot
+for something similar to this "shadow table" concept.
 
 There will be data privacy issues in doing this.  Still feels like what I'd like to have though.
