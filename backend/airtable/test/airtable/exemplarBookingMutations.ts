@@ -98,6 +98,7 @@ export const exemplarBookingMutations: Mutation[] = [
             id: '050da0be-01f1-4246-8a2e-dd3f691f73fd',
             date: '2024-04-02',
             order_id: 'a5b8c4b2-b9d2-4b73-bed5-ac5078d7f58f',
+            order_line_id: 'd3dab4e6-e569-461d-a4f7-21b06ccfce35',
             tenant_id: 'tenant1',
             add_on_ids: [],
             service_id: 'smallCarWash',

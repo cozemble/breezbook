@@ -189,12 +189,16 @@ async function applyAirtableRecord(
     recordId: AirtableRecordIdMapping,
     record: AirtableMutation
 ): Promise<AppliedAirtableOutcome> {
-    if (record._type === 'airtable.upsert') {
-        return applyAirtableUpsert(idRepo, airtableClient, mutation, recordId, record);
-    } else if (record._type === 'airtable.update') {
-        return applyAirtableUpdate(idRepo, airtableClient, mutation, recordId, record);
-    } else {
-        return applyAirtableCreate(idRepo, airtableClient, mutation, recordId, record);
+    try {
+        if (record._type === 'airtable.upsert') {
+            return await applyAirtableUpsert(idRepo, airtableClient, mutation, recordId, record);
+        } else if (record._type === 'airtable.update') {
+            return await applyAirtableUpdate(idRepo, airtableClient, mutation, recordId, record);
+        } else {
+            return await applyAirtableCreate(idRepo, airtableClient, mutation, recordId, record);
+        }
+    } catch (e:any) {
+        return failedAppliedAirtableMapping(`While processing airtable mutation '${record._type}' on '${record.baseId}/${record.table}': ${e.message}`, {"airtableFields":"unknown"});
     }
 }
 

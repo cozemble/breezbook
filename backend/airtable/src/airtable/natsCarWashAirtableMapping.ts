@@ -77,6 +77,28 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                 ]
             }
         },
+
+        {
+            when: '_type == "create" && entity == "order_lines"',
+            airtable: {
+                recordId: {
+                    mappedTo: {
+                        entity: 'order_lines',
+                        entityId: {id: 'data.id'}
+                    }
+                },
+                records: [
+                    {
+                        _type: 'airtable.create',
+                        baseId: 'ENV.SMARTWASH_BASE_ID',
+                        table: 'Order lines',
+                        fields: {
+                            Price: {_type: 'expression', expression: 'data.total_price_in_minor_units / 100'},
+                        }
+                    }
+                ]
+            }
+        },
         {
             when: '_type == "create" && entity == "bookings"',
             airtable: {
@@ -101,6 +123,15 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                                     nullable: false
                                 }
                             ],
+                            "Order line": [
+                                {
+                                    _type: 'lookup',
+                                    entity: 'order_lines',
+                                    entityId: {id: 'data.order_line_id'},
+                                    table: 'Order lines',
+                                    nullable: false
+                                }
+                            ],
                             'Due Date': {_type: 'object.path', path: 'data.date'},
                             Time: {
                                 _type: 'expression',
@@ -117,6 +148,7 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                 ]
             }
         },
+
         {
             when: '_type == "upsert" && create.entity == "booking_service_form_values"',
             airtable: {

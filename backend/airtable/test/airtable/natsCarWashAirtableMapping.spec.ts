@@ -30,7 +30,10 @@ test('integrating from breezbook to Nats airtable tables', async () => {
         Customer: ['rec100'],
         "Service ID": ['rec1'],
         "Car details": [
-            "rec102"
+            "rec103"
+        ],
+        "Order line": [
+            "rec101"
         ],
         'Due Date': '2024-04-02',
         Time: '09:00 to 13:00',
@@ -47,8 +50,8 @@ test('integrating from breezbook to Nats airtable tables', async () => {
     const bookingPaymentRecord = stubAirtableClient.records.find((record) => record.table === 'Booking payments');
     expect(bookingPaymentRecord).toBeDefined();
     expect(bookingPaymentRecord!.fields).toEqual({
-        Booking: ['rec101'],
+        Booking: ['rec102'],
         Amount: 65.00,
-        "Stripe Payment ID":"pi_3PDnrNH2RPqITCMj0vUw0P3K"
+        "Stripe Payment ID": "pi_3PDnrNH2RPqITCMj0vUw0P3K"
     });
 });

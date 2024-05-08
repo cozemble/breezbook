@@ -560,3 +560,28 @@ I refactored CreateOrderRequest our of the codebase, in favour of using PricedBa
 All thats needed in addition to the PricedBasket is the Customer and the payment method.  Actually feels more natural.
 
 And all of the existing validations have been ported over to the PricedBasket.
+
+# Wed 8 May 2024
+
+I'm finding myself having to expose more tables into airtable to achieve the behaviours I want in airtable.  Two 
+examples:
+
+1. I find myself having to add "Order lines" to airtable, and replicate the Price of the Order Line to Airtable, so I
+can pull up the total cost of a booking in airtable.
+2. This morning I find myself considering having to replicate Orders to Airtable, because the payment method is on the
+order.  The payment can be "full payment at point of booking", "payment following delivery of service", and 
+"deposit with balance paid following delivery of service".  The reason airtable needs this data is to help decide when 
+to send the confirmation email.  In the case of full payment or deposit-and-balcne, it's when the confirmation from 
+stripe comes in.  In the case of payment following service, the confirm email goes straight away.
+
+I'd like my replicate engine enable me to hide the fact that there are Orders and Order lines underpinning the bookings.
+The folks managing bookings in airtable don't need this noise.
+
+In both cases above, the relevant values from Order Line and Order are airtable lookup fields, i.e. pulled into the 
+Booking record.
+
+So what crossed my mind is that the replication engine permits the marking of certain tables as "shadow tables", meaning
+that the engine maintains their state, and enables the necessary lookups into these shadow tables.  The right values
+get to airtable, but the noise is hidden.
+
+There will be data privacy issues in doing this.  Still feels like what I'd like to have though.
