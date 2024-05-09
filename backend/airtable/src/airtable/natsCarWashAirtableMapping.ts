@@ -182,7 +182,8 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                                 entity: 'services',
                                 entityId: {id: 'data.service_id'},
                                 table: 'Services'
-                            }]
+                            }],
+                            "Breezbook ID": {_type: 'object.path', path: 'data.id'}
                         }
                     }
                 ]
