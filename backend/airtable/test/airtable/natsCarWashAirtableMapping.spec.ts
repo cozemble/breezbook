@@ -42,7 +42,8 @@ test('integrating from breezbook to Nats airtable tables', async () => {
         'First line of address': '11 Main Street',
         Postcode: 'X1Y2',
         "Add-ons": ['rec2', 'rec3'],
-        "Breezbook ID":"050da0be-01f1-4246-8a2e-dd3f691f73fd"
+        "Breezbook ID":"050da0be-01f1-4246-8a2e-dd3f691f73fd",
+        Status: "cancelled"
     });
     const carDetailsRecord = stubAirtableClient.records.find((record) => record.table === 'Car details');
     expect(carDetailsRecord).toBeDefined();

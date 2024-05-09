@@ -265,6 +265,27 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                     }
                 ]
             }
+        },
+        {
+            when: '_type == "update" && entity == "bookings"',
+            airtable: {
+                recordId: {
+                    mappedTo: {
+                        entity: 'bookings',
+                        entityId: {id: 'where.id'}
+                    }
+                },
+                records: [
+                    {
+                        _type: 'airtable.update',
+                        baseId: 'ENV.SMARTWASH_BASE_ID',
+                        table: 'Bookings',
+                        fields: {
+                            Status: {_type: 'object.path', path: 'data.status'}
+                        }
+                    }
+                ]
+            }
         }
     ]
 };

@@ -190,5 +190,12 @@ export const exemplarBookingMutations: Mutation[] = [
             "amount_in_minor_units": 6500,
             "provider_transaction_id": "pi_3PDnrNH2RPqITCMj0vUw0P3K"
         },
+    },
+    {
+        _type: "update",
+        entity: "bookings",
+        entityId: {_type: "id", value: "fa0b61bc-dbb1-443a-baab-4df7cb21fddc"},
+        where: {id: "050da0be-01f1-4246-8a2e-dd3f691f73fd"},
+        data: {status: "cancelled"}
     }
 ];
