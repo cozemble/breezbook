@@ -7,7 +7,7 @@ import createExtrasStore from './extras';
 import createDetailsStore from './details';
 import checkoutStore from '../checkout';
 import { createStoreContext } from '$lib/common/helpers/store';
-import { locationStore } from '../location';
+import routeStore from '../routes';
 
 const BOOKING_STORE_CONTEXT_KEY = 'booking_store';
 
@@ -17,8 +17,8 @@ const BOOKING_STORE_CONTEXT_KEY = 'booking_store';
  * - There are 3 default steps: time, extras, details
  */
 function createBookingStore(service: Service) {
-	const location = locationStore.get();
 	const checkout = checkoutStore.get();
+	const routes = routeStore.get();
 
 	const timeStore = createTimeStore(service);
 	const extrasStore = createExtrasStore(service);
@@ -52,7 +52,7 @@ function createBookingStore(service: Service) {
 		});
 
 		// redirect to cart // TODO make this a global function (probably as a navigate util)
-		goto(`/${location.slug}/checkout`);
+		goto(routes.checkout.main());
 	};
 
 	return {
