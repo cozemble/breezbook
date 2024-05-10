@@ -100,10 +100,14 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
             return handleOutcome(res, prisma, tenantEnvironment, outcome);
         }
         const {mutations, orderCreatedResponse} = outcome;
-        await inngest.send({
-            name: announceChangesToAirtable.deferredChangeAnnouncement,
-            data:{tenantId:tenantEnvironment.tenantId.value, environmentId:tenantEnvironment.environmentId.value}
-        });
+        try {
+            await inngest.send({
+                name: announceChangesToAirtable.deferredChangeAnnouncement,
+                data: {tenantId: tenantEnvironment.tenantId.value, environmentId: tenantEnvironment.environmentId.value}
+            });
+        } catch (e:any) {
+            console.info(`While sending ${announceChangesToAirtable.deferredChangeAnnouncement} to Inngest: ${e.message}`)
+        }
         await handleOutcome(res, prisma, tenantEnvironment, mutations, httpJsonResponse(200, orderCreatedResponse));
     });
 }
