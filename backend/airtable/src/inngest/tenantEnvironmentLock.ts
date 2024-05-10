@@ -1,10 +1,10 @@
 import {PrismaClient} from "@prisma/client";
 
-export async function acquireLock(prisma: PrismaClient, tenantId: string, environmentId: string): Promise<boolean> {
+export async function acquireLock(prisma: PrismaClient, tenantId: string, environmentId: string, purpose:string): Promise<boolean> {
     try {
         await prisma.locks.create({
             data: {
-                lock_key: `${tenantId}-${environmentId}`,
+                lock_key: `${tenantId}-${environmentId}-${purpose}`,
             }
         });
         return true
@@ -17,10 +17,10 @@ export async function acquireLock(prisma: PrismaClient, tenantId: string, enviro
     }
 }
 
-export async function releaseLock(prisma: PrismaClient, tenantId: string, environmentId: string): Promise<void> {
+export async function releaseLock(prisma: PrismaClient, tenantId: string, environmentId: string, purpose:string): Promise<void> {
     await prisma.locks.delete({
         where: {
-            lock_key: `${tenantId}-${environmentId}`
+            lock_key: `${tenantId}-${environmentId}-${purpose}`
         }
     });
 }

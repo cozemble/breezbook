@@ -80,7 +80,7 @@ export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClien
         return;
     }
     const locked = await inngestStep.run('acquireLock', async () => {
-        return await acquireLock(prisma, tenantId, environmentId)
+        return await acquireLock(prisma, tenantId, environmentId,'airtable-replication')
     });
     if (!locked) {
         logger.info(`Tenant ${tenantId} environment ${environmentId} already locked, skipping`);
@@ -133,7 +133,7 @@ export async function handlePendingChangeInTenantEnvironment(prisma: PrismaClien
         logger.info(`No more pending changes for tenant ${tenantId} environment ${environmentId}`);
     }
     await inngestStep.run('releaseLock', async () => {
-        await releaseLock(prisma, tenantId, environmentId);
+        await releaseLock(prisma, tenantId, environmentId, 'airtable-replication');
     });
 }
 
