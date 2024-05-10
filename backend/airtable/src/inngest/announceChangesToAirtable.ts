@@ -14,9 +14,10 @@ import {natsCarWashAirtableMapping} from "../airtable/natsCarWashAirtableMapping
 import {carWashMapping} from "../airtable/carWashMapping.js";
 import {DelegatingInngestStep, InngestStep, Logger} from "./inngestTypes.js";
 
-const announceChangesToAirtable = {
+export const announceChangesToAirtable = {
     fanOutChangesInTenantEnvironments: 'announceChanges/airtable/fanOutChangesInTenantEnvironments',
     onPendingChangeInTenantEnvironment: 'announceChanges/airtable/onPendingChangeInTenantEnvironment',
+    deferredChangeAnnouncement: 'announceChanges/airtable/deferredChangeAnnouncement',
 };
 
 
@@ -182,5 +183,22 @@ export const onPendingChangeInTenantEnvironment = inngest.createFunction(
         const httpAirtableClient = new HttpAirtableClient('https://api.airtable.com/v0', new AirtableAccessTokenProvider(tenantId, environmentId));
         const inngestStep = new DelegatingInngestStep(inngest, step);
         await handlePendingChangeInTenantEnvironment(prisma, logger, baseIdReplacingMappingFinder(hardCodedMappingFinder), getEarliestNonReplicatedMutationEvent, prismaSynchronisationIdRepository, httpAirtableClient, tenantId, environmentId, inngestStep);
+    }
+);
+
+export const deferredChangeAnnouncement = inngest.createFunction(
+    {
+        id: announceChangesToAirtable.deferredChangeAnnouncement,
+    },
+    {event: announceChangesToAirtable.deferredChangeAnnouncement},
+    async ({event, step}) => {
+        const {environmentId, tenantId} = event.data;
+        await step.run('waitTwoSeconds', async () => {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+        });
+        await inngest.send({
+            name: announceChangesToAirtable.onPendingChangeInTenantEnvironment,
+            data: {tenantId, environmentId}
+        });
     }
 );

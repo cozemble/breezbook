@@ -20,6 +20,8 @@ import {doInsertOrder} from './doInsertOrder.js';
 import {ErrorResponse, OrderCreatedResponse, PricedCreateOrderRequest} from '@breezbook/backend-api-types';
 import {prismaClient} from '../prisma/client.js';
 import {Mutations} from '../mutation/mutations.js';
+import {announceChangesToAirtable} from "../inngest/announceChangesToAirtable.js";
+import {inngest} from "../inngest/client.js";
 
 export const addOrderErrorCodes = {
     customerFormMissing: 'addOrder.customer.form.missing',
@@ -98,6 +100,10 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
             return handleOutcome(res, prisma, tenantEnvironment, outcome);
         }
         const {mutations, orderCreatedResponse} = outcome;
+        await inngest.send({
+            name: announceChangesToAirtable.deferredChangeAnnouncement,
+            data:{tenantId:tenantEnvironment.tenantId.value, environmentId:tenantEnvironment.environmentId.value}
+        });
         await handleOutcome(res, prisma, tenantEnvironment, mutations, httpJsonResponse(200, orderCreatedResponse));
     });
 }
