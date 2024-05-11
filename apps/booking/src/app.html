@@ -23,6 +23,19 @@
 		</style>
 
 		%sveltekit.head%
+
+		<!-- Mouseflow -->
+		<!-- use data-mouseflow-exclude for the elements to disable tracking -->
+		<script type="text/javascript">
+			window._mfq = window._mfq || [];
+			(function () {
+				var mf = document.createElement('script');
+				mf.type = 'text/javascript';
+				mf.defer = true;
+				mf.src = '//cdn.mouseflow.com/projects/76f87053-6453-40f6-ba59-9c214687117e.js';
+				document.getElementsByTagName('head')[0].appendChild(mf);
+			})();
+		</script>
 	</head>
 	<body data-sveltekit-preload-data="hover" data-theme="corporate">
 		<div style="display: contents">%sveltekit.body%</div>

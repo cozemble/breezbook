@@ -24,7 +24,7 @@
 			{#if $loading}
 				<Loading />
 			{:else if $stripe && $clientSecret}
-				<div class="card-body p-4 sm:p-8">
+				<div class="card-body p-4 sm:p-8" data-mouseflow-exclude>
 					<h1 class="text-xl font-bold">Card Details</h1>
 
 					<Elements stripe={$stripe}>
