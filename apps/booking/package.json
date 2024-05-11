@@ -14,6 +14,10 @@
 		"test:integration": "echo playwright test",
 		"test:unit": "vitest"
 	},
+	"dependencies": {
+		"@sentry/sveltekit": "^7.114.0",
+		"@sentry/utils": "^7.114.0"
+	},
 	"devDependencies": {
 		"@breezbook/backend-api-types": "workspace:*",
 		"@breezbook/packages-core": "workspace:*",
