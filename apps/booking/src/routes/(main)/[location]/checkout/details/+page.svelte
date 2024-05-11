@@ -31,7 +31,7 @@
 
 <div class="flex flex-col items-center justify-center">
 	<div class="card flex flex-col w-full max-w-lg p- bg-base-200">
-		<div class="card-body" data-mouseflow-exclude>
+		<div class="card-body">
 			<SchemaForm
 				schema={$schema}
 				bind:value={$customer}
