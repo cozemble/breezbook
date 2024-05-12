@@ -14,18 +14,18 @@
 </script>
 
 <div class="card bg-base-200">
-	<div class="card-body">
-		<h1 class="text-lg font-semibold">Coupon</h1>
-		<div class="join">
+	<div class="card-body p-6">
+		<h1 class="text-lg font-semibold mb-4">Coupon</h1>
+		<div class="flex flex-col gap-4 w-full">
 			<input
 				type="text"
 				name="coupon"
 				bind:value
 				placeholder="Enter coupon code here"
-				class="input input-bordered join-item"
+				class="input input-bordered w-full"
 			/>
 
-			<button class="btn btn-secondary join-item" on:click={onApply}>Apply</button>
+			<button class="btn btn-secondary self-end" on:click={onApply}>Apply</button>
 		</div>
 	</div>
 </div>
