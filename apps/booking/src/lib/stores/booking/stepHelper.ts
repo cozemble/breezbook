@@ -47,7 +47,11 @@ export function defineStep(id: string): BookingStep {
 		onOpen: () => {
 			if (!isPrevStepSuccess()) return;
 
-			goto(`#${id}`);
+			// scroll to the top if on mobile
+			// scroll to the step if on desktop
+			if (window.innerWidth < 768) window.scrollTo({ top: 0, behavior: 'smooth' });
+			else goto(`#${id}`);
+
 			get(stepsStore).forEach((s) => {
 				if (s.id !== id) s.open.set(false);
 				else s.open.set(true);
