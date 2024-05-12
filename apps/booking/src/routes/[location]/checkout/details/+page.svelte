@@ -24,7 +24,7 @@
 </script>
 
 <div class="mb-10">
-	<h1 class="text-2xl font-semibold text-primary">Customer Details</h1>
+	<h1 class="text-2xl font-semibold text-primary">Your Details</h1>
 	<p>Please enter your details to complete your booking</p>
 </div>
 
