@@ -16,7 +16,7 @@ export const initValues = (schema: JSONSchema): AnyValue => {
 
 	if (schema.type === 'string') return schema.default || '';
 
-	if (schema.type === 'number' || schema.type === 'integer') return schema.default || 0;
+	if (schema.type === 'number' || schema.type === 'integer') return schema.default || undefined;
 
 	if (schema.type === 'boolean') return schema.default || false;
 
