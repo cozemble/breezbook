@@ -2,11 +2,10 @@
 	import { goto } from '$app/navigation';
 	import SchemaForm from '$lib/components/schemaForm/SchemaForm.svelte';
 	import checkoutStore from '$lib/stores/checkout';
-	import { locationStore } from '$lib/stores/location';
 	import routeStore from '$lib/stores/routes';
 
 	const routes = routeStore.get();
-	const tenantLocation = locationStore.get();
+
 	const {
 		customerStore: { customer, schema, errors, submitWithCallback },
 		submitOrder

@@ -1,5 +1,6 @@
 import { onMount } from 'svelte';
 import { derived, get, type Readable, writable } from 'svelte/store';
+import { goto } from '$app/navigation';
 
 import * as core from '@breezbook/packages-core';
 import { addOnId, addOnOrder } from '@breezbook/packages-core';
@@ -9,8 +10,6 @@ import {
 	unpricedBasket,
 	unpricedBasketLine
 } from '@breezbook/backend-api-types';
-
-import { goto } from '$app/navigation';
 
 import { createStoreContext } from '$lib/common/helpers/store';
 import api from '$lib/common/api';
@@ -23,8 +22,6 @@ import { locationStore } from '../location';
 import routeStore from '../routes';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
-
-// TODO refactor this
 
 const getFromLocalStorage = () => {
 	const items = localStorage.getItem(CART_STORE_CONTEXT_KEY);
@@ -50,50 +47,23 @@ function createCheckoutStore() {
 	const items = writable<Booking[]>([]);
 	const couponCode = writable<string | undefined>();
 
-	// const order = derived(
-	//     [items, customerStore.customer],
-	//     ([$items, $customer]): core.Order | null => {
-	//         if ($items.length === 0) return null;
-	//
-	//         const lines = $items.map((item) =>
-	//             core.orderLine(
-	//                 core.serviceId(item.service.id),
-	//                 core.locationId(tenantLocation.id), // TODO correct the hard-coded location
-	//                 core.price(item.time.price, core.currency('GBP')), // TODO correct this
-	//                 item.extras.map((e) => core.addOnOrder(core.addOnId(e.id))),
-	//                 core.isoDate(item.time.day),
-	//                 core.timeslotSpec(
-	//                     core.time24(item.time.start),
-	//                     core.time24(item.time.end),
-	//                     '',
-	//                     core.id(item.time.id)
-	//                 ),
-	//                 [item.details]
-	//             )
-	//         );
-	//
-	//         // TODO get rid of this, this is a hack to prevent id being lost
-	//
-	//         return core.order(
-	//             {
-	//                 ...$customer,
-	//                 id: core.customerId(),
-	//                 email: core.email($customer.email as unknown as string)
-	//             },
-	//             lines
-	//         );
-	//     }
-	// );
-
 	const total: Readable<PricedBasket | null> = derived(
 		[items, couponCode],
 		([$items, $couponCode], set) => {
 			if ($items.length === 0) return set(null);
 
+			// remove eventually
+			const tNotif = notifications.create({
+				title: 'Calculating total',
+				description: 'Please wait...',
+				type: 'loading',
+				canUserClose: false
+			});
+
 			const basketItems = $items.map((item) => {
 				return unpricedBasketLine(
 					core.serviceId(item.service.id),
-					core.locationId(tenantLocation.id), // TODO correct the hard-coded location
+					core.locationId(tenantLocation.id),
 					item.extras.map((extra) => addOnOrder(addOnId(extra.id))),
 					core.isoDate(item.time.day),
 					core.timeslotSpec(
@@ -106,53 +76,30 @@ function createCheckoutStore() {
 				);
 			});
 
-			const _couponCode = $couponCode ? core.couponCode($couponCode) : undefined;
-
-			const unpriced = unpricedBasket(basketItems, _couponCode);
-
-			const tNotif = notifications.create({
-				title: 'Calculating total',
-				description: 'Please wait...',
-				type: 'loading',
-				canUserClose: false
-			});
+			const coupon = $couponCode ? core.couponCode($couponCode) : undefined;
+			const unpriced = unpricedBasket(basketItems, coupon);
 
 			api.basket
 				.pricing(tenant.slug, unpriced)
-				.then((res) => {
-					set(res);
-					tNotif.remove();
-				})
+				.then((res) => set(res))
 				.catch((err) => {
-					console.error(err);
+					console.warn(err);
+
+					const noSuchCoupon = err.response.data.errorCode === 'addOrder.no.such.coupon';
+					if (noSuchCoupon) couponCode.set(undefined);
+
+					notifications.create({
+						title: 'Error',
+						description: err.response.data.errorMessage,
+						type: 'error',
+						duration: 4000
+					});
+				})
+				.finally(() => {
 					tNotif.remove();
-
-					if (err.response.data.errorCode === 'addOrder.no.such.coupon') {
-						console.warn('Invalid coupon code');
-						notifications.create({
-							title: 'Error',
-							description: err.response.data.errorMessage,
-							type: 'error',
-							duration: 4000
-						});
-						couponCode.set(undefined);
-						return;
-					}
-
-					// notifications.create({
-					// 	title: 'Error',
-					// 	description: err.message,
-					// 	type: 'error',
-					// 	duration: 4000
-					// });
 				});
 		}
 	);
-
-	// const total = derived([order, coupons], ([$order, $coupons]) => {
-	// 	if (!$order) return null;
-	// 	return core.calculateOrderTotal($order, core.carwash.addOns, $coupons);
-	// });
 
 	// ----------------------------------------------------------------
 
@@ -161,7 +108,7 @@ function createCheckoutStore() {
 			...item,
 			id: Math.random().toString(36).substring(2, 9)
 		};
-		console.log(newItem);
+
 		items.update((prev) => [...prev, newItem]);
 		return newItem;
 	};
@@ -175,17 +122,8 @@ function createCheckoutStore() {
 	};
 
 	const submitOrder = async () => {
-		// const coupon = get(couponCode);
-
-		// const theOrder = get(order);
-		// if (!theOrder) return;
-
 		const theTotal = get(total);
 		if (!theTotal) return;
-
-		// const orderWithCoupon = coupon
-		//     ? core.orderFns.addCoupon(theOrder, core.couponCode(coupon))
-		//     : theOrder;
 
 		const notif = notifications.create({
 			title: 'Placing order',
@@ -208,13 +146,12 @@ function createCheckoutStore() {
 
 		try {
 			const orderRes = await api.booking.placeOrder(tenant.slug, orderReq);
-			console.log(orderRes);
 
 			paymentStore.createPaymentIntent(orderRes.orderId);
 			notif.remove();
 			goto(routes.checkout.payment());
 		} catch (err) {
-			console.error('Failed to place order', err);
+			console.warn('Failed to place order', err);
 			notif.remove();
 			notifications.create({
 				title: 'Error',

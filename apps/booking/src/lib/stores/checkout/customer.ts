@@ -18,7 +18,7 @@ export function createCustomerStore() {
 			formData: {
 				type: 'object',
 				properties: {
-					phone: { type: 'string', description: 'Your phone number', title: 'Phone' },
+					phone: { type: 'string', description: 'Your phone number', title: 'Phone' }
 				},
 				required: ['phone']
 			}
@@ -79,13 +79,10 @@ export function createCustomerStore() {
 
 	//
 
-	//
-
 	let unsubValidate: () => void; // prevent memory leak
 
 	/** Submit the form and call the callback if valid */
 	const submitWithCallback = async (callbackIfValid: () => void) => {
-		console.log('submitting');
 		unsubValidate?.(); // unsubscribe from validation
 		const isValid = validate();
 
@@ -95,7 +92,6 @@ export function createCustomerStore() {
 			return;
 		}
 
-		console.log('valid');
 		callbackIfValid();
 	};
 
