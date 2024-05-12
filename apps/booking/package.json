@@ -27,6 +27,7 @@
 		"@typescript-eslint/eslint-plugin": "^6.0.0",
 		"@typescript-eslint/parser": "^6.0.0",
 		"ajv": "^8.12.0",
+		"ajv-formats": "^3.0.1",
 		"autoprefixer": "^10.4.16",
 		"axios": "^1.6.7",
 		"daisyui": "^4.10.5",

@@ -1,5 +1,6 @@
 import { get, writable } from 'svelte/store';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 import type { ErrorObject as AjvErrorObject } from 'ajv';
 import _ from 'lodash';
 
@@ -14,7 +15,7 @@ export function createCustomerStore() {
 		properties: {
 			firstName: { type: 'string', description: 'Your name', title: 'First Name' },
 			lastName: { type: 'string', description: 'Your last name', title: 'Last Name' },
-			email: { type: 'string', description: 'Your email address', title: 'Email' },
+			email: { type: 'string', description: 'Your email address', title: 'Email', format: 'email' },
 			formData: {
 				type: 'object',
 				properties: {
@@ -66,6 +67,7 @@ export function createCustomerStore() {
 		const ajv = new Ajv({
 			allErrors: true
 		});
+		addFormats(ajv);
 		ajv.addVocabulary([]); // TODO add specific words later if needed
 
 		const validate = ajv.compile(get(schema));
