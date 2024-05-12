@@ -8,12 +8,10 @@ import { error, redirect } from '@sveltejs/kit';
 
 export const load: LayoutLoad = async ({ params, url }) => {
 	if (browser) {
+		// Posthog tracking
 		posthog.init('phc_asps2z1RUkEjKSSWV1ezUHyt2epCGGqDhLTejoYA2a7', {
 			api_host: 'https://us.i.posthog.com'
 		});
-		console.log('Posthog initialized');
-
-		Object.assign(window, { posthog });
 	}
 
 	const subdomain = utils.link.getSubdomain(url);
