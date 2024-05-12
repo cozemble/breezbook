@@ -5,6 +5,7 @@
 	export let open: boolean = false;
 	/** keep shorter than 15 for mobile */
 	export let label: string;
+	export let id: string;
 	export let status: GenericStatus = 'default';
 	/** keep shorter than 25 for mobile */
 	export let summary: string = '';
@@ -23,7 +24,7 @@
 	- On click, the accordion opens and displays the slot content.
  -->
 
-<div class="collapse collapse-arrow border {open && 'collapse-open'}">
+<div {id} class="collapse collapse-arrow border {open && 'collapse-open'}">
 	<button
 		class="collapse-title flex items-center justify-start
     {status === 'success' && 'text-success'}

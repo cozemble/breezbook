@@ -18,6 +18,7 @@
 </script>
 
 <StepWrapper
+	id={step.id}
 	open={$open}
 	label="Pick extras"
 	status={$status}

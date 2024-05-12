@@ -28,6 +28,7 @@
 <!-- TODO date range filter -->
 
 <StepWrapper
+	id={step.id}
 	open={$open}
 	label="Pick a time"
 	status={$status}

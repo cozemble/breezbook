@@ -20,6 +20,7 @@
 </script>
 
 <StepWrapper
+	id={step.id}
 	open={$open}
 	label="Details"
 	status={$status}

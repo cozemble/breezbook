@@ -58,17 +58,17 @@ function createBookingStore(service: Service) {
 	return {
 		time: {
 			...timeStore,
-			step: defineStep()
+			step: defineStep('time')
 		},
 
 		extras: {
 			...extrasStore,
-			step: defineStep()
+			step: defineStep('extras')
 		},
 
 		details: {
 			...detailsStore,
-			step: defineStep()
+			step: defineStep('details')
 		},
 
 		total,

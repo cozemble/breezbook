@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { goto } from '$app/navigation';
 import { getContext, setContext } from 'svelte';
 import { type Writable, get, writable } from 'svelte/store';
 
@@ -18,10 +18,9 @@ const stepsStoreCtx = () => {
  * - Handles all the logic related to the step automatically
  * - #### Define the steps in the order you want them to be displayed
  */
-export function defineStep(): BookingStep {
+export function defineStep(id: string): BookingStep {
 	const stepsStore = stepsStoreCtx();
 
-	const id = _.uniqueId('step_');
 	const isFirst = !get(stepsStore).length;
 
 	const getStepIdx = () => get(stepsStore).findIndex((s) => s.id === id);
@@ -48,6 +47,7 @@ export function defineStep(): BookingStep {
 		onOpen: () => {
 			if (!isPrevStepSuccess()) return;
 
+			goto(`#${id}`);
 			get(stepsStore).forEach((s) => {
 				if (s.id !== id) s.open.set(false);
 				else s.open.set(true);
