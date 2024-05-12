@@ -1,6 +1,5 @@
 import { get, writable } from 'svelte/store';
 import { createUID } from '$lib/common/utils';
-import { dev } from '$app/environment';
 
 export interface Notification {
 	id: string;
@@ -74,20 +73,6 @@ const remove = (id: string) => {
 		notifications.filter((notification) => notification.id !== id)
 	);
 };
-
-// TODO remove this when the app is ready
-// A notification to show when the app is in early prototype
-
-if (!dev) {
-	create({
-		title: 'This is an early prototype',
-		description: 'Functionality is limited to testing purposes only.',
-		type: 'neutral',
-		canUserClose: true,
-		// duration: 2000,
-		icon: 'wpf:maintenance'
-	});
-}
 
 export default {
 	...notificationStore,
