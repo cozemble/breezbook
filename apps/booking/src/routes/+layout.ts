@@ -1,5 +1,5 @@
 import posthog from 'posthog-js';
-import { browser } from '$app/environment';
+import { browser, dev } from '$app/environment';
 import type { LayoutLoad } from './$types';
 
 import api from '$lib/common/api';
@@ -7,7 +7,7 @@ import * as utils from '$lib/common/utils';
 import { error, redirect } from '@sveltejs/kit';
 
 export const load: LayoutLoad = async ({ params, url }) => {
-	if (browser) {
+	if (browser && !dev) {
 		// Posthog tracking
 		posthog.init('phc_asps2z1RUkEjKSSWV1ezUHyt2epCGGqDhLTejoYA2a7', {
 			api_host: 'https://us.i.posthog.com'
