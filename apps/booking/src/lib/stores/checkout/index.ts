@@ -20,6 +20,7 @@ import notifications from '../notifications';
 import tenantStore from '../tenant';
 import { locationStore } from '../location';
 import routeStore from '../routes';
+import { H } from 'highlight.run';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -143,6 +144,14 @@ function createCheckoutStore() {
 			patchedCustomer,
 			core.fullPaymentOnCheckout()
 		);
+
+		// Identify the user on Highlight so we can track who that user is
+		H.identify(patchedCustomer.email.value, {
+			id: patchedCustomer.id.value,
+			firstName: patchedCustomer.firstName,
+			lastName: patchedCustomer.lastName,
+			formData: JSON.stringify(patchedCustomer.formData)
+		});
 
 		try {
 			const orderRes = await api.booking.placeOrder(tenant.slug, orderReq);

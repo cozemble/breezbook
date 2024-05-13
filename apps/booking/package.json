@@ -50,6 +50,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"highlight.run": "^8.12.2",
 		"posthog-js": "^1.131.4"
 	}
 }
