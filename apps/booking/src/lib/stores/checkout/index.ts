@@ -1,6 +1,6 @@
 import { onMount } from 'svelte';
 import { derived, get, type Readable, writable } from 'svelte/store';
-import { goto } from '$app/navigation';
+import { H } from 'highlight.run';
 
 import * as core from '@breezbook/packages-core';
 import { addOnId, addOnOrder } from '@breezbook/packages-core';
@@ -19,8 +19,6 @@ import { createCustomerStore } from './customer';
 import notifications from '../notifications';
 import tenantStore from '../tenant';
 import { locationStore } from '../location';
-import routeStore from '../routes';
-import { H } from 'highlight.run';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -40,7 +38,6 @@ const saveToLocalStorage = (items: Booking[]) => {
 function createCheckoutStore() {
 	const tenant = tenantStore.get();
 	const tenantLocation = locationStore.get();
-	const routes = routeStore.get();
 
 	const customerStore = createCustomerStore();
 	const paymentStore = createPaymentStore();
@@ -126,24 +123,12 @@ function createCheckoutStore() {
 		const theTotal = get(total);
 		if (!theTotal) return;
 
-		const notif = notifications.create({
-			title: 'Placing order',
-			description: "You'll be redirected to the payment page in a moment.",
-			type: 'loading',
-			canUserClose: false
-		});
-
 		const theCustomer = get(customerStore.customer);
 		const patchedCustomer = {
 			...theCustomer,
 			id: core.customerId(),
 			email: core.email(theCustomer.email as unknown as string)
 		};
-		const orderReq = pricedCreateOrderRequest(
-			theTotal,
-			patchedCustomer,
-			core.fullPaymentOnCheckout()
-		);
 
 		// Identify the user on Highlight so we can track who that user is
 		H.identify(patchedCustomer.email.value, {
@@ -153,23 +138,13 @@ function createCheckoutStore() {
 			formData: JSON.stringify(patchedCustomer.formData)
 		});
 
-		try {
-			const orderRes = await api.booking.placeOrder(tenant.slug, orderReq);
+		const orderReq = pricedCreateOrderRequest(
+			theTotal,
+			patchedCustomer,
+			core.fullPaymentOnCheckout()
+		);
 
-			paymentStore.createPaymentIntent(orderRes.orderId);
-			notif.remove();
-			goto(routes.checkout.payment());
-		} catch (err) {
-			console.warn('Failed to place order', err);
-			notif.remove();
-			notifications.create({
-				title: 'Error',
-				description: 'Failed to place order',
-				type: 'error',
-				duration: 4000
-			});
-			return;
-		}
+		paymentStore.initiatePayment(orderReq);
 	};
 
 	// ----------------------------------------------------------------

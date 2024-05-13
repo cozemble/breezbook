@@ -1,42 +1,48 @@
-import api from '$lib/common/api';
+import { derived, get, writable } from 'svelte/store';
+import { goto } from '$app/navigation';
 import { loadStripe, type Stripe, type StripeElements } from '@stripe/stripe-js';
-import { onMount } from 'svelte';
-import { get, writable } from 'svelte/store';
+
+import type { PricedCreateOrderRequest } from '@breezbook/backend-api-types';
+
+import api from '$lib/common/api';
 import notifications from '../notifications';
 import tenantStore from '../tenant';
 import orderHistoryStore from '../orderHistory';
 import { settingsStore } from '../settings';
+import routeStore from '../routes';
 
 export const createPaymentStore = () => {
 	const tenant = tenantStore.get();
 	const settings = settingsStore.get();
+	const routes = routeStore.get();
 
 	const clientSecret = writable<string | null>(null);
 	const stripePublicKey = writable<string | null>(null);
-	const stripe = writable<Stripe | null>(null);
+	/** keep track of payment initiation
+	 * - while `false`, payment page will redirect to success page
+	 */
+	const paymentInitiated = derived(clientSecret, ($clientSecret) => $clientSecret !== null);
+	/** bind to elements in the Elements component */
 	const elements = writable<StripeElements | undefined>(undefined);
 	const loading = writable<boolean>(false);
 
-	// ----------------------------------------------------------
+	/** derived from stripePublicKey */
+	const stripe = derived<typeof stripePublicKey, Stripe | null>(stripePublicKey, ($key, set) => {
+		if (!$key) return;
 
-	// doing this onMount so that we can use the store in the browser
-	onMount(() => {
-		stripePublicKey.subscribe(async (key) => {
-			if (!key) return;
-
-			loading.set(true);
-
-			const notif = notifications.create({
-				title: 'Loading payment gateway',
-				description: 'Please wait...',
-				type: 'loading'
-			});
-
-			const stripeInstance = await loadStripe(key);
-			stripe.set(stripeInstance);
-			notif.remove();
-			loading.set(false);
+		const notif = notifications.create({
+			title: 'Loading payment gateway',
+			description: 'Please wait...',
+			type: 'loading'
 		});
+		loading.set(true);
+
+		loadStripe($key)
+			.then(set)
+			.finally(() => {
+				notif.remove();
+				loading.set(false);
+			});
 	});
 
 	// ----------------------------------------------------------
@@ -55,6 +61,39 @@ export const createPaymentStore = () => {
 				duration: 4000
 			});
 
+			return;
+		}
+	};
+
+	/** initiate payment process
+	 * 1. place order
+	 * 2. create payment intent
+	 * 3. redirect to payment page
+	 */
+	const initiatePayment = async (orderReq: PricedCreateOrderRequest) => {
+		const notif = notifications.create({
+			title: 'Placing order',
+			description: "You'll be redirected to the payment page in a moment",
+			type: 'loading',
+			canUserClose: false
+		});
+
+		try {
+			const orderRes = await api.booking.placeOrder(tenant.slug, orderReq);
+
+			await createPaymentIntent(orderRes.orderId);
+			notif.remove();
+			goto(routes.checkout.payment());
+		} catch (err) {
+			console.warn('Failed to place order', err);
+
+			notif.remove();
+			notifications.create({
+				title: 'Error',
+				description: 'Failed to place order',
+				type: 'error',
+				duration: 4000
+			});
 			return;
 		}
 	};
@@ -107,12 +146,13 @@ export const createPaymentStore = () => {
 	return {
 		clientSecret,
 		stripePublicKey,
+		paymentInitiated,
 
 		stripe,
 		elements,
 		loading,
 
-		createPaymentIntent,
+		initiatePayment,
 		onSubmit
 	};
 };

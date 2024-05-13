@@ -1,14 +1,35 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Elements, PaymentElement } from 'svelte-stripe';
+	import { goto } from '$app/navigation';
+
+	import routeStore from '$lib/stores/routes';
 	import checkoutStore from '$lib/stores/checkout';
+
 	import Loading from '$lib/components/Loading.svelte';
 	import CustomerSummary from '$lib/sections/checkout/payment/CustomerSummary.svelte';
 	import PaymentSummary from '$lib/sections/checkout/payment/PaymentSummary.svelte';
 	import Bookings from '$lib/sections/checkout/payment/PaymentBookings.svelte';
+	import notifications from '$lib/stores/notifications';
+	import { browser } from '$app/environment';
 
+	const routes = routeStore.get();
 	const {
-		paymentStore: { clientSecret, stripe, onSubmit, elements, loading }
+		paymentStore: { clientSecret, stripe, onSubmit, elements, loading, paymentInitiated }
 	} = checkoutStore.get();
+
+	if (!$paymentInitiated && browser) {
+		console.warn('Payment has not been initiated');
+
+		notifications.create({
+			type: 'error',
+			title: 'Error',
+			description: 'Payment has not been initiated',
+			duration: 5000
+		});
+
+		goto(routes.checkout.main());
+	}
 </script>
 
 <div class="mb-10">
@@ -21,19 +42,19 @@
 		<CustomerSummary />
 
 		<div class="card bg-base-200">
-			{#if $loading}
-				<Loading />
-			{:else if $stripe && $clientSecret}
-				<div class="card-body p-4 sm:p-8">
-					<h1 class="text-xl font-bold">Card Details</h1>
+			<div class="card-body p-4 sm:p-8">
+				<h1 class="text-xl font-bold">Card Details</h1>
 
+				{#if $loading}
+					<Loading />
+				{:else if $stripe && $clientSecret}
 					<Elements stripe={$stripe}>
 						<Elements stripe={$stripe} clientSecret={$clientSecret} bind:elements={$elements}>
 							<PaymentElement />
 						</Elements>
 					</Elements>
-				</div>
-			{/if}
+				{/if}
+			</div>
 		</div>
 
 		<Bookings />
