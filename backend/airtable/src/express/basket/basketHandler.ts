@@ -6,7 +6,6 @@ import {
 } from '../../infra/functionalExpress.js';
 import express from 'express';
 import {UnpricedBasket, unpricedBasketFns} from '@breezbook/backend-api-types';
-import {getEverythingForAvailability} from '../getEverythingForAvailability.js';
 import {priceBasket} from '../../core/basket/priceBasket.js';
 import {prismaClient} from "../../prisma/client.js";
 import {byLocation} from "../../availability/byLocation.js";
@@ -20,7 +19,7 @@ export async function onBasketPriceRequest(req: express.Request, res: express.Re
     await withTwoRequestParams(req, res, tenantEnvironmentParam(), unpricedBasketBody(), async (tenantEnvironment, unpricedBasket) => {
         const {fromDate, toDate} = unpricedBasketFns.getDates(unpricedBasket);
         const locations = unpricedBasket.lines.map((line) => line.locationId);
-        const allTheSameLocation = locations.every((val, i, arr) => val === arr[0]);
+        const allTheSameLocation = locations.every((val, i, arr) => val.value === arr[0].value);
         if (!allTheSameLocation) {
             res.status(400).send({error: 'All line items must be for the same location'});
             return;

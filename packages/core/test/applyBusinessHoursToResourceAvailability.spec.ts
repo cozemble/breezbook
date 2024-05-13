@@ -3,7 +3,7 @@ import {fitAvailability} from "../src/applyBookingsToResourceAvailability.js";
 import {
     dayAndTimePeriod,
     isoDate,
-    resource,
+    fungibleResource,
     resourceDayAvailability,
     resourceType,
     time24,
@@ -11,7 +11,7 @@ import {
 } from "../src/types.js";
 
 const van = resourceType('van');
-const van1 = resource(van, "Van 1");
+const van1 = fungibleResource(van, "Van 1");
 const eightAm = time24('08:00')
 const nineAm = time24('09:00')
 const nineThirty = time24('09:30')

@@ -7,7 +7,7 @@ import {
     GBP,
     isoDate,
     price,
-    resource,
+    fungibleResource,
     resourceDayAvailability,
     resourceType,
     service,
@@ -17,7 +17,7 @@ import {
 } from "../src/types.js";
 
 const van = resourceType('van');
-const van1 = resource(van, "Van 1");
+const van1 = fungibleResource(van, "Van 1");
 const carWash = service('Car Wash','Car wash', [van], 120, true, price(1000, GBP), [], []);
 const services = [carWash];
 const nineAm = time24('09:00')

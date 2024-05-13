@@ -39,6 +39,8 @@ export const tomorrow = isoDateFns.addDays(isoDate(), 1);
 export const twoDaysFromNow = isoDateFns.addDays(isoDate(), 2);
 export const threeDaysFromNow = isoDateFns.addDays(isoDate(), 3);
 export const fourDaysFromNow = isoDateFns.addDays(isoDate(), 4);
+export const fiveDaysFromNow = isoDateFns.addDays(isoDate(), 5);
+
 
 // export async function postOrder(order: Order, total: Price, port: number) {
 // 	const body = createOrderRequest(order, total, fullPaymentOnCheckout());
@@ -94,7 +96,7 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
     return everythingForAvailability(
         businessConfiguration(
             businessAvailability([dayAndTimePeriod(today, carwash.nineToSix)]),
-            [resourceDayAvailability(carwash.van1, [dayAndTimePeriod(today, carwash.nineToSix)])],
+            [resourceDayAvailability(carwash.van1, [dayAndTimePeriod(today, carwash.nineToSix)]),resourceDayAvailability(carwash.van2, [dayAndTimePeriod(today, carwash.nineToSix)])],
             [carwash.smallCarWash],
             carwash.addOns,
             carwash.timeslots,

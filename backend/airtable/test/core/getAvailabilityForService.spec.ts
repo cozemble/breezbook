@@ -13,9 +13,18 @@ test('if resource is available and there are no bookings, then we have service a
 	expect(availability.slots[today.value]).toHaveLength(3);
 });
 
-test('if resource is available but there is a booking, then we have no service availability', () => {
-	const theBooking = booking(customerId('customer#1'), carwash.smallCarWash.id, today, theOnlyTimeslotWeHave);
-	const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([theBooking]), carwash.smallCarWash.id, today, today);
+test('if some but not all resources are assigned to a timeslot, then we still have service availability for that timeslot', () => {
+	const bookingForVan1 = booking(customerId('customer#1'), carwash.smallCarWash.id, today, theOnlyTimeslotWeHave);
+	const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([bookingForVan1]), carwash.smallCarWash.id, today, today);
+	expect(availability).toBeDefined();
+	expect(availability.slots[today.value]).toBeDefined();
+	expect(availability.slots[today.value]).toHaveLength(3);
+});
+
+test('if all resources are assigned to a timeslot, then we have no service availability for that timeslot', () => {
+	const bookingForVan1 = booking(customerId('customer#1'), carwash.smallCarWash.id, today, theOnlyTimeslotWeHave);
+	const bookingForVan2 = booking(customerId('customer#1'), carwash.smallCarWash.id, today, theOnlyTimeslotWeHave);
+	const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([bookingForVan1, bookingForVan2]), carwash.smallCarWash.id, today, today);
 	expect(availability).toBeDefined();
 	expect(availability.slots[today.value]).toBeDefined();
 	expect(availability.slots[today.value]).toHaveLength(2);

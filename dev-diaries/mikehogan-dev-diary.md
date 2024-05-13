@@ -588,3 +588,23 @@ It is possible to hide tables in airtable, but nevertheless, in the spirit of re
 for something similar to this "shadow table" concept.
 
 There will be data privacy issues in doing this.  Still feels like what I'd like to have though.
+
+# Sat 11 May 2024
+
+I think we have done everything necessary to launch with Nat.  There are some UX snags that have to be worked thru, but
+all the parts of the system are done.  UI, availability, booking, payment, replication to airtable.  In airtable, 
+sending of notification emails.
+
+The plan is to switch one of Nat's services on his website to book thru breezbook, and we'll watch how bookings are
+progressing thru the use of Mouseflow, and watch for errors thru the use of Sentry.  So I can't think of anything to do
+right now :)
+
+What will it be like once this goes live?  Watch for the first visit to the booking page.  See if it's clear to the 
+visitor.  Iterate on the UX and UI if not.  If a booking happens, high five!  Check it replicates correctly to airtable
+and the confirmation email goes out.  Check with the team that they are comfortable with the data layout in airtable.
+In time, switch all of Nat's services over to breezbook.
+
+Then will we need to migrate customers and bookings from his existing booking systems, those being docsndata and acuity?
+And retire those systems.
+
+In terms of ops, mouseflow, sentry and inngest error reporting to slack should give us great visibility.

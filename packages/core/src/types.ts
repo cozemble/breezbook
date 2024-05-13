@@ -1,7 +1,6 @@
-import {v4 as uuidv4} from 'uuid';
+import {v4 as uuidv4, v4 as uuid} from 'uuid';
 import {PriceAdjustment} from './calculatePrice.js';
 import dayjs from 'dayjs';
-import {v4 as uuid} from 'uuid'
 
 export interface ValueType<T> {
     _type: unknown;
@@ -29,9 +28,20 @@ export interface TenantId extends ValueType<string> {
     _type: 'tenant.id';
 }
 
+export interface Minutes extends ValueType<number> {
+    _type: 'minutes';
+}
+
 export function tenantId(value: string): TenantId {
     return {
         _type: 'tenant.id',
+        value
+    };
+}
+
+export function minutes(value: number): Minutes {
+    return {
+        _type: 'minutes',
         value
     };
 }
@@ -201,11 +211,11 @@ export function time24(value: string, timezone?: Timezone): TwentyFourHourClockT
     };
 }
 
-export interface Duration extends ValueType<number> {
+export interface Duration extends ValueType<Minutes> {
     _type: 'duration';
 }
 
-export function duration(value: number): Duration {
+export function duration(value: Minutes): Duration {
     return {
         _type: 'duration',
         value
@@ -458,10 +468,13 @@ export function currency(value: string): Currency {
 
 export const GBP = currency('GBP');
 
-export function price(amount: number, currency: Currency): Price {
+export function price(amountInMinorUnits: number, currency: Currency): Price {
+    if (parseInt(amountInMinorUnits.toString()) !== amountInMinorUnits) {
+        throw new Error(`Amount in minor units must be an integer. Got ${amountInMinorUnits}`)
+    }
     return {
         _type: 'price',
-        amount: moneyInMinorUnits(amount),
+        amount: moneyInMinorUnits(amountInMinorUnits),
         currency
     };
 }
@@ -477,6 +490,7 @@ export interface Service {
     permittedAddOns: AddOnId[];
     serviceFormIds: FormId[];
 }
+
 
 export function service(
     name: string,
@@ -516,7 +530,7 @@ export function resourceId(value: string): ResourceId {
     };
 }
 
-export function resource(type: ResourceType, name: string, id = resourceId(uuidv4())): FungibleResource {
+export function fungibleResource(type: ResourceType, name: string, id = resourceId(uuidv4())): FungibleResource {
     return {
         _type: 'fungible.resource',
         id,
@@ -744,6 +758,15 @@ export const timePeriodFns = {
             (period2.to.value >= period.from.value && period2.to.value <= period.to.value) ||
             (period2.from.value <= period.from.value && period2.to.value >= period.to.value)
         );
+    },
+    listPossibleStartTimes(period: TimePeriod, duration: Duration) {
+        let currentTime = period.from;
+        const result: TwentyFourHourClockTime[] = []
+        while (currentTime.value <= period.to.value) {
+            result.push(currentTime);
+            currentTime = time24Fns.addMinutes(currentTime, duration.value.value)
+        }
+        return result
     }
 };
 
@@ -979,6 +1002,18 @@ export interface BusinessHours {
     day_of_week: DayOfWeek;
     start_time_24hr: TwentyFourHourClockTime;
     end_time_24hr: TwentyFourHourClockTime;
+}
+
+export function businessHours(day_of_week: DayOfWeek,
+                              start_time_24hr: TwentyFourHourClockTime,
+                              end_time_24hr: TwentyFourHourClockTime): BusinessHours {
+    return {
+        _type: 'business.hours',
+        id: id(),
+        day_of_week,
+        start_time_24hr,
+        end_time_24hr
+    };
 }
 
 export interface DaysFromTimeSpec {

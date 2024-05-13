@@ -12,10 +12,10 @@ import {
     isoDate,
     IsoDate,
     isoDateFns,
-    mandatory,
+    mandatory, minutes,
     periodicStartTime,
     PricingRule,
-    resource,
+    fungibleResource,
     resourceDayAvailability,
     ResourceDayAvailability,
     resourceId,
@@ -126,7 +126,7 @@ export function makeResourceAvailability(
     dates: IsoDate[]
 ): ResourceDayAvailability[] {
     const mappedResources = resources.map((r) =>
-        resource(
+        fungibleResource(
             mandatory(
                 mappedResourceTypes.find((rt) => rt.value === r.resource_type),
                 `No resource type ${r.resource_type}`
@@ -240,7 +240,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
             mappedAddOns,
             mappedTimeSlots,
             mappedForms,
-            periodicStartTime(duration(30)),
+            periodicStartTime(duration(minutes(30))),
             customerForm ? customerForm.id : null
         ),
         availabilityData.pricingRules.map((pr) => toDomainPricingRule(pr)),

@@ -6,7 +6,7 @@ import {
     IsoDate,
     isoDate,
     price,
-    resource,
+    fungibleResource,
     resourcedTimeSlot,
     resourceType,
     service,
@@ -48,7 +48,7 @@ test("adjustments for today and tomorrow, otherwise base rate", () => {
 })
 
 const van = resourceType('van');
-const van1 = resource(van, "Van 1");
+const van1 = fungibleResource(van, "Van 1");
 const smallCarWash = service('Small Car Wash','Small Car Wash', [van], 120, true, price(1000, GBP), [], []);
 const today = isoDate('2021-05-24');
 const tomorrow = isoDate('2021-05-25');

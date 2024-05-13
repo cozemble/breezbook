@@ -11,7 +11,7 @@ import {
     GBP,
     isoDate,
     price,
-    resource,
+    fungibleResource,
     resourceDayAvailability,
     resourceType,
     service,
@@ -35,7 +35,7 @@ const availability = businessAvailability([
 ], timezone('Europe/London'));
 
 const staff = resourceType('staff');
-const amy = resource(staff, "Amy");
+const amy = fungibleResource(staff, "Amy");
 const resources = [amy];
 
 const resourceAvailability = resources.map(r => resourceDayAvailability(r, [

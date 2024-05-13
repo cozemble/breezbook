@@ -12,7 +12,7 @@ import {
     percentageAsRatio,
     percentageCoupon,
     price,
-    resource,
+    fungibleResource,
     resourceType,
     service,
     serviceId,
@@ -37,8 +37,8 @@ const polish = addOn('Polish', price(500, GBP), false, 'We will polish your car'
 const cleanSeats = addOn('Clean seats', price(2000, GBP), true, null, addOnId('addOn-clean-seats'));
 const cleanCarpets = addOn('Clean carpets', price(2000, GBP), false, 'We will clean the foot well carpets', addOnId('addOn-clean-carpets'));
 const van = resourceType('van');
-const van1 = resource(van, 'Van 1');
-const van2 = resource(van, 'Van 2');
+const van1 = fungibleResource(van, 'Van 1');
+const van2 = fungibleResource(van, 'Van 2');
 const resources = [van1, van2];
 const smallCarWash = service(
     'Small Car Wash',

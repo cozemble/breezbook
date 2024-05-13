@@ -1,7 +1,7 @@
 import {PrismaClient} from '@prisma/client';
 import {makeTestId} from "./testIds.js";
 
-const tenant_id = 'breezbook.multi.location.gym';
+const tenant_id = 'breezbook-gym';
 const environment_id = 'dev';
 const locationHarlow = makeTestId(tenant_id, environment_id, 'europe.uk.harlow')
 const locationStortford = makeTestId(tenant_id, environment_id, 'europe.uk.bishops-stortford')
@@ -347,6 +347,16 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
                 tenant_id, environment_id, service_id: swim30mins, location_id: locationStortford
             }
         ]
+    });
+
+    await prisma.tenant_branding.create({
+        data: {
+         tenant_id,
+            environment_id,
+            headline: 'The Smart Wash',
+            description: 'The Smart Wash is the best car wash in the world',
+            theme:{}
+        }
     });
 
 }

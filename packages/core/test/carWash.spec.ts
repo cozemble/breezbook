@@ -7,8 +7,7 @@ import {
     businessConfiguration,
     customer,
     dayAndTimePeriod,
-    duration,
-    isoDate,
+    isoDate, minutes, duration,
     periodicStartTime,
     resourceDayAvailability,
     ResourcedTimeSlot,
@@ -34,7 +33,7 @@ const resourceAvailability = carwash.resources.map(r => resourceDayAvailability(
     dayAndTimePeriod(isoDate("2021-05-26"), carwash.nineToSix),
 ]))
 
-const config = businessConfiguration(availability, resourceAvailability, carwash.services, [], carwash.timeslots, [], periodicStartTime(duration(30)), null);
+const config = businessConfiguration(availability, resourceAvailability, carwash.services, [], carwash.timeslots, [], periodicStartTime(duration(minutes(30))), null);
 
 const mike = customer('Mike', 'Hogan', 'mike@email.com');
 const mete = customer('Mete', 'Bora', 'mete@email.com');
