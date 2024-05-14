@@ -112,8 +112,8 @@ export function pricedAddOn(addOnId: AddOnId, quantity: number, price: Price): P
 export const unpricedBasketFns = {
     getDates(unpricedBasket: UnpricedBasket): { fromDate: IsoDate; toDate: IsoDate } {
         const dates = unpricedBasket.lines.map((l) => l.date);
-        const fromDate = dates.reduce((acc, curr) => (acc < curr ? acc : curr));
-        const toDate = dates.reduce((acc, curr) => (acc > curr ? acc : curr));
+        const fromDate = dates.reduce((acc, curr) => (acc.value < curr.value ? acc : curr));
+        const toDate = dates.reduce((acc, curr) => (acc.value > curr.value ? acc : curr));
         return {fromDate, toDate};
     }
 };
