@@ -19,19 +19,9 @@ import { createCustomerStore } from './customer';
 import notifications from '../notifications';
 import tenantStore from '../tenant';
 import { locationStore } from '../location';
+import { syncLocalStorage } from '$lib/common/helpers/localStorage';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
-
-const getFromLocalStorage = () => {
-	const items = localStorage.getItem(CART_STORE_CONTEXT_KEY);
-	if (!items) return [];
-
-	return JSON.parse(items) as Booking[];
-};
-
-const saveToLocalStorage = (items: Booking[]) => {
-	localStorage.setItem(CART_STORE_CONTEXT_KEY, JSON.stringify(items));
-};
 
 //
 
@@ -43,6 +33,7 @@ function createCheckoutStore() {
 	const paymentStore = createPaymentStore();
 
 	const items = writable<Booking[]>([]);
+	syncLocalStorage(CART_STORE_CONTEXT_KEY, items);
 	const couponCode = writable<string | undefined>();
 
 	const total: Readable<PricedBasket | null> = derived(
@@ -116,7 +107,6 @@ function createCheckoutStore() {
 
 	const clearItems = () => {
 		items.set([]);
-		saveToLocalStorage([]);
 	};
 
 	const submitOrder = async () => {
@@ -148,12 +138,6 @@ function createCheckoutStore() {
 	};
 
 	// ----------------------------------------------------------------
-
-	// doing this on mount otherwise SSR will fail
-	onMount(() => {
-		items.set(getFromLocalStorage());
-		items.subscribe((value) => saveToLocalStorage(value));
-	});
 
 	return {
 		customerStore,
