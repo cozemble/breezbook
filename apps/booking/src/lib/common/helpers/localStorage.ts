@@ -1,6 +1,6 @@
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/motion';
-import type { Writable } from 'svelte/store';
+import { get, type Writable } from 'svelte/store';
 import _ from 'lodash';
 import { browser } from '$app/environment';
 
@@ -15,17 +15,47 @@ export const syncLocalStorage = <T extends Writable<V>, V>(key: string, store: T
 	if (!browser) return; // * prevent SSR issues
 
 	const retrieveFromLocalStorage = () => {
-		const local = localStorage.getItem(key);
-		if (!local) return;
+		const localJson = localStorage.getItem(key);
+		console.log(`${key} - localJson`, localJson);
+		if (!localJson) return;
 
-		store.update((val) => {
-			if (_.isArray(val)) return val.push(JSON.parse(local));
-			if (_.isObject(val)) return _.merge(val, JSON.parse(local));
-			return val || JSON.parse(local);
-		});
+		const localVal = JSON.parse(localJson);
+		console.log(`${key} - localVal`, localVal);
+
+		const val = _.cloneDeep(get(store));
+
+		if (_.isArray(val)) {
+			if (!_.isArray(localVal))
+				throw new Error(
+					`localStorage value for key "${key}" is not an array, but the store is an array.`,
+					localVal
+				);
+
+			const merged = _.concat(val, localVal) as V;
+			store.set(merged);
+			console.log(`${key} - merged`, merged);
+			return;
+		}
+
+		if (_.isObject(val)) {
+			if (!_.isObject(localVal))
+				throw new Error(
+					`localStorage value for key "${key}" is not an object, but the store is an object.`,
+					localVal
+				);
+
+			store.set(_.merge(val, localVal));
+			return;
+		}
+
+		if (!val) store.set(localVal);
 	};
 
 	const saveToLocalStorage = (item: V) => {
+		console.log(`${key} - saveToLocalStorage`, item);
+
+		if (!item) localStorage.removeItem(key); // remove the key if the value is null
+
 		localStorage.setItem(key, JSON.stringify(item));
 	};
 
@@ -36,9 +66,7 @@ export const syncLocalStorage = <T extends Writable<V>, V>(key: string, store: T
 		retrieveFromLocalStorage();
 
 		unsubscriber?.();
-		unsubscriber = store.subscribe((value) => {
-			saveToLocalStorage(value);
-		});
+		unsubscriber = store.subscribe(saveToLocalStorage);
 	});
 
 	onDestroy(() => {
