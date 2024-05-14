@@ -1,15 +1,16 @@
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/motion';
 import { get, writable } from 'svelte/store';
-import _ from 'lodash';
 import { browser } from '$app/environment';
 
 /** Create an automatically synchronized Svelte store with localStorage for persistence
- * - get the data from localStorage onMount
+ * - get the data from localStorage on initialization
  * 	   - if the store is a simple one and already has a value, do nothing
  * 		 - if the store is an array, merge the localStorage value into the store
  *     - if the store is an object, merge the localStorage value into the store
  * - save the data to localStorage on store change
+ * - prevent memory leaks
+ * - don't break on SSR
  */
 export const localSyncedStore = <T>(key: string, initialValue: T) => {
 	const getLocalValue = (): T | null => {

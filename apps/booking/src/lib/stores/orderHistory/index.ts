@@ -1,8 +1,7 @@
 import * as core from '@breezbook/packages-core';
 
 import { createStoreContext } from '$lib/common/helpers/store';
-import { writable } from 'svelte/store';
-import { syncLocalStorage } from '$lib/common/helpers/localStorage';
+import { localSyncedStore } from '$lib/common/helpers/stores';
 
 const key = 'order-history-store';
 
@@ -16,9 +15,7 @@ type OrderHistoryItem = {
 type OrderHistoryItemCreateParams = Omit<OrderHistoryItem, 'id'>;
 
 const orderHistoryStore = createStoreContext(key, () => {
-	const items = writable<OrderHistoryItem[]>([]);
-
-	syncLocalStorage(key, items);
+	const items = localSyncedStore<OrderHistoryItem[]>(key, []);
 
 	const addItem = (item: OrderHistoryItemCreateParams) => {
 		items.update((prev) => {

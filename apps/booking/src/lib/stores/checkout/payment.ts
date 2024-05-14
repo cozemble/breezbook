@@ -8,12 +8,10 @@ import api from '$lib/common/api';
 import notifications from '../notifications';
 import tenantStore from '../tenant';
 import orderHistoryStore from '../orderHistory';
-import { settingsStore } from '../settings';
 import routeStore from '../routes';
 
 export const createPaymentStore = () => {
 	const tenant = tenantStore.get();
-	const settings = settingsStore.get();
 	const routes = routeStore.get();
 
 	const clientSecret = writable<string | null>(null);
