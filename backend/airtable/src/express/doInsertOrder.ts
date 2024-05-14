@@ -214,9 +214,6 @@ export function doInsertOrder(
     tenantSettings: TenantSettings
 ): { _type: 'success'; mutations: Mutations; orderCreatedResponse: OrderCreatedResponse } {
     const theId = orderId()
-    // const basket = createOrderRequest.basket;
-    // const lines:OrderLine[] = createOrderRequest.basket.lines.map((line) => orderLine(line.serviceId,line.locationId,));
-    // const theOrder = order(createOrderRequest.customer, lines, theId)
     const {
         mutations: orderLineMutations,
         bookingIds,

@@ -12,6 +12,7 @@ import {
     validateAvailability,
     validateCoupon,
     validateCustomerForm,
+    validateOpeningHours,
     validateOrderTotal,
     validateServiceForms,
     validateTimeslotId
@@ -28,6 +29,7 @@ export const addOrderErrorCodes = {
     customerFormInvalid: 'addOrder.customer.form.invalid',
     serviceFormMissing: 'addOrder.service.form.missing',
     serviceFormInvalid: 'addOrder.service.form.invalid',
+    businessIsNotOpenAtThatTime: 'addOrder.business.is.not.open.at.that.time',
     noAvailability: 'addOrder.no.availability',
     noSuchCoupon: 'addOrder.no.such.coupon',
     expiredCoupon: 'addOrder.expired.coupon',
@@ -38,6 +40,7 @@ export const addOrderErrorCodes = {
 
 function withValidationsPerformed<T>(everythingForTenant: EverythingForAvailability, pricedCreateOrderRequest: PricedCreateOrderRequest, fn: () => T): ErrorResponse | T {
     const validationFns = [
+        () => validateOpeningHours(everythingForTenant, pricedCreateOrderRequest),
         () => validateTimeslotId(everythingForTenant, pricedCreateOrderRequest),
         () => validateCustomerForm(everythingForTenant, pricedCreateOrderRequest),
         () => validateServiceForms(everythingForTenant, pricedCreateOrderRequest),
@@ -80,7 +83,7 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
     await withTwoRequestParams(req, res, tenantEnvironmentParam(), pricedCreateOrderRequest(), async (tenantEnvironment, createOrderRequest) => {
         const {fromDate, toDate} = isoDateFns.getDateRange(createOrderRequest.basket.lines.map((l) => l.date));
         const prisma = prismaClient();
-        const everythingForTenant = await getEverythingForAvailability(prisma, tenantEnvironment, fromDate, toDate);
+        const everythingForAvailability = await getEverythingForAvailability(prisma, tenantEnvironment, fromDate, toDate);
         let maybeExistingCustomer = await prisma.customers.findUnique({
             where: {
                 tenant_id_environment_id_email: {
@@ -93,8 +96,8 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
         if (maybeExistingCustomer) {
             createOrderRequest.customer.id = customerId(maybeExistingCustomer.id);
         }
-        const outcome = withValidationsPerformed(everythingForTenant, createOrderRequest, () => {
-            return doAddOrder(everythingForTenant, createOrderRequest);
+        const outcome = withValidationsPerformed(everythingForAvailability, createOrderRequest, () => {
+            return doAddOrder(everythingForAvailability, createOrderRequest);
         });
         if (outcome._type === 'error.response') {
             return handleOutcome(res, prisma, tenantEnvironment, outcome);
@@ -105,7 +108,7 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
                 name: announceChangesToAirtable.deferredChangeAnnouncement,
                 data: {tenantId: tenantEnvironment.tenantId.value, environmentId: tenantEnvironment.environmentId.value}
             });
-        } catch (e:any) {
+        } catch (e: any) {
             console.info(`While sending ${announceChangesToAirtable.deferredChangeAnnouncement} to Inngest: ${e.message}`)
         }
         await handleOutcome(res, prisma, tenantEnvironment, mutations, httpJsonResponse(200, orderCreatedResponse));

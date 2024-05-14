@@ -199,3 +199,19 @@ test("can handle a basket with more than one line", () => {
         throw new Error('Expected success, got ' + JSON.stringify(outcome));
     }
 });
+
+test("can handle a basket with more than one line on different days", () => {
+    const thePricedBasket = pricedBasket(
+        [
+            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
+            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne, [goodServiceFormData])
+            ],
+        priceFns.multiply(carwash.smallCarWash.price,2),
+    );
+    const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
+
+    const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing([], fiveDaysFromNow, [fourDaysFromNow]), request);
+    if (!outcome || outcome._type !== 'success') {
+        throw new Error('Expected success, got ' + JSON.stringify(outcome));
+    }
+});

@@ -1,5 +1,6 @@
 import {EverythingForAvailability} from '../../express/getEverythingForAvailability.js';
 import {
+    Availability,
     errorResponse,
     ErrorResponse,
     pricedAddOn,
@@ -21,9 +22,14 @@ export const pricingErrorCodes = {
 function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: EverythingForAvailability) {
     return unpricedLines.map((line) => {
         const availability = getAvailabilityForService(everythingForTenant, line.serviceId, line.date, line.date);
-        const availableSlot = (availability.slots[line.date.value] ?? []).find((slot) => slot.timeslotId === line.timeslot.id.value);
+        if(Object.keys(availability.slots).length === 0) {
+            throw new Error(`No availability found for service '${line.serviceId.value}' on date '${line.date.value}'`);
+        }
+        const slotsForDate = (availability.slots[line.date.value] ?? []) as Availability[]
+        const availableSlot = slotsForDate.find((slot) => slot.timeslotId === line.timeslot.id.value);
         if (!availableSlot) {
-            throw new Error(`Slot ${line.timeslot.id.value} not found in availability for service ${line.serviceId.value} on date ${line.date.value}`);
+            const availableSlotIds = slotsForDate.map(a => a.timeslotId)
+            throw new Error(`Slot '${line.timeslot.id.value}' not found in availability for service '${line.serviceId.value}' on date '${line.date.value}', available slot ids are '${availableSlotIds.join(",")}'`);
         }
         const pricedAddOns = line.addOnIds.map((added) => {
             const addOn = mandatory(

@@ -1,4 +1,15 @@
-import {booking, Booking, CouponCode, Form, FormId, isoDateFns, mandatory} from '@breezbook/packages-core';
+import {
+    booking,
+    Booking,
+    CouponCode,
+    Form,
+    FormId,
+    IsoDate,
+    isoDateFns,
+    mandatory,
+    timePeriodFns,
+    TimeslotSpec
+} from '@breezbook/packages-core';
 import {EverythingForAvailability} from './getEverythingForAvailability.js';
 import {errorResponse, ErrorResponse, pricedBasketFns, PricedCreateOrderRequest} from '@breezbook/backend-api-types';
 import {
@@ -37,7 +48,7 @@ export function validateOrderTotal(everythingForTenant: EverythingForAvailabilit
     if (repricedBasket.total.amount.value !== pricedBasket.basket.total.amount.value) {
         return errorResponse(addOrderErrorCodes.wrongTotalPrice, `Expected ${repricedBasket.total.amount.value} but got ${pricedBasket.basket.total.amount.value}`);
     }
-    if(repricedBasket.discount && repricedBasket.discount.amount.value !== pricedBasket.basket.discount?.amount.value) {
+    if (repricedBasket.discount && repricedBasket.discount.amount.value !== pricedBasket.basket.discount?.amount.value) {
         return errorResponse(addOrderErrorCodes.incorrectDiscountAmount, `Expected discount ${repricedBasket.discount.amount.value} but got ${pricedBasket.basket.discount?.amount.value ?? 'nothing'}`);
     }
     return null;
@@ -109,6 +120,19 @@ export function validateAvailability(everythingForTenant: EverythingForAvailabil
         }
     }
     return null;
+}
+
+function businessIsOpen(everythingForTenant: EverythingForAvailability, date: IsoDate, timeSlot: TimeslotSpec): ErrorResponse | null {
+    const availability = mandatory(everythingForTenant.businessConfiguration.availability.availability.find(a => a.day.value === date.value), `Did not find business availability for date ${date.value}`);
+    if (timePeriodFns.overlaps(availability.period, timeSlot.slot)) {
+        return null
+    }
+    return errorResponse(addOrderErrorCodes.businessIsNotOpenAtThatTime, `Business is not open at ${timeSlot.slot.from.value} on ${date.value}`)
+}
+
+export function validateOpeningHours(everythingForTenant: EverythingForAvailability, order: PricedCreateOrderRequest): ErrorResponse | null {
+    const validationOutcomes = order.basket.lines.map(line => businessIsOpen(everythingForTenant, line.date, line.timeslot))
+    return validationOutcomes.find(o => o != null) ?? null
 }
 
 export function validateCouponCode(everythingForTenant: EverythingForAvailability, couponCode: CouponCode | undefined) {

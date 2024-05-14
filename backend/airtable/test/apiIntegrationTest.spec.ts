@@ -9,8 +9,6 @@ import {
     isoDate,
     isoDateFns,
     mandatory,
-    order,
-    orderLine,
     price,
     priceFns,
     randomInteger,
@@ -22,16 +20,23 @@ import {
 import {afterAll, beforeAll, describe, expect, test} from 'vitest';
 import {startTestEnvironment, stopTestEnvironment} from './setup.js';
 import {StartedDockerComposeEnvironment} from 'testcontainers';
-import {fourDaysFromNow, goodCustomer, goodServiceFormData, postOrder, threeDaysFromNow} from './helper.js';
+import {
+    fiveDaysFromNow,
+    fourDaysFromNow,
+    goodCustomer,
+    goodServiceFormData,
+    postOrder,
+    threeDaysFromNow
+} from './helper.js';
 import {
     AvailabilityResponse,
     CancellationGranted,
-    createOrderRequest,
     OrderCreatedResponse,
     pricedAddOn,
     pricedBasket,
     PricedBasket,
-    pricedBasketLine, pricedCreateOrderRequest,
+    pricedBasketLine,
+    pricedCreateOrderRequest,
     Service,
     Tenant,
     unpricedBasket,
@@ -61,7 +66,7 @@ const expressPort = 3010;
 const postgresPort = 54340;
 const tenantEnv = tenantEnvironment(environmentId('dev'), tenantId('tenant1'));
 
-describe('Given a migrated database', async () => {
+describe('Given a migrated database', () => {
     let testEnvironment: StartedDockerComposeEnvironment;
 
     beforeAll(async () => {
@@ -116,7 +121,7 @@ describe('Given a migrated database', async () => {
     test('can add an order for two car washes, each with different add-ons', async () => {
         const twoServicesPricedBasket = pricedBasket([
             pricedBasketLine(carwash.locations.london, carwash.smallCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price)], carwash.smallCarWash.price, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), fourDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
-            pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price), pricedAddOn(carwash.polish.id, 1, carwash.polish.price)], carwash.mediumCarWash.price, priceFns.add(carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price), fourDaysFromNow, carwash.nineToOne, [goodServiceFormData])
+            pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price), pricedAddOn(carwash.polish.id, 1, carwash.polish.price)], carwash.mediumCarWash.price, priceFns.add(carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price), fiveDaysFromNow, carwash.nineToOne, [goodServiceFormData])
         ], priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price))
 
 
@@ -139,7 +144,7 @@ describe('Given a migrated database', async () => {
 
     test('can price a basket', async () => {
         const theBasket = unpricedBasket([
-            unpricedBasketLine(carwash.mediumCarWash.id, carwash.locations.london, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.fourToSix)
+            unpricedBasketLine(carwash.mediumCarWash.id, carwash.locations.london, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.fourToSix, [])
         ]);
 
         const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/basket/price`, {
@@ -175,7 +180,7 @@ describe('Given a migrated database', async () => {
         const costInPence = randomInteger(5000);
         const createOrderResponse = await insertOrder(
             tenantEnv,
-            pricedCreateOrderRequest(pricedBasket([], price(costInPence, currency('GBP'))),customer('Mike', 'Hogan', 'mike7@email.com'), fullPaymentOnCheckout()),
+            pricedCreateOrderRequest(pricedBasket([], price(costInPence, currency('GBP'))), customer('Mike', 'Hogan', 'mike7@email.com'), fullPaymentOnCheckout()),
             [],
             tenantSettings(timezone('Europe/London'), null)
         );
@@ -308,7 +313,7 @@ async function completeCancellationGrant() {
 }
 
 async function createBooking(date: IsoDate): Promise<string> {
-    const theBasket = pricedBasket([pricedBasketLine(carwash.locations.london,carwash.mediumCarWash.id,[], carwash.mediumCarWash.price, carwash.mediumCarWash.price, date,carwash.nineToOne, [])], carwash.mediumCarWash.price)
+    const theBasket = pricedBasket([pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [], carwash.mediumCarWash.price, carwash.mediumCarWash.price, date, carwash.nineToOne, [])], carwash.mediumCarWash.price)
     const createOrderResponse = await insertOrder(
         tenantEnv,
         pricedCreateOrderRequest(
