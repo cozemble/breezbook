@@ -1,21 +1,17 @@
 <script lang="ts">
-	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
+	import { browser } from '$app/environment';
 
-	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
-	import PaymentBookings from '$lib/sections/checkout/payment/PaymentBookings.svelte';
-	import checkoutStore from '$lib/stores/checkout';
-	import notifications from '$lib/stores/notifications';
-	import orderHistoryStore from '$lib/stores/orderHistory';
 	import tenantStore from '$lib/stores/tenant';
 	import routeStore from '$lib/stores/routes';
+	import checkoutStore from '$lib/stores/checkout';
 	import { settingsStore } from '$lib/stores/settings';
+	import Loading from '$lib/components/Loading.svelte';
 
 	const routes = routeStore.get();
 	const tenant = tenantStore.get();
 	const checkout = checkoutStore.get();
 	const settings = settingsStore.get();
-	const orderHistory = orderHistoryStore.get();
 
 	$: params = $page.url.href
 		.split('?')[1]
@@ -40,16 +36,22 @@
 		checkout.clearItems();
 	}
 
+	$: returnUrl = $settings.checkout.successReturnUrl;
+
 	// Redirect to the success return URL if it exists
 	$: {
-		const returnUrl = $settings.checkout.successReturnUrl;
-
 		if (returnUrl && browser) {
 			console.log('redirecting to', returnUrl);
 			// @ts-ignore
 			window.location = returnUrl;
 		}
 	}
+
+	/** Hack to delay to not display content in case of redirect */
+	let ready = false;
+	setTimeout(() => {
+		ready = true;
+	}, 200);
 
 	// const historyOrder = get(orderHistory.items).find(
 	// 	(item) => item.paymentIntent === params.payment_intent
@@ -79,28 +81,34 @@
 	// }
 </script>
 
-<div class="w-full flex flex-col gap-4">
-	<div class="card bg-success text-success-content">
-		<div class="card-body">
-			<h1 class="text-4xl font-bold">Booking Successful!</h1>
-			<p>You will receive an email with the details. Thank you for booking with us!</p>
+{#if !ready}
+	<div class="w-full flex-grow flex items-center justify-center">
+		<Loading />
+	</div>
+{:else}
+	<div class="w-full flex flex-col gap-4">
+		<div class="card bg-success text-success-content">
+			<div class="card-body">
+				<h1 class="text-4xl font-bold">Booking Successful!</h1>
+				<p>You will receive an email with the details. Thank you for booking with us!</p>
 
-			<div class="card-actions">
-				<a href={routes.home()} class="btn btn-ghost mt-8">Go to home page</a>
+				<div class="card-actions">
+					<a href={routes.home()} class="btn btn-ghost mt-8">Go to home page</a>
+				</div>
 			</div>
 		</div>
-	</div>
 
-	<!-- <PaymentBookings /> -->
+		<!-- <PaymentBookings /> -->
 
-	<div>
-		<p class="text-sm opacity-50">
-			You can cancel or reschedule your booking using the email we sent you.
-		</p>
-		<p class="text-sm opacity-50">
-			<!-- TODO mailto or contact link -->
-			If you have any questions, please contact us at
-			<a href={routes.contact()} class="link">{tenant.name}</a>.
-		</p>
+		<div>
+			<p class="text-sm opacity-50">
+				You can cancel or reschedule your booking using the email we sent you.
+			</p>
+			<p class="text-sm opacity-50">
+				<!-- TODO mailto or contact link -->
+				If you have any questions, please contact us at
+				<a href={routes.contact()} class="link">{tenant.name}</a>.
+			</p>
+		</div>
 	</div>
-</div>
+{/if}
