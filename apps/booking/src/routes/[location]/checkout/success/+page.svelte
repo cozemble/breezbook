@@ -82,7 +82,7 @@
 </script>
 
 {#if !ready}
-	<div class="w-full flex-grow flex items-center justify-center">
+	<div class="absolute inset-32 flex justify-center items-center">
 		<Loading />
 	</div>
 {:else}
