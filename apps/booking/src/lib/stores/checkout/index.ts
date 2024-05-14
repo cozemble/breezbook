@@ -19,7 +19,7 @@ import { createCustomerStore } from './customer';
 import notifications from '../notifications';
 import tenantStore from '../tenant';
 import { locationStore } from '../location';
-import { syncLocalStorage } from '$lib/common/helpers/localStorage';
+import { localSyncedStore } from '$lib/common/helpers/stores';
 
 const CART_STORE_CONTEXT_KEY = 'cart_store';
 
@@ -32,8 +32,8 @@ function createCheckoutStore() {
 	const customerStore = createCustomerStore();
 	const paymentStore = createPaymentStore();
 
-	const items = writable<Booking[]>([]);
-	syncLocalStorage(CART_STORE_CONTEXT_KEY, items);
+	const items = localSyncedStore<Booking[]>('cart_items', []);
+
 	const couponCode = writable<string | undefined>();
 
 	const total: Readable<PricedBasket | null> = derived(
