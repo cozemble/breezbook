@@ -114,7 +114,7 @@ export const createPaymentStore = () => {
 			elements: elem,
 			confirmParams: {
 				// Make sure to change this to your payment completion page
-				return_url: get(settings.checkout.successReturnUrl)
+				return_url: window.location.origin + routes.checkout.success()
 			}
 		});
 

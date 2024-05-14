@@ -1,3 +1,6 @@
+/** Utility type for making a type nullable */
+declare type Nullable<T> = T | null;
+
 declare type GenericStatus = 'success' | 'error' | 'warning' | 'info' | 'default';
 
 declare interface Tenant {
@@ -100,7 +103,7 @@ declare namespace Service {
 
 declare interface Settings {
 	checkout: {
-		/** Return to this URL when Stripe payment succeeds */
-		successReturnUrl: import('svelte/store').Writable<string>;
+		/** Return to this URL from success page when order is successful */
+		successReturnUrl?: string | null;
 	};
 }

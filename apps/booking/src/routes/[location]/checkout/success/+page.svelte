@@ -1,19 +1,20 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { get } from 'svelte/store';
+	import { browser } from '$app/environment';
 	import { page } from '$app/stores';
+
 	import BookingSummary from '$lib/sections/checkout/BookingSummary.svelte';
 	import PaymentBookings from '$lib/sections/checkout/payment/PaymentBookings.svelte';
 	import checkoutStore from '$lib/stores/checkout';
 	import notifications from '$lib/stores/notifications';
 	import orderHistoryStore from '$lib/stores/orderHistory';
 	import tenantStore from '$lib/stores/tenant';
-
 	import routeStore from '$lib/stores/routes';
+	import { settingsStore } from '$lib/stores/settings';
 
 	const routes = routeStore.get();
 	const tenant = tenantStore.get();
 	const checkout = checkoutStore.get();
+	const settings = settingsStore.get();
 	const orderHistory = orderHistoryStore.get();
 
 	$: params = $page.url.href
@@ -34,38 +35,48 @@
 
 	$: success = params.redirect_status === 'succeeded';
 
-	onMount(() => {
-		if (!success) return;
-
+	$: if (success) {
+		console.warn('clearing items');
 		checkout.clearItems();
+	}
 
-		// const historyOrder = get(orderHistory.items).find(
-		// 	(item) => item.paymentIntent === params.payment_intent
-		// );
-		// const checkoutOrder = get(checkout.order);
+	// Redirect to the success return URL if it exists
+	$: {
+		const returnUrl = $settings.checkout.successReturnUrl;
 
-		// if (!historyOrder && !checkoutOrder) {
-		// 	notifications.create({
-		// 		type: 'error',
-		// 		title: 'An error occurred',
-		// 		description: 'We could not find your order. Please contact us for assistance.',
-		// 		canUserClose: true
-		// 	});
+		if (returnUrl && browser) {
+			console.log('redirecting to', returnUrl);
+			// @ts-ignore
+			window.location = returnUrl;
+		}
+	}
 
-		// 	return;
-		// }
+	// const historyOrder = get(orderHistory.items).find(
+	// 	(item) => item.paymentIntent === params.payment_intent
+	// );
+	// const checkoutOrder = get(checkout.order);
 
-		// if (!historyOrder && checkoutOrder) {
-		// 	orderHistory.addItem({
-		// 		order: checkoutOrder,
-		// 		paymentIntent: params.payment_intent,
-		// 		success: true
-		// 	});
+	// if (!historyOrder && !checkoutOrder) {
+	// 	notifications.create({
+	// 		type: 'error',
+	// 		title: 'An error occurred',
+	// 		description: 'We could not find your order. Please contact us for assistance.',
+	// 		canUserClose: true
+	// 	});
 
-		// 	checkout.clearItems();
-		// 	return;
-		// }
-	});
+	// 	return;
+	// }
+
+	// if (!historyOrder && checkoutOrder) {
+	// 	orderHistory.addItem({
+	// 		order: checkoutOrder,
+	// 		paymentIntent: params.payment_intent,
+	// 		success: true
+	// 	});
+
+	// 	checkout.clearItems();
+	// 	return;
+	// }
 </script>
 
 <div class="w-full flex flex-col gap-4">

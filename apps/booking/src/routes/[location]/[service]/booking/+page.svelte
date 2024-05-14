@@ -28,7 +28,11 @@
 
 		if (successReturnUrl) {
 			console.log('success return url:', successReturnUrl);
-			settings.checkout.successReturnUrl.set(successReturnUrl);
+			settings.changeSettings({
+				checkout: {
+					successReturnUrl
+				}
+			});
 			// <!-- TODO clear the URL parameter, couldn't implement yet because history.replaceState breaks Kit routing and SvelteKit replaceState throws error -->
 		}
 	});
