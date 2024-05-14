@@ -1,18 +1,28 @@
 import { onDestroy, onMount } from 'svelte';
 import type { Unsubscriber } from 'svelte/motion';
 import type { Writable } from 'svelte/store';
+import _ from 'lodash';
+import { browser } from '$app/environment';
 
-// * be careful to only operate on browser to prevent SSR issues
-// TODO save to local storage on init
-// TODO listen to changes and save to local storage
-// TODO retrieve from local storage on mount
-
+/** Automatically synchronize a Svelte store with localStorage for persistence
+ * - get the data from localStorage onMount
+ * 	   - if the store is a simple one and already has a value, do nothing
+ * 		 - if the store is an array, merge the localStorage value into the store
+ *     - if the store is an object, merge the localStorage value into the store
+ * - save the data to localStorage on store change
+ */
 export const syncLocalStorage = <T extends Writable<V>, V>(key: string, store: T) => {
-	const retrieveFromLocalStorage = () => {
-		const val = localStorage.getItem(key);
-		if (!val) return;
+	if (!browser) return; // * prevent SSR issues
 
-		store.set(JSON.parse(val));
+	const retrieveFromLocalStorage = () => {
+		const local = localStorage.getItem(key);
+		if (!local) return;
+
+		store.update((val) => {
+			if (_.isArray(val)) return val.push(JSON.parse(local));
+			if (_.isObject(val)) return _.merge(val, JSON.parse(local));
+			return val || JSON.parse(local);
+		});
 	};
 
 	const saveToLocalStorage = (item: V) => {
