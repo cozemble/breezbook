@@ -32,7 +32,7 @@
 >
 	<Header />
 	<main class="p-3 md:p-6 flex-grow w-full flex flex-col items-center">
-		<div class="max-w-7xl w-full flex-grow flex">
+		<div class="max-w-7xl w-full">
 			<slot />
 		</div>
 	</main>
