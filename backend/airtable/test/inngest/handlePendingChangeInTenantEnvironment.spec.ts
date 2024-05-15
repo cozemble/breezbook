@@ -1,7 +1,5 @@
 import {expect, test} from 'vitest';
-import {
-    handlePendingChangeInTenantEnvironment
-} from "../../src/inngest/announceChangesToAirtable.js";
+import {handlePendingChangeInTenantEnvironment} from "../../src/inngest/announceChangesToAirtable.js";
 
 import {PrismockClient} from 'prismock';
 import {InMemorySynchronisationIdRepository} from "../../src/inngest/dataSynchronisation.js";
@@ -10,26 +8,13 @@ import {upsertCustomer} from "../../src/prisma/breezPrismaMutations.js";
 import {DbMutationEvent} from "../../src/prisma/dbtypes.js";
 import {id} from "@breezbook/packages-core";
 import {carWashMapping} from "../../src/airtable/carWashMapping.js";
-import {consoleLogger, InngestInvocation, InngestStep} from "../../src/inngest/inngestTypes.js";
-
-class StubStep implements InngestStep {
-    constructor(public readonly stepsRun: string[] = [], public readonly eventsSent: InngestInvocation[] = []) {
-    }
-
-    async run<T>(name: string, f: () => Promise<T>): Promise<T> {
-        this.stepsRun.push(name);
-        return await f()
-    }
-
-    async send(payload: InngestInvocation): Promise<void> {
-        this.eventsSent.push(payload);
-    }
-}
+import {consoleLogger} from "../../src/inngest/inngestTypes.js";
+import {StubInngestStep} from "./stubInngestStep.js";
 
 
 test("does nothing when no pending event", async () => {
     const prismock = new PrismockClient();
-    const stubStep = new StubStep();
+    const stubStep = new StubInngestStep();
     await handlePendingChangeInTenantEnvironment(prismock, consoleLogger(), () => carWashMapping, async () => null, new InMemorySynchronisationIdRepository(),
         new StubAirtableClient(), "tenantId", "environmentId", stubStep);
     expect(stubStep.stepsRun).toEqual([
@@ -41,7 +26,7 @@ test("does nothing when no pending event", async () => {
 
 test("applies airtable plan when pending event", async () => {
     const prismock = new PrismockClient();
-    const stubStep = new StubStep();
+    const stubStep = new StubInngestStep();
     const synchronisationIdRepository = new InMemorySynchronisationIdRepository();
     const airtableClient = new StubAirtableClient();
 

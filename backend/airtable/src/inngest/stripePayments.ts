@@ -30,16 +30,16 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
         return await prisma.received_webhooks.findUnique({where: {id: webhookId}});
     })
     if (!webhook) {
-        logger.error(`Webhook ${webhookId} not found`);
+        logger.error(`Webhook '${webhookId}' not found`);
         return;
     }
     if ((webhook.payload as any)._type !== 'stripe.payment.intent.webhook.body') {
-        logger.error(`Webhook ${webhookId} is not a stripe.payment.intent.webhook.body`);
+        logger.error(`Webhook '${webhookId}' is not a stripe.payment.intent.webhook.body`);
         return;
     }
     const paymentIntent: PaymentIntentWebhookBody = webhook.payload as any;
     if (!paymentIntent.metadata.tenantId || !paymentIntent.metadata.orderId || !paymentIntent.metadata.environmentId) {
-        logger.error(`Webhook ${webhookId} is missing metadata`);
+        logger.error(`Webhook '${webhookId}' is missing metadata`);
         return;
     }
     const theTenantEnvironment = tenantEnvironment(environmentId(paymentIntent.metadata.environmentId as string), tenantId(paymentIntent.metadata.tenantId as string))
@@ -57,7 +57,7 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
                 provider_transaction_id: paymentIntent.id,
             }
         )
-        await applyMutations(prismaClient(), theTenantEnvironment, [mutation])
+        await applyMutations(prisma, theTenantEnvironment, [mutation])
         return mutation
     });
     const orderLines = await step.run('findOrderLines', async () => {
@@ -74,7 +74,7 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
     await step.run('createBookingPayments', async () => {
         const mutations = orderLines.map(orderLine => {
             const booking = mandatory(bookings.find(b => b.order_line_id === orderLine.id), `Booking not found for order line ${orderLine.id}`)
-            const bookingPercentageOfTotal = bookingTotalInMinorUnits / orderLine.total_price_in_minor_units
+            const bookingPercentageOfTotal = orderLine.total_price_in_minor_units / bookingTotalInMinorUnits
             const bookingPayment = paymentIntent.amount * bookingPercentageOfTotal
             return createBookingPayment({
                 id: uuid(),
@@ -88,7 +88,7 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
                 amount_currency: paymentIntent.currency,
             })
         })
-        await applyMutations(prismaClient(), theTenantEnvironment, mutations)
+        await applyMutations(prisma, theTenantEnvironment, mutations)
         return mutations
     })
 }

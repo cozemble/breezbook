@@ -53,3 +53,35 @@ export class ConsoleLogger implements Logger {
 export function consoleLogger(): Logger {
     return new ConsoleLogger();
 }
+
+export class CollectingLogger implements Logger {
+    private readonly logs: any[] = [];
+
+    info(...args: any[]): void {
+        this.logs.push(['info', args]);
+    }
+
+    warn(...args: any[]): void {
+        this.logs.push(['warn', args]);
+    }
+
+    error(...args: any[]): void {
+        this.logs.push(['error', args]);
+    }
+
+    debug(...args: any[]): void {
+        this.logs.push(['debug', args]);
+    }
+
+    getLogs(): any[] {
+        return this.logs;
+    }
+
+    lines(): string[] {
+        return this.logs.map(([level, args]) => `${level}: ${args.join(' ')}`);
+    }
+}
+
+export function collectingLogger(): Logger {
+    return new CollectingLogger();
+}
