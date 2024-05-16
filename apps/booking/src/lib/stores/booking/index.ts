@@ -1,4 +1,4 @@
-import { derived, get } from 'svelte/store';
+import { derived, get, readable, writable } from 'svelte/store';
 import { goto } from '$app/navigation';
 
 import { defineStep } from './stepHelper';
@@ -8,6 +8,11 @@ import createDetailsStore from './details';
 import checkoutStore from '../checkout';
 import { createStoreContext } from '$lib/common/helpers/store';
 import routeStore from '../routes';
+import type { AvailabilityResponse } from '@breezbook/backend-api-types';
+import api from '$lib/common/api';
+import tenantStore from '../tenant';
+import { locationStore } from '../location';
+import { onMount } from 'svelte';
 
 const BOOKING_STORE_CONTEXT_KEY = 'booking_store';
 
@@ -19,10 +24,34 @@ const BOOKING_STORE_CONTEXT_KEY = 'booking_store';
 function createBookingStore(service: Service) {
 	const checkout = checkoutStore.get();
 	const routes = routeStore.get();
+	const tenant = tenantStore.get();
+	const tenantLocation = locationStore.get();
 
-	const timeStore = createTimeStore(service);
-	const extrasStore = createExtrasStore(service);
-	const detailsStore = createDetailsStore(service);
+	/** The response from the availability endpoint */
+	const availabilityResponse = writable<AvailabilityResponse | null>(null);
+
+	/** Fetch availability for the given filters */
+	const fetchAvailability = async (filters: { fromDate: Date; toDate: Date }) => {
+		const res = await api.booking.getAvailability(
+			tenant.slug,
+			tenantLocation.id,
+			service.id,
+			filters
+		);
+
+		availabilityResponse.set(res);
+	};
+
+	onMount(() =>
+		fetchAvailability({
+			fromDate: new Date(),
+			toDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7)
+		})
+	);
+
+	const timeStore = createTimeStore(availabilityResponse, fetchAvailability);
+	const extrasStore = createExtrasStore(availabilityResponse);
+	const detailsStore = createDetailsStore(availabilityResponse);
 
 	const total = derived([timeStore.value, extrasStore.value], ([$time, $extras]) => {
 		const timePrice = $time?.price || 0;

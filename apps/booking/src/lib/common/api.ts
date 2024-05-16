@@ -92,23 +92,7 @@ const service = {
 };
 
 const booking = {
-	getDetails: async (tenantSlug: string, locationId: string, serviceId: string) =>
-		axios
-			.post<AvailabilityResponse>(
-				`${config.apiUrl}/${tenantSlug}/${locationId}/service/${serviceId}/availability?fromDate=${
-					new Date().toISOString().split('T')[0]
-				}&toDate=${
-					new Date(new Date().getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-				}`,
-				{
-					headers: {
-						'Content-Type': 'application/json'
-					}
-				}
-			)
-			.then((res) => res.data),
-
-	getTimeSlots: async (
+	getAvailability: async (
 		tenantSlug: string,
 		locationId: string,
 		serviceId: string,
@@ -128,24 +112,7 @@ const booking = {
 					}
 				}
 			)
-			.then((res) => {
-				const data = res.data;
-
-				const adaptedDays: DaySlot[] = Object.entries(data.slots).reduce((prev, [key, value]) => {
-					const timeSlots: TimeSlot[] = value.map((slot) => ({
-						id: slot.timeslotId,
-						start: slot.startTime24hr,
-						end: slot.endTime24hr,
-						price: slot.priceWithNoDecimalPlaces,
-						day: key
-					}));
-					const day: DaySlot = { date: key, timeSlots };
-
-					return [...prev, day];
-				}, [] as DaySlot[]);
-
-				return adaptedDays;
-			}),
+			.then((res) => res.data),
 
 	placeOrder: async (tenantSlug: string, order: PricedCreateOrderRequest) =>
 		axios

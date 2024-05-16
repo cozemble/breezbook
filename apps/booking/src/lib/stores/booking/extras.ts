@@ -1,26 +1,22 @@
-import { derived, writable } from 'svelte/store';
-import api from '$lib/common/api';
-import tenantStore from '../tenant';
-import { locationStore } from '../location';
+import { derived, writable, type Writable } from 'svelte/store';
+import type { AvailabilityResponse } from '@breezbook/backend-api-types';
 
 /** Setup stores to manage extras
  * - fetch extras initially
  */
-export default function createExtrasStore(service: Service) {
-	const tenant = tenantStore.get();
-	const tenantLocation = locationStore.get();
-
+export default function createExtrasStore(
+	availabilityResponseStore: Writable<AvailabilityResponse | null>
+) {
 	const extras = writable<Service.Extra[]>([]);
-	const loading = writable(false);
-	/** Automatically derived from the extras with `selected: true` */
-	const value = derived(extras, ($extras) => $extras.filter((extra) => extra.selected));
+	const loading = writable(true);
 
-	const fetchExtras = async () => {
-		loading.set(true);
+	availabilityResponseStore.subscribe((availabilityResponse) => {
+		if (!availabilityResponse) {
+			loading.set(true);
+			return;
+		}
 
-		const res = await api.booking.getDetails(tenant.slug, tenantLocation.id, service.id);
-
-		const addOns = res.addOns.map(
+		const xtr = availabilityResponse.addOns.map(
 			(addOn): Service.Extra => ({
 				id: addOn.id,
 				name: addOn.name,
@@ -29,13 +25,12 @@ export default function createExtrasStore(service: Service) {
 				selected: false
 			})
 		);
-		extras.set(addOns);
-
+		extras.set(xtr);
 		loading.set(false);
-	};
+	});
 
-	// fetch time slots initially
-	fetchExtras();
+	/** Automatically derived from the extras with `selected: true` */
+	const value = derived(extras, ($extras) => $extras.filter((extra) => extra.selected));
 
 	return {
 		extras,

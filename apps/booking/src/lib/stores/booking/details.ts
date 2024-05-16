@@ -1,21 +1,18 @@
 import type { ErrorObject as AjvErrorObject } from 'ajv';
-import { writable, get } from 'svelte/store';
+import { writable, get, type Writable } from 'svelte/store';
 import Ajv from 'ajv';
 import _ from 'lodash';
+import type { AvailabilityResponse } from '@breezbook/backend-api-types';
 
-import api from '$lib/common/api';
 import { jsonSchemaUtils, ajvUtils } from '$lib/common/utils';
-import tenantStore from '../tenant';
-import { locationStore } from '../location';
 
 /** Setup stores to manage details */
-export default function createDetailsStore(service: Service) {
-	const tenant = tenantStore.get();
-	const tenantLocation = locationStore.get();
-
+export default function createDetailsStore(
+	availabilityResponseStore: Writable<AvailabilityResponse | null>
+) {
 	const schema = writable<JSONSchema>(undefined);
 	const value = writable<Service.Details>({}); // TODO proper typing
-	const loading = writable(false);
+	const loading = writable(true);
 	const errors = writable<ObjectError>({});
 
 	// const initValue = (schema: JSONSchema) => {
@@ -23,20 +20,16 @@ export default function createDetailsStore(service: Service) {
 	// 	value.set(newVal);
 	// };
 
-	const fetchSchema = async () => {
-		loading.set(true);
+	availabilityResponseStore.subscribe((res) => {
+		if (!res) {
+			loading.set(true);
+			return;
+		}
 
-		const res = await api.booking.getDetails(tenant.slug, tenantLocation.id, service.id);
 		const sche = res.serviceSummary.forms[0].schema as JSONSchema;
 		schema.set(sche);
-
-		// initValue(sche); // init value with default values
-
 		loading.set(false);
-	};
-
-	// fetch time slots initially
-	fetchSchema();
+	});
 
 	/** Add errors to the store */
 	const addErrors = (errorObjects?: AjvErrorObject[] | null) => {

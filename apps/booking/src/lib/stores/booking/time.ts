@@ -1,7 +1,6 @@
-import { get, writable } from 'svelte/store';
-import api from '$lib/common/api';
-import tenantStore from '../tenant';
-import { locationStore } from '../location';
+import { derived, get, writable, type Writable } from 'svelte/store';
+
+import type { AvailabilityResponse } from '@breezbook/backend-api-types';
 
 type TimeSlotFilter = {
 	fromDate: Date;
@@ -26,34 +25,46 @@ const isSlotWithinFilters = (slot: TimeSlot, filter: TimeSlotFilter) => {
  * - re-fetch time slots when filters change
  * - manage selected time slot
  */
-export default function createTimeStore(service: Service) {
-	const tenant = tenantStore.get();
-	const tenantLocation = locationStore.get();
+export default function createTimeStore(
+	availabilityResponse: Writable<AvailabilityResponse | null>,
+	fetchAvailability: (filters: TimeSlotFilter) => void
+) {
+	const daySlots = derived(availabilityResponse, ($res) => {
+		if (!$res) return [];
 
-	const daySlots = writable<DaySlot[]>([]);
+		const adaptedDays: DaySlot[] = Object.entries($res.slots).reduce((prev, [key, value]) => {
+			const timeSlots: TimeSlot[] = value.map((slot) => ({
+				id: slot.timeslotId,
+				start: slot.startTime24hr,
+				end: slot.endTime24hr,
+				price: slot.priceWithNoDecimalPlaces,
+				day: key
+			}));
+			const day: DaySlot = { date: key, timeSlots };
+
+			return [...prev, day];
+		}, [] as DaySlot[]);
+
+		loading.set(false);
+		return adaptedDays;
+	});
+
 	const filters = writable<TimeSlotFilter>(DEFAULT_TIME_SLOT_FILTER);
 	const value = writable<TimeSlot | null>(null);
-	const loading = writable(false);
+	const loading = writable(true);
 
 	const fetchTimeSlots = async () => {
 		loading.set(true);
 
-		const res = await api.booking.getTimeSlots(
-			tenant.slug,
-			tenantLocation.id,
-			service.id,
-			get(filters)
-		);
-		daySlots.set(res);
+		await fetchAvailability(get(filters));
 
 		loading.set(false);
 	};
 
-	// fetch time slots initially
-	fetchTimeSlots();
-
 	// re-fetch time slots when filters change
 	filters.subscribe((filters) => {
+		if (filters === DEFAULT_TIME_SLOT_FILTER) return; // skip initial value because it's already fetched by onMount
+
 		fetchTimeSlots();
 
 		// if the selected slot is not within the filters, clear it
