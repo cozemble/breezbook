@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 
 	import { page } from '$app/stores';
-	import BreezbookLogo from '$lib/components/BreezbookLogo.svelte';
+	import BreezbookLogo from '$lib/assets/breezbook-logo.svg';
 	import * as utils from '$lib/common/utils';
 
 	onMount(() => {
@@ -22,7 +22,7 @@
 <div class="p-10">
 	<header class="">
 		<a href="https://breezbook.com">
-			<BreezbookLogo />
+			<img src={BreezbookLogo} alt="Breezbook" class="h-10" />
 		</a>
 	</header>
 
