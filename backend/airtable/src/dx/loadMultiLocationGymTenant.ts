@@ -353,8 +353,8 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
         data: {
          tenant_id,
             environment_id,
-            headline: 'The Smart Wash',
-            description: 'The Smart Wash is the best car wash in the world',
+            headline: 'Breez Gym',
+            description: 'Getting fit and healthy has never been easier',
             theme:{}
         }
     });

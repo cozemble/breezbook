@@ -1,9 +1,0 @@
-{
-  "watch": [
-    "src/",
-    "package.json",
-    "tsconfig.json"
-  ],
-  "ext": "ts",
-  "signal": "SIGTERM"
-}

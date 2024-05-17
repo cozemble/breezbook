@@ -133,7 +133,7 @@ function calculateTimeslotAvailability(
 function calcAllPossibleStartTimes(startTimeConfig: PeriodicStartTime, availability: BusinessAvailability, date: IsoDate): DiscreteStartTimes {
     const dayAvailability = availability.availability.find((a) => isoDateFns.sameDay(a.day, date));
     if (!dayAvailability) {
-        throw new Error(`No availability for date ${date}`);
+        throw new Error(`No availability for date ${date.value}`);
     }
     const times = timePeriodFns.listPossibleStartTimes(dayAvailability.period, startTimeConfig.period);
     return discreteStartTimes(times)

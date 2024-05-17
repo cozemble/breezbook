@@ -1,4 +1,0 @@
-{
-  "migrationPattern": "migrations/schema/*",
-  "driver": "pg"
-}

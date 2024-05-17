@@ -119,6 +119,8 @@ describe("Given a gym with services at various locations", async () => {
                 date: '2024-04-22',
                 start_time_24hr: "09:00",
                 end_time_24hr: "18:00",
+                customer_id:'customer1',
+                order_line_id: 'orderLine1'
             }, {
                 id: uuid(),
                 tenant_id: multiLocationGym.tenant_id,
@@ -130,6 +132,8 @@ describe("Given a gym with services at various locations", async () => {
                 date: '2024-04-22',
                 start_time_24hr: "09:00",
                 end_time_24hr: "18:00",
+                customer_id:'customer1',
+                order_line_id: 'orderLine2'
             }]
         });
         const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
