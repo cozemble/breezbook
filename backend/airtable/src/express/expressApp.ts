@@ -20,6 +20,7 @@ import {withNoRequestParams} from "../infra/functionalExpress.js";
 import {setupDevEnvironment} from "../dx/setupDevEnvironment.js";
 import {getServiceAvailabilityForLocation} from "./availability/getServiceAvailabilityForLocation.js";
 import {onAirtableOauthBegin, onAirtableOauthCallback} from "./oauth/airtableConnect.js";
+import {onVapiVoiceBotPromptRequest} from "./voicebot/vapiHandlers.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
@@ -77,6 +78,7 @@ export function expressApp(): Express {
     app.get(externalApiPaths.getTenant, onGetTenantRequest);
     app.get(externalApiPaths.airtableOauthBegin, onAirtableOauthBegin);
     app.get(externalApiPaths.airtableOauthCallback, onAirtableOauthCallback);
+    app.get(externalApiPaths.vapiVoiceBotPrompt, onVapiVoiceBotPromptRequest);
 
     app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
     app.post('/internal/api/:envId/:tenantId/secret', onStoreTenantSecret);
@@ -101,6 +103,7 @@ export const externalApiPaths = {
     getAvailabilityForLocation: '/api/:envId/:tenantId/:locationId/service/:serviceId/availability',
     airtableOauthBegin: '/v1/connect/airtable/oauth2/authorize',
     airtableOauthCallback: '/v1/connect/airtable/oauth2/callback',
+    vapiVoiceBotPrompt: '/api/:envId/:tenantId/:locationId/voicebot/vapi/prompt',
 }
 
 async function onAppStartRequest(req: express.Request, res: express.Response): Promise<void> {

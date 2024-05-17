@@ -1,6 +1,7 @@
 import {v4 as uuidv4, v4 as uuid} from 'uuid';
 import {PriceAdjustment} from './calculatePrice.js';
 import dayjs from 'dayjs';
+import {ToWords} from "to-words";
 
 export interface ValueType<T> {
     _type: unknown;
@@ -235,6 +236,25 @@ export const time24Fns = {
         const paddedMins = (newMinsMod60 < 10 ? '0' : '') + newMinsMod60;
 
         return time24(`${paddedHours}:${paddedMins}`, time.timezone);
+    },
+    toWords(time: TwentyFourHourClockTime): string {
+        const [hours, minutes] = time.value.split(':').map((s) => parseInt(s, 10));
+        const amPm = hours < 12 ? 'am' : 'pm';
+        const adjustedHours = amPm === 'pm' ? hours - 12 : hours;
+        const adjustedMinutes = minutes < 10 ? `zero ${minutes}` : minutes;
+        if (minutes === 0) {
+            if (adjustedHours === 0 && amPm === 'am') {
+                return `midnight`;
+            }
+            if(adjustedHours === 0 && amPm === 'pm') {
+                return `midday`;
+            }
+            return `${adjustedHours} ${amPm}`;
+        }
+        if (adjustedHours === 0) {
+            return `12 ${adjustedMinutes} ${amPm}`;
+        }
+        return `${adjustedHours} ${adjustedMinutes} ${amPm}`;
     }
 };
 
@@ -431,6 +451,142 @@ export const currencies = {
     CHF: currency('CHF')
 };
 
+export const currencyFns = {
+    name: function (currency: Currency): string {
+        switch (currency.value) {
+            case 'GBP':
+                return 'Pound';
+            case 'USD':
+                return 'Dollar';
+            case 'EUR':
+                return 'Euro';
+            case 'AUD':
+                return 'Dollar';
+            case 'CAD':
+                return 'Dollar';
+            case 'JPY':
+                return 'Yen';
+            case 'NZD':
+                return 'Dollar';
+            case 'CHF':
+                return 'Franc';
+            default:
+                return currency.value;
+        }
+    },
+    plural: function (currency: Currency): string {
+        switch (currency.value) {
+            case 'GBP':
+                return 'Pounds';
+            case 'USD':
+                return 'Dollars';
+            case 'EUR':
+                return 'Euros';
+            case 'AUD':
+                return 'Dollars';
+            case 'CAD':
+                return 'Dollars';
+            case 'JPY':
+                return 'Yen';
+            case 'NZD':
+                return 'Dollars';
+            case 'CHF':
+                return 'Francs';
+            default:
+                return currency.value;
+        }
+    },
+    fractionalName: function (currency: Currency): string {
+        switch (currency.value) {
+            case 'GBP':
+                return 'Penny';
+            case 'USD':
+                return 'Cent';
+            case 'EUR':
+                return 'Cent';
+            case 'AUD':
+                return 'Cent';
+            case 'CAD':
+                return 'Cent';
+            case 'JPY':
+                return 'Yen';
+            case 'NZD':
+                return 'Cent';
+            case 'CHF':
+                return 'Rappen';
+            default:
+                return currency.value;
+        }
+    },
+    fractionalPlural: function (currency: Currency): string {
+        switch (currency.value) {
+            case 'GBP':
+                return 'Pence';
+            case 'USD':
+                return 'Cents';
+            case 'EUR':
+                return 'Cents';
+            case 'AUD':
+                return 'Cents';
+            case 'CAD':
+                return 'Cents';
+            case 'JPY':
+                return 'Yen';
+            case 'NZD':
+                return 'Cents';
+            case 'CHF':
+                return 'Rappen';
+            default:
+                return currency.value;
+        }
+
+    },
+    symbol: function (currency: Currency): string {
+        switch (currency.value) {
+            case 'GBP':
+                return '£';
+            case 'USD':
+                return '$';
+            case 'EUR':
+                return '€';
+            case 'AUD':
+                return '$';
+            case 'CAD':
+                return '$';
+            case 'JPY':
+                return '¥';
+            case 'NZD':
+                return '$';
+            case 'CHF':
+                return 'CHF';
+            default:
+                return currency.value;
+        }
+    },
+    fractionalSymbol: function (currency: Currency): string {
+        switch (currency.value) {
+            case 'GBP':
+                return 'p';
+            case 'USD':
+                return '¢';
+            case 'EUR':
+                return 'c';
+            case 'AUD':
+                return 'c';
+            case 'CAD':
+                return 'c';
+            case 'JPY':
+                return '¥';
+            case 'NZD':
+                return 'c';
+            case 'CHF':
+                return 'Rp';
+            default:
+                return currency.value;
+        }
+    }
+}
+
 export interface Price {
     _type: 'price';
     amount: MoneyInMinorUnits;
@@ -456,6 +612,25 @@ export const priceFns = {
     },
     isEqual(price1: Price, price2: Price) {
         return price1.amount.value === price2.amount.value && price1.currency.value === price2.currency.value;
+    },
+    toWords(price: Price): string {
+        const toWords = new ToWords();
+        const amount = price.amount.value / 100;
+        return toWords.convert(amount, {
+            currency: true,
+            doNotAddOnly: true,
+            currencyOptions: {
+                name: currencyFns.name(price.currency),
+                plural: currencyFns.plural(price.currency),
+                symbol: currencyFns.symbol(price.currency),
+                fractionalUnit: {
+                    name: currencyFns.fractionalName(price.currency),
+                    plural: currencyFns.fractionalPlural(price.currency),
+                    symbol: currencyFns.fractionalSymbol(price.currency)
+                }
+            }
+        });
+
     }
 };
 

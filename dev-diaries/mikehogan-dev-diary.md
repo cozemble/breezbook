@@ -608,3 +608,24 @@ Then will we need to migrate customers and bookings from his existing booking sy
 And retire those systems.
 
 In terms of ops, mouseflow, sentry and inngest error reporting to slack should give us great visibility.
+
+# Fri 17 May 2024
+
+We've been on a bit of a go-slow for the last few days, waiting for Nat to make some decisions and give us the go-ahead
+to launch with one of his services.
+
+But today I started playing around with adding a voicebot to breezbook.  I initially played with OpenAI text to speech
+but then I realised that there is much more than text to speech when it comes to making a voicebot.  You need to deal
+with interruptions being one major thing.  And you need to make sure people don't jail break your prompt and make it
+say "breezbook sucks".  And you need a neat way to hook it up to phone numbers etc.
+
+So I played around with Vapi.ai.  I was initially worried that there would be no flexibility in configuring a voicebot
+on the fly for all my tenants.  This is because all I saw were low code demos. But thanks to perplexity, I soon realised
+that it can totally define voicebots on the fly.  You supply a config object.
+
+So I got a POC running with a hard coded prompt, simulating the main points of Nat's car wash in a hard coded manner. It
+did really well.  There must be a ton of extra prompting that vapi adds, because the agent was saying things that were
+not in my prompt.  Correct things that a normal person would say.  I was impressed.
+
+So now I am making an endpoint that returns this prompt for a given tenant/environment/location tuple, and from that
+we're close to having a very nice, custom voicebot for breezbook.
