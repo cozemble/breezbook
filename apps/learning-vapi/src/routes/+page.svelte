@@ -1,20 +1,21 @@
 <script lang="ts">
     import Vapi from "@vapi-ai/web";
     import type {CreateAssistantDTO} from "@vapi-ai/web/api";
+    import {baseUrl} from "./config";
 
     let message: string | null = null
 
     async function onChat() {
         console.log("Chat to TheSmartWashLtd");
         message = "Starting the call...."
-        const prompt = await fetch('http://localhost:3000/api/dev/thesmartwashltd/thesmartwashltd_dev_location_europe.uk.london/voicebot/vapi/prompt');
-        if(!prompt.ok) {
+        const prompt = await fetch(`${baseUrl}/api/dev/thesmartwashltd/thesmartwashltd_dev_location_europe.uk.london/voicebot/vapi/prompt`);
+        if (!prompt.ok) {
             message = `Failed to fetch prompt from backend: ${prompt.status} ${prompt.statusText}`
             return;
         }
         const content = await prompt.text()
         const vapi = new Vapi("314b1f44-ad46-4fa8-a548-98956126863e");
-        const vapiConfig:CreateAssistantDTO = {
+        const vapiConfig: CreateAssistantDTO = {
             transcriber: {
                 provider: "deepgram",
                 model: "nova-2",
