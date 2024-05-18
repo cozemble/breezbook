@@ -7,7 +7,7 @@
 
     async function onChat() {
         console.log("Chat to TheSmartWashLtd");
-        message = "Starting the call...."
+        message = "Starting the call....can take up to 10 seconds"
         const prompt = await fetch(`${baseUrl}/api/dev/thesmartwashltd/thesmartwashltd_dev_location_europe.uk.london/voicebot/vapi/prompt`);
         if (!prompt.ok) {
             message = `Failed to fetch prompt from backend: ${prompt.status} ${prompt.statusText}`
