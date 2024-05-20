@@ -20,6 +20,8 @@
 		"typescript": "^5.4.5"
 	},
 	"devDependencies": {
+		"@iconify/svelte": "^3.1.6",
+		"astro-icon": "^1.1.0",
 		"daisyui": "^4.11.1",
 		"prettier": "^3.2.5",
 		"prettier-plugin-astro": "^0.13.0"
