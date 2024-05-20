@@ -1,0 +1,62 @@
+---
+import { Icon } from 'astro-icon/components';
+
+const features: {
+	name: string;
+	description: string;
+	icon: string;
+}[] = [
+	{
+		name: 'Custom Booking Experience',
+		description: 'Define your services, availability and pricing. Let your customers book your services online.',
+		icon: 'solar:calendar-broken'
+	},
+	{
+		name: 'Integration with Airtable & Smartsuite',
+		description: 'Manage your bookings and customers in Airtable. Smartsuite coming soon.',
+		icon: 'solar:database-broken'
+	},
+	{
+		name: 'Custom Theming',
+		description: 'Customize the look and feel of your booking page to match your brand.',
+		icon: 'solar:paint-roller-broken'
+	},
+	{
+		name: 'Simple Landing Page',
+		description:
+			'Showcase your services and promote your business with a simple landing page that comes with the booking app.',
+		icon: 'solar:window-frame-broken'
+	},
+	{
+		name: 'More Features Coming Soon',
+		description: 'We are working on more features to help you grow your business. Stay tuned!',
+		icon: 'solar:stars-line-broken'
+	}
+];
+---
+
+<section id="features" class="px-[var(--page-padding)]">
+	<ul class="features-list gap-6">
+		{
+			features.map((feat) => (
+				<li class="card bg-base-200 ">
+					<div class="card-body">
+						<div class="flex gap-4">
+							<Icon name={feat.icon} class="text-5xl text-primary flex-shrink-0" />
+							<h1 class="text-xl font-semibold flex-shrink">{feat.name}</h1>
+						</div>
+						<p>{feat.description}</p>
+					</div>
+				</li>
+			))
+		}
+	</ul>
+</section>
+
+<style>
+	.features-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		justify-content: center;
+	}
+</style>
