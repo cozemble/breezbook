@@ -1,4 +1,6 @@
 ---
+import Header from '../components/Header.astro';
+
 interface Props {
 	title: string;
 }
@@ -17,10 +19,7 @@ const { title } = Astro.props;
 
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Commissioner:wght@100;200;300;400;500;600;700;800;900&display=swap"
-			rel="stylesheet"
-		/>
+		<link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
 		<style>
 			/* Prevent false padding on right of the screen */
@@ -34,12 +33,24 @@ const { title } = Astro.props;
 
 		<title>{title}</title>
 	</head>
+
 	<body>
-		<slot />
+		<Header />
+
+		<main>
+			<slot />
+		</main>
 	</body>
 </html>
 
 <style is:global>
+	:root {
+		/* Width of all the content in the page */
+		--page-content-width: clamp(320px, 90%, 1440px);
+		/* Padding on the left and right of the page, calculated from the width */
+		--page-padding: calc((100% - var(--page-content-width)) / 2);
+	}
+
 	code {
 		font-family:
 			Menlo,
