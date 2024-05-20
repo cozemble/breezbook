@@ -1,5 +1,6 @@
 ---
 import HeroMockup from './HeroMockup.astro';
+import JoinWaitlist from './JoinWaitlist.svelte';
 ---
 
 <div class="hero lg:py-[10vh] px-[var(--page-padding)]">
@@ -12,7 +13,8 @@ import HeroMockup from './HeroMockup.astro';
 				Breezbook is a no-code solution that helps you manage your bookings business with integration to Airtable. It's
 				a simple and easy way to manage your bookings, customers, and payments all in one place.
 			</p>
-			<button class="btn btn-primary">Join Waitlist</button>
+
+			<JoinWaitlist client:load />
 		</div>
 
 		<HeroMockup />
