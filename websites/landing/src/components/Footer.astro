@@ -1,0 +1,31 @@
+---
+const links: {
+	text: string;
+	href: string;
+}[] = [
+	{ text: 'Features', href: '#features' },
+	{ text: 'Pricing', href: '/pricing' },
+	{ text: 'Docs', href: '/docs' },
+	{ text: 'Contact', href: '/contact' },
+	{ text: 'Privacy Policy', href: 'https://github.com/cozemble/breezbook/blob/main/privacy_policy.md' },
+	{ text: 'Terms of Service', href: 'https://github.com/cozemble/breezbook/blob/main/terms_of_service.md' }
+];
+---
+
+<footer class="footer bg-base-300 shadow-lg py-6 mt-24 px-[var(--page-padding)] justify-between">
+	<img src="breezbook-logo.svg" alt="Breezbook Logo" class="w-32" />
+
+	<nav class="hidden sm:block">
+		<ul class="flex">
+			{
+				links.map((link) => (
+					<li>
+						<a href={link.href} class="btn btn-ghost btn-xs">
+							{link.text}
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</nav>
+</footer>
