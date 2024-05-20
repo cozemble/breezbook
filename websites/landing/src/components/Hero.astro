@@ -2,17 +2,19 @@
 import HeroMockup from './HeroMockup.astro';
 ---
 
-<div class="hero py-[10vh] px-[var(--page-padding)]">
-	<div class="hero-content flex-col lg:flex-row-reverse lg:justify-between max-w-full w-full">
-		<HeroMockup />
-
+<div class="hero lg:py-[10vh] px-[var(--page-padding)]">
+	<div class="hero-content flex-col md:flex-row lg:justify-between max-w-full w-full gap-12">
 		<div class="lg:w-[35vw] max-w-[40rem]">
-			<h1 class="text-5xl font-bold tracking-tighter">All you need to run your bookings business on Airtable</h1>
-			<p class="py-6 tracking-tight">
+			<h1 class="text-4xl sm:text-5xl font-bold tracking-tighter">
+				All you need to run your bookings business on Airtable
+			</h1>
+			<p class="py-6 tracking-tight text-sm sm:text-base">
 				Breezbook is a no-code solution that helps you manage your bookings business with integration to Airtable. It's
 				a simple and easy way to manage your bookings, customers, and payments all in one place.
 			</p>
 			<button class="btn btn-primary">Join Waitlist</button>
 		</div>
+
+		<HeroMockup />
 	</div>
 </div>
