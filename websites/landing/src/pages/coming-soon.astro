@@ -1,0 +1,16 @@
+---
+import { Icon } from 'astro-icon/components';
+import Layout from '../layouts/Layout.astro';
+import GoBackButton from '../components/GoBackButton.svelte';
+---
+
+<Layout title="breezbook - coming soon">
+	<div
+		class="bg-gradient-to-b from-secondary to-transparent flex flex-col items-center justify-center h-full py-[10vh] px-[10vw]"
+	>
+		<Icon name="solar:ruler-cross-pen-broken" class="w-[15vw] h-auto text-base-100 mb-20" />
+		<h1 class="text-5xl font-bold mb-8">This Page is under construction</h1>
+		<p class="text-lg mb-10">We are working on it and will be online soon.</p>
+		<GoBackButton client:load />
+	</div>
+</Layout>
