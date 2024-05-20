@@ -13,5 +13,5 @@ export default {
 	singleQuote: true,
 	useTabs: true,
 	trailingComma: 'none',
-	printWidth: 160
+	printWidth: 120
 };
