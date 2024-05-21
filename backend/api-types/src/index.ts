@@ -171,3 +171,5 @@ export interface Tenant {
 	serviceLocations: ServiceLocation[]
 	theme: any;
 }
+
+export * from './waitlistRegistration.js'

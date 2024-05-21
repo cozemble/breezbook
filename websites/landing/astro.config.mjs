@@ -17,5 +17,13 @@ export default defineConfig({
 		})
 	],
 	output: 'server',
-	adapter: vercel()
+	adapter: vercel(),
+	vite: {
+		build: {
+			rollupOptions: {
+				external: ['sharp'],
+			},
+		},
+	},
+
 });
