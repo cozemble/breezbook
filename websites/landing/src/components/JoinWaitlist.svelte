@@ -54,7 +54,7 @@
 		localStorage.setItem('hasSubmittedEmail', 'true');
 	}
 
-	$: buttonText = (isOpen && 'Join Waitlist') || (hasSubmitted && 'Thanks for joining!') || 'Joint Waitlist';
+	$: buttonText = (isOpen && 'Join Waitlist') || (hasSubmitted && 'Thanks for joining!') || 'Join Waitlist';
 
 	$: tooltipText =
 		(errorState && 'Please enter a valid email') ||
