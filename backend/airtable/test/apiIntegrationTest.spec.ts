@@ -40,7 +40,7 @@ import {
     Service,
     Tenant,
     unpricedBasket,
-    unpricedBasketLine
+    unpricedBasketLine, waitlistRegistration
 } from '@breezbook/backend-api-types';
 import {prismaClient} from '../src/prisma/client.js';
 import {PaymentIntentWebhookBody} from '../src/stripe.js';
@@ -53,6 +53,7 @@ import {OrderPaymentCreatedResponse} from '../src/express/handleReceivedWebhook.
 import {setSystemConfig} from '../src/prisma/setSystemConfig.js';
 import {storeSystemSecret, storeTenantSecret} from '../src/infra/secretsInPostgres.js';
 import {insertOrder} from "./insertOrder.js";
+import {externalApiPaths} from "../src/express/expressApp.js";
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
@@ -249,6 +250,18 @@ describe('Given a migrated database', () => {
         expect(json.description).toBeDefined();
         expect(json.services.length).toBeGreaterThan(1);
         expect(json.serviceLocations.length).toBeGreaterThan(1);
+    });
+
+    test('can post an email to the wait list', async () => {
+        const body = waitlistRegistration('mike@email.com');
+        const response = await fetch(`http://localhost:${expressPort}${externalApiPaths.waitlistSignup}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+        expect(response.status).toBe(200);
     });
 
     // test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {

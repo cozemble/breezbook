@@ -80,7 +80,7 @@ export function expressApp(): Express {
     app.get(externalApiPaths.airtableOauthBegin, onAirtableOauthBegin);
     app.get(externalApiPaths.airtableOauthCallback, onAirtableOauthCallback);
     app.get(externalApiPaths.vapiVoiceBotPrompt, onVapiVoiceBotPromptRequest);
-    app.get(externalApiPaths.waitlistSignup, onWaitlistSignup);
+    app.post(externalApiPaths.waitlistSignup, onWaitlistSignup);
 
     app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
     app.post('/internal/api/:envId/:tenantId/secret', onStoreTenantSecret);
