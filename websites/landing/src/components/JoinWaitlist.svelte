@@ -29,14 +29,17 @@
 	};
 
 	async function handleSubmit() {
-		const fetched = await fetch('/api/subscriber', {
+		const fetched = await fetch('https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app/api/signup/waitlist', {
 			method: 'POST',
-			body: JSON.stringify({ email: value }),
+			body: JSON.stringify({
+				_type: 'waitlist.registration',
+				email: value
+			}),
 			headers: { 'Content-Type': 'application/json' }
 		});
 
 		if (fetched.ok) {
-			return await fetched.json();
+			return;
 		}
 	}
 
@@ -91,7 +94,7 @@
 		/>
 
 		<!-- TODO enable when the endpoint is ready -->
-		<button class="pr-6 btn {buttonClass}" on:click={mainHandler} disabled>
+		<button class="pr-6 btn {buttonClass}" on:click={mainHandler}>
 			<Icon icon={hasSubmitted ? 'mdi:bell-check' : 'mdi:bell'} class="mr-1 text-xl" />
 			{buttonText}
 		</button>
