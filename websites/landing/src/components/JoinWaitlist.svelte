@@ -57,6 +57,14 @@
 		localStorage.setItem('hasSubmittedEmail', 'true');
 	}
 
+	function enterHandler(e: KeyboardEvent) {
+		if (e.key !== 'Enter') return;
+
+		// remove focus
+		(e.target as HTMLInputElement).blur();
+		mainHandler();
+	}
+
 	$: buttonText = (isOpen && 'Join Waitlist') || (hasSubmitted && 'Thanks for joining!') || 'Join Waitlist';
 
 	$: tooltipText =
@@ -91,6 +99,7 @@
 			placeholder="Your email address"
 			bind:value
 			on:change={clearError}
+			on:keypress={enterHandler}
 		/>
 
 		<!-- TODO enable when the endpoint is ready -->
