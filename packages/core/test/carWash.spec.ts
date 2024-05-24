@@ -35,8 +35,8 @@ const resourceAvailability = carwash.resources.map(r => resourceDayAvailability(
 
 const config = businessConfiguration(availability, resourceAvailability, carwash.services, [], carwash.timeslots, [], periodicStartTime(duration(minutes(30))), null);
 
-const mike = customer('Mike', 'Hogan', 'mike@email.com');
-const mete = customer('Mete', 'Bora', 'mete@email.com');
+const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
+const mete = customer('Mete', 'Bora', 'mete@email.com', "+14155552672");
 
 const mikeOnMonday = booking(mike.id, carwash.smallCarWash.id, isoDate('2021-05-24'), carwash.nineToOne);
 const meteOnMonday = booking(mete.id, carwash.mediumCarWash.id, isoDate('2021-05-24'), carwash.nineToOne);

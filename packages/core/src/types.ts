@@ -365,20 +365,37 @@ export function email(value: string): Email {
     };
 }
 
+export interface PhoneNumber extends ValueType<string> {
+    _type: 'phone.number';
+}
+
+export function phoneNumber(e164: string): PhoneNumber {
+    const regEx = /^\+[1-9]\d{1,14}$/;
+    if (!e164.match(regEx)) {
+        throw new Error(`Invalid phone number format ${e164}. Expected E.164 format`);
+    }
+    return {
+        _type: 'phone.number',
+        value:e164
+    };
+}
+
 export interface Customer {
     id: CustomerId;
     firstName: string;
     lastName: string;
     email: Email;
+    phone: PhoneNumber;
     formData: unknown;
 }
 
-export function customer(firstName: string, lastName: string, emailStr: string, formData: unknown = null, id = customerId(uuidv4())): Customer {
+export function customer(firstName: string, lastName: string, emailStr: string, phoneStr:string,formData: unknown = null, id = customerId(uuidv4())): Customer {
     return {
         id,
         firstName,
         lastName,
         email: email(emailStr),
+        phone: phoneNumber(phoneStr),
         formData
     };
 }

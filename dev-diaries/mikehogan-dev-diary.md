@@ -629,3 +629,25 @@ not in my prompt.  Correct things that a normal person would say.  I was impress
 
 So now I am making an endpoint that returns this prompt for a given tenant/environment/location tuple, and from that
 we're close to having a very nice, custom voicebot for breezbook.
+
+# Fri 24 May 2024
+
+The initial vapi agent shows promise.  But the user could be coming to the agent with a number of intents.  For example,
+they might want to book a car wash, or they might want to know the opening hours, they might want to cancel or 
+reschedule.  I can't put everything needed for all cases into the initial prompt.  So I'm investigating how to deal with
+conditional conversation flow.  I know vapi supports `sendMessage()` and it purports to extend the prompt.  But vapi 
+also supports function calling. So I want to understand if responses from function calls can be prompt extensions or 
+just data.
+
+Actually working on this, and getting to the point of adding in functions to book slots, made me realise that requiring
+only email for customers right now is wrong. I need to make phone number a core customer record component too, and it 
+needs to identify the customer.  So I'm going to make this change now.  Which raises an interesting issue.  Customers
+that originate thru a voice bot will have a phone number, but no email.  There is no neat way to get an email address
+over the phone when the operator is an LLM powered voice bot.  So this turns the whole email-address-identifies-customer
+thing on its head.  Do I have to make both phone number and email optional?  Actually phone number can be acquired thru
+both channels, so maybe that's the unique attribute.
+
+Maybe the voicebot never contacts a customer unless they provide their first name, email and phone number in a form to 
+initiate the call?  The database would have a table of `contact_requests` containing this information, optionally 
+relating to a customer via email address and/or phone number.  Right, so the voicebot can expect this information to be
+known serverside, and maybe even some of it (first name) is in the prompt.

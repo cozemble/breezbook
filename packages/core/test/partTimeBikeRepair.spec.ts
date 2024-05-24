@@ -50,8 +50,8 @@ const services = [bicycleRepair];
 
 const config = businessConfiguration(availability, resourceAvailability, services, [],[], [],discreteStartTimes(morningCheckInTimes), null);
 
-const mike = customer('Mike', 'Hogan', 'mike@email.com');
-const mete = customer('Mete', 'Bora', 'mete@email.com');
+const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
+const mete = customer('Mete', 'Bora', 'mete@email.com', "+14155552672");
 
 const mikeOnMonday = booking(mike.id, bicycleRepair.id, isoDate('2021-05-24'), exactTimeAvailability(nineAm));
 const meteOnMonday = booking(mete.id, bicycleRepair.id, isoDate('2021-05-24'), exactTimeAvailability(nineTen));

@@ -218,13 +218,18 @@ create table customers
     first_name     text                                not null,
     last_name      text                                not null,
     email          text                                not null check (email ~* '^.+@.+\..+$'),
+    phone_e164     text                                not null,
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp,
-    unique (tenant_id, environment_id, email)
+    unique (tenant_id, environment_id, email),
+    unique (tenant_id, environment_id, phone_e164)
 );
 
 alter table customers
     add constraint customers_tenant_id_email_key unique (tenant_id, environment_id, email);
+
+alter table customers
+    add constraint customers_tenant_id_phone_key unique (tenant_id, environment_id, phone_e164);
 
 create type payment_method as enum ('upfront', 'on_delivery','deposit_and_balance_on_delivery');
 

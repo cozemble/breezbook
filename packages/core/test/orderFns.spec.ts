@@ -3,7 +3,7 @@ import {addOnOrder, carwash, customer, isoDate, isoDateFns, order, orderFns, ord
 
 const tomorrow = isoDateFns.addDays(isoDate(), 1);
 const dayAfterTomorrow = isoDateFns.addDays(isoDate(), 2);
-const mike = customer('Mike', 'Hogan', 'mike@email.com', null);
+const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671", null);
 
 test('can get from and to date from an order with one order line', () => {
     const theOrder = order(mike, [orderLine(carwash.smallCarWash.id, carwash.locations.london, carwash.smallCarWash.price, [addOnOrder(carwash.wax.id)], tomorrow, carwash.fourToSix, [])]);

@@ -48,12 +48,12 @@ export const customerForm: JsonSchemaForm = {
 		$schema: 'http://json-schema.org/draft-07/schema#',
 		type: 'object',
 		properties: {
-			phone: {
-				type: 'string',
-				description: 'Your phone number.'
+			age: {
+				type: 'number',
+				description: 'Your age, and of course it does not matter, this is only for tests.'
 			},
 		},
-		required: ['phone'],
+		required: ['age'],
 		additionalProperties: false
 	}
 };

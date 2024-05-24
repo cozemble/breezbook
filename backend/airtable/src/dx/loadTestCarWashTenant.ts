@@ -309,13 +309,13 @@ const contactDetailsForm: JsonSchemaForm = {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {
-            "phone": {
-                "type": "string",
-                "description": "Your phone number."
+            "age": {
+                "type": "number",
+                "description": "Just a test property"
             }
         },
         "required": [
-            "phone"
+            "age"
         ],
         "additionalProperties": false
     }

@@ -35,7 +35,35 @@
                 provider: "openai",
                 voiceId: "onyx",
             },
-            name: "My Inline Assistant",
+            name: "Booking Assistant",
+            "functions": [
+                {
+                    "name": "listAvailability",
+                    "description": "list available dates, time and prices for a given service, to assist with the booking process",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "serviceId": {
+                                "type": "string",
+                                "description": "The ID of the service the user is interested in"
+                            }
+                        }
+                    }
+                },
+                {
+                    "name": "bookAppointment",
+                    "description": "book a given service at a given date and time for a given phone number",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "serviceId": {
+                                "type": "string",
+                                "description": "The ID of the service the user is interested in"
+                            }
+                        }
+                    }
+                }
+            ]
         }
         console.log({vapiConfig})
         vapi.start(vapiConfig);

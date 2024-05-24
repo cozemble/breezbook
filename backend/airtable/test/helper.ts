@@ -67,9 +67,7 @@ export async function postOrder(pricedBasket: PricedBasket, customer: Customer, 
 
 }
 
-export const goodCustomer = customer('Mike', 'Hogan', 'mike@email.com', {
-    phone: '23678482376'
-});
+export const goodCustomer = customer('Mike', 'Hogan', 'mike@email.com',"+14155552671", {age: 30});
 
 export const goodServiceFormData = {
     make: 'Ford',

@@ -78,6 +78,7 @@ function webQueryTask(business: BusinessConfiguration): string {
 4. If they do want to book a service, then follow this sub-workflow:
     - Ask them what service they want.  It may help you guide them on which service to choose if you know what size of car they have.  Details of the services we have are listed below.
     - Ask them when they would like to book the service.  You will need the date and time. ${timeslotStatement}
+    - Use the function named below to check if the time slot they have chosen is available.  If it is not, then offer them the next available time slot.
     - Let them know that we have extras/add-ons that can be added to services.  And ask if they would like to avail of some of these
         The list of add-ons is below.
     - Confirm the booking details with them.

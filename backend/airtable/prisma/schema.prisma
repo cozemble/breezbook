@@ -167,6 +167,7 @@ model customers {
   first_name           String
   last_name            String
   email                String
+  phone_e164           String
   created_at           DateTime               @default(now()) @db.Timestamptz(6)
   updated_at           DateTime               @default(now()) @db.Timestamptz(6)
   bookings             bookings[]
@@ -174,8 +175,10 @@ model customers {
   tenants              tenants                @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   orders               orders[]
 
-  @@unique([tenant_id, environment_id, email], map: "customers_tenant_id_email_key")
   @@unique([tenant_id, environment_id, email])
+  @@unique([tenant_id, environment_id, phone_e164])
+  @@unique([tenant_id, environment_id, email], map: "customers_tenant_id_email_key")
+  @@unique([tenant_id, environment_id, phone_e164], map: "customers_tenant_id_phone_key")
 }
 
 model data_synchronisation_id_mappings {

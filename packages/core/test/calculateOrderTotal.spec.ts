@@ -18,7 +18,7 @@ import {
 } from '../src/index.js';
 import { calculateOrderTotal } from '../src/calculateOrderTotal.js';
 
-const mike = customer('Mike', 'Hogan', 'mike@email.com');
+const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
 const twentyPercentOff = coupon(
 	couponCode('20-percent-off'),
 	unlimited(),

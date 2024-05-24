@@ -84,13 +84,21 @@ export async function addOrder(req: express.Request, res: express.Response): Pro
         const {fromDate, toDate} = isoDateFns.getDateRange(createOrderRequest.basket.lines.map((l) => l.date));
         const prisma = prismaClient();
         const everythingForAvailability = await getEverythingForAvailability(prisma, tenantEnvironment, fromDate, toDate);
-        let maybeExistingCustomer = await prisma.customers.findUnique({
+        const maybeExistingCustomer = await prisma.customers.findFirst({
             where: {
-                tenant_id_environment_id_email: {
-                    tenant_id: tenantEnvironment.tenantId.value,
-                    environment_id: tenantEnvironment.environmentId.value,
-                    email: createOrderRequest.customer.email.value
-                }
+                OR: [
+                    {
+                        tenant_id: tenantEnvironment.tenantId.value,
+                        environment_id: tenantEnvironment.environmentId.value,
+                        email: createOrderRequest.customer.email.value
+                    },
+                    {
+
+                        tenant_id: tenantEnvironment.tenantId.value,
+                        environment_id: tenantEnvironment.environmentId.value,
+                        phone_e164: createOrderRequest.customer.phone.value
+                    }
+                ]
             }
         });
         if (maybeExistingCustomer) {

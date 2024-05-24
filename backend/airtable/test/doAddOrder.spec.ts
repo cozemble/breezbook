@@ -25,7 +25,7 @@ const london = carwash.locations.london;
 const smallCarWash = carwash.smallCarWash;
 
 test('tenant has a customer form, and the customer does not have a form response', () => {
-    const theCustomer = customer('Mike', 'Hogan', 'mike@email.com');
+    const theCustomer = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
     const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [])], smallCarWash.price);
     const request = pricedCreateOrderRequest(thePricedBasket, theCustomer, fullPaymentOnCheckout());
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
@@ -33,7 +33,7 @@ test('tenant has a customer form, and the customer does not have a form response
 });
 
 test('tenant has a customer form, and submitted form does not validate', () => {
-    const mike = customer('Mike', 'Hogan', 'mike@email.com', {});
+    const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671",{});
     const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [])], smallCarWash.price);
     const request = pricedCreateOrderRequest(thePricedBasket, mike, fullPaymentOnCheckout());
 
