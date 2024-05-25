@@ -651,3 +651,30 @@ Maybe the voicebot never contacts a customer unless they provide their first nam
 initiate the call?  The database would have a table of `contact_requests` containing this information, optionally 
 relating to a customer via email address and/or phone number.  Right, so the voicebot can expect this information to be
 known serverside, and maybe even some of it (first name) is in the prompt.
+
+# Sat 25 May 2024
+
+My docker image for google cloud run that represents pretty much all of my backend has blown up from about 230MB to 
+830MB.  On a bit of a trip to learn why.  bundlephobia does not show anything massive in terms of included packages.
+Although body-parser is larger than I realised.  So I am not running `du -sk` commands inside the image itself.  And 
+learning lots:
+
+1. The `.bin` folder in node_modules is there.  Pretty sure I don't need that.
+2. The .pnpm directory is there, and it's huge.  Given that the app is installed and compiled and ready to run at this 
+stage, I think I can delete it.  Same for `.modules.yaml`.  Except of course that .pnpm is where the actual packages are
+and node_modules just soft links to them.  So I can't delete it.
+
+So it looks like `inngest` is indirectly pulling in:
+
+```postgresql
+99904 aws-sdk@2.1628.0
+104520 next@14.2.3_react-dom@18.3.1_react@18.3.1__react@18.3.1
+128316 @next+swc-linux-x64-gnu@14.2.3
+153196 @next+swc-linux-x64-musl@14.2.3
+```
+
+Now I'm going to try using `esbuild` to bundle the index.js for me, because it will tree shake the unused code.
+
+This is proving to be a bit of a pain in the ass, as Prisma requires native binaries to work.  Now fiddling around with
+copying those into the right place in my Dockerfile.  This might prove brittle.  But in any case, the docker image size
+is now about 16MB.

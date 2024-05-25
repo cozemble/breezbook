@@ -23,6 +23,5 @@
   "dependencies": {
     "@breezbook/packages-core": "workspace:*",
     "uuid": "^9.0.1"
-
   }
 }

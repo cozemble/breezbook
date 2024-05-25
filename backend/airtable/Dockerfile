@@ -15,7 +15,9 @@ WORKDIR /app
 
 # First install the dependencies (as they change less often)
 COPY --from=builder /app/ .
-RUN pnpm install
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install
 RUN pnpm run build
 
 FROM node:18.16.0-alpine AS runner
@@ -25,6 +27,11 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 breezbook
 USER breezbook
 
-COPY --from=installer --chown=breezbook:nodejs /app/ ./
+COPY --from=installer --chown=breezbook:nodejs /app/dist ./dist
+COPY --from=installer --chown=breezbook:nodejs /app/prisma ./prisma
+#COPY --from=installer --chown=breezbook:nodejs /app/node_modules ./node_modules
+COPY --from=installer --chown=breezbook:nodejs /app/node_modules/prisma/libquery_engine-linux-musl-openssl* /app/prisma/
+#COPY --from=installer --chown=breezbook:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+
 EXPOSE 3000
-CMD node dist/esm/index.js
+CMD node dist/cjs/index.cjs

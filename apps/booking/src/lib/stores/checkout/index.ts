@@ -114,11 +114,14 @@ function createCheckoutStore() {
 		if (!theTotal) return;
 
 		const theCustomer = get(customerStore.customer);
+		console.log({theCustomer})
 		const patchedCustomer = {
 			...theCustomer,
 			id: core.customerId(),
-			email: core.email(theCustomer.email as unknown as string)
+			email: core.email(theCustomer.email as unknown as string),
+			phone: core.phoneNumber(theCustomer.phone as unknown as string),
 		};
+		console.log({patchedCustomer})
 
 		// Identify the user on Highlight so we can track who that user is
 		H.identify(patchedCustomer.email.value, {
