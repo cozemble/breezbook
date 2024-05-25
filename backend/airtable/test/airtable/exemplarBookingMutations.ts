@@ -7,6 +7,7 @@ export const exemplarBookingMutations: Mutation[] = [
             data: {
                 id: '1e2e743d-d35d-494a-a8fc-572b6c0610df',
                 email: 'mike@email.com',
+                phone: '23432432',
                 last_name: 'Hogan',
                 tenant_id: 'tenant1',
                 first_name: 'Mike',

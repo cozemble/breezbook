@@ -50,34 +50,13 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                         fields: {
                             'First name': {_type: 'object.path', path: 'create.data.first_name', nullable: false},
                             'Last name': {_type: 'object.path', path: 'create.data.last_name', nullable: false},
-                            Email: {_type: 'object.path', path: 'create.data.email', nullable: false}
+                            Email: {_type: 'object.path', path: 'create.data.email', nullable: false},
+                            Phone: {_type: 'object.path', path: 'create.data.phone', nullable: false}
                         }
                     }
                 ]
             }
         },
-        {
-            when: '_type == "upsert" && create.entity == "customer_form_values"',
-            airtable: {
-                recordId: {
-                    mappedTo: {
-                        entity: 'customers',
-                        entityId: {id: 'create.data.customer_id'}
-                    }
-                },
-                records: [
-                    {
-                        _type: 'airtable.update',
-                        baseId: 'ENV.SMARTWASH_BASE_ID',
-                        table: 'Customers',
-                        fields: {
-                            Phone: {_type: 'object.path', path: 'create.data.form_values.phone', nullable: false}
-                        }
-                    }
-                ]
-            }
-        },
-
         {
             when: '_type == "create" && entity == "orders"',
             airtable: {
