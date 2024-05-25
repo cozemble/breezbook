@@ -1,7 +1,7 @@
 ---
 import '../styles/fonts.css';
 import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
+import Header from '../components/Header.svelte';
 
 interface Props {
 	title: string;
@@ -32,7 +32,7 @@ const { title } = Astro.props;
 	</head>
 
 	<body class="min-h-[100vh] flex flex-col justify-between">
-		<Header />
+		<Header client:load />
 
 		<main>
 			<slot />
