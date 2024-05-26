@@ -13,6 +13,9 @@ const massage30mins = makeTestId(tenant_id, environment_id, 'massage.30mins');
 const swim30mins = makeTestId(tenant_id, environment_id, 'swim.30mins');
 const ptMike = makeTestId(tenant_id, environment_id, `resource.ptMike`)
 const ptMete = makeTestId(tenant_id, environment_id, `resource.ptMete`)
+const resourceTypes = ['personal.trainer', 'massage.therapist', 'yoga.instructor']
+
+
 
 export const multiLocationGym = {
     tenant_id,
@@ -137,7 +140,6 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
     });
 
 
-    const resourceTypes = ['personal.trainer', 'massage.therapist', 'yoga.instructor']
     await prisma.resource_types.createMany({
         data: resourceTypes.map((resourceType) => ({
             id: makeTestId(tenant_id, environment_id, `resource.${resourceType}`),
@@ -157,6 +159,68 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             resource_type: makeTestId(tenant_id, environment_id, `resource.personal.trainer`)
         }))
     });
+    await prisma.resource_images.createMany({
+        data: [
+            {
+                resource_id: makeTestId(tenant_id, environment_id, `resource.ptMike`),
+                tenant_id,
+                environment_id,
+                public_image_url: 'https://pbs.twimg.com/profile_images/1783563449005404160/qS4bslrZ_400x400.jpg',
+                context: 'profile',
+                mime_type: 'image/jpeg'
+            }, {
+                resource_id: makeTestId(tenant_id, environment_id, `resource.ptMete`),
+                tenant_id,
+                environment_id,
+                public_image_url: 'https://avatars.githubusercontent.com/u/86600423',
+                context: 'profile',
+                mime_type: 'image/jpeg'
+            }]
+    });
+    await prisma.resource_markup.createMany({
+        data: [
+            {
+                resource_id: makeTestId(tenant_id, environment_id, `resource.ptMike`),
+                tenant_id,
+                environment_id,
+                context: 'description',
+                markup_type: 'markdown',
+                markup: 'Mike is a specialist in training people in recovery from injury.\n' +
+                    '\n' +
+                    'He has a background in sports science and has worked with a range of clients from professional athletes to those recovering from injury.\n' +
+                    '\n' +
+                    'His approach is to work with clients to help them achieve their goals and improve their quality of life.\n' +
+                    '\n' +
+                    'Mike is passionate about helping people to recover from injury and get back to doing the things they love.\n' +
+                    '\n' +
+                    'His qualifications are:\n' +
+                    '\n' +
+                    '- BSc (Hons) Sports Science\n' +
+                    '- Level 3 Personal Trainer\n' +
+                    '- Level 3 Sports Massage Therapist'
+            },
+            {
+                resource_id: makeTestId(tenant_id, environment_id, `resource.ptMete`),
+                tenant_id,
+                environment_id,
+                context: 'description',
+                markup_type: 'markdown',
+                markup: 'Mete is a specialist in elite sports training, with a particular focus on power events.\n' +
+                    '\n' +
+                    'He has worked with a number of elite athletes, including Olympic gold medalists and world champions.\n' +
+                    '\n' +
+                    'Mete has a background in exercise science and has a PhD in sports science.\n' +
+                    '\n' +
+                    'His qualifications are:\n' +
+                    '\n' +
+                    '- PhD in Sports Science\n' +
+                    '- MSc in Exercise Science\n' +
+                    '- BSc in Sports Science\n' +
+                    '- Certified Strength and Conditioning Specialist (CSCS)'
+            }
+        ]
+    });
+
     // ptMike is at harlow Mon-Fri and ware Sat-Sun
     await prisma.resource_availability.createMany({
         data: mondayToFriday.map((day, dayIndex) => ({
@@ -351,11 +415,11 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 
     await prisma.tenant_branding.create({
         data: {
-         tenant_id,
+            tenant_id,
             environment_id,
             headline: 'Breez Gym',
             description: 'Getting fit and healthy has never been easier',
-            theme:{}
+            theme: {}
         }
     });
 

@@ -22,6 +22,7 @@ import {getServiceAvailabilityForLocation} from "./availability/getServiceAvaila
 import {onAirtableOauthBegin, onAirtableOauthCallback} from "./oauth/airtableConnect.js";
 import {onVapiVoiceBotPromptRequest} from "./voicebot/vapiHandlers.js";
 import {onWaitlistSignup} from "./waitlist/onWaitlistSignup.js";
+import {onListResourcesByTypeRequest} from "./resources/resourcesHandler.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
@@ -80,6 +81,7 @@ export function expressApp(): Express {
     app.get(externalApiPaths.airtableOauthBegin, onAirtableOauthBegin);
     app.get(externalApiPaths.airtableOauthCallback, onAirtableOauthCallback);
     app.get(externalApiPaths.vapiVoiceBotPrompt, onVapiVoiceBotPromptRequest);
+    app.get(externalApiPaths.listResourcesByType, onListResourcesByTypeRequest);
     app.post(externalApiPaths.waitlistSignup, onWaitlistSignup);
 
     app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
@@ -106,6 +108,7 @@ export const externalApiPaths = {
     airtableOauthBegin: '/v1/connect/airtable/oauth2/authorize',
     airtableOauthCallback: '/v1/connect/airtable/oauth2/callback',
     vapiVoiceBotPrompt: '/api/:envId/:tenantId/:locationId/voicebot/vapi/prompt',
+    listResourcesByType: '/api/:envId/:tenantId/resources/:type/list',
     waitlistSignup: '/api/signup/waitlist',
 }
 

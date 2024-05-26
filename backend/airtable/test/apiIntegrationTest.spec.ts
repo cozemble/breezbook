@@ -54,6 +54,8 @@ import {setSystemConfig} from '../src/prisma/setSystemConfig.js';
 import {storeSystemSecret, storeTenantSecret} from '../src/infra/secretsInPostgres.js';
 import {insertOrder} from "./insertOrder.js";
 import {externalApiPaths} from "../src/express/expressApp.js";
+import {multiLocationGym} from "../src/dx/loadMultiLocationGymTenant.js";
+import {ResourceSummary} from "../src/core/resources/resources.js";
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
@@ -124,7 +126,6 @@ describe('Given a migrated database', () => {
             pricedBasketLine(carwash.locations.london, carwash.smallCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price)], carwash.smallCarWash.price, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), fourDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
             pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price), pricedAddOn(carwash.polish.id, 1, carwash.polish.price)], carwash.mediumCarWash.price, priceFns.add(carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price), fiveDaysFromNow, carwash.nineToOne, [goodServiceFormData])
         ], priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price))
-
 
         const fetched = await postOrder(
             twoServicesPricedBasket,
@@ -262,6 +263,21 @@ describe('Given a migrated database', () => {
             body: JSON.stringify(body)
         });
         expect(response.status).toBe(200);
+    });
+
+    test("can list all resources by type", async () => {
+        const url = `http://localhost:${expressPort}${externalApiPaths.listResourcesByType}`
+            .replace(":envId",multiLocationGym.environment_id)
+            .replace(":tenantId",multiLocationGym.tenant_id).replace(":type","personal.trainer");
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        expect(response.status).toBe(200);
+        const jsonResponse = await response.json() as ResourceSummary[]
+        expect(jsonResponse).toHaveLength(2)
     });
 
     // test('incoming stripe webhooks are stashed and the webhook handler is called', async () => {

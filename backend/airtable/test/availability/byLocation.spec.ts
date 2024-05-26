@@ -6,7 +6,7 @@ import {
     carwash,
     environmentId,
     isoDate,
-    locationId, serviceId,
+    locationId,
     tenantEnvironmentLocation,
     tenantId
 } from "@breezbook/packages-core";
@@ -119,7 +119,7 @@ describe("Given a gym with services at various locations", async () => {
                 date: '2024-04-22',
                 start_time_24hr: "09:00",
                 end_time_24hr: "18:00",
-                customer_id:'customer1',
+                customer_id: 'customer1',
                 order_line_id: 'orderLine1'
             }, {
                 id: uuid(),
@@ -132,7 +132,7 @@ describe("Given a gym with services at various locations", async () => {
                 date: '2024-04-22',
                 start_time_24hr: "09:00",
                 end_time_24hr: "18:00",
-                customer_id:'customer1',
+                customer_id: 'customer1',
                 order_line_id: 'orderLine2'
             }]
         });

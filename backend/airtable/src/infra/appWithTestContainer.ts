@@ -4,6 +4,7 @@ import { DockerComposeEnvironment, StartedDockerComposeEnvironment, Wait } from 
 import { v4 as uuidv4 } from 'uuid';
 import {prismaClient} from "../prisma/client.js";
 import {loadTestCarWashTenant} from "../dx/loadTestCarWashTenant.js";
+import {loadMultiLocationGymTenant} from "../dx/loadMultiLocationGymTenant.js";
 
 export async function withMigratedDatabase(postgresPort: number): Promise<StartedDockerComposeEnvironment> {
 	const composeAndFileName = 'supabase-min-docker-compose.yml';
@@ -34,6 +35,7 @@ export async function withMigratedDatabase(postgresPort: number): Promise<Starte
 	);
 	const prisma = prismaClient();
 	await loadTestCarWashTenant(prisma);
+	await loadMultiLocationGymTenant(prisma);
 	console.log(outcome.stdout);
 	console.error('STDERR:' + outcome.stderr);
 
