@@ -1,3 +1,6 @@
+/* This file is currently not in use due to a bug in the font loading process in Astro.
+	The content is copied to the Layout.astro file. */
+
 @font-face {
 	font-family: Commissioner;
 	src: url(/fonts/Commissioner/static/Commissioner-Black.ttf);
