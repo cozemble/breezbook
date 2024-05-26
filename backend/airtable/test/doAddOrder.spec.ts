@@ -7,7 +7,7 @@ import {
     customer,
     customerId,
     fullPaymentOnCheckout,
-    id,
+    id, isoDate, isoDateFns,
     price,
     priceFns
 } from '@breezbook/packages-core';
@@ -215,3 +215,16 @@ test("can handle a basket with more than one line on different days", () => {
         throw new Error('Expected success, got ' + JSON.stringify(outcome));
     }
 });
+
+test("not possible to make an order in the past", () => {
+    const dayInThePast = isoDateFns.addDays(isoDate(), -1);
+    const thePricedBasket = pricedBasket(
+        [pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, dayInThePast, carwash.nineToOne, [goodServiceFormData])],
+        carwash.smallCarWash.price,
+    );
+    const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
+
+    const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing([], dayInThePast), request) as ErrorResponse;
+    expect(outcome.errorCode).toBe(addOrderErrorCodes.serviceDateInThePast);
+    expect(outcome.errorMessage).toBeDefined();
+})

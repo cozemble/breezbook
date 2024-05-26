@@ -135,6 +135,18 @@ export function validateOpeningHours(everythingForTenant: EverythingForAvailabil
     return validationOutcomes.find(o => o != null) ?? null
 }
 
+function dateIsInTheFuture(date: IsoDate) {
+    if (isoDateFns.lt(date, isoDateFns.today())) {
+        return errorResponse(addOrderErrorCodes.serviceDateInThePast, `Service date ${date.value} is in the past, today is ${isoDateFns.today().value}`);
+    }
+    return null
+}
+
+export function validateServiceDates(everythingForTenant: EverythingForAvailability, order: PricedCreateOrderRequest): ErrorResponse | null {
+    const validationOutcomes = order.basket.lines.map(line => dateIsInTheFuture(line.date))
+    return validationOutcomes.find(o => o != null) ?? null
+}
+
 export function validateCouponCode(everythingForTenant: EverythingForAvailability, couponCode: CouponCode | undefined) {
     if (couponCode) {
         const coupon = everythingForTenant.coupons.find((c) => c.code.value === couponCode.value);

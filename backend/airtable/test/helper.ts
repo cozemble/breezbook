@@ -43,18 +43,6 @@ export const fourDaysFromNow = isoDateFns.addDays(isoDate(), 4);
 export const fiveDaysFromNow = isoDateFns.addDays(isoDate(), 5);
 
 
-// export async function postOrder(order: Order, total: Price, port: number) {
-// 	const body = createOrderRequest(order, total, fullPaymentOnCheckout());
-// 	return await fetch(`http://localhost:${port}/api/dev/tenant1/orders`, {
-// 		method: 'POST',
-// 		headers: {
-// 			'Content-Type': 'application/json'
-// 		},
-// 		body: JSON.stringify(body)
-// 	});
-// }
-
-
 export async function postOrder(pricedBasket: PricedBasket, customer: Customer, paymentIntent: PaymentIntent, port: number) {
     const body = pricedCreateOrderRequest(pricedBasket, customer, paymentIntent);
     return await fetch(`http://localhost:${port}/api/dev/tenant1/orders`, {

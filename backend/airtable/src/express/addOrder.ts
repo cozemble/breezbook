@@ -13,7 +13,7 @@ import {
     validateCoupon,
     validateCustomerForm,
     validateOpeningHours,
-    validateOrderTotal,
+    validateOrderTotal, validateServiceDates,
     validateServiceForms,
     validateTimeslotId
 } from './addOrderValidations.js';
@@ -35,11 +35,13 @@ export const addOrderErrorCodes = {
     expiredCoupon: 'addOrder.expired.coupon',
     wrongTotalPrice: 'addOrder.wrong.total.price',
     noSuchTimeslotId: 'addOrder.no.such.timeslot.id',
-    incorrectDiscountAmount: 'addOrder.incorrect.discount.amount'
+    incorrectDiscountAmount: 'addOrder.incorrect.discount.amount',
+    serviceDateInThePast: 'addOrder.service.date.in.the.past',
 };
 
 function withValidationsPerformed<T>(everythingForTenant: EverythingForAvailability, pricedCreateOrderRequest: PricedCreateOrderRequest, fn: () => T): ErrorResponse | T {
     const validationFns = [
+        () => validateServiceDates(everythingForTenant, pricedCreateOrderRequest),
         () => validateOpeningHours(everythingForTenant, pricedCreateOrderRequest),
         () => validateTimeslotId(everythingForTenant, pricedCreateOrderRequest),
         () => validateCustomerForm(everythingForTenant, pricedCreateOrderRequest),
