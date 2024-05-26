@@ -51,7 +51,7 @@ export const natsCarWashAirtableMapping: AirtableMappingPlan = {
                             'First name': {_type: 'object.path', path: 'create.data.first_name', nullable: false},
                             'Last name': {_type: 'object.path', path: 'create.data.last_name', nullable: false},
                             Email: {_type: 'object.path', path: 'create.data.email', nullable: false},
-                            Phone: {_type: 'object.path', path: 'create.data.phone', nullable: false}
+                            Phone: {_type: 'object.path', path: 'create.data.phone_e164', nullable: false}
                         }
                     }
                 ]
