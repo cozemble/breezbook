@@ -1,6 +1,6 @@
 import {Prisma} from '@prisma/client';
 import {Create, Update, Upsert} from '../mutation/mutations.js';
-import {id, mandatory} from '@breezbook/packages-core';
+import {id, mandatory, omit, pick} from '@breezbook/packages-core';
 
 export type CreateOrder = Create<Prisma.ordersCreateArgs['data']>;
 
@@ -221,4 +221,120 @@ export function createBookingPayment(data: Prisma.booking_paymentsCreateArgs['da
         entity: 'booking_payments',
         entityId: id(mandatory(data.id, 'Booking Payment ID'))
     };
+}
+
+export type UpsertBusinessHours = Upsert<Prisma.business_hoursCreateArgs['data'], Prisma.business_hoursUpdateArgs['data'], Prisma.business_hoursUpdateArgs['where']>;
+
+export function upsertBusinessHours(create: Prisma.business_hoursCreateArgs['data']): UpsertBusinessHours {
+    const update = omit(create, ["id"]) as Prisma.business_hoursUpdateArgs['data']
+    const where = pick(create, ["id"]) as Prisma.business_hoursUpdateArgs['where']
+
+    return {
+        _type: 'upsert',
+        create: {
+            _type: 'create',
+            data: create,
+            entity: 'business_hours',
+            entityId: id(mandatory(create.id, 'Business Hours ID'))
+        },
+        update: {
+            _type: 'update',
+            data: update,
+            where,
+            entity: 'business_hours',
+            entityId: id(mandatory(create.id, 'Business Hours ID'))
+        },
+    }
+}
+
+export type UpsertBlockedTime = Upsert<Prisma.blocked_timeCreateArgs['data'], Prisma.blocked_timeUpdateArgs['data'], Prisma.blocked_timeUpdateArgs['where']>
+
+export function upsertBlockedTime(create: Prisma.blocked_timeCreateArgs['data']): UpsertBlockedTime {
+    const update = omit(create, ["id"]) as Prisma.blocked_timeUpdateArgs['data']
+    const where = pick(create, ["id"]) as Prisma.blocked_timeUpdateArgs['where']
+    return {
+        _type: 'upsert',
+        create: {
+            _type: 'create',
+            data: create,
+            entity: 'blocked_time',
+            entityId: id(mandatory(create.id, 'Blocked Time ID'))
+        },
+        update: {
+            _type: 'update',
+            data: update,
+            where,
+            entity: 'blocked_time',
+            entityId: id(mandatory(create.id, 'Blocked Time ID'))
+        },
+    }
+}
+
+export type UpsertResourceType = Upsert<Prisma.resource_typesCreateArgs['data'], Prisma.resource_typesUpdateArgs['data'], Prisma.resource_typesUpdateArgs['where']>
+
+export function upsertResourceType(create: Prisma.resource_typesCreateArgs['data']): UpsertResourceType {
+    const update = omit(create, ["id"]) as Prisma.resource_typesUpdateArgs['data']
+    const where = pick(create, ["id"]) as Prisma.resource_typesUpdateArgs['where']
+    return {
+        _type: 'upsert',
+        create: {
+            _type: 'create',
+            data: create,
+            entity: 'resource_types',
+            entityId: id(mandatory(create.id, 'Resource Type ID'))
+        },
+        update: {
+            _type: 'update',
+            data: update,
+            where,
+            entity: 'resource_types',
+            entityId: id(mandatory(create.id, 'Resource Type ID'))
+        },
+    }
+}
+
+export type UpsertResource = Upsert<Prisma.resourcesCreateArgs['data'], Prisma.resourcesUpdateArgs['data'], Prisma.resourcesUpdateArgs['where']>
+
+export function upsertResource(create: Prisma.resourcesCreateArgs['data']): UpsertResource {
+    const update = omit(create, ["id"]) as Prisma.resourcesUpdateArgs['data']
+    const where = pick(create, ["id"]) as Prisma.resourcesUpdateArgs['where']
+    return {
+        _type: 'upsert',
+        create: {
+            _type: 'create',
+            data: create,
+            entity: 'resources',
+            entityId: id(mandatory(create.id, 'Resource ID'))
+        },
+        update: {
+            _type: 'update',
+            data: update,
+            where,
+            entity: 'resources',
+            entityId: id(mandatory(create.id, 'Resource ID'))
+        },
+    }
+}
+
+export type UpsertResourceImage = Upsert<Prisma.resource_imagesCreateArgs['data'], Prisma.resource_imagesUpdateArgs['data'], Prisma.resource_imagesUpdateArgs['where']>
+
+export function upsertResourceImage(create: Prisma.resource_imagesCreateArgs['data']): UpsertResourceImage {
+    const update = omit(create, ["id"]) as Prisma.resource_imagesUpdateArgs['data']
+    const where = pick(create, ["id"]) as Prisma.resource_imagesUpdateArgs['where']
+    return {
+        _type: 'upsert',
+        create: {
+            _type: 'create',
+            data: create,
+            entity: 'resource_images',
+            entityId: id(mandatory(create.id, 'Resource ID'))
+        },
+        update: {
+            _type: 'update',
+            data: update,
+            where,
+            entity: 'resource_images',
+            entityId: id(mandatory(create.id, 'Resource ID'))
+        },
+    }
 }

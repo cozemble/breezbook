@@ -1,7 +1,7 @@
 import {PrismaClient} from '@prisma/client'
-import {ResourceType, TenantEnvironment} from "@breezbook/packages-core";
+import {ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-core";
 import {errorResponse, ErrorResponse} from "@breezbook/backend-api-types";
-import {DbResource, DbResourceImage, DbResourceMarkup} from "../../prisma/dbtypes.js";
+import {DbResource, DbResourceAvailability, DbResourceImage, DbResourceMarkup} from "../../prisma/dbtypes.js";
 
 interface ImageSummary {
     publicUrl: string;
@@ -23,16 +23,19 @@ export interface ResourceSummary {
     id: string
     name: string
     type: string
+    locationIds: string[]
     branding?: ResourceBranding
 }
 
 function toResourceSummary(r: DbResource & { resource_images: DbResourceImage[] } & {
     resource_markup: DbResourceMarkup[]
-}): ResourceSummary | ErrorResponse {
+} & { resource_availability: DbResourceAvailability[] }): ResourceSummary | ErrorResponse {
+    const locationIds = Array.from(new Set(r.resource_availability.map(ra => ra.location_id).filter(locationId => locationId !== null))) as string[]
     return {
         id: r.id,
         name: r.name,
         type: r.resource_type,
+        locationIds,
         branding: {
             images: r.resource_images.map(i => ({
                 publicUrl: i.public_image_url,
@@ -48,11 +51,11 @@ function toResourceSummary(r: DbResource & { resource_images: DbResourceImage[] 
 
 }
 
-async function listByType(prisma: PrismaClient, tenantEnvironment: TenantEnvironment, type: ResourceType): Promise<ResourceSummary[] | ErrorResponse> {
+async function listByType(prisma: PrismaClient, tenantEnvironmentLoc: TenantEnvironmentLocation, type: ResourceType): Promise<ResourceSummary[] | ErrorResponse> {
     const foundType = await prisma.resource_types.findFirst({
         where: {
-            tenant_id: tenantEnvironment.tenantId.value,
-            environment_id: tenantEnvironment.environmentId.value,
+            tenant_id: tenantEnvironmentLoc.tenantId.value,
+            environment_id: tenantEnvironmentLoc.environmentId.value,
             name: type.value
         }
     });
@@ -62,12 +65,13 @@ async function listByType(prisma: PrismaClient, tenantEnvironment: TenantEnviron
     const foundResources = await prisma.resources.findMany({
         where: {
             resource_type: foundType.id,
-            tenant_id: tenantEnvironment.tenantId.value,
-            environment_id: tenantEnvironment.environmentId.value
+            tenant_id: tenantEnvironmentLoc.tenantId.value,
+            environment_id: tenantEnvironmentLoc.environmentId.value
         },
         include: {
             resource_images: true,
-            resource_markup: true
+            resource_markup: true,
+            resource_availability: true,
         }
     })
     return foundResources.map(toResourceSummary)

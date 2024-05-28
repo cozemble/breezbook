@@ -1,5 +1,13 @@
 import {PrismaClient} from '@prisma/client';
 import {makeTestId} from "./testIds.js";
+import {
+    upsertBlockedTime,
+    upsertBusinessHours,
+    upsertResource,
+    upsertResourceType
+} from "../prisma/breezPrismaMutations.js";
+import {prismaMutationToPromise} from "../infra/prismaMutations.js";
+import {Upsert} from "../mutation/mutations.js";
 
 const tenant_id = 'breezbook-gym';
 const environment_id = 'dev';
@@ -14,7 +22,6 @@ const swim30mins = makeTestId(tenant_id, environment_id, 'swim.30mins');
 const ptMike = makeTestId(tenant_id, environment_id, `resource.ptMike`)
 const ptMete = makeTestId(tenant_id, environment_id, `resource.ptMete`)
 const resourceTypes = ['personal.trainer', 'massage.therapist', 'yoga.instructor']
-
 
 
 export const multiLocationGym = {
@@ -32,35 +39,75 @@ export const multiLocationGym = {
     ptMete
 }
 
+async function runUpserts(prisma: PrismaClient, upserts: Upsert<any, any, any>[]) {
+    for (const upsert of upserts) {
+        await prismaMutationToPromise(prisma, upsert)
+    }
+}
+
 export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<void> {
-    await prisma.tenants.create({
-        data: {
+    await prisma.tenants.upsert({
+        where: {
+            tenant_id
+        },
+        create: {
             tenant_id,
+            name: 'Multi-location Gym',
+            slug: tenant_id
+        },
+        update: {
             name: 'Multi-location Gym',
             slug: tenant_id
         }
     })
-    await prisma.locations.create({
-        data: {
+    await prisma.locations.upsert({
+        where: {
             id: locationHarlow,
+        },
+        create: {
+            id: locationHarlow,
+            tenant_id,
+            environment_id,
+            name: 'Harlow',
+            slug: 'harlow',
+        },
+        update: {
             tenant_id,
             environment_id,
             name: 'Harlow',
             slug: 'harlow',
         }
     });
-    await prisma.locations.create({
-        data: {
+    await prisma.locations.upsert({
+        where: {
             id: locationStortford,
+        },
+        create: {
+            id: locationStortford,
+            tenant_id,
+            environment_id,
+            name: 'Bishops Stortford',
+            slug: 'stortford',
+        },
+        update: {
             tenant_id,
             environment_id,
             name: 'Bishops Stortford',
             slug: 'stortford',
         }
     });
-    await prisma.locations.create({
-        data: {
+    await prisma.locations.upsert({
+        where: {
+            id: locationWare
+        },
+        create: {
             id: locationWare,
+            tenant_id,
+            environment_id,
+            name: 'Ware',
+            slug: 'ware',
+        },
+        update: {
             tenant_id,
             environment_id,
             name: 'Ware',
@@ -72,62 +119,59 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
     const daysOfWeek = [...mondayToFriday, ...satSun]
     const start_time_24hr = '09:00';
     const end_time_24hr = '18:00';
-    await prisma.business_hours.createMany({
-        data: daysOfWeek.map((day, index) => ({
-            id: makeTestId(tenant_id, environment_id, `businessHours#${index + 1}`),
-            tenant_id,
-            environment_id,
-            day_of_week: day,
-            start_time_24hr,
-            end_time_24hr
+    const businessHourUpserts = daysOfWeek.map((day, index) => upsertBusinessHours({
+        id: makeTestId(tenant_id, environment_id, `businessHours#${index + 1}`),
+        tenant_id,
+        environment_id,
+        day_of_week: day,
+        start_time_24hr,
+        end_time_24hr
 
-        }))
-    });
+    }))
     // Let's make harlow closed on Wednesdays
     const daysLessWednesday = daysOfWeek.filter(day => day !== 'Wednesday')
-    await prisma.business_hours.createMany({
-        data: daysLessWednesday.map((day, index) => ({
-            id: makeTestId(tenant_id, environment_id, `harlowBusinessHours#${index + 1}`),
-            tenant_id,
-            environment_id,
-            day_of_week: day,
-            start_time_24hr,
-            end_time_24hr,
-            location_id: locationHarlow
-        }))
-    });
+    const harlowBusinessHourUpserts = daysLessWednesday.map((day, index) => upsertBusinessHours({
+        id: makeTestId(tenant_id, environment_id, `harlowBusinessHours#${index + 1}`),
+        tenant_id,
+        environment_id,
+        day_of_week: day,
+        start_time_24hr,
+        end_time_24hr,
+        location_id: locationHarlow
+
+    }))
+    await runUpserts(prisma, [...businessHourUpserts, ...harlowBusinessHourUpserts]);
 
     // everywhere is closed on Christmas day, and Harlow on the 26th in addition
-    await prisma.blocked_time.createMany({
-        data: [
-            {
-                id: makeTestId(tenant_id, environment_id, `blockedChristmasDay.harlow`),
-                tenant_id,
-                environment_id,
-                location_id: locationHarlow,
-                date: '2024-12-25',
-                start_time_24hr,
-                end_time_24hr
-            },
-            {
-                id: makeTestId(tenant_id, environment_id, `blockedBoxingDay.harlow`),
-                tenant_id,
-                environment_id,
-                location_id: locationHarlow,
-                date: '2024-12-26',
-                start_time_24hr,
-                end_time_24hr
-            },
-            {
-                id: makeTestId(tenant_id, environment_id, `blockedChristmasDay.stortford`),
-                tenant_id,
-                environment_id,
-                location_id: locationStortford,
-                date: '2024-12-25',
-                start_time_24hr,
-                end_time_24hr
-            },
-            {
+    const blockedTimeUpserts = [
+        upsertBlockedTime({
+            id: makeTestId(tenant_id, environment_id, `blockedChristmasDay.harlow`),
+            tenant_id,
+            environment_id,
+            location_id: locationHarlow,
+            date: '2024-12-25',
+            start_time_24hr,
+            end_time_24hr
+        }),
+        upsertBlockedTime({
+            id: makeTestId(tenant_id, environment_id, `blockedBoxingDay.harlow`),
+            tenant_id,
+            environment_id,
+            location_id: locationHarlow,
+            date: '2024-12-26',
+            start_time_24hr,
+            end_time_24hr
+        }),
+        upsertBlockedTime({
+            id: makeTestId(tenant_id, environment_id, `blockedChristmasDay.stortford`),
+            tenant_id,
+            environment_id,
+            location_id: locationStortford,
+            date: '2024-12-25',
+            start_time_24hr,
+            end_time_24hr
+        }),
+        upsertBlockedTime({
                 id: makeTestId(tenant_id, environment_id, `blockedChristmasDay.ware`),
                 tenant_id,
                 environment_id,
@@ -136,29 +180,26 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
                 start_time_24hr,
                 end_time_24hr
             }
-        ]
-    });
+        ),
+    ]
+    await runUpserts(prisma, blockedTimeUpserts);
 
+    const resourceTypeUpserts = resourceTypes.map(resourceType => upsertResourceType({
+        id: makeTestId(tenant_id, environment_id, `resource.${resourceType}`),
+        tenant_id,
+        environment_id,
+        name: resourceType
+    }))
+    await runUpserts(prisma, resourceTypeUpserts)
 
-    await prisma.resource_types.createMany({
-        data: resourceTypes.map((resourceType) => ({
-            id: makeTestId(tenant_id, environment_id, `resource.${resourceType}`),
-            tenant_id,
-            environment_id,
-            name: resourceType
-
-        }))
-    });
     const personalTrainers = ['ptMike', 'ptMete']
-    await prisma.resources.createMany({
-        data: personalTrainers.map((pt) => ({
-            id: makeTestId(tenant_id, environment_id, `resource.${pt}`),
-            tenant_id,
-            environment_id,
-            name: pt,
-            resource_type: makeTestId(tenant_id, environment_id, `resource.personal.trainer`)
-        }))
-    });
+    await runUpserts(prisma, personalTrainers.map(pt => upsertResource({
+        id: makeTestId(tenant_id, environment_id, `resource.${pt}`),
+        tenant_id,
+        environment_id,
+        name: pt,
+        resource_type: makeTestId(tenant_id, environment_id, `resource.personal.trainer`)
+    })))
     await prisma.resource_images.createMany({
         data: [
             {

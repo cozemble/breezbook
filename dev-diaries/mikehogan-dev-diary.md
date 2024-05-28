@@ -678,3 +678,42 @@ Now I'm going to try using `esbuild` to bundle the index.js for me, because it w
 This is proving to be a bit of a pain in the ass, as Prisma requires native binaries to work.  Now fiddling around with
 copying those into the right place in my Dockerfile.  This might prove brittle.  But in any case, the docker image size
 is now about 16MB.
+
+# Mon 27 May 2024
+
+Nat is being slow about making changes on his side to launch breez on his site, so I'm doing work to help our contact
+in Oz see what breez can do for his multi-location gym.  Yesterday I added an endpoint to list resources by resource
+type, and added images and markup to resources.  This is because gym bookings typically start by choosing a personal
+trainer first.  I realised this morning that this endpoint needs to be location sensitive too, so will fix that asap.
+Then the plan is to make a rudimentary user interface to prove that the mechanics work. Then myself and Mete can plan
+how to roll this kind of booking experience into breez, as a booking-journey-type choice that users have.
+
+# Tue 28 May 2024
+
+I asked the IntelliJ AI to convert the prisma create code we have to create the test tenants, into upsert code, because
+I want the definition of the test tenants to change, as the app and database changes.  It did a terrible job, so I'm 
+doing it manually.  In the process, I am willing in the definition of the `mutation` types for each of the database 
+tables.  This will come in handy when we start doing the admin functions and endpoints.
+
+What I realised in doing this is that must mutations are fully specified by their create clause.  Usually the update
+part is the create clause minus the primary key.  And the where clause is the primary key.  Two little helper functions,
+`omit` and `pick` make this simple.  So making the code a bit more compact during this process.
+
+I'm changing the multi-location gym tenant into upsert code first.  Once that is done, I will change the app boot 
+sequence to always attempt to make this upsert.  This will get personal trainer images and markup into the database, so 
+we can start work on the new booking sequence - that being:
+
+1. Pick the resource (a personal trainer)
+2. See their individual availability
+3. Choose a data and time
+4. Make the booking, tying that resource to the booking
+
+Hmm, these mutations of mine have been living a charmed existence.  All those used so far have a single field primary 
+key, called `id`.  Now when it comes to modelling `resource_images` as a mutation, it has a composite primary key, of
+fields `resource_id` and `context`.  I can think of two options:
+
+1. Change this (and all tables) to always have a single field primary key
+2. Change my modelling of keys in mutations to support composites
+
+If my airtable integration code, which is based on mutations, is to be most generic and useful, then supporting 
+composite keys is the first one to try.  So going to check-in and explore that option.
