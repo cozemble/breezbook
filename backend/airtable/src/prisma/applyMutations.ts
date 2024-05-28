@@ -17,7 +17,7 @@ function storeEvent(tenantEnvironment: TenantEnvironment, prisma: PrismaClient, 
             environment_id: tenantEnvironment.environmentId.value,
             event_type: mutation._type,
             entity_type: mutationFns.entity(mutation),
-            entity_id: mutationFns.entityId(mutation).value,
+            entity_id: mutationFns.entityIdAsStableJson(mutation),
             event_data: mutation as any
         }
     });

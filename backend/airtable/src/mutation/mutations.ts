@@ -1,21 +1,28 @@
 import {Prisma} from '@prisma/client';
-import {Id} from '@breezbook/packages-core';
+import {stableJson} from '@breezbook/packages-core';
 
 export type Entity = keyof Prisma.TypeMap<any>['model'];
-export type EntityId = Record<string, Id>
+export type CompositeKey = Record<string, string>;
+
+export const compositeKeyFns = {
+    toString: (key: CompositeKey): string => {
+        const sortedKeys = Object.keys(key).sort();
+        return sortedKeys.map((k) => key[k]).join('-');
+    }
+};
 
 export interface Create<TData> {
     _type: 'create';
     data: TData;
     entity: Entity;
-    entityId: Id;
+    entityId: CompositeKey;
 }
 
 export interface Delete<TWhereUniqueInput> {
     _type: 'delete';
     where: TWhereUniqueInput;
     entity: Entity;
-    entityId: Id;
+    entityId: CompositeKey;
 }
 
 export interface Update<TData, TWhereUniqueInput> {
@@ -23,7 +30,7 @@ export interface Update<TData, TWhereUniqueInput> {
     data: TData;
     where: TWhereUniqueInput;
     entity: Entity;
-    entityId: Id;
+    entityId: CompositeKey;
 }
 
 export interface Upsert<TCreateInput, TUpdateInput, TWhereUniqueInput> {
@@ -32,21 +39,21 @@ export interface Upsert<TCreateInput, TUpdateInput, TWhereUniqueInput> {
     update: Update<TUpdateInput, TWhereUniqueInput>;
 }
 
-export function create(entity: Entity, entityId: Id, data: any): Create<any> {
-    return {_type: 'create', entity, entityId, data};
-}
-
-export function _delete(entity: Entity, entityId: Id): Delete<any> {
-    return {_type: 'delete', entity, entityId, where: {id: entityId}};
-}
-
-export function update(entity: Entity, entityId: Id, data: any): Update<any, any> {
-    return {_type: 'update', entity, entityId, where: {id: entityId}, data};
-}
-
-export function upsert(create: Create<any>, update: Update<any, any>): Upsert<any, any, any> {
-    return {_type: 'upsert', create, update};
-}
+// export function create(entity: Entity, entityId: CompositeKey, data: any): Create<any> {
+//     return {_type: 'create', entity, entityId, data};
+// }
+//
+// export function _delete(entity: Entity, entityId: CompositeKey): Delete<any> {
+//     return {_type: 'delete', entity, entityId, where: {id: entityId}};
+// }
+//
+// export function update(entity: Entity, entityId: CompositeKey, data: any): Update<any, any> {
+//     return {_type: 'update', entity, entityId, where: {id: entityId}, data};
+// }
+//
+// export function upsert(create: Create<any>, update: Update<any, any>): Upsert<any, any, any> {
+//     return {_type: 'upsert', create, update};
+// }
 
 export type Mutation = Create<any> | Delete<any> | Update<any, any> | Upsert<any, any, any>;
 
@@ -66,10 +73,8 @@ export const mutationFns = {
         }
         return m.entity;
     },
-    entityId: function (m: Mutation): Id {
-        if (m._type === 'upsert') {
-            return m.update.entityId;
-        }
-        return m.entityId;
+    entityIdAsStableJson: function (m: Mutation): string {
+        const id = m._type === 'upsert' ? m.update.entityId : m.entityId;
+        return stableJson(id);
     }
 };
