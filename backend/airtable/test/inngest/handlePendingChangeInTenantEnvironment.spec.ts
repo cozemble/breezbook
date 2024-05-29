@@ -6,10 +6,10 @@ import {InMemorySynchronisationIdRepository} from "../../src/inngest/dataSynchro
 import {StubAirtableClient} from "../../src/airtable/airtableClient.js";
 import {upsertCustomer} from "../../src/prisma/breezPrismaMutations.js";
 import {DbMutationEvent} from "../../src/prisma/dbtypes.js";
-import {id} from "@breezbook/packages-core";
 import {carWashMapping} from "../../src/airtable/carWashMapping.js";
 import {consoleLogger} from "../../src/inngest/inngestTypes.js";
 import {StubInngestStep} from "./stubInngestStep.js";
+import {compositeKey} from "../../src/mutation/mutations.js";
 
 
 test("does nothing when no pending event", async () => {
@@ -34,6 +34,7 @@ test("applies airtable plan when pending event", async () => {
         {
             id: "customer#1",
             email: "mike@email.com",
+            phone_e164: "+14155552671",
             first_name: "Mike",
             last_name: "Hogan",
             tenant_id: "tenantId",
@@ -77,6 +78,6 @@ test("applies airtable plan when pending event", async () => {
         "First name": "Mike",
         "Last name": "Hogan"
     });
-    expect(await synchronisationIdRepository.getTargetId("customers", {id: "customer#1"}, "Customers")).toEqual(id("rec100"));
+    expect(await synchronisationIdRepository.getTargetId("customers", {id: "customer#1"}, "Customers")).toEqual(compositeKey("airtableRecordId", "rec100"));
     expect((prismock as any).getData()['replicated_mutation_events']).toHaveLength(1)
 });

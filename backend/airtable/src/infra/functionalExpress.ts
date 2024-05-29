@@ -13,7 +13,7 @@ import {
     serviceId,
     ServiceId,
     tenantEnvironment,
-    TenantEnvironment,
+    TenantEnvironment, TenantEnvironmentLocation, tenantEnvironmentLocation,
     tenantId,
     TenantId
 } from '@breezbook/packages-core';
@@ -134,6 +134,28 @@ export function tenantEnvironmentParam(
             return null;
         }
         return tenantEnvironment(environmentId, tenantId);
+    };
+}
+
+export function tenantEnvironmentLocationParam(
+    tenantIdExtractor: RequestValueExtractor = path('tenantId'),
+    environmentIdExtractor: RequestValueExtractor = path('envId'),
+    locationIdExtractor: RequestValueExtractor = path('envId')
+): ParamExtractor<TenantEnvironmentLocation | null> {
+    return (req: express.Request, res: express.Response) => {
+        const tenantId = tenantIdParam(tenantIdExtractor)(req, res);
+        if (!tenantId) {
+            return null;
+        }
+        const environmentId = environmentIdParam(environmentIdExtractor)(req, res);
+        if (!environmentId) {
+            return null;
+        }
+        const locationId = locationIdParam(locationIdExtractor)(req, res)
+        if (!locationId) {
+            return null;
+        }
+        return tenantEnvironmentLocation(environmentId, tenantId, locationId);
     };
 }
 

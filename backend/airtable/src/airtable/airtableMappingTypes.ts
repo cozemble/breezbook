@@ -1,5 +1,4 @@
-import {Entity} from '../mutation/mutations.js';
-import {CompositeKey} from '../inngest/dataSynchronisation.js';
+import {CompositeKey, Entity} from '../mutation/mutations.js';
 
 interface AirtableCreate {
     _type: 'airtable.create';

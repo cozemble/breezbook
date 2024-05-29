@@ -15,11 +15,12 @@ interface MarkupSummary {
 }
 
 export interface ResourceBranding {
-    images: ImageSummary;
+    images: ImageSummary[];
     markup: MarkupSummary[]
 }
 
 export interface ResourceSummary {
+    _type: 'resource.summary'
     id: string
     name: string
     type: string
@@ -30,8 +31,12 @@ export interface ResourceSummary {
 function toResourceSummary(r: DbResource & { resource_images: DbResourceImage[] } & {
     resource_markup: DbResourceMarkup[]
 } & { resource_availability: DbResourceAvailability[] }): ResourceSummary | ErrorResponse {
+    if (r.resource_markup.some(m => m.markup_type !== 'markdown')) {
+        return errorResponse(resources.errorCodes.unknownResourceType, `Unknown markup type: '${r.resource_markup.find(m => m.markup_type !== 'markdown')?.markup_type}'`)
+    }
     const locationIds = Array.from(new Set(r.resource_availability.map(ra => ra.location_id).filter(locationId => locationId !== null))) as string[]
     return {
+        _type: 'resource.summary',
         id: r.id,
         name: r.name,
         type: r.resource_type,
@@ -42,10 +47,12 @@ function toResourceSummary(r: DbResource & { resource_images: DbResourceImage[] 
                 context: i.context,
                 mimeType: i.mime_type
             })),
-            markup: r.resource_markup.map(m => ({
-                markup: m.markup,
-                markupType: m.markup_type
-            }))
+            markup: r.resource_markup.map(m => {
+                return ({
+                    markup: m.markup,
+                    markupType: 'markdown'
+                });
+            })
         }
     }
 
@@ -74,7 +81,12 @@ async function listByType(prisma: PrismaClient, tenantEnvironmentLoc: TenantEnvi
             resource_availability: true,
         }
     })
-    return foundResources.map(toResourceSummary)
+    const mapped = foundResources.map(toResourceSummary)
+    const firstError = mapped.find(m => m._type === 'error.response')
+    if (firstError) {
+        return firstError as ErrorResponse
+    }
+    return mapped as ResourceSummary[]
 }
 
 export const resources = {

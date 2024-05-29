@@ -1,4 +1,3 @@
-import {id, Id} from '@breezbook/packages-core';
 import {CompositeKey, compositeKeyFns, Entity} from '../mutation/mutations.js';
 import {PrismaClient} from '@prisma/client';
 import {v4 as uuid} from 'uuid';
@@ -6,19 +5,19 @@ import {airtableSystemName} from "../express/oauth/airtableConnect.js";
 
 
 export interface SynchronisationIdRepository {
-    getTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string): Promise<Id | undefined>;
+    getTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string): Promise<CompositeKey | undefined>;
 
-    setTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string, targetId: Id): Promise<void>;
+    setTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string, targetId: CompositeKey): Promise<void>;
 }
 
 export class InMemorySynchronisationIdRepository implements SynchronisationIdRepository {
-    private readonly synchronisationIds: Record<string, Id> = {};
+    private readonly synchronisationIds: Record<string, CompositeKey> = {};
 
-    async getTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string): Promise<Id | undefined> {
+    async getTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string): Promise<CompositeKey | undefined> {
         return this.synchronisationIds[`${sourceEntity}-${compositeKeyFns.toString(sourceEntityId)}-${targetEntity}`];
     }
 
-    async setTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string, targetId: Id): Promise<void> {
+    async setTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string, targetId: CompositeKey): Promise<void> {
         this.synchronisationIds[`${sourceEntity}-${compositeKeyFns.toString(sourceEntityId)}-${targetEntity}`] = targetId;
     }
 }
@@ -31,7 +30,7 @@ export class PrismaSynchronisationIdRepository implements SynchronisationIdRepos
     ) {
     }
 
-    async getTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string): Promise<Id | undefined> {
+    async getTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string): Promise<CompositeKey | undefined> {
         const maybeExisting = await this.prisma.data_synchronisation_id_mappings.findUnique({
             where: {
                 tenant_id_environment_id_from_system_from_entity_type_from_entity_id_to_system_to_entity_type: {
@@ -45,10 +44,10 @@ export class PrismaSynchronisationIdRepository implements SynchronisationIdRepos
                 }
             }
         });
-        return maybeExisting ? id(maybeExisting.to_entity_id) : undefined;
+        return maybeExisting ? JSON.parse(maybeExisting.to_entity_id) as CompositeKey : undefined;
     }
 
-    async setTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string, targetId: Id): Promise<void> {
+    async setTargetId(sourceEntity: Entity, sourceEntityId: CompositeKey, targetEntity: string, targetId: CompositeKey): Promise<void> {
         await this.prisma.data_synchronisation_id_mappings.upsert({
             where: {
                 tenant_id_environment_id_from_system_from_entity_type_from_entity_id_to_system_to_entity_type: {
@@ -61,7 +60,7 @@ export class PrismaSynchronisationIdRepository implements SynchronisationIdRepos
                     to_entity_type: targetEntity
                 }
             },
-            update: {to_entity_id: targetId.value},
+            update: {to_entity_id: JSON.stringify(targetId)},
             create: {
                 id: uuid(),
                 tenant_id: this.tenantId,
@@ -71,7 +70,7 @@ export class PrismaSynchronisationIdRepository implements SynchronisationIdRepos
                 from_entity_id: compositeKeyFns.toString(sourceEntityId),
                 to_system: airtableSystemName,
                 to_entity_type: targetEntity,
-                to_entity_id: targetId.value
+                to_entity_id: JSON.stringify(targetId)
             }
         });
     }

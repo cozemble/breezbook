@@ -7,7 +7,7 @@
     "dist/"
   ],
   "scripts": {
-    "build": "npx prisma generate && node build.js",
+    "build": "npx prisma generate && tsc --noEmit && node build.js",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "start": "nodemon dist/esm/index.js",

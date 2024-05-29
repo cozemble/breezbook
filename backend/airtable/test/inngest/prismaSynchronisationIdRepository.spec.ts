@@ -4,6 +4,7 @@ import { prismaClient } from '../../src/prisma/client.js';
 import { id } from '@breezbook/packages-core';
 import { startTestEnvironment, stopTestEnvironment } from '../setup.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
+import {airtableRecordIdFns} from "../../src/airtable/applyAirtablePlan.js";
 
 const expressPort = 3011;
 const postgresPort = 54341;
@@ -29,9 +30,10 @@ describe('Given a migrated database', async () => {
 			}
 		});
 		const repo = new PrismaSynchronisationIdRepository(prisma, 'tenant-id', 'environment-id');
-		await repo.setTargetId('customers', { id: 'customer1001' }, 'Customers', id('rec875'));
-		await repo.setTargetId('customers', { id: 'customer1001' }, 'Customers', id('rec876'));
+		await repo.setTargetId('customers', { id: 'customer1001' }, 'Customers', airtableRecordIdFns.toCompositeKey('rec875'));
+		await repo.setTargetId('customers', { id: 'customer1001' }, 'Customers', airtableRecordIdFns.toCompositeKey('rec876'));
 		const retrieved = await repo.getTargetId('customers', { id: 'customer1001' }, 'Customers');
-		expect(retrieved?.value).toEqual('rec876');
+		const airtablRecordId = airtableRecordIdFns.fromCompositeKey(retrieved)
+		expect(airtablRecordId).toEqual('rec876');
 	});
 });

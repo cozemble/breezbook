@@ -11,9 +11,9 @@ import {
     airtableUpsertCommand,
     FieldMapping
 } from './airtableMappingTypes.js';
-import {CompositeKey, Mutation} from '../mutation/mutations.js';
-import {id} from '@breezbook/packages-core';
+import {CompositeKey, compositeKey, compositeKeyFns, Mutation} from '../mutation/mutations.js';
 import jexl from 'jexl';
+import {mandatory} from "@breezbook/packages-core";
 
 export async function applyAirtablePlan(
     idRepo: SynchronisationIdRepository,
@@ -25,19 +25,6 @@ export async function applyAirtablePlan(
     const maybeMapping = mapping.mappings.find((mapping) => jexlInstance.evalSync(mapping.when, mutation));
     if (maybeMapping) {
         return await applyAirtableMapping(idRepo, airtableClient, mutation, maybeMapping.airtable);
-    }
-    return []
-}
-
-export async function planAirtableMutations(
-    idRepo: SynchronisationIdRepository,
-    mapping: AirtableMappingPlan,
-    mutation: Mutation
-): Promise<AirtableMutationCommand[]> {
-    const jexlInstance = new jexl.Jexl();
-    const maybeMapping = mapping.mappings.find((mapping) => jexlInstance.evalSync(mapping.when, mutation));
-    if (maybeMapping) {
-        return await planSingleMutation(idRepo, mutation, maybeMapping.airtable);
     }
     return []
 }
@@ -55,8 +42,6 @@ async function dereferenceFieldMapping(
     idRepo: SynchronisationIdRepository,
     fieldMapping: FieldMapping | FieldMapping[],
     mutation: Mutation
-    // fieldValues: Record<string, any>,
-    // fieldName: string,
 ): Promise<any> {
     if (Array.isArray(fieldMapping)) {
         return await Promise.all(
@@ -77,7 +62,7 @@ async function dereferenceFieldMapping(
         return jexlInstance.evalSync(fieldMapping.expression, mutation);
     } else if (fieldMapping._type === 'lookup') {
         const filledEntityId = expandCompositeKey(fieldMapping.entityId, mutation);
-        const targetId = await idRepo.getTargetId(fieldMapping.entity, filledEntityId, fieldMapping.table);
+        const targetId = await idRepo.getTargetId(fieldMapping.entity, filledEntityId, fieldMapping.table).then(k => k ? airtableRecordIdFns.fromCompositeKey(k) : null);
         if (!fieldMapping.nullable && !targetId) {
             throw new Error(
                 `While processing lookup ${JSON.stringify(fieldMapping)},no target id for entity ${fieldMapping.entity}, key ${JSON.stringify(filledEntityId)}, table ${
@@ -85,7 +70,7 @@ async function dereferenceFieldMapping(
                 }`
             );
         }
-        return targetId?.value;
+        return targetId;
     } else if (fieldMapping._type === 'map') {
         const list = jexlInstance.evalSync(fieldMapping.list.path, mutation);
         if (!list) {
@@ -96,9 +81,9 @@ async function dereferenceFieldMapping(
                 const variableName = fieldMapping.variableName;
                 const lookup = fieldMapping.fn;
                 const variables = {[variableName]: item}
-                const compositeKey = applyVariables(lookup.entityId, variables);
                 const filledEntityId = expandCompositeKey(lookup.entityId, item, variables);
-                const targetId = await idRepo.getTargetId(lookup.entity, filledEntityId, lookup.table);
+                const targetId = await idRepo.getTargetId(lookup.entity, filledEntityId, lookup.table)
+                    .then(k => k ? airtableRecordIdFns.fromCompositeKey(k) : null)
                 if (!lookup.nullable && !targetId) {
                     throw new Error(
                         `While processing map ${JSON.stringify(fieldMapping)},no target id for entity ${lookup.entity}, key ${JSON.stringify(filledEntityId)}, table ${
@@ -106,7 +91,7 @@ async function dereferenceFieldMapping(
                         }`
                     );
                 }
-                return targetId?.value;
+                return targetId
             })
         );
     } else {
@@ -151,6 +136,19 @@ export type AppliedAirtableOutcome =
     | FailedAppliedAirtableMapping
     | AirtableClientFailure
 
+export const airtableRecordIdFns = {
+    toCompositeKey(airtableRecordId: string) {
+        return compositeKey("airtableRecordId", airtableRecordId);
+    },
+
+    fromCompositeKey(compositeKey: CompositeKey): string {
+        if("airtableRecordId" in compositeKey) {
+            return compositeKey.airtableRecordId;
+        }
+        throw new Error(`Composite key ${JSON.stringify(compositeKey)} is not an airtable record id`);
+    }
+}
+
 async function applyAirtableCreate(
     idRepo: SynchronisationIdRepository,
     airtableClient: AirtableClient,
@@ -163,7 +161,7 @@ async function applyAirtableCreate(
     if (outcome._type === 'airtable.client.failure') {
         return outcome;
     }
-    await idRepo.setTargetId(recordId.mappedTo.entity, recordId.mappedTo.entityId, record.table, id(outcome.recordId.value));
+    await idRepo.setTargetId(recordId.mappedTo.entity, recordId.mappedTo.entityId, record.table, airtableRecordIdFns.toCompositeKey(outcome.recordId.value));
     return successfulAppliedAirtableMapping(outcome, recordId)
 }
 
@@ -192,7 +190,8 @@ async function applyAirtableUpdate(
             recordId.mappedTo.entityId
         )}', table '${record.table}'`, fieldValues)
     }
-    const outcome = await airtableClient.updateRecord(record.baseId, record.table, targetId.value, fieldValues);
+    const airtableRecordId = airtableRecordIdFns.fromCompositeKey(targetId);
+    const outcome = await airtableClient.updateRecord(record.baseId, record.table, airtableRecordId, fieldValues);
     if (outcome._type === 'airtable.client.failure') {
         return outcome;
     }
@@ -234,7 +233,7 @@ async function applyAirtableRecord(
     }
 }
 
-function expandCompositeKey(compositeKey: Record<string,any>, mutation: Mutation, variables: Record<string, string> = {}): CompositeKey {
+function expandCompositeKey(compositeKey: Record<string, any>, mutation: Mutation, variables: Record<string, string> = {}): CompositeKey {
     const jexlInstance = new jexl.Jexl();
     const expanded: Record<string, any> = {};
     for (const [key, value] of Object.entries(compositeKey)) {

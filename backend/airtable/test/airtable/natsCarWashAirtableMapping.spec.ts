@@ -1,16 +1,16 @@
 import {expect, test} from 'vitest';
 import {InMemorySynchronisationIdRepository} from '../../src/inngest/dataSynchronisation.js';
-import {id} from '@breezbook/packages-core';
 import {StubAirtableClient} from '../../src/airtable/airtableClient.js';
 import {applyAirtablePlan} from '../../src/airtable/applyAirtablePlan.js';
 import {exemplarBookingMutations} from "./exemplarBookingMutations.js";
 import {natsCarWashAirtableMapping} from "../../src/airtable/natsCarWashAirtableMapping.js";
+import {compositeKey} from "../../src/mutation/mutations.js";
 
 test('integrating from breezbook to Nats airtable tables', async () => {
     const idRepo = new InMemorySynchronisationIdRepository();
-    await idRepo.setTargetId('services', {id: 'smallCarWash'}, 'Services', id('rec1'));
-    await idRepo.setTargetId('add_on', {id: 'screenwash_refill_oil_fluids_check'}, 'Add-ons', id('rec2'));
-    await idRepo.setTargetId('add_on', {id: 'shampoo_headlining'}, 'Add-ons', id('rec3'));
+    await idRepo.setTargetId('services', {id: 'smallCarWash'}, 'Services', compositeKey('airtableRecordId', 'rec1'));
+    await idRepo.setTargetId('add_on', {id: 'screenwash_refill_oil_fluids_check'}, 'Add-ons', compositeKey('airtableRecordId', 'rec2'));
+    await idRepo.setTargetId('add_on', {id: 'shampoo_headlining'}, 'Add-ons', compositeKey('airtableRecordId', 'rec3'));
     const stubAirtableClient = new StubAirtableClient();
 
     for (const mutation of exemplarBookingMutations) {
@@ -42,7 +42,7 @@ test('integrating from breezbook to Nats airtable tables', async () => {
         'First line of address': '11 Main Street',
         Postcode: 'X1Y2',
         "Add-ons": ['rec2', 'rec3'],
-        "Breezbook ID":"050da0be-01f1-4246-8a2e-dd3f691f73fd",
+        "Breezbook ID": "050da0be-01f1-4246-8a2e-dd3f691f73fd",
         Status: "cancelled"
     });
     const carDetailsRecord = stubAirtableClient.records.find((record) => record.table === 'Car details');

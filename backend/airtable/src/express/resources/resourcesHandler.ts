@@ -5,7 +5,7 @@ import {
     path,
     RequestValueExtractor,
     sendJson,
-    tenantEnvironmentParam,
+    tenantEnvironmentLocationParam,
     withTwoRequestParams
 } from "../../infra/functionalExpress.js";
 import {prismaClient} from "../../prisma/client.js";
@@ -17,9 +17,9 @@ export function resourceTypeParam(requestValue: RequestValueExtractor = path('ty
 }
 
 export async function onListResourcesByTypeRequest(req: express.Request, res: express.Response): Promise<void> {
-    await withTwoRequestParams(req, res, tenantEnvironmentParam(), resourceTypeParam(), async (tenantEnvironment, resourceType) => {
+    await withTwoRequestParams(req, res, tenantEnvironmentLocationParam(), resourceTypeParam(), async (tenantEnvironmentLocation, resourceType) => {
         const prisma = prismaClient();
-        const outcome = await resources.listByType(prisma, tenantEnvironment, resourceType);
+        const outcome = await resources.listByType(prisma, tenantEnvironmentLocation, resourceType);
         if (Array.isArray(outcome)) {
             sendJson(res, outcome)
         } else {

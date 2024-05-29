@@ -1,4 +1,4 @@
-import { Create, Entity, Mutation, Update, Upsert } from '../mutation/mutations.js';
+import {CompositeKey, Create, Entity, Mutation, Update, Upsert} from '../mutation/mutations.js';
 import { AirtableMapping } from '../airtable/mappings.js';
 import { id, Id } from '@breezbook/packages-core';
 import { SynchronisationIdRepository } from './dataSynchronisation.js';
@@ -18,15 +18,6 @@ interface AirtableUpdate {
 	fields: Record<string, any>;
 }
 
-interface AirtableUpsert {
-	_type: 'airtable.upsert';
-	baseId: string;
-	table: string;
-	recordId: string;
-	create: AirtableCreate;
-	update: AirtableUpdate;
-}
-
 export function airtableCreate(baseId: string, table: string, fields: Record<string, any>): AirtableCreate {
 	return { _type: 'airtable.create', baseId, table, fields };
 }
@@ -35,21 +26,16 @@ export function airtableUpdate(baseId: string, table: string, recordId: string, 
 	return { _type: 'airtable.update', baseId, table, recordId, fields };
 }
 
-// export function airtableUpsert(baseId: string, table: string, recordId: string, create: AirtableCreate, update: AirtableUpdate): AirtableUpsert {
-// 	return { _type: 'airtable.upsert', baseId, table, recordId, create, update };
-// }
-
-// type AirtableMutation = AirtableCreate | AirtableUpdate | AirtableUpsert;
 type AirtableMutation = AirtableCreate | AirtableUpdate;
 
 export interface ToAirtableSynchronisation {
 	_type: 'to.airtable.synchronisation';
 	airtableMutation: AirtableMutation;
 	sourceEntity: Entity;
-	sourceEntityId: Id;
+	sourceEntityId: CompositeKey;
 }
 
-export function toAirtableSynchronisation(airtableMutation: AirtableMutation, sourceEntity: Entity, sourceEntityId: Id): ToAirtableSynchronisation {
+export function toAirtableSynchronisation(airtableMutation: AirtableMutation, sourceEntity: Entity, sourceEntityId: CompositeKey): ToAirtableSynchronisation {
 	return { _type: 'to.airtable.synchronisation', airtableMutation, sourceEntity, sourceEntityId };
 }
 

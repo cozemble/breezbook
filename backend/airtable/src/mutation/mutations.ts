@@ -4,6 +4,20 @@ import {stableJson} from '@breezbook/packages-core';
 export type Entity = keyof Prisma.TypeMap<any>['model'];
 export type CompositeKey = Record<string, string>;
 
+export function compositeKey(...values: string[]): CompositeKey {
+    if (values.length === 0) {
+        throw new Error('Composite key must have at least one value')
+    }
+    if (values.length % 2 !== 0) {
+        throw new Error('Composite key construction requires an even number of values')
+    }
+    const key: CompositeKey = {};
+    for (let i = 0; i < values.length; i += 2) {
+        key[values[i]] = values[i + 1];
+    }
+    return key;
+}
+
 export const compositeKeyFns = {
     toString: (key: CompositeKey): string => {
         const sortedKeys = Object.keys(key).sort();
@@ -38,22 +52,6 @@ export interface Upsert<TCreateInput, TUpdateInput, TWhereUniqueInput> {
     create: Create<TCreateInput>;
     update: Update<TUpdateInput, TWhereUniqueInput>;
 }
-
-// export function create(entity: Entity, entityId: CompositeKey, data: any): Create<any> {
-//     return {_type: 'create', entity, entityId, data};
-// }
-//
-// export function _delete(entity: Entity, entityId: CompositeKey): Delete<any> {
-//     return {_type: 'delete', entity, entityId, where: {id: entityId}};
-// }
-//
-// export function update(entity: Entity, entityId: CompositeKey, data: any): Update<any, any> {
-//     return {_type: 'update', entity, entityId, where: {id: entityId}, data};
-// }
-//
-// export function upsert(create: Create<any>, update: Update<any, any>): Upsert<any, any, any> {
-//     return {_type: 'upsert', create, update};
-// }
 
 export type Mutation = Create<any> | Delete<any> | Update<any, any> | Upsert<any, any, any>;
 

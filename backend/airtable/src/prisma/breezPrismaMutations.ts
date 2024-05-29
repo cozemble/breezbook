@@ -1,5 +1,5 @@
 import {Prisma} from '@prisma/client';
-import {Create, Update, Upsert} from '../mutation/mutations.js';
+import {CompositeKey, compositeKey, Create, Update, Upsert} from '../mutation/mutations.js';
 import {id, mandatory, omit, pick} from '@breezbook/packages-core';
 
 export type CreateOrder = Create<Prisma.ordersCreateArgs['data']>;
@@ -9,7 +9,7 @@ export function createOrder(data: Prisma.ordersCreateArgs['data']): CreateOrder 
         _type: 'create',
         data,
         entity: 'orders',
-        entityId: id(mandatory(data.id, 'Order ID'))
+        entityId: compositeKey("id", mandatory(data.id, 'Order ID'))
     };
 }
 
@@ -20,7 +20,7 @@ export function createBooking(data: Prisma.bookingsCreateArgs['data']): CreateBo
         _type: 'create',
         data,
         entity: 'bookings',
-        entityId: id(mandatory(data.id, 'Booking ID'))
+        entityId: compositeKey("id", mandatory(data.id, 'Booking ID'))
     };
 }
 
@@ -31,7 +31,7 @@ export function createReservation(data: Prisma.reservationsCreateArgs['data']): 
         _type: 'create',
         data,
         entity: 'reservations',
-        entityId: id(mandatory(data.id, 'Reservation ID'))
+        entityId: compositeKey("id", mandatory(data.id, 'Reservation ID'))
     };
 }
 
@@ -42,7 +42,7 @@ export function createOrderLine(data: Prisma.order_linesCreateArgs['data']): Cre
         _type: 'create',
         data,
         entity: 'order_lines',
-        entityId: id(mandatory(data.id, 'Order Line ID'))
+        entityId: compositeKey("id", mandatory(data.id, 'Order Line ID'))
     };
 }
 
@@ -53,7 +53,7 @@ export function createBookingEvent(data: Prisma.booking_eventsCreateArgs['data']
         _type: 'create',
         data,
         entity: 'booking_events',
-        entityId: id(mandatory(data.id, 'Booking Event ID'))
+        entityId: compositeKey("id", mandatory(data.id, 'Booking Event ID'))
     };
 }
 
@@ -65,7 +65,7 @@ export function updateBooking(data: Prisma.bookingsUpdateArgs['data'], where: Pr
         data,
         where,
         entity: 'bookings',
-        entityId: id(mandatory(where.id, 'Booking ID'))
+        entityId: compositeKey("id", mandatory(where.id, 'Booking ID'))
     };
 }
 
@@ -76,15 +76,16 @@ export function upsertCustomer(
     update: Prisma.customersUpdateArgs['data'],
     where: Prisma.customersWhereUniqueInput
 ): UpsertCustomer {
+    const entityId = compositeKey("id", mandatory(create.id, 'Customer ID'))
     return {
         _type: 'upsert',
-        create: {_type: 'create', data: create, entity: 'customers', entityId: id(mandatory(create.id, 'Customer ID'))},
+        create: {_type: 'create', data: create, entity: 'customers', entityId},
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'customers',
-            entityId: id(mandatory(create.id, 'Customer ID'))
+            entityId
         }
     };
 }
@@ -100,20 +101,21 @@ export function upsertCustomerFormValues(
     update: Prisma.customer_form_valuesUpdateArgs['data'],
     where: Prisma.customer_form_valuesWhereUniqueInput
 ): UpsertCustomerFormValues {
+    const entityId = compositeKey("customer_id", mandatory(create.customer_id, 'Customer Form Values ID'))
     return {
         _type: 'upsert',
         create: {
             _type: 'create',
             data: create,
             entity: 'customer_form_values',
-            entityId: id(mandatory(create.customer_id, 'Customer Form Values ID'))
+            entityId
         },
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'customer_form_values',
-            entityId: id(mandatory(create.customer_id, 'Customer Form Values ID'))
+            entityId
         }
     };
 }
@@ -129,20 +131,21 @@ export function upsertBookingServiceFormValues(
     update: Prisma.booking_service_form_valuesUpdateArgs['data'],
     where: Prisma.booking_service_form_valuesWhereUniqueInput
 ): UpsertBookingServiceFormValues {
+    const entityId = compositeKey("booking_id", mandatory(create.booking_id, 'Booking Service Form Values ID'))
     return {
         _type: 'upsert',
         create: {
             _type: 'create',
             data: create,
             entity: 'booking_service_form_values',
-            entityId: id(mandatory(create.booking_id, 'Booking Service Form Values ID'))
+            entityId
         },
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'booking_service_form_values',
-            entityId: id(mandatory(create.booking_id, 'Booking Service Form Values ID'))
+            entityId
         }
     };
 }
@@ -158,7 +161,7 @@ export function updateCancellationGrant(
         data,
         where,
         entity: 'cancellation_grants',
-        entityId: id(mandatory(where.id, 'Cancellation Grant ID'))
+        entityId: compositeKey("id", mandatory(where.id, 'Cancellation Grant ID'))
     };
 }
 
@@ -170,15 +173,16 @@ export function upsertAddOn(
     update: Prisma.add_onUpdateArgs['data'],
     where: Prisma.add_onWhereUniqueInput
 ): UpsertAddOn {
+    const entityId = compositeKey("id", mandatory(create.id, 'Add-On ID'))
     return {
         _type: 'upsert',
-        create: {_type: 'create', data: create, entity: 'add_on', entityId: id(mandatory(create.id, 'Add-On ID'))},
+        create: {_type: 'create', data: create, entity: 'add_on', entityId},
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'add_on',
-            entityId: id(mandatory(create.id, 'Add-On ID'))
+            entityId
         }
     };
 }
@@ -188,15 +192,16 @@ export function upsertService(
     update: Prisma.servicesUpdateArgs['data'],
     where: Prisma.servicesWhereUniqueInput
 ): UpsertService {
+    const entityId = compositeKey("id", mandatory(create.id, 'Service ID'))
     return {
         _type: 'upsert',
-        create: {_type: 'create', data: create, entity: 'services', entityId: id(mandatory(create.id, 'Service ID'))},
+        create: {_type: 'create', data: create, entity: 'services', entityId},
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'services',
-            entityId: id(mandatory(create.id, 'Service ID'))
+            entityId
         }
     };
 }
@@ -209,7 +214,7 @@ export function createOrderPayment(data: Prisma.order_paymentsCreateArgs['data']
         _type: 'create',
         data,
         entity: 'order_payments',
-        entityId: id(mandatory(data.id, 'Order Payment ID'))
+        entityId: compositeKey("id", mandatory(data.id, 'Order Payment ID'))
     };
 
 }
@@ -219,7 +224,7 @@ export function createBookingPayment(data: Prisma.booking_paymentsCreateArgs['da
         _type: 'create',
         data,
         entity: 'booking_payments',
-        entityId: id(mandatory(data.id, 'Booking Payment ID'))
+        entityId: compositeKey("id", mandatory(data.id, 'Booking Payment ID'))
     };
 }
 
@@ -228,6 +233,7 @@ export type UpsertBusinessHours = Upsert<Prisma.business_hoursCreateArgs['data']
 export function upsertBusinessHours(create: Prisma.business_hoursCreateArgs['data']): UpsertBusinessHours {
     const update = omit(create, ["id"]) as Prisma.business_hoursUpdateArgs['data']
     const where = pick(create, ["id"]) as Prisma.business_hoursUpdateArgs['where']
+    const entityId = compositeKey("id", mandatory(create.id, 'Business Hours ID'))
 
     return {
         _type: 'upsert',
@@ -235,14 +241,14 @@ export function upsertBusinessHours(create: Prisma.business_hoursCreateArgs['dat
             _type: 'create',
             data: create,
             entity: 'business_hours',
-            entityId: id(mandatory(create.id, 'Business Hours ID'))
+            entityId
         },
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'business_hours',
-            entityId: id(mandatory(create.id, 'Business Hours ID'))
+            entityId
         },
     }
 }
@@ -252,20 +258,21 @@ export type UpsertBlockedTime = Upsert<Prisma.blocked_timeCreateArgs['data'], Pr
 export function upsertBlockedTime(create: Prisma.blocked_timeCreateArgs['data']): UpsertBlockedTime {
     const update = omit(create, ["id"]) as Prisma.blocked_timeUpdateArgs['data']
     const where = pick(create, ["id"]) as Prisma.blocked_timeUpdateArgs['where']
+    const entityId = compositeKey("id", mandatory(create.id, 'Blocked Time ID'))
     return {
         _type: 'upsert',
         create: {
             _type: 'create',
             data: create,
             entity: 'blocked_time',
-            entityId: id(mandatory(create.id, 'Blocked Time ID'))
+            entityId
         },
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'blocked_time',
-            entityId: id(mandatory(create.id, 'Blocked Time ID'))
+            entityId
         },
     }
 }
@@ -275,66 +282,78 @@ export type UpsertResourceType = Upsert<Prisma.resource_typesCreateArgs['data'],
 export function upsertResourceType(create: Prisma.resource_typesCreateArgs['data']): UpsertResourceType {
     const update = omit(create, ["id"]) as Prisma.resource_typesUpdateArgs['data']
     const where = pick(create, ["id"]) as Prisma.resource_typesUpdateArgs['where']
+    const entityId = compositeKey("id", mandatory(create.id, 'Resource Type ID'))
     return {
         _type: 'upsert',
         create: {
             _type: 'create',
             data: create,
             entity: 'resource_types',
-            entityId: id(mandatory(create.id, 'Resource Type ID'))
+            entityId
         },
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'resource_types',
-            entityId: id(mandatory(create.id, 'Resource Type ID'))
+            entityId
         },
     }
 }
 
 export type UpsertResource = Upsert<Prisma.resourcesCreateArgs['data'], Prisma.resourcesUpdateArgs['data'], Prisma.resourcesUpdateArgs['where']>
 
+
 export function upsertResource(create: Prisma.resourcesCreateArgs['data']): UpsertResource {
     const update = omit(create, ["id"]) as Prisma.resourcesUpdateArgs['data']
     const where = pick(create, ["id"]) as Prisma.resourcesUpdateArgs['where']
+    const entityId = compositeKey("id", mandatory(create.id, 'Resource ID'))
     return {
         _type: 'upsert',
         create: {
             _type: 'create',
             data: create,
             entity: 'resources',
-            entityId: id(mandatory(create.id, 'Resource ID'))
+            entityId
         },
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'resources',
-            entityId: id(mandatory(create.id, 'Resource ID'))
+            entityId
         },
     }
 }
 
 export type UpsertResourceImage = Upsert<Prisma.resource_imagesCreateArgs['data'], Prisma.resource_imagesUpdateArgs['data'], Prisma.resource_imagesUpdateArgs['where']>
 
+function omitPk(data: any, pk: CompositeKey): any {
+    return omit(data, Object.keys(pk));
+}
+
+function pkToWhere(pk: CompositeKey): Record<string,any> {
+    return pick(pk, Object.keys(pk));
+}
+
 export function upsertResourceImage(create: Prisma.resource_imagesCreateArgs['data']): UpsertResourceImage {
-    const update = omit(create, ["id"]) as Prisma.resource_imagesUpdateArgs['data']
-    const where = pick(create, ["id"]) as Prisma.resource_imagesUpdateArgs['where']
+    const entityId = compositeKey("resource_id", mandatory(create.resource_id, "Resource ID"), "context", mandatory(create.context, 'Resource Image Context'))
+    const update = omitPk(create, entityId) as Prisma.resource_imagesUpdateArgs['data']
+    const where = pkToWhere(entityId) as Prisma.resource_imagesUpdateArgs['where']
     return {
         _type: 'upsert',
         create: {
             _type: 'create',
             data: create,
             entity: 'resource_images',
-            entityId: id(mandatory(create.id, 'Resource ID'))
+            entityId
         },
         update: {
             _type: 'update',
             data: update,
             where,
             entity: 'resource_images',
-            entityId: id(mandatory(create.id, 'Resource ID'))
+            entityId
         },
     }
 }

@@ -717,3 +717,12 @@ fields `resource_id` and `context`.  I can think of two options:
 
 If my airtable integration code, which is based on mutations, is to be most generic and useful, then supporting 
 composite keys is the first one to try.  So going to check-in and explore that option.
+
+## The value of making my docker containers smaller
+Some days back I spend a lot of time paring down the size of my docker files, by using `esbuild` to bundle my code, and
+by removing unnecessary files from the image.  I did this because I was surprised to see the size of the image had blown
+out to 830MB.  I got it down to 16MB.  Now:
+
+1. Builds are faster
+2. Pushes to the registry are faster
+3. Deployment on Cloud Run takes only a couple of seconds

@@ -2,13 +2,13 @@ import {expect, test} from 'vitest';
 import {InMemorySynchronisationIdRepository} from '../../src/inngest/dataSynchronisation.js';
 import {id} from '@breezbook/packages-core';
 import {StubAirtableClient} from '../../src/airtable/airtableClient.js';
-import {applyAirtablePlan} from '../../src/airtable/applyAirtablePlan.js';
+import {airtableRecordIdFns, applyAirtablePlan} from '../../src/airtable/applyAirtablePlan.js';
 import {carWashMapping} from "../../src/airtable/carWashMapping.js";
 import {exemplarBookingMutations} from "./exemplarBookingMutations.js";
 
 test('real integration from breezbook to airtable', async () => {
 	const idRepo = new InMemorySynchronisationIdRepository();
-	await idRepo.setTargetId('services', { id: 'smallCarWash' }, 'Services', id('rec1'));
+	await idRepo.setTargetId('services', { id: 'smallCarWash' }, 'Services', airtableRecordIdFns.toCompositeKey('rec1'));
 	const stubAirtableClient = new StubAirtableClient();
 
 	for (const mutation of exemplarBookingMutations) {
