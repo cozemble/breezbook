@@ -186,7 +186,7 @@ async function applyAirtableUpdate(
     const fieldValues = await applyFieldMappings(idRepo, mutation, record.fields);
     const targetId = await idRepo.getTargetId(recordId.mappedTo.entity, recordId.mappedTo.entityId, record.table);
     if (!targetId) {
-        return failedAppliedAirtableMapping(`While applying  ${record._type} to table '${record.table}', no target id for entity '${recordId.mappedTo.entity}', key '${compositeKeyFns.toString(
+        return failedAppliedAirtableMapping(`While applying  ${record._type} to table '${record.table}', no target id for entity '${recordId.mappedTo.entity}', key '${compositeKeyFns.toStableJson(
             recordId.mappedTo.entityId
         )}', table '${record.table}'`, fieldValues)
     }

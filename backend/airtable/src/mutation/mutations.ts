@@ -19,9 +19,8 @@ export function compositeKey(...values: string[]): CompositeKey {
 }
 
 export const compositeKeyFns = {
-    toString: (key: CompositeKey): string => {
-        const sortedKeys = Object.keys(key).sort();
-        return sortedKeys.map((k) => key[k]).join('-');
+    toStableJson: (key: CompositeKey): string => {
+        return stableJson(key)
     }
 };
 

@@ -726,3 +726,9 @@ out to 830MB.  I got it down to 16MB.  Now:
 1. Builds are faster
 2. Pushes to the registry are faster
 3. Deployment on Cloud Run takes only a couple of seconds
+
+# Wed 29 May 2024
+
+Entity id handling in airtable replication is based on composite keys, in terms of source records (breezbook) and 
+destination airtable records, even though airtable record ids are single values.  This is just the more generic 
+approach to replication
