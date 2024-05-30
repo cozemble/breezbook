@@ -30,17 +30,7 @@ export async function publishReferenceData(prisma: PrismaClient, tenantEnvironme
                 price: addOn.price,
                 price_currency: addOn.price_currency,
                 expect_quantity: addOn.expect_quantity
-            },
-            {
-                tenant_id: addOn.tenant_id,
-                environment_id: addOn.environment_id,
-                name: addOn.name,
-                description: addOn.description,
-                price: addOn.price,
-                price_currency: addOn.price_currency,
-                expect_quantity: addOn.expect_quantity
-            },
-            {id: addOn.id}
+            }
         )
     );
     const servicesAsMutations = services.map((service) =>
@@ -58,22 +48,6 @@ export async function publishReferenceData(prisma: PrismaClient, tenantEnvironme
                 permitted_add_on_ids: service.permitted_add_on_ids,
                 resource_types_required: service.resource_types_required,
                 requires_time_slot: service.requires_time_slot
-            },
-            {
-                tenant_id: service.tenant_id,
-                environment_id: service.environment_id,
-                slug: service.slug,
-                name: service.name,
-                description: service.description,
-                duration_minutes: service.duration_minutes,
-                price: service.price,
-                price_currency: service.price_currency,
-                permitted_add_on_ids: service.permitted_add_on_ids,
-                resource_types_required: service.resource_types_required,
-                requires_time_slot: service.requires_time_slot
-            },
-            {
-                id: service.id
             }
         )
     );

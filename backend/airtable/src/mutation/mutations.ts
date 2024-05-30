@@ -21,6 +21,9 @@ export function compositeKey(...values: string[]): CompositeKey {
 export const compositeKeyFns = {
     toStableJson: (key: CompositeKey): string => {
         return stableJson(key)
+    },
+    keys: (key: CompositeKey): string[] => {
+        return Object.keys(key);
     }
 };
 

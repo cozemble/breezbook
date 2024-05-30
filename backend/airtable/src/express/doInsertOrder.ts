@@ -45,14 +45,7 @@ function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, custome
                 last_name: customer.lastName,
                 environment_id,
                 tenant_id
-            },
-            {
-                email,
-                phone_e164: customer.phone.value,
-                first_name: customer.firstName,
-                last_name: customer.lastName,
-            },
-            {id: customer.id.value}
+            }
         )
     ];
     if (tenantSettings.customerFormId && customer.formData) {

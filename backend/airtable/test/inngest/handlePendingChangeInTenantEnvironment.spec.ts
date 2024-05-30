@@ -39,17 +39,6 @@ test("applies airtable plan when pending event", async () => {
             last_name: "Hogan",
             tenant_id: "tenantId",
             environment_id: "environmentId",
-        },
-        {
-            first_name: "Mike",
-            last_name: "Hogan",
-        },
-        {
-            tenant_id_environment_id_email: {
-                tenant_id: "tenantId",
-                environment_id: "environmentId",
-                email: "mike@email.com"
-            }
         }
     );
     const mutationEvent: DbMutationEvent = {
