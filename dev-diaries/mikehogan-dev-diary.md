@@ -732,3 +732,34 @@ out to 830MB.  I got it down to 16MB.  Now:
 Entity id handling in airtable replication is based on composite keys, in terms of source records (breezbook) and 
 destination airtable records, even though airtable record ids are single values.  This is just the more generic 
 approach to replication
+
+# Fri 31 May 2024
+
+I'm on a plane trying to test drive my way to a uniform code structure to get availability for the following cases:
+
+1. Booking against time slots with fungible resources - i.e. a car wash in London with any van
+2. Booking against time slots with non-fungible resources - a named doctor doing a home visit at a specific time slot
+3. Booking from a list of start times with fungible resources - i.e. a drop in car wash at 10am with anyone who is 
+    available
+4. Booking from a list of start times with non-fungible resources - i.e. 10am personal training session with PT Mike
+
+Any because I have only case 1 before, the code and supporting types are very much shaped by that.  Requires a bit of an
+exploration.  Might be that doing it on a plane is not ideal.
+
+Let's see if I can start by naming the types in the above cases.  Actually, are these cases exhaustive?  They are a
+combination of StartTimeAbstraction & ResourceAllocation.  And maybe the general case is that a StartTime might need 
+more than one resource allocated.  The resource requirement would be specified by the Service.  So maybe the abstraction
+is StartTime & ResourceAllocation[] & Service.
+
+The specification of a Fungible resource is simply the resource type i.e. pick any one resource of the given type.
+A NonFungible resource is a resource id - a specific personal trainer for example. A Start Time is either a Timeslot or 
+a time of day, like 09:15.  And a Service is a service.
+
+I think some options for the name of this type, given that it expresses when a given service can be provided, and how it
+can be resourced are:
+
+1. ServiceStartTime
+2. ServiceStartOption
+3. AvailableSlot
+
+Lets go with AvailableSlot

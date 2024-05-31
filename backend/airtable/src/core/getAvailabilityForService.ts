@@ -33,6 +33,7 @@ export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTi
     return priced.reduce(
         (acc, curr) => {
             if (curr._type === 'bookable.times') {
+                // const timesForDate = acc.slots[curr.date.value] ?? [];
                 throw new Error('Not yet implemented');
             }
             const slotsForDate = acc.slots[curr.slot.date.value] ?? [];

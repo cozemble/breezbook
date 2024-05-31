@@ -2,13 +2,16 @@ import {
     BlockedTime,
     businessAvailability,
     BusinessAvailability,
+    businessHours,
     BusinessHours,
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
+    DayOfWeek,
     IsoDate,
     isoDateFns,
-    timePeriod
+    timePeriod,
+    TwentyFourHourClockTime
 } from "./types.js";
 
 function availabilityForDate(businessHours: BusinessHours[], date: IsoDate): DayAndTimePeriod[] {
@@ -27,4 +30,8 @@ export function makeBusinessAvailability(businessHours: BusinessHours[], blocked
         return applicableBlocks.flatMap(block => dayAndTimePeriodFns.splitPeriod(avail, dayAndTimePeriod(block.date, timePeriod(block.start_time_24hr, block.end_time_24hr))))
     })
     return businessAvailability(availability);
+}
+
+export function makeBusinessHours(daysOfWeek: DayOfWeek[], startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime): BusinessHours[] {
+    return daysOfWeek.map(daysOfWeek => businessHours(daysOfWeek, startTime, endTime))
 }

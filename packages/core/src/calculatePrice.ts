@@ -33,7 +33,15 @@
  *
  * 7. Channel-Based Pricing: Different prices for different booking channels, such as online versus in-person.
  */
-import { dayAndTimePeriod, DayAndTimePeriod, dayAndTimePeriodFns, price, Price, ResourcedTimeSlot } from './types.js';
+import {
+	BookableTimes,
+	dayAndTimePeriod,
+	DayAndTimePeriod,
+	dayAndTimePeriodFns,
+	price,
+	Price,
+	ResourcedTimeSlot
+} from './types.js';
 import { calcSlotPeriod } from './calculateAvailability.js';
 
 export interface PercentageBasedPriceAdjustment {

@@ -18,6 +18,17 @@ export function success<T>(value: T): Success<T> {
     return {_type: 'success', value};
 }
 
+export interface ErrorResponse {
+    _type: 'error.response';
+    errorCode: string;
+    errorMessage?: string;
+}
+
+export function errorResponse(errorCode: string, errorMessage?: string): ErrorResponse {
+    return {_type: 'error.response', errorCode, errorMessage};
+}
+
+
 export function omit<Data extends object, Keys extends keyof Data>(
     data: Data,
     keys: Keys[]
@@ -29,27 +40,6 @@ export function omit<Data extends object, Keys extends keyof Data>(
     return result as Omit<Data, Keys>;
 }
 
-export function pick<Data extends object, Keys extends keyof Data>(
-    data: Data,
-    keys: Keys[]
-): Pick<Data, Keys> {
-    const result = {} as Pick<Data, Keys>;
-    for (const key of keys) {
-        result[key] = data[key];
-    }
-    return result;
-}
-
 export function stableJson(data: any): string {
     return JSON.stringify(data, Object.keys(data).sort());
-}
-
-export function valueMap<K extends keyof any, V, T>(data: Record<K, V>, f: (v: V) => T): Record<K, T> {
-    const result: Record<K, T> = {} as Record<K, T>;
-    for (const key in data) {
-        if (Object.hasOwn(data, key)) {
-            result[key] = f(data[key]);
-        }
-    }
-    return result;
 }

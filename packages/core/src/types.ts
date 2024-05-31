@@ -118,6 +118,7 @@ export function isoDate(value: string = dayjs().format('YYYY-MM-DD')): IsoDate {
 
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 export const daysOfWeek: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+export const mondayToFriday: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 export const isoDateFns = {
     isEqual(date1: IsoDate, date2: IsoDate): boolean {
@@ -246,7 +247,7 @@ export const time24Fns = {
             if (adjustedHours === 0 && amPm === 'am') {
                 return `midnight`;
             }
-            if(adjustedHours === 0 && amPm === 'pm') {
+            if (adjustedHours === 0 && amPm === 'pm') {
                 return `midday`;
             }
             return `${adjustedHours} ${amPm}`;
@@ -324,6 +325,8 @@ export function id(value = uuid()): Id {
     };
 }
 
+export const makeId = id
+
 export interface TimeslotSpec {
     _type: 'timeslot.spec';
     id: Id;
@@ -376,7 +379,7 @@ export function phoneNumber(e164: string): PhoneNumber {
     }
     return {
         _type: 'phone.number',
-        value:e164
+        value: e164
     };
 }
 
@@ -389,7 +392,7 @@ export interface Customer {
     formData: unknown;
 }
 
-export function customer(firstName: string, lastName: string, emailStr: string, phoneStr:string,formData: unknown = null, id = customerId(uuidv4())): Customer {
+export function customer(firstName: string, lastName: string, emailStr: string, phoneStr: string, formData: unknown = null, id = customerId(uuidv4())): Customer {
     return {
         id,
         firstName,
@@ -715,6 +718,13 @@ export interface FungibleResource {
     name: string;
 }
 
+export interface NonFungibleResource {
+    _type: 'non.fungible.resource';
+    id: ResourceId;
+    type: ResourceType;
+    name: string;
+}
+
 export function resourceId(value: string): ResourceId {
     return {
         _type: 'resource.id',
@@ -725,6 +735,15 @@ export function resourceId(value: string): ResourceId {
 export function fungibleResource(type: ResourceType, name: string, id = resourceId(uuidv4())): FungibleResource {
     return {
         _type: 'fungible.resource',
+        id,
+        type,
+        name
+    };
+}
+
+export function nonFungibleResource(type: ResourceType, name: string, id = resourceId(uuidv4())): NonFungibleResource {
+    return {
+        _type: 'non.fungible.resource',
         id,
         type,
         name
@@ -821,11 +840,6 @@ export function businessConfiguration(
         forms,
         customerFormId
     };
-}
-
-export interface BookableTimeSlots {
-    date: IsoDate;
-    bookableSlots: TimeslotSpec[];
 }
 
 export interface BookableTimeSlot {
@@ -951,10 +965,10 @@ export const timePeriodFns = {
             (period2.from.value <= period.from.value && period2.to.value >= period.to.value)
         );
     },
-    listPossibleStartTimes(period: TimePeriod, duration: Duration) {
+    listPossibleStartTimes(period: TimePeriod, duration: Duration): TwentyFourHourClockTime[] {
         let currentTime = period.from;
         const result: TwentyFourHourClockTime[] = []
-        while (currentTime.value <= period.to.value) {
+        while (currentTime.value < period.to.value) {
             result.push(currentTime);
             currentTime = time24Fns.addMinutes(currentTime, duration.value.value)
         }
@@ -1186,6 +1200,15 @@ export interface BlockedTime {
     date: IsoDate;
     start_time_24hr: TwentyFourHourClockTime;
     end_time_24hr: TwentyFourHourClockTime;
+}
+
+export function blockedTime(date: IsoDate,
+                            start_time_24hr: TwentyFourHourClockTime,
+                            end_time_24hr: TwentyFourHourClockTime, id = makeId()): BlockedTime {
+    return {
+        _type: 'blocked.time',
+        date, start_time_24hr, end_time_24hr, id
+    }
 }
 
 export interface BusinessHours {

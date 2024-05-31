@@ -6,7 +6,7 @@ import {
     carwash,
     environmentId,
     isoDate,
-    locationId,
+    locationId, serviceId,
     tenantEnvironmentLocation,
     tenantId
 } from "@breezbook/packages-core";
