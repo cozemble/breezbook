@@ -10,8 +10,8 @@ export async function setupDevEnvironment() {
         console.log("Test tenant already exists, skipping setupDevEnvironment")
     } else {
         await loadTestCarWashTenant(prisma);
-        await loadMultiLocationGymTenant(prisma)
     }
+    await loadMultiLocationGymTenant(prisma)
     await maybePublishRefDataToAssistLocalDev();
     await ensureStripeKeys(prisma, tenantEnvironment(environmentId('dev'), tenantId('tenant1')));
 }
