@@ -1,5 +1,6 @@
 import {
     Booking,
+    BusinessAvailability,
     BusinessConfiguration,
     dayAndTimePeriod,
     DayAndTimePeriod,
@@ -175,6 +176,26 @@ function asTimePeriod(time: StartTime, service: Service): TimePeriod {
     return calcSlotPeriod(exactTimeAvailability(time), service.duration);
 }
 
+export interface AvailabilityConfiguration {
+    _type: 'availability.configuration'
+    availability: BusinessAvailability;
+    resourceAvailability: ResourceDayAvailability[];
+    services: Service[];
+    timeslots: TimeslotSpec[];
+    startTimeSpec: StartTimeSpec;
+}
+
+export function availabilityConfiguration(availability: BusinessAvailability, resourceAvailability: ResourceDayAvailability[], services: Service[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec): AvailabilityConfiguration {
+    return {
+        _type: "availability.configuration",
+        availability,
+        resourceAvailability,
+        services,
+        timeslots,
+        startTimeSpec
+    }
+}
+
 export const availability = {
     errorCodes: {
         noAvailabilityForDay: 'no.availability.for.day',
@@ -182,7 +203,7 @@ export const availability = {
         noResourcesAvailable: 'no.resources.available',
         unresourceableBooking: 'unresourceable.booking'
     },
-    calculateAvailableSlots: (config: BusinessConfiguration,
+    calculateAvailableSlots: (config: AvailabilityConfiguration,
                               bookings: Booking[],
                               serviceId: ServiceId,
                               date: IsoDate): Success<AvailableSlot[]> | ErrorResponse => {

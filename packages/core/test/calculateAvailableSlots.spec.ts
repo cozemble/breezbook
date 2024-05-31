@@ -26,7 +26,7 @@ import {
     timeslotSpec
 } from "../src/index.js";
 import {makeBusinessAvailability, makeBusinessHours} from "../src/makeBusinessAvailability.js";
-import {availability, startTimeFns} from "../src/availability.js";
+import {availability, AvailabilityConfiguration, availabilityConfiguration, startTimeFns} from "../src/availability.js";
 
 const date = isoDate("2024-05-31")
 const nineAm = time24("09:00")
@@ -34,15 +34,12 @@ const fivePm = time24("17:00")
 
 describe("given a chatbot service that requires no resources, and is available monday to friday 9am to 5pm", () => {
     const theService = service("Chatbot Therapy", "Chatbot Therapy", [], 60, false, price(3500, currencies.GBP), [], [])
-    const config = businessConfiguration(
+    const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
         [theService],
         [],
-        [],
-        [],
-        periodicStartTime(duration(minutes(60))),
-        null)
+        periodicStartTime(duration(minutes(60))))
 
     test("if the service takes one hour, we can do 8 services a day", () => {
         const outcome = availability.calculateAvailableSlots(config, [], theService.id, date)
@@ -67,7 +64,7 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 
     test("if an hour is blocked out, we can do 7 services a day", () => {
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             availability: makeBusinessAvailability(makeBusinessHours(mondayToFriday, time24("09:00"), time24("17:00")), [blockedTime(date, time24("10:00"), time24("11:00"))], [date])
         }
@@ -81,7 +78,7 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 
     test("if 90 mins is blocked out across two slot boundaries, we can do 6 services a day", () => {
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             availability: makeBusinessAvailability(makeBusinessHours(mondayToFriday, time24("09:00"), time24("17:00")), [blockedTime(date, time24("09:30"), time24("11:00"))], [date])
         }
@@ -95,7 +92,7 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 
     test("if we permit starts on the half hour, we can do 15 services a day", () => {
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             startTimeSpec: periodicStartTime(duration(minutes(30)))
         }
@@ -109,7 +106,7 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 
     test("if the service takes two hours, we can do 7 services a day", () => {
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             services: config.services.map(s => ({...s, duration: 120}))
         }
@@ -123,7 +120,7 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 
     test("discrete time specifications are honoured", () => {
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             startTimeSpec: discreteStartTimes([time24("09:00"), time24("10:00"), time24("13:00"), time24("14:00")])
         }
@@ -138,7 +135,7 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 
     test("good error message if there is no availability for the given day", () => {
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             availability: businessAvailability([])
         }
@@ -148,7 +145,7 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 
     test("good error message if the service cannot be found", () => {
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             services: []
         }
@@ -161,15 +158,12 @@ describe("given a chatbot service that requires no resources, and is available m
 describe("given a carwash service that requires one of several interchangeable washers for each service, and is available monday to friday 9am to 5pm", () => {
     const carwasher = resourceType("carWasher")
     const theService = service("Carwash", "Carwash", [carwasher], 45, false, price(3500, currencies.GBP), [], [])
-    const config = businessConfiguration(
+    const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
         [theService],
         [],
-        [],
-        [],
-        periodicStartTime(duration(minutes(60))),
-        null)
+        periodicStartTime(duration(minutes(60))))
 
     test("there is no availability where there are no resources", () => {
         const outcome = availability.calculateAvailableSlots(config, [], theService.id, date) as ErrorResponse
@@ -178,7 +172,7 @@ describe("given a carwash service that requires one of several interchangeable w
     })
 
     test("we have availability when we have one resource", () => {
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
         }
@@ -194,7 +188,7 @@ describe("given a carwash service that requires one of several interchangeable w
 
     test("we lose availability when a booking takes all the resources", () => {
         const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(time24("10:00")), "confirmed")
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
         }
@@ -210,7 +204,7 @@ describe("given a carwash service that requires one of several interchangeable w
 
     test("we keep availability when a booking takes a resource, but there are extra resources available", () => {
         const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(time24("10:00")), "confirmed")
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [
                 resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))]),
@@ -232,15 +226,12 @@ describe("given a mobile carwash service that requires one of several interchang
     const theService = service("Mobile Carwash", "Mobile Carwash", [van], 120, true, price(3500, currencies.GBP), [], [])
     const morningSlot = timeslotSpec(nineAm, time24("12:00"), "morning slot");
     const afternoonSlot = timeslotSpec(time24("13:00"), time24("16:00"), "afternoon slot");
-    const config = businessConfiguration(
+    const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
         [theService],
-        [],
         [morningSlot, afternoonSlot],
-        [],
-        periodicStartTime(duration(minutes(60))),
-        null)
+        periodicStartTime(duration(minutes(60))))
 
     test("there is no availability where there are no resources", () => {
         const outcome = availability.calculateAvailableSlots(config, [], theService.id, date) as ErrorResponse
@@ -249,7 +240,7 @@ describe("given a mobile carwash service that requires one of several interchang
     })
 
     test("we have availability when we have one resource", () => {
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [resourceDayAvailability(fungibleResource(van, "Van#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
         }
@@ -266,7 +257,7 @@ describe("given a mobile carwash service that requires one of several interchang
     test("we lose availability when a booking takes all the resources", () => {
         const theBooking = booking(customerId(), theService.id, date, morningSlot, "confirmed")
 
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [resourceDayAvailability(fungibleResource(van, "Van#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
         }
@@ -282,7 +273,7 @@ describe("given a mobile carwash service that requires one of several interchang
     test("we keep availability when a booking takes a resource, but there are extra resources available", () => {
         const theBooking = booking(customerId(), theService.id, date, morningSlot, "confirmed")
 
-        const mutatedConfig: BusinessConfiguration = {
+        const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [
                 resourceDayAvailability(fungibleResource(van, "Van#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))]),

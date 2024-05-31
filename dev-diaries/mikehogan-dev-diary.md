@@ -766,4 +766,6 @@ Lets go with AvailableSlot
 
 ---------------------------
 
-Several hours later, this is going surprisingly well
+Several hours later, this is going surprisingly well.  I think not having internet might be the reason.  I understand
+the problem domain, and I just got on with writing tests, writing code, refactoring, thinking.  If I had the net, I'd
+be asking ChatGPT for ideas, and I'd be getting notifications, leading to distraction.
