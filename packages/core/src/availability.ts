@@ -14,6 +14,7 @@ import {
     ServiceId,
     StartTimeSpec,
     time24Fns,
+    TimePeriod,
     timePeriodFns,
     TimeslotSpec,
     TwentyFourHourClockTime
@@ -166,6 +167,14 @@ function resourcesAreAvailable(resourceTypes: ResourceType[], time: DayAndTimePe
     return resourceTypes.every(rt => resourceIsAvailable(rt, time, actualAvailableResources))
 }
 
+
+function asTimePeriod(time: StartTime, service: Service): TimePeriod {
+    if (time._type === "timeslot.spec") {
+        return time.slot
+    }
+    return calcSlotPeriod(exactTimeAvailability(time), service.duration);
+}
+
 export const availability = {
     errorCodes: {
         noAvailabilityForDay: 'no.availability.for.day',
@@ -190,11 +199,11 @@ export const availability = {
         if (!Array.isArray(resourceAvailabilityOutcome)) {
             return errorResponse(availability.errorCodes.unresourceableBooking, `Could not resource booking '${resourceAvailabilityOutcome.booking.id.value}', missing resource types are ${resourceAvailabilityOutcome.missingResourceTypes.map(rt => rt.value)}`)
         }
-        if(resourceAvailabilityOutcome.length === 0 && service.resourceTypes.length > 0) {
+        if (resourceAvailabilityOutcome.length === 0 && service.resourceTypes.length > 0) {
             return errorResponse(availability.errorCodes.noResourcesAvailable, `Do not have resources for service '${serviceId.value}'`)
         }
-        const possibleStartTimes = calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service)
-        const startTimesWithResources = possibleStartTimes.filter(time => resourcesAreAvailable(service.resourceTypes, dayAndTimePeriod(date, calcSlotPeriod(exactTimeAvailability(time), service.duration)), resourceAvailabilityOutcome))
+        const possibleStartTimes = service.requiresTimeslot ? config.timeslots : calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service)
+        const startTimesWithResources = possibleStartTimes.filter(time => resourcesAreAvailable(service.resourceTypes, dayAndTimePeriod(date, asTimePeriod(time, service)), resourceAvailabilityOutcome))
         return success(startTimesWithResources.map(t => availableSlot(serviceId, t, [])))
     }
 

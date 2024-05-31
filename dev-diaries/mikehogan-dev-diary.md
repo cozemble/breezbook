@@ -763,3 +763,7 @@ can be resourced are:
 3. AvailableSlot
 
 Lets go with AvailableSlot
+
+---------------------------
+
+Several hours later, this is going surprisingly well
