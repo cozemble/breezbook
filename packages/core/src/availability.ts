@@ -1,7 +1,6 @@
 import {
     Booking,
     BusinessAvailability,
-    BusinessConfiguration,
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
@@ -10,6 +9,8 @@ import {
     IsoDate,
     NonFungibleResource,
     ResourceDayAvailability,
+    resourceDayAvailabilityFns,
+    ResourceId,
     ResourceType,
     Service,
     ServiceId,
@@ -160,14 +161,14 @@ function calcActualResourceAvailability(resourceAvailability: ResourceDayAvailab
     return resourcedBookingsOutcome.remainingResources
 }
 
-function resourceIsAvailable(rt: ResourceType, time: DayAndTimePeriod, resources: ResourceDayAvailability[]): boolean {
-    return resources.some(r => r.resource.type.value === rt.value && r.availability.some(a => dayAndTimePeriodFns.overlaps(dayAndTimePeriod(a.day, a.period), time)))
-}
-
 function resourcesAreAvailable(resourceTypes: ResourceType[], time: DayAndTimePeriod, actualAvailableResources: ResourceDayAvailability[]): boolean {
-    return resourceTypes.every(rt => resourceIsAvailable(rt, time, actualAvailableResources))
+    return resourceTypes.every(resourceType =>
+        actualAvailableResources.some(r =>
+            r.resource.type.value === resourceType.value &&
+            r.availability.some(a => dayAndTimePeriodFns.overlaps(dayAndTimePeriod(a.day, a.period), time))
+        )
+    );
 }
-
 
 function asTimePeriod(time: StartTime, service: Service): TimePeriod {
     if (time._type === "timeslot.spec") {
@@ -220,12 +221,31 @@ export const availability = {
         if (!Array.isArray(resourceAvailabilityOutcome)) {
             return errorResponse(availability.errorCodes.unresourceableBooking, `Could not resource booking '${resourceAvailabilityOutcome.booking.id.value}', missing resource types are ${resourceAvailabilityOutcome.missingResourceTypes.map(rt => rt.value)}`)
         }
-        if (resourceAvailabilityOutcome.length === 0 && service.resourceTypes.length > 0) {
-            return errorResponse(availability.errorCodes.noResourcesAvailable, `Do not have resources for service '${serviceId.value}'`)
-        }
-        const possibleStartTimes = service.requiresTimeslot ? config.timeslots : calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service)
-        const startTimesWithResources = possibleStartTimes.filter(time => resourcesAreAvailable(service.resourceTypes, dayAndTimePeriod(date, asTimePeriod(time, service)), resourceAvailabilityOutcome))
-        return success(startTimesWithResources.map(t => availableSlot(serviceId, t, [])))
-    }
+        // Check which resource types are not available
+        const unavailableResourceTypes = service.resourceTypes.filter(resourceType =>
+            !resourceAvailabilityOutcome.some(r => r.resource.type.value === resourceType.value)
+        );
 
+        if (unavailableResourceTypes.length > 0) {
+            return errorResponse(availability.errorCodes.noResourcesAvailable, `Do not have resources for service '${serviceId.value}'. Missing resource types: ${unavailableResourceTypes.map(rt => rt.value).join(', ')}`);
+        }
+
+        const possibleStartTimes = service.requiresTimeslot ? config.timeslots : calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service);
+        const startTimesWithResources = possibleStartTimes.filter(time =>
+            resourcesAreAvailable(service.resourceTypes, dayAndTimePeriod(date, asTimePeriod(time, service)), resourceAvailabilityOutcome)
+        );
+
+        return success(startTimesWithResources.map(t => availableSlot(serviceId, t, [])));
+    },
+    calculateAvailableSlotsForResource: (config: AvailabilityConfiguration,
+                                         bookings: Booking[],
+                                         serviceId: ServiceId,
+                                         date: IsoDate,
+                                         resourceId: ResourceId): Success<AvailableSlot[]> | ErrorResponse => {
+        const mutatedConfig: AvailabilityConfiguration = {
+            ...config,
+            resourceAvailability: resourceDayAvailabilityFns.reduceToResource(config.resourceAvailability, resourceId)
+        }
+        return availability.calculateAvailableSlots(mutatedConfig, bookings.filter(b => b.assignedResources.some(rid => rid.value === resourceId.value)), serviceId, date)
+    }
 }

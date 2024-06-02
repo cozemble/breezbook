@@ -68,7 +68,7 @@ export function toDomainBooking(b: DbBooking, timeslots: TimeslotSpec[]): Bookin
 				`No timeslot with id ${b.time_slot_id}`
 		  )
 		: exactTimeAvailability(time24(b.start_time_24hr));
-	return booking(customerId(b.customer_id), serviceId(b.service_id), isoDate(b.date), slot);
+	return booking(customerId(b.customer_id), serviceId(b.service_id), isoDate(b.date), slot, []);
 }
 
 export function toDomainAddOn(a: DbAddOn): DomainAddOn {

@@ -107,7 +107,7 @@ export function validateAvailability(everythingForTenant: EverythingForAvailabil
     const projectedBookings: Booking[] = [...everythingForTenant.bookings];
     for (let i = 0; i < order.basket.lines.length; i++) {
         const line = order.basket.lines[i];
-        const projectedBooking = booking(order.customer.id, line.serviceId, line.date, line.timeslot);
+        const projectedBooking = booking(order.customer.id, line.serviceId, line.date, line.timeslot, []);
         projectedBookings.push(projectedBooking);
         try {
             applyBookingsToResourceAvailability(

@@ -53,10 +53,10 @@ const config = businessConfiguration(availability, resourceAvailability, service
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
 const mete = customer('Mete', 'Bora', 'mete@email.com', "+14155552672");
 
-const mikeOnMonday = booking(mike.id, bicycleRepair.id, isoDate('2021-05-24'), exactTimeAvailability(nineAm));
-const meteOnMonday = booking(mete.id, bicycleRepair.id, isoDate('2021-05-24'), exactTimeAvailability(nineTen));
-const mikeOnTuesday = booking(mike.id, bicycleRepair.id, isoDate('2021-05-25'), exactTimeAvailability(nineTwenty));
-const meteOnTuesday = booking(mete.id, bicycleRepair.id, isoDate('2021-05-25'), exactTimeAvailability(nineAm));
+const mikeOnMonday = booking(mike.id, bicycleRepair.id, isoDate('2021-05-24'), exactTimeAvailability(nineAm), []);
+const meteOnMonday = booking(mete.id, bicycleRepair.id, isoDate('2021-05-24'), exactTimeAvailability(nineTen), []);
+const mikeOnTuesday = booking(mike.id, bicycleRepair.id, isoDate('2021-05-25'), exactTimeAvailability(nineTwenty), []);
+const meteOnTuesday = booking(mete.id, bicycleRepair.id, isoDate('2021-05-25'), exactTimeAvailability(nineAm), []);
 
 const existingBookings = [mikeOnMonday, meteOnMonday, mikeOnTuesday, meteOnTuesday];
 

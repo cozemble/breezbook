@@ -67,8 +67,8 @@ test('error message when posted price is not the same as the server side calcula
 });
 
 test('error message when no availability', () => {
-    const booking1 = booking(customerId('customer#1'), carwash.smallCarWash.id, today, carwash.nineToOne);
-    const booking2 = booking(customerId('customer#1'), carwash.smallCarWash.id, today, carwash.nineToOne);
+    const booking1 = booking(customerId('customer#1'), carwash.smallCarWash.id, today, carwash.nineToOne, []);
+    const booking2 = booking(customerId('customer#1'), carwash.smallCarWash.id, today, carwash.nineToOne, []);
 
     const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [goodServiceFormData])], smallCarWash.price);
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());

@@ -411,6 +411,7 @@ export interface Booking {
     date: IsoDate;
     slot: BookableSlot;
     serviceId: ServiceId;
+    assignedResources: ResourceId[];
     status: 'confirmed' | 'cancelled';
     formData?: unknown;
 }
@@ -420,6 +421,7 @@ export function booking(
     serviceId: ServiceId,
     date: IsoDate,
     slot: BookableSlot,
+    assignedResources: ResourceId[],
     status: 'confirmed' | 'cancelled' = 'confirmed',
     id = bookingId(uuidv4())
 ): Booking {
@@ -429,6 +431,7 @@ export function booking(
         date,
         slot,
         status,
+        assignedResources,
         serviceId
     };
 }
@@ -885,6 +888,12 @@ export function resourceDayAvailability(resource: FungibleResource, availability
         resource,
         availability
     };
+}
+
+export const resourceDayAvailabilityFns = {
+    reduceToResource: (resourceDayAvailabilities: ResourceDayAvailability[], resourceId: ResourceId): ResourceDayAvailability[] => {
+        return resourceDayAvailabilities.filter((rda) => rda.resource.id.value === resourceId.value);
+    }
 }
 
 export interface TimePeriod {

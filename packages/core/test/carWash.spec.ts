@@ -38,10 +38,10 @@ const config = businessConfiguration(availability, resourceAvailability, carwash
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
 const mete = customer('Mete', 'Bora', 'mete@email.com', "+14155552672");
 
-const mikeOnMonday = booking(mike.id, carwash.smallCarWash.id, isoDate('2021-05-24'), carwash.nineToOne);
-const meteOnMonday = booking(mete.id, carwash.mediumCarWash.id, isoDate('2021-05-24'), carwash.nineToOne);
-const mikeOnTuesday = booking(mike.id, carwash.mediumCarWash.id, isoDate('2021-05-25'), carwash.oneToFour);
-const meteOnTuesday = booking(mete.id, carwash.largeCarWash.id, isoDate('2021-05-25'), carwash.fourToSix);
+const mikeOnMonday = booking(mike.id, carwash.smallCarWash.id, isoDate('2021-05-24'), carwash.nineToOne, []);
+const meteOnMonday = booking(mete.id, carwash.mediumCarWash.id, isoDate('2021-05-24'), carwash.nineToOne, []);
+const mikeOnTuesday = booking(mike.id, carwash.mediumCarWash.id, isoDate('2021-05-25'), carwash.oneToFour, []);
+const meteOnTuesday = booking(mete.id, carwash.largeCarWash.id, isoDate('2021-05-25'), carwash.fourToSix, []);
 
 const existingBookings = [mikeOnMonday, meteOnMonday, mikeOnTuesday, meteOnTuesday];
 
