@@ -440,7 +440,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     );
 
     test("there is no availability when we have no resources", () => {
-        const outcome = availability.calculateAvailableSlotsForResource(config, [], theService.id, date, sixDogs.id) as ErrorResponse;
+        const outcome = availability.calculateAvailableSlots(config, [], theService.id, date) as ErrorResponse;
         expect(outcome.errorCode).toBe(availability.errorCodes.noResourcesAvailable);
         expect(outcome.errorMessage).toBeDefined();
     });
