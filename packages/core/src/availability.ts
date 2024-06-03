@@ -4,6 +4,7 @@ import {
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
+    ExactTimeAvailability,
     exactTimeAvailability,
     FungibleResource,
     IsoDate,
@@ -24,15 +25,14 @@ import {
 import {errorResponse, ErrorResponse, success, Success} from "./utils.js";
 import {calcSlotPeriod} from "./calculateAvailability.js";
 
-export type StartTime = TimeslotSpec | TwentyFourHourClockTime
+export type StartTime = TimeslotSpec | ExactTimeAvailability
 
 export type ResourceAllocation = FungibleResource | NonFungibleResource
 
 export const startTimeFns = {
-
     toTime24(startTime: StartTime): TwentyFourHourClockTime {
-        if (startTime._type === 'twenty.four.hour.clock.time') {
-            return startTime
+        if (startTime._type === 'exact.time.availability') {
+            return startTime.time
         }
         return startTime.slot.from
     }
@@ -40,15 +40,17 @@ export const startTimeFns = {
 
 export interface AvailableSlot {
     _type: 'available.slot'
-    service: ServiceId
+    service: Service
+    date: IsoDate
     startTime: StartTime
     resourceAllocation: ResourceAllocation[]
 }
 
-export function availableSlot(service: ServiceId, startTime: StartTime, resourceAllocation: ResourceAllocation[]): AvailableSlot {
+export function availableSlot(service: Service, date: IsoDate, startTime: StartTime, resourceAllocation: ResourceAllocation[]): AvailableSlot {
     return {
         _type: "available.slot",
         service,
+        date,
         startTime,
         resourceAllocation
     }
@@ -174,7 +176,7 @@ function asTimePeriod(time: StartTime, service: Service): TimePeriod {
     if (time._type === "timeslot.spec") {
         return time.slot
     }
-    return calcSlotPeriod(exactTimeAvailability(time), service.duration);
+    return calcSlotPeriod(time, service.duration);
 }
 
 export interface AvailabilityConfiguration {
@@ -221,7 +223,6 @@ export const availability = {
         if (!Array.isArray(resourceAvailabilityOutcome)) {
             return errorResponse(availability.errorCodes.unresourceableBooking, `Could not resource booking '${resourceAvailabilityOutcome.booking.id.value}', missing resource types are ${resourceAvailabilityOutcome.missingResourceTypes.map(rt => rt.value)}`)
         }
-        // Check which resource types are not available
         const unavailableResourceTypes = service.resourceTypes.filter(resourceType =>
             !resourceAvailabilityOutcome.some(r => r.resource.type.value === resourceType.value)
         );
@@ -230,12 +231,12 @@ export const availability = {
             return errorResponse(availability.errorCodes.noResourcesAvailable, `Do not have resources for service '${serviceId.value}'. Missing resource types: ${unavailableResourceTypes.map(rt => rt.value).join(', ')}`);
         }
 
-        const possibleStartTimes = service.requiresTimeslot ? config.timeslots : calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service);
+        const possibleStartTimes = service.requiresTimeslot ? config.timeslots : calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service).map(exactTimeAvailability);
         const startTimesWithResources = possibleStartTimes.filter(time =>
             resourcesAreAvailable(service.resourceTypes, dayAndTimePeriod(date, asTimePeriod(time, service)), resourceAvailabilityOutcome)
         );
 
-        return success(startTimesWithResources.map(t => availableSlot(serviceId, t, [])));
+        return success(startTimesWithResources.map(t => availableSlot(service, date, t, [])));
     },
     calculateAvailableSlotsForResource: (config: AvailabilityConfiguration,
                                          bookings: Booking[],

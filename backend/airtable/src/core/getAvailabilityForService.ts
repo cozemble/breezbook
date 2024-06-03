@@ -2,17 +2,20 @@ import {EverythingForAvailability} from '../express/getEverythingForAvailability
 import {
     AddOn,
     AddOn as DomainAddOn,
+    AvailableSlot,
     BookableTimes,
     calculateAvailability,
     calculatePrice,
     Form,
     IsoDate,
     mandatory,
+    Price,
     PricingRule,
     ResourcedTimeSlot,
     Service,
     Service as DomainService,
     ServiceId,
+    startTimeFns,
     values
 } from '@breezbook/packages-core';
 import {
@@ -20,8 +23,31 @@ import {
     AvailabilityResponse,
     emptyAvailabilityResponse,
     ServiceSummary,
+    TimeSlotAvailability,
     timeSlotAvailability
 } from '@breezbook/backend-api-types';
+
+function toTimeSlotAvailability(slot: ResourcedTimeSlot | AvailableSlot, price: Price): TimeSlotAvailability {
+    if (slot._type === 'available.slot') {
+        const startTime24 = startTimeFns.toTime24(slot.startTime)
+        return timeSlotAvailability(
+            startTime24.value,
+            startTime24.value,
+            "---",
+            startTime24.value,
+            price.amount.value,
+            price.currency.value
+        );
+    }
+    return timeSlotAvailability(
+        slot.slot.id.value,
+        slot.slot.slot.from.value,
+        slot.slot.slot.to.value,
+        slot.slot.description,
+        price.amount.value,
+        price.currency.value
+    );
+}
 
 export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTimes[], pricingRules: PricingRule[], services: Service[], addOns: AddOn[], forms: Form[], serviceId: ServiceId): AvailabilityResponse {
     const priced = availability.map((a) => {
@@ -37,14 +63,7 @@ export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTi
                 throw new Error('Not yet implemented');
             }
             const slotsForDate = acc.slots[curr.slot.date.value] ?? [];
-            const currTimeslot = timeSlotAvailability(
-                curr.slot.slot.id.value,
-                curr.slot.slot.slot.from.value,
-                curr.slot.slot.slot.to.value,
-                curr.slot.slot.description,
-                curr.price.amount.value,
-                curr.price.currency.value
-            );
+            const currTimeslot = toTimeSlotAvailability(curr.slot, curr.price);
             if (!slotsForDate.some((a) => a.label === currTimeslot.label)) {
                 slotsForDate.push(currTimeslot);
             }

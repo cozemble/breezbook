@@ -33,105 +33,98 @@
  *
  * 7. Channel-Based Pricing: Different prices for different booking channels, such as online versus in-person.
  */
-import {
-	BookableTimes,
-	dayAndTimePeriod,
-	DayAndTimePeriod,
-	dayAndTimePeriodFns,
-	price,
-	Price,
-	ResourcedTimeSlot
-} from './types.js';
-import { calcSlotPeriod } from './calculateAvailability.js';
+import {dayAndTimePeriod, DayAndTimePeriod, dayAndTimePeriodFns, price, Price, ResourcedTimeSlot} from './types.js';
+import {calcSlotPeriod} from './calculateAvailability.js';
+import {AvailableSlot} from "./availability.js";
 
 export interface PercentageBasedPriceAdjustment {
-	_type: 'percentage.based.price.adjustment';
-	percentage: number;
+    _type: 'percentage.based.price.adjustment';
+    percentage: number;
 }
 
 export function percentageBasedPriceAdjustment(percentage: number): PercentageBasedPriceAdjustment {
-	return {
-		_type: 'percentage.based.price.adjustment',
-		percentage
-	};
+    return {
+        _type: 'percentage.based.price.adjustment',
+        percentage
+    };
 }
 
 export interface AmountBasedPriceAdjustment {
-	_type: 'amount.based.price.adjustment';
-	amount: Price;
+    _type: 'amount.based.price.adjustment';
+    amount: Price;
 }
 
 export function amountBasedPriceAdjustment(amount: Price): AmountBasedPriceAdjustment {
-	return {
-		_type: 'amount.based.price.adjustment',
-		amount
-	};
+    return {
+        _type: 'amount.based.price.adjustment',
+        amount
+    };
 }
 
 export type PriceAdjustment = PercentageBasedPriceAdjustment | AmountBasedPriceAdjustment;
 
 export interface TimeBasedPriceAdjustment {
-	_type: 'time.based.price.adjustment';
-	time: DayAndTimePeriod;
-	adjustment: PriceAdjustment;
+    _type: 'time.based.price.adjustment';
+    time: DayAndTimePeriod;
+    adjustment: PriceAdjustment;
 }
 
 export function timeBasedPriceAdjustment(time: DayAndTimePeriod, adjustment: PriceAdjustment): TimeBasedPriceAdjustment {
-	return {
-		_type: 'time.based.price.adjustment',
-		time,
-		adjustment
-	};
+    return {
+        _type: 'time.based.price.adjustment',
+        time,
+        adjustment
+    };
 }
 
 export type PricingRule = TimeBasedPriceAdjustment;
 
 export interface PricedSlot {
-	_type: 'priced.slot';
-	slot: ResourcedTimeSlot;
-	price: Price;
-	adjustments: PriceAdjustment[];
+    _type: 'priced.slot';
+    slot: ResourcedTimeSlot | AvailableSlot;
+    price: Price;
+    adjustments: PriceAdjustment[];
 }
 
-export function pricedSlot(slot: ResourcedTimeSlot, price: Price, adjustments: PriceAdjustment[]): PricedSlot {
-	return {
-		_type: 'priced.slot',
-		slot,
-		price,
-		adjustments
-	};
+export function pricedSlot(slot: ResourcedTimeSlot | AvailableSlot, price: Price, adjustments: PriceAdjustment[]): PricedSlot {
+    return {
+        _type: 'priced.slot',
+        slot,
+        price,
+        adjustments
+    };
 }
 
 function applyPriceAdjustment(slot: PricedSlot, pricingRule: TimeBasedPriceAdjustment): PricedSlot {
-	if (pricingRule.adjustment._type === 'amount.based.price.adjustment') {
-		return pricedSlot(slot.slot, price(slot.price.amount.value + pricingRule.adjustment.amount.amount.value, slot.price.currency), [
-			...slot.adjustments,
-			pricingRule.adjustment
-		]);
-	}
-	return pricedSlot(slot.slot, price(slot.price.amount.value + slot.price.amount.value * pricingRule.adjustment.percentage, slot.price.currency), [
-		...slot.adjustments,
-		pricingRule.adjustment
-	]);
+    if (pricingRule.adjustment._type === 'amount.based.price.adjustment') {
+        return pricedSlot(slot.slot, price(slot.price.amount.value + pricingRule.adjustment.amount.amount.value, slot.price.currency), [
+            ...slot.adjustments,
+            pricingRule.adjustment
+        ]);
+    }
+    return pricedSlot(slot.slot, price(slot.price.amount.value + slot.price.amount.value * pricingRule.adjustment.percentage, slot.price.currency), [
+        ...slot.adjustments,
+        pricingRule.adjustment
+    ]);
 }
 
 function applyTimeBasedPriceAdjustment(slot: PricedSlot, pricingRule: TimeBasedPriceAdjustment): PricedSlot {
-	const period = calcSlotPeriod(slot.slot.slot, slot.slot.service.duration);
-	const dayTime = dayAndTimePeriod(slot.slot.date, period);
-	const overlaps = dayAndTimePeriodFns.overlaps(pricingRule.time, dayTime);
-	if (overlaps) {
-		return applyPriceAdjustment(slot, pricingRule);
-	}
-	return slot;
+    const period = slot.slot._type === 'resourced.time.slot' ? calcSlotPeriod(slot.slot.slot, slot.slot.service.duration) : calcSlotPeriod(slot.slot.startTime, 0)
+    const dayTime = dayAndTimePeriod(slot.slot.date, period);
+    const overlaps = dayAndTimePeriodFns.overlaps(pricingRule.time, dayTime);
+    if (overlaps) {
+        return applyPriceAdjustment(slot, pricingRule);
+    }
+    return slot;
 }
 
 function applyPricingRule(givenPricedSlot: PricedSlot, pricingRule: PricingRule): PricedSlot {
-	if (pricingRule._type === 'time.based.price.adjustment') {
-		return applyTimeBasedPriceAdjustment(givenPricedSlot, pricingRule);
-	}
-	return givenPricedSlot;
+    if (pricingRule._type === 'time.based.price.adjustment') {
+        return applyTimeBasedPriceAdjustment(givenPricedSlot, pricingRule);
+    }
+    return givenPricedSlot;
 }
 
-export function calculatePrice(slot: ResourcedTimeSlot, pricingRules: PricingRule[]): PricedSlot {
-	return pricingRules.reduce(applyPricingRule, pricedSlot(slot, slot.service.price, []));
+export function calculatePrice(slot: ResourcedTimeSlot | AvailableSlot, pricingRules: PricingRule[]): PricedSlot {
+    return pricingRules.reduce(applyPricingRule, pricedSlot(slot, slot.service.price, []));
 }
