@@ -1,6 +1,7 @@
 import {
     Booking,
     BusinessAvailability,
+    capacityFns,
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
@@ -22,7 +23,7 @@ import {
     TimeslotSpec,
     TwentyFourHourClockTime
 } from "./types.js";
-import {errorResponse, ErrorResponse, success, Success} from "./utils.js";
+import {errorResponse, ErrorResponse, mandatory, success, Success} from "./utils.js";
 import {calcSlotPeriod} from "./calculateAvailability.js";
 
 export type StartTime = TimeslotSpec | ExactTimeAvailability
@@ -134,12 +135,29 @@ function subtractTimePeriod(period: DayAndTimePeriod, booking: Booking, service:
     return dayAndTimePeriodFns.splitPeriod(period, dayAndTimePeriod(booking.date, servicePeriod))
 }
 
+function subtractCapacity(resourcedBooking: FullyResourcedBooking | UnresourceableBooking, r: ResourceDayAvailability, service: Service): ResourceDayAvailability {
+    const assigned = mandatory(resourcedBooking.booking.assignedResources.find(assigned => assigned.resource.value === r.resource.id.value), `No assigned resource for resource '${r.resource.id.value}'`)
+    const remainingCapacity = capacityFns.subtract(r.resource.capacity, assigned.capacity)
+    if (remainingCapacity.value === 0) {
+        return {
+            ...r,
+            availability: r.availability.flatMap(a => subtractTimePeriod(a, resourcedBooking.booking, service))
+        }
+    } else {
+        return {...r, resource: {...r.resource, capacity: remainingCapacity}}
+    }
+}
+
 function subtractResources(resourcedBooking: ResourcedBookingOutcome, remainingResources: ResourceDayAvailability[], service: Service): ResourceDayAvailability[] {
     return remainingResources.map(r => {
         if (resourcedBooking.resourceAllocation.some(alloc => alloc.id.value === r.resource.id.value)) {
-            return {
-                ...r,
-                availability: r.availability.flatMap(a => subtractTimePeriod(a, resourcedBooking.booking, service))
+            if (r.resource.type.hasCapacity) {
+                return subtractCapacity(resourcedBooking, r, service);
+            } else {
+                return {
+                    ...r,
+                    availability: r.availability.flatMap(a => subtractTimePeriod(a, resourcedBooking.booking, service))
+                }
             }
         }
         return r
@@ -247,6 +265,6 @@ export const availability = {
             ...config,
             resourceAvailability: resourceDayAvailabilityFns.reduceToResource(config.resourceAvailability, resourceId)
         }
-        return availability.calculateAvailableSlots(mutatedConfig, bookings.filter(b => b.assignedResources.some(rid => rid.value === resourceId.value)), serviceId, date)
+        return availability.calculateAvailableSlots(mutatedConfig, bookings.filter(b => b.assignedResources.some(rid => rid.resource.value === resourceId.value)), serviceId, date)
     }
 }

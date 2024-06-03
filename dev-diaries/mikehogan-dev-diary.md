@@ -769,3 +769,30 @@ Lets go with AvailableSlot
 Several hours later, this is going surprisingly well.  I think not having internet might be the reason.  I understand
 the problem domain, and I just got on with writing tests, writing code, refactoring, thinking.  If I had the net, I'd
 be asking ChatGPT for ideas, and I'd be getting notifications, leading to distraction.
+
+# Mon 3 Jun 2024
+
+For the last few days, I've been the exact opposite of [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it)
+, which was a bit of a mantra for me here-to-fore.  I've been test driving availability logic for as many different
+scenarios as I can think of:
+
+1. Purely digital servicw with no resource contraints
+2. Mobile car wash with fungible resources
+3. Fixed location car was with fungible resources
+4. Gym with non-fungible resource i.e. booking with a particular personal trainer
+5. Scenarios that require a time slot and scenarios that can happen any time of day
+6. Scenarios that require more than one resource
+
+I am going to extend this list with the following:
+
+1. Dog walker that can take 6 dogs at 08.30
+2. Yoga class that can take up to 12 people at 18.00
+3. Hair salon booking, where the service is configurable from a pick list of sub-services that contribute time and 
+   price, like
+
+3.1 Haircut
+3.2 Haircut and blow dry
+3.3 High lights
+3.4 Colouring
+3.5 Perm
+3.6 Hair treatment

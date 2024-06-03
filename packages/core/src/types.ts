@@ -259,10 +259,11 @@ export const time24Fns = {
     }
 };
 
-export function resourceType(value: string): ResourceType {
+export function resourceType(value: string, hasCapacity = false): ResourceType {
     return {
         _type: 'resource.type',
-        value
+        value,
+        hasCapacity
     };
 }
 
@@ -275,6 +276,7 @@ export function timezone(value: string): Timezone {
 
 export interface ResourceType extends ValueType<string> {
     _type: 'resource.type';
+    hasCapacity: boolean;
 }
 
 export interface BookingId extends ValueType<string> {
@@ -411,9 +413,40 @@ export interface Booking {
     date: IsoDate;
     slot: BookableSlot;
     serviceId: ServiceId;
-    assignedResources: ResourceId[];
+    assignedResources: ResourceAssignment[];
     status: 'confirmed' | 'cancelled';
     formData?: unknown;
+}
+
+export interface Capacity extends ValueType<number> {
+    _type: 'capacity';
+}
+
+export function capacity(value: number): Capacity {
+    return {
+        _type: 'capacity',
+        value
+    };
+}
+
+export const capacityFns = {
+    subtract: (capacity1: Capacity, capacity2: Capacity): Capacity => {
+        return capacity(capacity1.value - capacity2.value);
+    },
+}
+
+export interface ResourceAssignment {
+    _type: 'resource.assignment';
+    resource: ResourceId;
+    capacity:Capacity
+}
+
+export function resourceAssignment(resource: ResourceId, theCapacity = capacity(1)): ResourceAssignment {
+    return {
+        _type: 'resource.assignment',
+        resource,
+        capacity: theCapacity
+    };
 }
 
 export function booking(
@@ -421,7 +454,7 @@ export function booking(
     serviceId: ServiceId,
     date: IsoDate,
     slot: BookableSlot,
-    assignedResources: ResourceId[],
+    assignedResources: ResourceAssignment[],
     status: 'confirmed' | 'cancelled' = 'confirmed',
     id = bookingId(uuidv4())
 ): Booking {
@@ -719,6 +752,7 @@ export interface FungibleResource {
     id: ResourceId;
     type: ResourceType;
     name: string;
+    capacity: Capacity;
 }
 
 export interface NonFungibleResource {
@@ -740,9 +774,20 @@ export function fungibleResource(type: ResourceType, name: string, id = resource
         _type: 'fungible.resource',
         id,
         type,
-        name
+        name,
+        capacity: capacity(1)
     };
 }
+
+export const fungibleResourceFns = {
+    setCapacity: (resource: FungibleResource, capacity: Capacity): FungibleResource => {
+        return {
+            ...resource,
+            capacity
+        };
+    }
+}
+
 
 export function nonFungibleResource(type: ResourceType, name: string, id = resourceId(uuidv4())): NonFungibleResource {
     return {
