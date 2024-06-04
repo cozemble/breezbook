@@ -1,7 +1,7 @@
 import {
+    availabilityBlock,
     Booking,
     BusinessAvailability,
-    capacityFns,
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
@@ -118,7 +118,7 @@ function recordResourceAllocation(booking: ResourcedBookingOutcome, resourceDayA
 
 function assignResourcesToBooking(booking: Booking, resources: ResourceDayAvailability[], service: Service): ResourcedBookingOutcome {
     return service.resourceTypes.reduce((acc, resourceType) => {
-        const possibleResources = resources.filter(r => r.availability.some(ra => ra.day.value === booking.date.value) && r.resource.type.value === resourceType.value)
+        const possibleResources = resources.filter(r => r.availability.some(ra => ra.when.day.value === booking.date.value) && r.resource.type.value === resourceType.value)
         if (possibleResources.length === 0) {
             return recordUnresourcedResourceType(acc, resourceType)
         }
@@ -137,15 +137,7 @@ function subtractTimePeriod(period: DayAndTimePeriod, booking: Booking, service:
 
 function subtractCapacity(resourcedBooking: FullyResourcedBooking | UnresourceableBooking, r: ResourceDayAvailability, service: Service): ResourceDayAvailability {
     const assigned = mandatory(resourcedBooking.booking.assignedResources.find(assigned => assigned.resource.value === r.resource.id.value), `No assigned resource for resource '${r.resource.id.value}'`)
-    const remainingCapacity = capacityFns.subtract(r.resource.capacity, assigned.capacity)
-    if (remainingCapacity.value === 0) {
-        return {
-            ...r,
-            availability: r.availability.flatMap(a => subtractTimePeriod(a, resourcedBooking.booking, service))
-        }
-    } else {
-        return {...r, resource: {...r.resource, capacity: remainingCapacity}}
-    }
+    return resourceDayAvailabilityFns.subtractCapacity(r, dayAndTimePeriod(resourcedBooking.booking.date, calcSlotPeriod(resourcedBooking.booking.slot, service.duration)), assigned.capacity)
 }
 
 function subtractResources(resourcedBooking: ResourcedBookingOutcome, remainingResources: ResourceDayAvailability[], service: Service): ResourceDayAvailability[] {
@@ -156,7 +148,7 @@ function subtractResources(resourcedBooking: ResourcedBookingOutcome, remainingR
             } else {
                 return {
                     ...r,
-                    availability: r.availability.flatMap(a => subtractTimePeriod(a, resourcedBooking.booking, service))
+                    availability: r.availability.flatMap(a => subtractTimePeriod(a.when, resourcedBooking.booking, service).map(p => availabilityBlock(p, a.capacity)))
                 }
             }
         }
@@ -185,7 +177,7 @@ function resourcesAreAvailable(resourceTypes: ResourceType[], time: DayAndTimePe
     return resourceTypes.every(resourceType =>
         actualAvailableResources.some(r =>
             r.resource.type.value === resourceType.value &&
-            r.availability.some(a => dayAndTimePeriodFns.overlaps(dayAndTimePeriod(a.day, a.period), time))
+            r.availability.some(a => dayAndTimePeriodFns.overlaps(dayAndTimePeriod(a.when.day, a.when.period), time))
         )
     );
 }

@@ -1,5 +1,6 @@
 import {describe, expect, test} from 'vitest'
 import {
+    availabilityBlock,
     blockedTime,
     booking,
     businessAvailability,
@@ -12,7 +13,6 @@ import {
     ErrorResponse,
     exactTimeAvailability,
     fungibleResource,
-    fungibleResourceFns,
     isoDate,
     minutes,
     mondayToFriday,
@@ -176,7 +176,7 @@ describe("given a carwash service that requires one of several interchangeable w
     test("we have availability when we have one resource", () => {
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
-            resourceAvailability: [resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
+            resourceAvailability: [resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [], theService.id, date)
         if (outcome._type === 'error.response') {
@@ -192,7 +192,7 @@ describe("given a carwash service that requires one of several interchangeable w
         const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(time24("10:00")), [], "confirmed")
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
-            resourceAvailability: [resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
+            resourceAvailability: [resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], theService.id, date)
         if (outcome._type === 'error.response') {
@@ -209,8 +209,8 @@ describe("given a carwash service that requires one of several interchangeable w
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [
-                resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))]),
-                resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
+                resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
+                resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], theService.id, date)
         if (outcome._type === 'error.response') {
@@ -244,7 +244,7 @@ describe("given a mobile carwash service that requires one of several interchang
     test("we have availability when we have one resource", () => {
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
-            resourceAvailability: [resourceDayAvailability(fungibleResource(van, "Van#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
+            resourceAvailability: [resourceDayAvailability(fungibleResource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [], theService.id, date)
         if (outcome._type === 'error.response') {
@@ -261,7 +261,7 @@ describe("given a mobile carwash service that requires one of several interchang
 
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
-            resourceAvailability: [resourceDayAvailability(fungibleResource(van, "Van#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
+            resourceAvailability: [resourceDayAvailability(fungibleResource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], theService.id, date)
         if (outcome._type === 'error.response') {
@@ -278,8 +278,8 @@ describe("given a mobile carwash service that requires one of several interchang
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [
-                resourceDayAvailability(fungibleResource(van, "Van#1"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))]),
-                resourceDayAvailability(fungibleResource(van, "Van#2"), [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
+                resourceDayAvailability(fungibleResource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
+                resourceDayAvailability(fungibleResource(van, "Van#2"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], theService.id, date)
         if (outcome._type === 'error.response') {
@@ -296,7 +296,7 @@ describe("given a gym that offers personal training with specific trainers, and 
     const personalTrainer = resourceType("personalTrainer")
     const ptMike = fungibleResource(personalTrainer, "ptMike")
     const ptMete = fungibleResource(personalTrainer, "ptMete")
-    const bothPtsAvailable = [resourceDayAvailability(ptMike, [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))]), resourceDayAvailability(ptMete, [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))])]
+    const bothPtsAvailable = [resourceDayAvailability(ptMike, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]), resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
     const theService = service("Personal Training", "Personal Training", [personalTrainer], 55, false, price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
@@ -359,9 +359,9 @@ describe("given a gym that offers personal training requiring a specific trainer
     const ptMete = fungibleResource(personalTrainer, "ptMete");
     const roomA = fungibleResource(gymRoom, "roomA");
     const requiredResources = [
-        resourceDayAvailability(ptMike, [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))]),
-        resourceDayAvailability(ptMete, [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))]),
-        resourceDayAvailability(roomA, [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))]),
+        resourceDayAvailability(ptMike, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
+        resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
+        resourceDayAvailability(roomA, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
     const theService = service("Personal Training", "Personal Training", [personalTrainer, gymRoom], 55, false, price(3500, currencies.GBP), [], []);
     const config = availabilityConfiguration(
@@ -426,9 +426,9 @@ describe("given a gym that offers personal training requiring a specific trainer
 
 describe("given a dog walking service that can take up to 6 dogs at 09.00, and is open monday to friday", () => {
     const dogIntake = resourceType("dogs", true);
-    const sixDogs = fungibleResourceFns.setCapacity(fungibleResource(dogIntake, "Dog"), capacity(6))
+    const sixDogs = fungibleResource(dogIntake, "Dog")
     const requiredResources = [
-        resourceDayAvailability(sixDogs, [dayAndTimePeriod(date, timePeriod(nineAm, fivePm))]),
+        resourceDayAvailability(sixDogs, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(6))]),
     ];
     const theService = service("Dog Walk", "Dog Walk", [dogIntake], 480, false, price(3500, currencies.GBP), [], []);
     const config = availabilityConfiguration(

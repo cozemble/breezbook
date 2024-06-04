@@ -16,7 +16,7 @@ import {
     resourceType,
     service,
     time24,
-    timePeriod
+    timePeriod, availabilityBlock
 } from "../../src/index.js";
 import {makeBusinessAvailability} from "../../src/makeBusinessAvailability.js";
 
@@ -66,7 +66,7 @@ test("no availability when no resources", () => {
 test("full availability when resources are available and no bookings", () => {
     const theAvailability = makeBusinessAvailability([businessHours("Monday", nineAm, sixPm)], [], [today]);
     const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
-        dayAndTimePeriod(today, nineToSix),
+        availabilityBlock(dayAndTimePeriod(today, nineToSix)),
     ]))
 
     const theBusiness = businessConfiguration(theAvailability, resourceAvailability, [gym.services.personalTraining55Mins], [], [], [], periodicStartTime(duration(minutes(15))), null)
@@ -113,7 +113,7 @@ test("full availability when resources are available and no bookings", () => {
 test("periodic start controls the possible start times", () => {
     const theAvailability = makeBusinessAvailability([businessHours("Monday", nineAm, sixPm)], [], [today]);
     const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
-        dayAndTimePeriod(today, nineToSix),
+        availabilityBlock(dayAndTimePeriod(today, nineToSix)),
     ]))
 
     const theBusiness = businessConfiguration(theAvailability, resourceAvailability, [gym.services.personalTraining55Mins], [], [], [], periodicStartTime(duration(minutes(30))), null)

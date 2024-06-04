@@ -1,4 +1,5 @@
 import {
+    availabilityBlock,
     Booking,
     businessAvailability,
     businessConfiguration,
@@ -14,7 +15,7 @@ import {
     environmentId,
     IsoDate,
     isoDate,
-    isoDateFns,
+    isoDateFns, minutes,
     PaymentIntent,
     percentageAsRatio,
     percentageCoupon,
@@ -82,7 +83,7 @@ const tenPercentMoreTwoDaysFromNow = timeBasedPriceAdjustment(
 export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[] = [], today = isoDate(), otherDays: IsoDate[] = []) {
     const allDays = [today, ...otherDays];
     const theResourceAvailability = allDays.flatMap(day => [
-        resourceDayAvailability(carwash.van1, [dayAndTimePeriod(day, carwash.nineToSix)]), resourceDayAvailability(carwash.van2, [dayAndTimePeriod(day, carwash.nineToSix)])]);
+        resourceDayAvailability(carwash.van1, [availabilityBlock(dayAndTimePeriod(day, carwash.nineToSix))]), resourceDayAvailability(carwash.van2, [availabilityBlock(dayAndTimePeriod(day, carwash.nineToSix))])]);
     const theBusinessAvailability = allDays.map(day => dayAndTimePeriod(day, carwash.nineToSix))
 
     return everythingForAvailability(
@@ -93,7 +94,7 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
             carwash.addOns,
             carwash.timeslots,
             [carwashForm, customerForm],
-            periodicStartTime(duration(90)),
+            periodicStartTime(duration(minutes(90))),
             null
         ),
         [fortyPercentMoreToday, twentyFivePercentMoreTomorrow, tenPercentMoreTwoDaysFromNow],

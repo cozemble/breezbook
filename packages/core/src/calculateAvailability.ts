@@ -1,6 +1,7 @@
 import {mandatory} from './utils.js';
 import {applyBookingsToResourceAvailability, fitAvailability} from './applyBookingsToResourceAvailability.js';
 import {
+    availabilityBlock,
     BookableSlot,
     BookableTimes,
     bookableTimeSlot,
@@ -9,7 +10,8 @@ import {
     BusinessConfiguration,
     DayAndTimePeriod,
     dayAndTimePeriod,
-    dayAndTimePeriodFns, discreteStartTimes,
+    dayAndTimePeriodFns,
+    discreteStartTimes,
     DiscreteStartTimes,
     exactTimeAvailability,
     ExactTimeAvailability,
@@ -26,7 +28,8 @@ import {
     ServiceId,
     time24Fns,
     timePeriod,
-    TimePeriod, timePeriodFns,
+    TimePeriod,
+    timePeriodFns,
     TimeslotSpec,
     values
 } from './types.js';
@@ -62,7 +65,7 @@ function assignResourcesToBookings(config: BusinessConfiguration, bookings: Book
         const serviceTime = calcBookingPeriod(booking, bookedService.duration);
         const bookedResources = bookedService.resourceTypes.map((rt: ResourceType) => {
             const possibleResources = config.resourceAvailability
-                .filter((ra) => ra.availability.some((da) => dayAndTimePeriodFns.overlaps(da, serviceTime)))
+                .filter((ra) => ra.availability.some((da) => dayAndTimePeriodFns.overlaps(da.when, serviceTime)))
                 .map((a) => a.resource);
             const resource = possibleResources.find(
                 (r) => !resourceTimeSlots.find((rts) => dayAndTimePeriodFns.overlaps(rts.allocation, serviceTime) && values.isEqual(rts.resourceId, r.id))
@@ -84,19 +87,16 @@ function assignResourcesToBookings(config: BusinessConfiguration, bookings: Book
 }
 
 function applyBookedTimeSlotsToResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookedSlot: ResourcedTimeSlot): ResourceDayAvailability[] {
-    return resourceAvailability.map((resource) => {
-        if (bookedSlot.resources.find((r) => values.isEqual(r.id, resource.resource.id))) {
+    return resourceAvailability.map((ra) => {
+        if (bookedSlot.resources.find((r) => values.isEqual(r.id, ra.resource.id))) {
+            const slotPeriod = dayAndTimePeriod(bookedSlot.date, calcSlotPeriod(bookedSlot.slot, bookedSlot.service.duration))
+            const newBlocks = ra.availability.flatMap(block => dayAndTimePeriodFns.splitPeriod(block.when, slotPeriod).map(p => availabilityBlock(p, block.capacity)))
             return {
-                ...resource,
-                availability: resource.availability.flatMap((da) => {
-                    if (isoDateFns.sameDay(da.day, bookedSlot.date)) {
-                        return dayAndTimePeriodFns.splitPeriod(da, dayAndTimePeriod(bookedSlot.date, calcSlotPeriod(bookedSlot.slot, bookedSlot.service.duration)));
-                    }
-                    return [da];
-                })
-            };
+                ...ra,
+                availability: newBlocks
+            } as ResourceDayAvailability;
         }
-        return resource;
+        return ra;
     });
 }
 
@@ -192,7 +192,7 @@ function hasResourcesForSlot(
     const resourcesUsedDuringSlot = bookingWithResourceUsage
         .filter((r) => dayAndTimePeriodFns.overlaps(calcBookingPeriod(r.booking, service.duration), slotDayAndTime))
         .flatMap((r) => r.resources);
-    const availableResourcesForSlot = availableResources.filter((ra) => ra.availability.some((da) => dayAndTimePeriodFns.overlaps(da, slotDayAndTime)));
+    const availableResourcesForSlot = availableResources.filter((ra) => ra.availability.some((da) => dayAndTimePeriodFns.overlaps(da.when, slotDayAndTime)));
     const resourcesTypesAvailable = availableResourcesForSlot
         .map((a) => a.resource)
         .filter((r) => !resourcesUsedDuringSlot.find((used) => values.isEqual(used.id, r.id)))
@@ -202,7 +202,7 @@ function hasResourcesForSlot(
 
 function getResource(availabilities: ResourceDayAvailability[], resourceType: ResourceType, period: DayAndTimePeriod): FungibleResource | null {
     const availableResources = availabilities.filter((ra) => values.isEqual(ra.resource.type, resourceType));
-    const availableResource = availableResources.find((ra) => ra.availability.some((da) => dayAndTimePeriodFns.overlaps(da, period)));
+    const availableResource = availableResources.find((ra) => ra.availability.some((da) => dayAndTimePeriodFns.overlaps(da.when, period)));
     return availableResource ? availableResource.resource : null;
 }
 

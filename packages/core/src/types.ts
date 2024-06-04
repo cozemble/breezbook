@@ -757,7 +757,7 @@ export function service(
         price,
         permittedAddOns,
         serviceFormIds,
-        options:[]
+        options: []
     };
 }
 
@@ -766,7 +766,6 @@ export interface FungibleResource {
     id: ResourceId;
     type: ResourceType;
     name: string;
-    capacity: Capacity;
 }
 
 export interface NonFungibleResource {
@@ -789,19 +788,8 @@ export function fungibleResource(type: ResourceType, name: string, id = resource
         id,
         type,
         name,
-        capacity: capacity(1)
     };
 }
-
-export const fungibleResourceFns = {
-    setCapacity: (resource: FungibleResource, capacity: Capacity): FungibleResource => {
-        return {
-            ...resource,
-            capacity
-        };
-    }
-}
-
 
 export function nonFungibleResource(type: ResourceType, name: string, id = resourceId(uuidv4())): NonFungibleResource {
     return {
@@ -937,12 +925,47 @@ export interface BookableTimes {
     bookableTimes: ExactTimeAvailability[];
 }
 
-export interface ResourceDayAvailability {
-    resource: FungibleResource;
-    availability: DayAndTimePeriod[];
+export interface AvailabilityBlock {
+    _type: 'availability.block';
+    when: DayAndTimePeriod;
+    capacity: Capacity;
 }
 
-export function resourceDayAvailability(resource: FungibleResource, availability: DayAndTimePeriod[]): ResourceDayAvailability {
+export const availabilityBlockFns = {
+
+    subtractCapacity(a: AvailabilityBlock, when: DayAndTimePeriod, capacity: Capacity): AvailabilityBlock[] {
+        if (dayAndTimePeriodFns.intersects(a.when, when)) {
+            const split = dayAndTimePeriodFns.splitPeriod(a.when, when, true)
+            return split.map(dt => availabilityBlock(dt, a.capacity))
+                .map(block => {
+                    if (dayAndTimePeriodFns.overlaps(block.when, when)) {
+                        return {
+                            ...block,
+                            capacity: capacityFns.subtract(block.capacity, capacity)
+                        }
+                    }
+                    return block
+                })
+                .filter(block => block.capacity.value > 0)
+        }
+        return [a]
+    }
+}
+
+export function availabilityBlock(when: DayAndTimePeriod, theCapacity = capacity(1)): AvailabilityBlock {
+    return {
+        _type: 'availability.block',
+        when,
+        capacity: theCapacity
+    };
+}
+
+export interface ResourceDayAvailability {
+    resource: FungibleResource;
+    availability: AvailabilityBlock[];
+}
+
+export function resourceDayAvailability(resource: FungibleResource, availability: AvailabilityBlock[]): ResourceDayAvailability {
     return {
         resource,
         availability
@@ -952,6 +975,20 @@ export function resourceDayAvailability(resource: FungibleResource, availability
 export const resourceDayAvailabilityFns = {
     reduceToResource: (resourceDayAvailabilities: ResourceDayAvailability[], resourceId: ResourceId): ResourceDayAvailability[] => {
         return resourceDayAvailabilities.filter((rda) => rda.resource.id.value === resourceId.value);
+    },
+    subtractCapacity(resourceDayAvailability: ResourceDayAvailability, when: DayAndTimePeriod, capacity: Capacity): ResourceDayAvailability {
+        const subtractedBlocks = resourceDayAvailability.availability.flatMap(a => availabilityBlockFns.subtractCapacity(a, when, capacity))
+        const deDupedBlocks = subtractedBlocks.reduce((acc, block) => {
+            const existingBlock = acc.find(b => dayAndTimePeriodFns.equals(b.when, block.when))
+            if (existingBlock) {
+                return acc
+            }
+            return [...acc, block]
+        }, [] as AvailabilityBlock[])
+        return {
+            ...resourceDayAvailability,
+            availability: deDupedBlocks
+        }
     }
 }
 
@@ -979,13 +1016,16 @@ export const dayAndTimePeriodFns = {
     overlaps: (dayAndTimePeriod1: DayAndTimePeriod, dayAndTimePeriod2: DayAndTimePeriod): boolean => {
         return isoDateFns.isEqual(dayAndTimePeriod1.day, dayAndTimePeriod2.day) && timePeriodFns.overlaps(dayAndTimePeriod1.period, dayAndTimePeriod2.period);
     },
-    splitPeriod(da: DayAndTimePeriod, bookingPeriod: DayAndTimePeriod): DayAndTimePeriod[] {
-        if (!dayAndTimePeriodFns.overlaps(da, bookingPeriod)) {
+    splitPeriod(da: DayAndTimePeriod, bookingPeriod: DayAndTimePeriod, includeGivenPeriod = false): DayAndTimePeriod[] {
+        if (!dayAndTimePeriodFns.intersects(da, bookingPeriod)) {
             return [da];
         }
         const remainingTimePeriods = [] as TimePeriod[];
         if (timePeriodFns.startsEarlier(da.period, bookingPeriod.period)) {
             remainingTimePeriods.push(timePeriod(da.period.from, bookingPeriod.period.from));
+        }
+        if (includeGivenPeriod) {
+            remainingTimePeriods.push(bookingPeriod.period)
         }
         if (timePeriodFns.endsLater(da.period, bookingPeriod.period)) {
             remainingTimePeriods.push(timePeriod(bookingPeriod.period.to, da.period.to));
@@ -1003,6 +1043,9 @@ export const dayAndTimePeriodFns = {
     },
     intersects(period1: DayAndTimePeriod, period2: DayAndTimePeriod) {
         return isoDateFns.sameDay(period1.day, period2.day) && timePeriodFns.intersects(period1.period, period2.period);
+    },
+    equals(when: DayAndTimePeriod, when2: DayAndTimePeriod) {
+        return isoDateFns.isEqual(when.day, when2.day) && timePeriodFns.equals(when.period, when2.period);
     }
 };
 
@@ -1041,6 +1084,9 @@ export const timePeriodFns = {
             currentTime = time24Fns.addMinutes(currentTime, duration.value.value)
         }
         return result
+    },
+    equals(period: TimePeriod, period2: TimePeriod) {
+        return period.from.value === period2.from.value && period.to.value === period2.to.value;
     }
 };
 

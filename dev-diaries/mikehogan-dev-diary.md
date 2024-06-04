@@ -796,3 +796,10 @@ I am going to extend this list with the following:
 3.4 Colouring
 3.5 Perm
 3.6 Hair treatment
+
+# Tue 4 Jun 2024
+
+Realised this morning that putting `capacity` on `resource` is the wrong place.  It should be on the 
+`ResourceDayAvailability`, because capacity changes with time.  A dog walker might add or remove resource at any time,
+and a mobile car wash might add and remove a van at any time.  A yoga class might be able to take 12 people at 18.00,
+but only 6 at 08.30.  So I'm going to move `capacity` to `ResourceDayAvailability`.

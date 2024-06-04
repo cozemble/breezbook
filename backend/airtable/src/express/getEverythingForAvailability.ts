@@ -25,7 +25,7 @@ import {
     TenantSettings,
     time24,
     timePeriod,
-    values
+    values, availabilityBlock
 } from '@breezbook/packages-core';
 import {makeBusinessAvailability} from './makeBusinessAvailability.js';
 import {
@@ -152,10 +152,10 @@ export function makeResourceAvailability(
     return availability.reduce((acc, curr) => {
         const existing = acc.find((a) => values.isEqual(a.resource.id, curr.resource.id));
         if (existing) {
-            existing.availability.push(curr.availability);
+            existing.availability.push(availabilityBlock(curr.availability));
             return acc;
         }
-        return [...acc, resourceDayAvailability(curr.resource, [curr.availability])];
+        return [...acc, resourceDayAvailability(curr.resource, [availabilityBlock(curr.availability)])];
     }, [] as ResourceDayAvailability[]);
 }
 

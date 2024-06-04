@@ -6,7 +6,7 @@ import {
     carwash,
     environmentId,
     isoDate,
-    locationId, serviceId,
+    locationId,
     tenantEnvironmentLocation,
     tenantId
 } from "@breezbook/packages-core";
@@ -21,7 +21,7 @@ const harlow = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGy
 const stortford = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGym.locationStortford))
 const ware = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGym.locationWare))
 
-describe("Given a gym with services at various locations", async () => {
+describe("Given a gym with services at various locations", () => {
     let prisma: PrismaClient;
 
     beforeEach(async () => {
@@ -83,9 +83,9 @@ describe("Given a gym with services at various locations", async () => {
 
     test("ptMike is at harlow mon-friday, and ptMete is there on tue", async () => {
         const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
-        const ptMikeDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.day.value))
+        const ptMikeDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.when.day.value))
         expect(ptMikeDays).toEqual(['2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26'])
-        const ptMeteDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMete).flatMap(ra => ra.availability.map(a => a.day.value))
+        const ptMeteDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMete).flatMap(ra => ra.availability.map(a => a.when.day.value))
         expect(ptMeteDays).toEqual(['2024-04-23'])
     })
 
@@ -102,7 +102,7 @@ describe("Given a gym with services at various locations", async () => {
             }
         });
         const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
-        const ptMikeDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.day.value))
+        const ptMikeDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.when.day.value))
         expect(ptMikeDays).toEqual(['2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26'])
     });
 

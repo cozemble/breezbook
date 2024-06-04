@@ -17,7 +17,7 @@ import {
     service,
     time24,
     timePeriod,
-    timezone
+    timezone, availabilityBlock
 } from "../src/types.js";
 import {calculateAvailability} from '../src/index.js';
 
@@ -43,7 +43,7 @@ const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(isoDate("2021-05-24"), nineToTen),
     dayAndTimePeriod(isoDate("2021-05-25"), nineToTen),
     dayAndTimePeriod(isoDate("2021-05-26"), nineToTen),
-]))
+].map(when => availabilityBlock(when))))
 
 const bicycleRepair = service('Bicycle Repair','Bicycle Repair', [staff], 5, false, price(3500, GBP), [], []);
 const services = [bicycleRepair];
