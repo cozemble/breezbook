@@ -803,3 +803,15 @@ Realised this morning that putting `capacity` on `resource` is the wrong place. 
 `ResourceDayAvailability`, because capacity changes with time.  A dog walker might add or remove resource at any time,
 and a mobile car wash might add and remove a van at any time.  A yoga class might be able to take 12 people at 18.00,
 but only 6 at 08.30.  So I'm going to move `capacity` to `ResourceDayAvailability`.
+
+----------------
+
+Extending my availability logic to deal with more cases, seems to cause me to quite frequently replace a simple value
+with that value wrapped in context.  Examples:
+
+1. ResourceDayAvailability got a capacity field added
+2. Calculating availability took a service id, but now services can have options added, so the service id is now wrapped
+   in a ServiceRequest object, that also carries the ids of the service options.  It will also eventually carry the 
+   requested add-ons and their quantities, I suspect
+3. Bookings have a service id, and from that the duration was implied.  But now services can have variable duration, 
+   so Booking will carry its duration explicitly.

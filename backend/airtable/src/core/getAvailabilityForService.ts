@@ -19,7 +19,7 @@ import {
     ResourcedTimeSlot,
     Service,
     Service as DomainService,
-    ServiceId,
+    ServiceId, serviceRequest,
     startTimeFns, success,
     values
 } from '@breezbook/packages-core';
@@ -137,8 +137,7 @@ export function getAvailabilityForService2(
 function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], serviceId: ServiceId, fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
     const dates = isoDateFns.listDays(fromDate, toDate);
     const eachDate = dates.map(date => {
-        const outcome = availability.calculateAvailableSlots(config, bookings, serviceId, date);
-        console.log({outcome})
+        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(serviceId, date));
         if(outcome._type === 'error.response' && outcome.errorCode === availability.errorCodes.noAvailabilityForDay) {
             return success([])
         }

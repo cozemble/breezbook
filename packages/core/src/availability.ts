@@ -16,6 +16,7 @@ import {
     ResourceType,
     Service,
     ServiceId,
+    ServiceOptionId,
     StartTimeSpec,
     time24Fns,
     TimePeriod,
@@ -209,6 +210,34 @@ export function availabilityConfiguration(availability: BusinessAvailability, re
     }
 }
 
+export interface ServiceOptionRequest {
+    _type: 'service.option.request'
+    serviceOptionId: ServiceOptionId
+}
+
+export function serviceOptionRequest(serviceOptionId: ServiceOptionId): ServiceOptionRequest {
+    return {
+        _type: "service.option.request",
+        serviceOptionId
+    }
+}
+
+export interface ServiceRequest {
+    _type: 'service.request'
+    date: IsoDate;
+    serviceId: ServiceId;
+    options: ServiceOptionRequest[]
+}
+
+export function serviceRequest(serviceId: ServiceId, date: IsoDate, options: ServiceOptionRequest[] = []): ServiceRequest {
+    return {
+        _type: "service.request",
+        date,
+        serviceId,
+        options
+    }
+}
+
 export const availability = {
     errorCodes: {
         noAvailabilityForDay: 'no.availability.for.day',
@@ -218,8 +247,9 @@ export const availability = {
     },
     calculateAvailableSlots: (config: AvailabilityConfiguration,
                               bookings: Booking[],
-                              serviceId: ServiceId,
-                              date: IsoDate): Success<AvailableSlot[]> | ErrorResponse => {
+                              serviceRequest: ServiceRequest): Success<AvailableSlot[]> | ErrorResponse => {
+        const serviceId = serviceRequest.serviceId
+        const date = serviceRequest.date
         const availabilityForDay = config.availability.availability.filter(a => a.day.value === date.value)
         if (availabilityForDay.length === 0) {
             return errorResponse(availability.errorCodes.noAvailabilityForDay, `No availability for date '${date.value}'`)
@@ -250,13 +280,12 @@ export const availability = {
     },
     calculateAvailableSlotsForResource: (config: AvailabilityConfiguration,
                                          bookings: Booking[],
-                                         serviceId: ServiceId,
-                                         date: IsoDate,
+                                         serviceRequest: ServiceRequest,
                                          resourceId: ResourceId): Success<AvailableSlot[]> | ErrorResponse => {
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: resourceDayAvailabilityFns.reduceToResource(config.resourceAvailability, resourceId)
         }
-        return availability.calculateAvailableSlots(mutatedConfig, bookings.filter(b => b.assignedResources.some(rid => rid.resource.value === resourceId.value)), serviceId, date)
+        return availability.calculateAvailableSlots(mutatedConfig, bookings.filter(b => b.assignedResources.some(rid => rid.resource.value === resourceId.value)), serviceRequest)
     }
 }

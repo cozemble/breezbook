@@ -723,9 +723,20 @@ export interface Service {
     options: ServiceOption[];
 }
 
+export interface ServiceOptionId extends ValueType<string> {
+    _type: 'service.option.id';
+}
+
+export function serviceOptionId(value: string): ServiceOptionId {
+    return {
+        _type: 'service.option.id',
+        value
+    };
+}
+
 export interface ServiceOption {
     _type: 'service.option';
-    id: Id;
+    id: ServiceOptionId;
     name: string;
     description: string;
     price: Price;
@@ -735,6 +746,14 @@ export interface ServiceOption {
     forms: FormId[]
 }
 
+export const serviceFns = {
+    addOptions(service1: Service, serviceOptions: ServiceOption[]): Service {
+        return {
+            ...service1,
+            options: service1.options.concat(serviceOptions)
+        };
+    }
+}
 
 export function service(
     name: string,
@@ -758,6 +777,29 @@ export function service(
         permittedAddOns,
         serviceFormIds,
         options: []
+    };
+}
+
+export function serviceOption(
+    name: string,
+    description: string,
+    price: Price,
+    requiresQuantity: boolean,
+    duration: Duration,
+    resourceTypes: ResourceType[],
+    forms: FormId[],
+    id = serviceOptionId(uuidv4())
+): ServiceOption {
+    return {
+        _type: 'service.option',
+        id,
+        name,
+        description,
+        price,
+        requiresQuantity,
+        duration,
+        resourceTypes,
+        forms
     };
 }
 
