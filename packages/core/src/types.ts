@@ -438,7 +438,7 @@ export const capacityFns = {
 export interface ResourceAssignment {
     _type: 'resource.assignment';
     resource: ResourceId;
-    capacity:Capacity
+    capacity: Capacity
 }
 
 export function resourceAssignment(resource: ResourceId, theCapacity = capacity(1)): ResourceAssignment {
@@ -720,6 +720,19 @@ export interface Service {
     price: Price;
     permittedAddOns: AddOnId[];
     serviceFormIds: FormId[];
+    options: ServiceOption[];
+}
+
+export interface ServiceOption {
+    _type: 'service.option';
+    id: Id;
+    name: string;
+    description: string;
+    price: Price;
+    requiresQuantity: boolean;
+    duration: Duration;
+    resourceTypes: ResourceType[];
+    forms: FormId[]
 }
 
 
@@ -743,7 +756,8 @@ export function service(
         requiresTimeslot,
         price,
         permittedAddOns,
-        serviceFormIds
+        serviceFormIds,
+        options:[]
     };
 }
 
