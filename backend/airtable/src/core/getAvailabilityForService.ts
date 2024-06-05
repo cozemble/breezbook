@@ -9,7 +9,8 @@ import {
     BookableTimes,
     Booking,
     calculateAvailability,
-    calculatePrice, ErrorResponse,
+    calculatePrice,
+    ErrorResponse,
     Form,
     IsoDate,
     isoDateFns,
@@ -19,8 +20,10 @@ import {
     ResourcedTimeSlot,
     Service,
     Service as DomainService,
-    ServiceId, serviceRequest,
-    startTimeFns, success,
+    ServiceId,
+    serviceRequest,
+    startTimeFns,
+    success,
     values
 } from '@breezbook/packages-core';
 import {
@@ -54,7 +57,7 @@ function toTimeSlotAvailability(slot: ResourcedTimeSlot | AvailableSlot, price: 
     );
 }
 
-export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTimes[] | AvailableSlot[], pricingRules: PricingRule[], services: Service[], addOns: AddOn[], forms: Form[], serviceId: ServiceId): AvailabilityResponse {
+export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTimes[] | AvailableSlot[], pricingRules: PricingRule[], service: Service, addOns: AddOn[], forms: Form[]): AvailabilityResponse {
     const priced = availability.map((a) => {
         if (a._type === 'bookable.times') {
             return a;
@@ -64,7 +67,6 @@ export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTi
     return priced.reduce(
         (acc, curr) => {
             if (curr._type === 'bookable.times') {
-                // const timesForDate = acc.slots[curr.date.value] ?? [];
                 throw new Error('Not yet implemented');
             }
             const slotsForDate = acc.slots[curr.slot.date.value] ?? [];
@@ -76,8 +78,8 @@ export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTi
             return acc;
         },
         emptyAvailabilityResponse(
-            getServiceSummary(services, serviceId, forms),
-            getAddOnSummaries(services, addOns, serviceId)
+            getServiceSummary(service, forms),
+            getAddOnSummaries(service, addOns)
         )
     );
 }
@@ -88,6 +90,7 @@ export function getAvailabilityForService(
     fromDate: IsoDate,
     toDate: IsoDate
 ): AvailabilityResponse {
+    const service = mandatory(everythingForAvailability.businessConfiguration.services.find((s) => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
     const availability = calculateAvailability(
         everythingForAvailability.businessConfiguration,
         everythingForAvailability.bookings.filter((b) => b.status === 'confirmed'),
@@ -98,10 +101,9 @@ export function getAvailabilityForService(
     return applyPricingRules(
         availability,
         everythingForAvailability.pricingRules,
-        everythingForAvailability.businessConfiguration.services,
+        service,
         everythingForAvailability.businessConfiguration.addOns,
-        everythingForAvailability.businessConfiguration.forms,
-        serviceId);
+        everythingForAvailability.businessConfiguration.forms);
 }
 
 export function getAvailabilityForService2(
@@ -113,51 +115,38 @@ export function getAvailabilityForService2(
     const config = availabilityConfiguration(
         everythingForAvailability.businessConfiguration.availability,
         everythingForAvailability.businessConfiguration.resourceAvailability,
-        everythingForAvailability.businessConfiguration.services,
         everythingForAvailability.businessConfiguration.timeslots,
         everythingForAvailability.businessConfiguration.startTimeSpec);
-    // const availability = calculateAvailability(
-    //     config.businessConfiguration,
-    //     config.bookings.filter((b) => b.status === 'confirmed'),
-    //     serviceId,
-    //     fromDate,
-    //     toDate
-    // );
-
-    const availability = getAvailableSlots(config, everythingForAvailability.bookings, serviceId, fromDate, toDate)
+    const service = mandatory(everythingForAvailability.businessConfiguration.services.find((s) => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
+    const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, fromDate, toDate)
     return applyPricingRules(
         availability,
         everythingForAvailability.pricingRules,
-        config.services,
+        service,
         everythingForAvailability.businessConfiguration.addOns,
-        everythingForAvailability.businessConfiguration.forms,
-        serviceId);
+        everythingForAvailability.businessConfiguration.forms);
 }
 
-function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], serviceId: ServiceId, fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
+function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
     const dates = isoDateFns.listDays(fromDate, toDate);
     const eachDate = dates.map(date => {
-        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(serviceId, date));
-        if(outcome._type === 'error.response' && outcome.errorCode === availability.errorCodes.noAvailabilityForDay) {
+        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(service, date));
+        if (outcome._type === 'error.response' && outcome.errorCode === availability.errorCodes.noAvailabilityForDay) {
             return success([])
         }
         return outcome
     })
     const firstError = eachDate.find(r => r._type === 'error.response')
-    if(firstError) {
+    if (firstError) {
         throw new Error((firstError as ErrorResponse).errorMessage)
     }
     return eachDate.flatMap(d => d._type === 'success' ? d.value : [])
 }
 
-function getServiceSummary(services: DomainService[], serviceId: ServiceId, forms: Form[]): ServiceSummary {
-    const service = mandatory(
-        services.find((s) => s.id.value === serviceId.value),
-        `Service with id ${serviceId.value} not found`
-    );
+function getServiceSummary(service: DomainService, forms: Form[]): ServiceSummary {
     return {
         name: service.name,
-        id: serviceId.value,
+        id: service.id.value,
         durationMinutes: service.duration,
         description: service.description,
         forms: service.serviceFormIds.map((id) =>
@@ -169,11 +158,7 @@ function getServiceSummary(services: DomainService[], serviceId: ServiceId, form
     };
 }
 
-function getAddOnSummaries(services: DomainService[], addOns: DomainAddOn[], serviceId: ServiceId): AddOnSummary[] {
-    const service = mandatory(
-        services.find((s) => s.id.value === serviceId.value),
-        `Service with id ${serviceId.value} not found`
-    );
+function getAddOnSummaries(service: DomainService, addOns: DomainAddOn[]): AddOnSummary[] {
     const permittedAddOns = service.permittedAddOns.map((ao) =>
         mandatory(
             addOns.find((a) => a.id.value === ao.value),

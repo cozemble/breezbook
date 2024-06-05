@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { getAvailabilityForService } from '../../src/core/getAvailabilityForService.js';
-import { booking, carwash, customerId, isoDate } from '@breezbook/packages-core';
+import {Booking, booking, carwash, customerId, isoDate} from '@breezbook/packages-core';
 import { everythingForCarWashTenantWithDynamicPricing } from '../helper.js';
 
 const today = isoDate();
@@ -31,7 +31,7 @@ test('if all resources are assigned to a timeslot, then we have no service avail
 });
 
 test('cancelled bookings do not count against availability', () => {
-	const theBooking = {
+	const theBooking:Booking = {
 		...booking(customerId('customer#1'), carwash.smallCarWash.id, today, theOnlyTimeslotWeHave, []),
 		status: 'cancelled'
 	};

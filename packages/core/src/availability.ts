@@ -15,7 +15,7 @@ import {
     ResourceId,
     ResourceType,
     Service,
-    ServiceId,
+    ServiceId, ServiceOption,
     ServiceOptionId,
     StartTimeSpec,
     time24Fns,
@@ -194,46 +194,34 @@ export interface AvailabilityConfiguration {
     _type: 'availability.configuration'
     availability: BusinessAvailability;
     resourceAvailability: ResourceDayAvailability[];
-    services: Service[];
+    // services: Service[];
     timeslots: TimeslotSpec[];
     startTimeSpec: StartTimeSpec;
 }
 
-export function availabilityConfiguration(availability: BusinessAvailability, resourceAvailability: ResourceDayAvailability[], services: Service[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec): AvailabilityConfiguration {
+export function availabilityConfiguration(availability: BusinessAvailability, resourceAvailability: ResourceDayAvailability[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec): AvailabilityConfiguration {
     return {
         _type: "availability.configuration",
         availability,
         resourceAvailability,
-        services,
+        // services,
         timeslots,
         startTimeSpec
-    }
-}
-
-export interface ServiceOptionRequest {
-    _type: 'service.option.request'
-    serviceOptionId: ServiceOptionId
-}
-
-export function serviceOptionRequest(serviceOptionId: ServiceOptionId): ServiceOptionRequest {
-    return {
-        _type: "service.option.request",
-        serviceOptionId
     }
 }
 
 export interface ServiceRequest {
     _type: 'service.request'
     date: IsoDate;
-    serviceId: ServiceId;
-    options: ServiceOptionRequest[]
+    service: Service;
+    options: ServiceOption[]
 }
 
-export function serviceRequest(serviceId: ServiceId, date: IsoDate, options: ServiceOptionRequest[] = []): ServiceRequest {
+export function serviceRequest(service: Service, date: IsoDate, options: ServiceOption[] = []): ServiceRequest {
     return {
         _type: "service.request",
         date,
-        serviceId,
+        service,
         options
     }
 }
@@ -241,22 +229,17 @@ export function serviceRequest(serviceId: ServiceId, date: IsoDate, options: Ser
 export const availability = {
     errorCodes: {
         noAvailabilityForDay: 'no.availability.for.day',
-        serviceNotFound: 'service.not.found',
         noResourcesAvailable: 'no.resources.available',
         unresourceableBooking: 'unresourceable.booking'
     },
     calculateAvailableSlots: (config: AvailabilityConfiguration,
                               bookings: Booking[],
                               serviceRequest: ServiceRequest): Success<AvailableSlot[]> | ErrorResponse => {
-        const serviceId = serviceRequest.serviceId
+        const service = serviceRequest.service
         const date = serviceRequest.date
         const availabilityForDay = config.availability.availability.filter(a => a.day.value === date.value)
         if (availabilityForDay.length === 0) {
             return errorResponse(availability.errorCodes.noAvailabilityForDay, `No availability for date '${date.value}'`)
-        }
-        const service = config.services.find(s => s.id.value === serviceId.value)
-        if (!service) {
-            return errorResponse(availability.errorCodes.serviceNotFound, `No service with id '${serviceId.value}'`)
         }
         const bookingsForDate = bookings.filter(b => b.date.value === date.value)
         const resourceAvailabilityOutcome = calcActualResourceAvailability(config.resourceAvailability, bookingsForDate, service)
@@ -264,11 +247,11 @@ export const availability = {
             return errorResponse(availability.errorCodes.unresourceableBooking, `Could not resource booking '${resourceAvailabilityOutcome.booking.id.value}', missing resource types are ${resourceAvailabilityOutcome.missingResourceTypes.map(rt => rt.value)}`)
         }
         const unavailableResourceTypes = service.resourceTypes.filter(resourceType =>
-            !resourceAvailabilityOutcome.some(r => r.resource.type.value === resourceType.value)
+            !resourceAvailabilityOutcome.some(rda => rda.resource.type.value === resourceType.value)
         );
 
         if (unavailableResourceTypes.length > 0) {
-            return errorResponse(availability.errorCodes.noResourcesAvailable, `Do not have resources for service '${serviceId.value}'. Missing resource types: ${unavailableResourceTypes.map(rt => rt.value).join(', ')}`);
+            return errorResponse(availability.errorCodes.noResourcesAvailable, `Do not have resources for service '${service.id.value}'. Missing resource types: ${unavailableResourceTypes.map(rt => rt.value).join(', ')}`);
         }
 
         const possibleStartTimes = service.requiresTimeslot ? config.timeslots : calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service).map(exactTimeAvailability);

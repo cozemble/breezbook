@@ -815,3 +815,52 @@ with that value wrapped in context.  Examples:
    requested add-ons and their quantities, I suspect
 3. Bookings have a service id, and from that the duration was implied.  But now services can have variable duration, 
    so Booking will carry its duration explicitly.
+
+# Wed 5 Jun 2024
+
+Working on the domain logic, yesterday I added a `ServiceRequest` type, that wrapped a plain `serviceId`, and added more
+context like the service options and add-ons.  But I specified the service and options and add-ons using ids.  The 
+domain logic works better with the full objects, not the ids.  I guess I am of a mind to use ids because some part of my
+mind is thinking about the HTTP endpoints that are eventually going to front this logic.  So I think I need to resist
+this temptation, and see what happens to by business logic when it has full objects to deal with.
+
+## Support for services that are "classes"
+
+I worked into a test case of a yoga studio with two instructors and two rooms.  I tried to show that if one of the rooms
+was full, the booking I was trying to make was impossible.  But the availability logic found _a_ room available, so was 
+happy to proceed.  So what I need is to check availability against a particular instructor and a particular room.  There
+is a domain concept called "class" in this case, a yoga class.  I would model a class more generally as a resource 
+group.
+
+Might a yoga studio now be a bit different to resourcing that I have done here to fore.  The car wash and delivery 
+companies work to time slots.  Personal training tries to fill the day.  But a third type of resourcing is a published
+time table.  These would be basically pre-allocated non-fungible resources to a service.  I think I can model this 
+without too much compromise with what I currently have.
+
+1. We have two instructors and a large room and a small room
+2. We can have two yoga sessions at 18.00, one in the large room, one in the small room
+3. These could be modelled as two services, with assigned rooms and instructors.  
+   (Careful, what about changes thru time)
+4. One service would be called Asthanga yoga with Mike and the other Hatha yoga with Mete
+5. Suggests by the way that either services need to have a start and end date, or there is a missing concept, because
+   when the instructor changes, the service will have to be re-resourced, and renamed, which will affect past bookings
+   linked to the service
+6. So with these two named services, I can book one or the other.
+7. How do I fix the start time to 18.00?  All the resources involved will have resource availability of "all day"
+
+There does seem to be at least three ways to express times available:
+
+1. Time slots.  Good for mobile services (doctor visit, mobile car wash and dog treatments, deliveries).  We can be there
+   between 9am and 11am
+2. Any time of day, or sections of the day, and the booker chooses.  What's a good name for this?  ChatGPT suggests
+   'Flexible Scheduling'
+3. Timetable.  A service might be available at 9am, 13.00 and 17.00.  A particular yoga session for example.
+
+If a service has time slots, then 1 and 3 are the same?  The fact that `Service` as the boolean `requiresTimeslot` 
+suggests that maybe this is true.  Drop this boolean and add an optional array of `TimeSlot` to `Service` and we're
+good?
+
+So, concluding: services to have optional time slots, and the ability to express a need for one or more fungible and
+non-fungible resources.  Also, services to have start and end dates (or versions?) to handle changes over time.
+
+This way, and service that starts at 18.00 that requires Mike and the Small Room, is "Yoga with Mike in the Small Room"
