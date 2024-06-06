@@ -1,4 +1,4 @@
-import {mandatory} from "./utils.js";
+import {errorResponseFns, mandatory} from "./utils.js";
 import {
     availabilityBlock,
     AvailabilityBlock,
@@ -6,7 +6,7 @@ import {
     DayAndTimePeriod,
     dayAndTimePeriodFns,
     isoDateFns,
-    ResourceDayAvailability,
+    ResourceDayAvailability, resourceRequirementFns,
     Service,
     values
 } from "./types.js";
@@ -16,16 +16,13 @@ export function applyBookingsToResourceAvailability(resourceAvailability: Resour
     return bookings.reduce((resourceAvailability, booking) => {
         const service = mandatory(services.find(s => values.isEqual(s.id, booking.serviceId)), `Service with id ${booking.serviceId.value} not found`);
         const bookingPeriod = calcBookingPeriod(booking, service.duration);
-        const firstSuitableResources = service.resourceTypes.map(rt => {
-            const availableResources = resourceAvailability.filter(ra => ra.resource.type.value === rt.value);
-            const availableResource = availableResources.find(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da.when, bookingPeriod)));
-            if (!availableResource) {
-                throw new Error(`No resource of type '${rt.value}' available for booking ${booking.id.value}`);
-            }
-            return availableResource;
-        })
+        const resourceOutcome = resourceRequirementFns.matchRequirements(resourceAvailability, bookingPeriod, service.resourceRequirements);
+        if(resourceOutcome._type === 'error.response') {
+            throw errorResponseFns.toError(resourceOutcome)
+        }
+        const firstSuitableResources = resourceOutcome.value
         return resourceAvailability.map(ra => {
-            if (firstSuitableResources.find(r => values.isEqual(r.resource.id, ra.resource.id))) {
+            if (firstSuitableResources.find(r => values.isEqual(r.match.resource.id, ra.resource.id))) {
                 const amendedPeriods = ra.availability.flatMap(block => dayAndTimePeriodFns.splitPeriod(block.when, bookingPeriod).map(p => availabilityBlock(p, block.capacity)))
                 return {
                     ...ra,

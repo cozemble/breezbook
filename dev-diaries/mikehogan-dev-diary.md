@@ -864,3 +864,61 @@ So, concluding: services to have optional time slots, and the ability to express
 non-fungible resources.  Also, services to have start and end dates (or versions?) to handle changes over time.
 
 This way, and service that starts at 18.00 that requires Mike and the Small Room, is "Yoga with Mike in the Small Room"
+
+## Enjoying modelling this domain
+
+I got to say, I'm very engrossed and thoroughly enjoying modelling this domain.  I'm adding explicit resource 
+requirements to services now - supporting any resource or a given type, or a given resource.  Going through the code and
+patching this up, writing tests for new behaviour, it really feels like I'm "working the code" and it's coming into a 
+better shape. I'm enjoying it because its just domain classes and logic, disconnected from databases and http.  I can go
+fast and explore the domain cheaply this way.  Data objects are becoming more coherent in their contents, and better 
+named.  Functions are going into the right place.  It's starting to feel stable.
+
+# Thu 6 Jun 2024
+
+It seems to me that I am working with at least three different kinds of "model" in this work of modelling the domain of
+bookings and appointments:
+
+1. The business logic model - fully hydrated in-memory objects, with all the context they need to do their job, and a 
+suite of functions to carry out the business logic like checking availability, making bookings, etc.  
+2. The database model - the tables and relationships that are needed to store the configuration and user data
+3. The configuration model - how the business logic model is expressed by the user.  For example, a business logic 
+model of `Service` has the possible start times in it.  But expressing how a business thinks of start times is not by
+listing start times on each service.  They may say that booking options begin on the hour, or on the half hour.  They
+might list explicit blocks of time.  They may express a series of time slots.  So the configuration model is the medium
+in which the rules of the business are expressed.  These are stored in the database as different models.  And they are 
+converted into business logic models when the business logic needs them.
+
+## one instructor and many people in a room
+
+Consider this setup:
+
+```typescript
+const room = resourceType("room", true);
+const instructor = resourceType("instructor");
+const smallRoom = resource(room, "Small Room");
+const mikeInstructor = resource(instructor, "Mike");
+const requiredResources = [
+        resourceDayAvailability(smallRoom, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(10))]),
+        resourceDayAvailability(mikeInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
+    ];
+const theService = service("Yoga with Mike in the Small Room", "Yoga with Mike in the Small Room", [specificResource(smallRoom), specificResource(mikeInstructor)], 60,  price(3500, currencies.GBP), [], []);
+const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(smallRoom.id, capacity(1)), resourceAssignment(mikeInstructor.id)], "confirmed");
+```
+
+The intention here is to permit 10 bookings of Yoga with Mike in the Small Room at 09.00.  But the current code counts out `specificResource(mikeInstructor)` following the first booking.  
+The intention is not well expressed or modelled. This idea is that the capacity of the small room "transfers" magically to Mike being associated with it.
+
+I can't just say that if a any resource requirement has a capacity, then it transfers to the entire list of resource requirements.  
+Imagine if there was an instructor, a room that can take 10 people, and only 6 pilates machines.  The aggregate capacity would be 6, not 10.
+
+Is this the general rule?  If there is capacity involved, the capacity of the group is the min of all capacities?
+
+I can't help think there is a better way to express this.
+
+## Claude suggests moving the capacity to the service
+
+And I think it is right.  I asked it to check my dev diary to see what I modelled capacity on resource, and if there is anything I would lose
+by moving it to service.  It could see no reason.  Indeed it found reasons in my diary that make modelling capacity on service as probably
+more sensible.  It also pointed out that while the capacity of `Small room` might be 10, for a given service - one that uses lots of equipment for example -
+the capacity might be less.  Am sold. Refactor here we come.

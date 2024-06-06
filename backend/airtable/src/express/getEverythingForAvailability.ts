@@ -8,14 +8,14 @@ import {
     dayAndTimePeriodFns,
     duration,
     formId,
-    FungibleResource,
+    Resource,
     isoDate,
     IsoDate,
     isoDateFns,
     mandatory, minutes,
     periodicStartTime,
     PricingRule,
-    fungibleResource,
+    resource,
     resourceDayAvailability,
     ResourceDayAvailability,
     resourceId,
@@ -87,11 +87,11 @@ export function everythingForAvailability(
 }
 
 interface FlattenedResourceDayAvailability {
-    resource: FungibleResource;
+    resource: Resource;
     availability: DayAndTimePeriod;
 }
 
-function flattenedResourceDayAvailability(resource: FungibleResource, availability: DayAndTimePeriod): FlattenedResourceDayAvailability {
+function flattenedResourceDayAvailability(resource: Resource, availability: DayAndTimePeriod): FlattenedResourceDayAvailability {
     return {
         resource,
         availability
@@ -100,7 +100,7 @@ function flattenedResourceDayAvailability(resource: FungibleResource, availabili
 
 function resourceAvailabilityForDate(
     date: IsoDate,
-    resources: FungibleResource[],
+    resources: Resource[],
     dbResourceAvailabilities: DbResourceAvailability[]
 ): FlattenedResourceDayAvailability[] {
     const dayOfWeek = isoDateFns.dayOfWeek(date);
@@ -126,7 +126,7 @@ export function makeResourceAvailability(
     dates: IsoDate[]
 ): ResourceDayAvailability[] {
     const mappedResources = resources.map((r) =>
-        fungibleResource(
+        resource(
             mandatory(
                 mappedResourceTypes.find((rt) => rt.value === r.resource_type),
                 `No resource type ${r.resource_type}`
@@ -236,7 +236,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
         businessConfiguration(
             makeBusinessAvailability(availabilityData.businessHours, availabilityData.blockedTime, dates),
             makeResourceAvailability(mappedResourceTypes, availabilityData.resources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates),
-            availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms)),
+            availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots)),
             mappedAddOns,
             mappedTimeSlots,
             mappedForms,

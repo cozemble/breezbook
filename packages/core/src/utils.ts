@@ -18,14 +18,21 @@ export function success<T>(value: T): Success<T> {
     return {_type: 'success', value};
 }
 
-export interface ErrorResponse {
+export interface ErrorResponse<V = any> {
     _type: 'error.response';
     errorCode: string;
     errorMessage?: string;
+    errorData?: V
 }
 
-export function errorResponse(errorCode: string, errorMessage?: string): ErrorResponse {
-    return {_type: 'error.response', errorCode, errorMessage};
+export function errorResponse<V = any>(errorCode: string, errorMessage?: string, errorData?: V): ErrorResponse {
+    return {_type: 'error.response', errorCode, errorMessage, errorData};
+}
+
+export const errorResponseFns = {
+    toError: (response: ErrorResponse): Error => {
+        return new Error(`${response.errorCode}: ${response.errorMessage ?? ''}`);
+    }
 }
 
 

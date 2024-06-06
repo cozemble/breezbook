@@ -7,16 +7,16 @@ import {
     dayAndTimePeriodFns,
     ExactTimeAvailability,
     exactTimeAvailability,
-    FungibleResource,
     IsoDate,
-    NonFungibleResource,
+    Resource,
     ResourceDayAvailability,
     resourceDayAvailabilityFns,
     ResourceId,
+    ResourceRequirement,
+    resourceRequirementFns,
     ResourceType,
     Service,
-    ServiceId, ServiceOption,
-    ServiceOptionId,
+    ServiceOption,
     StartTimeSpec,
     time24Fns,
     TimePeriod,
@@ -29,7 +29,19 @@ import {calcSlotPeriod} from "./calculateAvailability.js";
 
 export type StartTime = TimeslotSpec | ExactTimeAvailability
 
-export type ResourceAllocation = FungibleResource | NonFungibleResource
+export interface ResourceAllocation {
+    _type: 'resource.allocation'
+    requirement: ResourceRequirement
+    resource: Resource
+}
+
+export function resourceAllocation(requirement: ResourceRequirement, resource: Resource): ResourceAllocation {
+    return {
+        _type: 'resource.allocation',
+        requirement,
+        resource
+    }
+}
 
 export const startTimeFns = {
     toTime24(startTime: StartTime): TwentyFourHourClockTime {
@@ -83,48 +95,12 @@ function fullyResourcedBooking(booking: Booking, resourceAllocation: ResourceAll
     }
 }
 
-interface UnresourceableBooking {
-    _type: 'unresourceable.booking'
-    booking: Booking
-    missingResourceTypes: ResourceType[]
-    resourceAllocation: ResourceAllocation[]
-}
-
-function unresourceableBooking(booking: Booking, missingResourceTypes: ResourceType[], resourceAllocation: ResourceAllocation[]): UnresourceableBooking {
-    return {
-        _type: "unresourceable.booking",
-        booking,
-        missingResourceTypes,
-        resourceAllocation
+function assignResourcesToBooking(booking: Booking, resources: ResourceDayAvailability[], service: Service): FullyResourcedBooking | ErrorResponse {
+    const resourceOutcome = resourceRequirementFns.matchRequirements(resources, dayAndTimePeriod(booking.date, calcSlotPeriod(booking.slot, service.duration)), service.resourceRequirements)
+    if (resourceOutcome._type === 'error.response') {
+        return resourceOutcome
     }
-}
-
-type ResourcedBookingOutcome = FullyResourcedBooking | UnresourceableBooking
-
-interface ResourcedBookingAccumulator {
-    bookings: ResourcedBookingOutcome[]
-    remainingResources: ResourceDayAvailability[]
-}
-
-function recordUnresourcedResourceType(outcome: ResourcedBookingOutcome, resourceType: ResourceType): ResourcedBookingOutcome {
-    if (outcome._type === 'unresourceable.booking') {
-        return {...outcome, missingResourceTypes: [...outcome.missingResourceTypes, resourceType]}
-    }
-    return unresourceableBooking(outcome.booking, [resourceType], outcome.resourceAllocation)
-}
-
-function recordResourceAllocation(booking: ResourcedBookingOutcome, resourceDayAvailability: ResourceDayAvailability): ResourcedBookingOutcome {
-    return {...booking, resourceAllocation: [...booking.resourceAllocation, resourceDayAvailability.resource]}
-}
-
-function assignResourcesToBooking(booking: Booking, resources: ResourceDayAvailability[], service: Service): ResourcedBookingOutcome {
-    return service.resourceTypes.reduce((acc, resourceType) => {
-        const possibleResources = resources.filter(r => r.availability.some(ra => ra.when.day.value === booking.date.value) && r.resource.type.value === resourceType.value)
-        if (possibleResources.length === 0) {
-            return recordUnresourcedResourceType(acc, resourceType)
-        }
-        return recordResourceAllocation(acc, possibleResources[0])
-    }, fullyResourcedBooking(booking) as ResourcedBookingOutcome)
+    return fullyResourcedBooking(booking, resourceOutcome.value.map(r => resourceAllocation(r.requirement, r.match.resource)))
 }
 
 
@@ -136,14 +112,14 @@ function subtractTimePeriod(period: DayAndTimePeriod, booking: Booking, service:
     return dayAndTimePeriodFns.splitPeriod(period, dayAndTimePeriod(booking.date, servicePeriod))
 }
 
-function subtractCapacity(resourcedBooking: FullyResourcedBooking | UnresourceableBooking, r: ResourceDayAvailability, service: Service): ResourceDayAvailability {
+function subtractCapacity(resourcedBooking: FullyResourcedBooking, r: ResourceDayAvailability, service: Service): ResourceDayAvailability {
     const assigned = mandatory(resourcedBooking.booking.assignedResources.find(assigned => assigned.resource.value === r.resource.id.value), `No assigned resource for resource '${r.resource.id.value}'`)
     return resourceDayAvailabilityFns.subtractCapacity(r, dayAndTimePeriod(resourcedBooking.booking.date, calcSlotPeriod(resourcedBooking.booking.slot, service.duration)), assigned.capacity)
 }
 
-function subtractResources(resourcedBooking: ResourcedBookingOutcome, remainingResources: ResourceDayAvailability[], service: Service): ResourceDayAvailability[] {
+function subtractResources(resourcedBooking: FullyResourcedBooking, remainingResources: ResourceDayAvailability[], service: Service): ResourceDayAvailability[] {
     return remainingResources.map(r => {
-        if (resourcedBooking.resourceAllocation.some(alloc => alloc.id.value === r.resource.id.value)) {
+        if (resourcedBooking.resourceAllocation.some(alloc => alloc.resource.id.value === r.resource.id.value)) {
             if (r.resource.type.hasCapacity) {
                 return subtractCapacity(resourcedBooking, r, service);
             } else {
@@ -157,21 +133,16 @@ function subtractResources(resourcedBooking: ResourcedBookingOutcome, remainingR
     })
 }
 
-function calcActualResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookings: Booking[], service: Service): ResourceDayAvailability[] | UnresourceableBooking {
-    const acc: ResourcedBookingAccumulator = {
-        bookings: [],
-        remainingResources: resourceAvailability
+function calcActualResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookings: Booking[], service: Service): ResourceDayAvailability[] | ErrorResponse {
+    let remainingResources = resourceAvailability
+    for (const booking of bookings) {
+        const resourcedBookingOutcome = assignResourcesToBooking(booking, remainingResources, service)
+        if (resourcedBookingOutcome._type === 'error.response') {
+            return resourcedBookingOutcome
+        }
+        remainingResources = subtractResources(resourcedBookingOutcome, remainingResources, service)
     }
-    const resourcedBookingsOutcome = bookings.reduce((acc, booking) => {
-        const resourcedBooking = assignResourcesToBooking(booking, acc.remainingResources, service)
-        const remainingResources = subtractResources(resourcedBooking, acc.remainingResources, service)
-        return {bookings: [...acc.bookings, resourcedBooking], remainingResources}
-    }, acc)
-    const firstUnresourced = resourcedBookingsOutcome.bookings.find(b => b._type === 'unresourceable.booking') as UnresourceableBooking
-    if (firstUnresourced) {
-        return firstUnresourced
-    }
-    return resourcedBookingsOutcome.remainingResources
+    return remainingResources
 }
 
 function resourcesAreAvailable(resourceTypes: ResourceType[], time: DayAndTimePeriod, actualAvailableResources: ResourceDayAvailability[]): boolean {
@@ -194,7 +165,6 @@ export interface AvailabilityConfiguration {
     _type: 'availability.configuration'
     availability: BusinessAvailability;
     resourceAvailability: ResourceDayAvailability[];
-    // services: Service[];
     timeslots: TimeslotSpec[];
     startTimeSpec: StartTimeSpec;
 }
@@ -204,7 +174,6 @@ export function availabilityConfiguration(availability: BusinessAvailability, re
         _type: "availability.configuration",
         availability,
         resourceAvailability,
-        // services,
         timeslots,
         startTimeSpec
     }
@@ -244,20 +213,26 @@ export const availability = {
         const bookingsForDate = bookings.filter(b => b.date.value === date.value)
         const resourceAvailabilityOutcome = calcActualResourceAvailability(config.resourceAvailability, bookingsForDate, service)
         if (!Array.isArray(resourceAvailabilityOutcome)) {
-            return errorResponse(availability.errorCodes.unresourceableBooking, `Could not resource booking '${resourceAvailabilityOutcome.booking.id.value}', missing resource types are ${resourceAvailabilityOutcome.missingResourceTypes.map(rt => rt.value)}`)
+            return resourceAvailabilityOutcome
         }
-        const unavailableResourceTypes = service.resourceTypes.filter(resourceType =>
-            !resourceAvailabilityOutcome.some(rda => rda.resource.type.value === resourceType.value)
-        );
+        const unavailableResourceTypes = service.resourceRequirements.filter(requirement => {
+            if (requirement._type === 'any.suitable.resource') {
+                return !resourceAvailabilityOutcome.some(r => r.resource.type.value === requirement.requirement.value)
+            } else {
+                return !resourceAvailabilityOutcome.some(r => r.resource.id.value === requirement.resource.id.value)
+            }
+        });
 
         if (unavailableResourceTypes.length > 0) {
-            return errorResponse(availability.errorCodes.noResourcesAvailable, `Do not have resources for service '${service.id.value}'. Missing resource types: ${unavailableResourceTypes.map(rt => rt.value).join(', ')}`);
+            return errorResponse(availability.errorCodes.noResourcesAvailable, `Do not have resources for service '${service.id.value}'. Missing resource types: ${JSON.stringify(unavailableResourceTypes)}`)
         }
 
-        const possibleStartTimes = service.requiresTimeslot ? config.timeslots : calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service).map(exactTimeAvailability);
-        const startTimesWithResources = possibleStartTimes.filter(time =>
-            resourcesAreAvailable(service.resourceTypes, dayAndTimePeriod(date, asTimePeriod(time, service)), resourceAvailabilityOutcome)
-        );
+        const possibleStartTimes = service.startTimes ?? calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service).map(exactTimeAvailability);
+        const startTimesWithResources = possibleStartTimes.filter(time => {
+            const timePeriod = dayAndTimePeriod(date, asTimePeriod(time, service));
+            const matched = resourceRequirementFns.matchRequirements(resourceAvailabilityOutcome, timePeriod, service.resourceRequirements);
+            return matched._type === 'success';
+        });
 
         return success(startTimesWithResources.map(t => availableSlot(service, date, t, [])));
     },

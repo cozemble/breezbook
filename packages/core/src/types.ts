@@ -2,6 +2,8 @@ import {v4 as uuidv4, v4 as uuid} from 'uuid';
 import {PriceAdjustment} from './calculatePrice.js';
 import dayjs from 'dayjs';
 import {ToWords} from "to-words";
+import {StartTime} from "./availability.js";
+import {errorResponse, ErrorResponse, success, Success} from "./utils.js";
 
 export interface ValueType<T> {
     _type: unknown;
@@ -710,17 +712,67 @@ export function price(amountInMinorUnits: number, currency: Currency): Price {
     };
 }
 
+export interface AnySuitableResource {
+    _type: 'any.suitable.resource'
+    requirement: ResourceType
+}
+
+export interface SpecificResource {
+    _type: 'specific.resource'
+    resource: Resource
+}
+
+export function anySuitableResource(requirement: ResourceType): AnySuitableResource {
+    return {
+        _type: 'any.suitable.resource',
+        requirement
+    }
+}
+
+export function specificResource(resource: Resource): SpecificResource {
+    return {
+        _type: 'specific.resource',
+        resource
+    }
+}
+
+export type ResourceRequirement = AnySuitableResource | SpecificResource
+
+export interface RequirementMatch {
+    requirement: ResourceRequirement
+    match: ResourceDayAvailability
+}
+
+export const resourceRequirementFns = {
+    errorCodes: {
+        noSuitableResource: 'no.suitable.resource'
+    },
+    matchRequirements: (available: ResourceDayAvailability[], period: DayAndTimePeriod, requirements: ResourceRequirement[]): Success<RequirementMatch[]> | ErrorResponse<ResourceRequirement> => {
+        const matched: RequirementMatch[] = [];
+        for (const requirement of requirements) {
+            const availableResources = requirement._type === 'any.suitable.resource' ? available.filter(ra => ra.resource.type.value === requirement.requirement.value) : available.filter(ra => ra.resource.id.value === requirement.resource.id.value);
+            const availableResource = availableResources.find(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da.when, period)));
+            if (availableResource) {
+                matched.push({requirement, match: availableResource});
+            } else {
+                return errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement`, requirement);
+            }
+        }
+        return success(matched)
+    }
+}
+
 export interface Service {
     id: ServiceId;
     name: string;
     description: string;
     duration: number;
-    resourceTypes: ResourceType[];
-    requiresTimeslot: boolean;
+    resourceRequirements: ResourceRequirement[]
     price: Price;
     permittedAddOns: AddOnId[];
     serviceFormIds: FormId[];
     options: ServiceOption[];
+    startTimes: StartTime[] | null
 }
 
 export interface ServiceOptionId extends ValueType<string> {
@@ -747,20 +799,25 @@ export interface ServiceOption {
 }
 
 export const serviceFns = {
-    addOptions(service1: Service, serviceOptions: ServiceOption[]): Service {
+    addOptions(service: Service, serviceOptions: ServiceOption[]): Service {
         return {
-            ...service1,
-            options: service1.options.concat(serviceOptions)
+            ...service,
+            options: service.options.concat(serviceOptions)
         };
+    },
+    setStartTimes(service: Service, startTimes: StartTime[] | null): Service {
+        return {
+            ...service,
+            startTimes
+        }
     }
 }
 
 export function service(
     name: string,
     description: string,
-    resourceTypes: ResourceType[],
+    resourceRequirements: ResourceRequirement[],
     duration: number,
-    requiresTimeslot: boolean,
     price: Price,
     permittedAddOns: AddOnId[],
     serviceFormIds: FormId[],
@@ -771,12 +828,12 @@ export function service(
         name,
         description,
         duration,
-        resourceTypes,
-        requiresTimeslot,
+        resourceRequirements,
         price,
         permittedAddOns,
         serviceFormIds,
-        options: []
+        options: [],
+        startTimes: null
     };
 }
 
@@ -803,15 +860,8 @@ export function serviceOption(
     };
 }
 
-export interface FungibleResource {
-    _type: 'fungible.resource';
-    id: ResourceId;
-    type: ResourceType;
-    name: string;
-}
-
-export interface NonFungibleResource {
-    _type: 'non.fungible.resource';
+export interface Resource {
+    _type: 'resource';
     id: ResourceId;
     type: ResourceType;
     name: string;
@@ -824,21 +874,12 @@ export function resourceId(value: string): ResourceId {
     };
 }
 
-export function fungibleResource(type: ResourceType, name: string, id = resourceId(uuidv4())): FungibleResource {
+export function resource(type: ResourceType, name: string, id = resourceId(uuidv4())): Resource {
     return {
-        _type: 'fungible.resource',
+        _type: 'resource',
         id,
         type,
         name,
-    };
-}
-
-export function nonFungibleResource(type: ResourceType, name: string, id = resourceId(uuidv4())): NonFungibleResource {
-    return {
-        _type: 'non.fungible.resource',
-        id,
-        type,
-        name
     };
 }
 
@@ -948,11 +989,11 @@ export function bookableTimeSlot(date: IsoDate, slot: TimeslotSpec): BookableTim
 
 export interface ResourcedTimeSlot extends BookableTimeSlot {
     _type: 'resourced.time.slot';
-    resources: FungibleResource[];
+    resources: Resource[];
     service: Service;
 }
 
-export function resourcedTimeSlot(slot: BookableTimeSlot, resources: FungibleResource[], service: Service): ResourcedTimeSlot {
+export function resourcedTimeSlot(slot: BookableTimeSlot, resources: Resource[], service: Service): ResourcedTimeSlot {
     return {
         _type: 'resourced.time.slot',
         ...slot,
@@ -1003,11 +1044,11 @@ export function availabilityBlock(when: DayAndTimePeriod, theCapacity = capacity
 }
 
 export interface ResourceDayAvailability {
-    resource: FungibleResource;
+    resource: Resource;
     availability: AvailabilityBlock[];
 }
 
-export function resourceDayAvailability(resource: FungibleResource, availability: AvailabilityBlock[]): ResourceDayAvailability {
+export function resourceDayAvailability(resource: Resource, availability: AvailabilityBlock[]): ResourceDayAvailability {
     return {
         resource,
         availability

@@ -7,18 +7,18 @@ import {
     GBP,
     isoDate,
     price,
-    fungibleResource,
+    resource,
     resourceDayAvailability,
     resourceType,
     service,
     time24,
     timePeriod,
-    timeslotSpec, availabilityBlock
+    timeslotSpec, availabilityBlock, anySuitableResource
 } from "../src/types.js";
 
 const van = resourceType('van');
-const van1 = fungibleResource(van, "Van 1");
-const carWash = service('Car Wash','Car wash', [van], 120, true, price(1000, GBP), [], []);
+const van1 = resource(van, "Van 1");
+const carWash = service('Car Wash','Car wash', [anySuitableResource(van)], 120,  price(1000, GBP), [], []);
 const services = [carWash];
 const nineAm = time24('09:00')
 const tenAm = time24('10:00')

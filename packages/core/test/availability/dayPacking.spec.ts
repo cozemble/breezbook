@@ -11,20 +11,20 @@ import {
     minutes,
     periodicStartTime,
     price,
-    fungibleResource,
+    resource,
     resourceDayAvailability,
     resourceType,
     service,
     time24,
-    timePeriod, availabilityBlock
+    timePeriod, availabilityBlock, anySuitableResource
 } from "../../src/index.js";
 import {makeBusinessAvailability} from "../../src/makeBusinessAvailability.js";
 
 const nineAm = time24('09:00');
 const sixPm = time24('18:00');
 const personalTrainer = resourceType('Personal Traniner');
-const ptMike = fungibleResource(personalTrainer, "Mike");
-const ptMete = fungibleResource(personalTrainer, "Mete");
+const ptMike = resource(personalTrainer, "Mike");
+const ptMete = resource(personalTrainer, "Mete");
 const resources = [ptMete, ptMike];
 const today = isoDate("2024-05-13");
 const nineToSix = timePeriod(nineAm, sixPm)
@@ -45,9 +45,8 @@ export const gym = {
         personalTraining55Mins: service(
             'Personal Training 55 mins',
             'Personal Training 55 mins',
-            [personalTrainer],
+            [anySuitableResource(personalTrainer)],
             55,
-            false,
             price(5500, currencies.GBP),
             [],
             [])

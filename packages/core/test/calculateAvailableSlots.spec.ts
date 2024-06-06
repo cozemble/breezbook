@@ -15,7 +15,7 @@ import {
     duration,
     ErrorResponse,
     exactTimeAvailability,
-    fungibleResource,
+    resource,
     isoDate,
     minutes,
     mondayToFriday,
@@ -32,7 +32,7 @@ import {
     startTimeFns,
     time24,
     timePeriod,
-    timeslotSpec
+    timeslotSpec, anySuitableResource, specificResource
 } from "../src/index.js";
 import {makeBusinessAvailability, makeBusinessHours} from "../src/makeBusinessAvailability.js";
 
@@ -41,7 +41,7 @@ const nineAm = time24("09:00")
 const fivePm = time24("17:00")
 
 describe("given a chatbot service that requires no resources, and is available monday to friday 9am to 5pm", () => {
-    const theService = service("Chatbot Therapy", "Chatbot Therapy", [], 60, false, price(3500, currencies.GBP), [], [])
+    const theService = service("Chatbot Therapy", "Chatbot Therapy", [], 60,  price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -151,7 +151,7 @@ describe("given a chatbot service that requires no resources, and is available m
 
 describe("given a carwash service that requires one of several interchangeable washers for each service, and is available monday to friday 9am to 5pm", () => {
     const carwasher = resourceType("carWasher")
-    const theService = service("Carwash", "Carwash", [carwasher], 45, false, price(3500, currencies.GBP), [], [])
+    const theService = service("Carwash", "Carwash", [anySuitableResource(carwasher)], 45,  price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -167,7 +167,7 @@ describe("given a carwash service that requires one of several interchangeable w
     test("we have availability when we have one resource", () => {
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
-            resourceAvailability: [resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
+            resourceAvailability: [resourceDayAvailability(resource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date))
         if (outcome._type === 'error.response') {
@@ -183,7 +183,7 @@ describe("given a carwash service that requires one of several interchangeable w
         const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(time24("10:00")), [], "confirmed")
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
-            resourceAvailability: [resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
+            resourceAvailability: [resourceDayAvailability(resource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date))
         if (outcome._type === 'error.response') {
@@ -200,8 +200,8 @@ describe("given a carwash service that requires one of several interchangeable w
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [
-                resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
-                resourceDayAvailability(fungibleResource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
+                resourceDayAvailability(resource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
+                resourceDayAvailability(resource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date))
         if (outcome._type === 'error.response') {
@@ -216,9 +216,9 @@ describe("given a carwash service that requires one of several interchangeable w
 
 describe("given a mobile carwash service that requires one of several interchangeable vans for each service, and books against time slots, and is available monday to friday 9am to 5pm", () => {
     const van = resourceType("Van")
-    const theService = service("Mobile Carwash", "Mobile Carwash", [van], 120, true, price(3500, currencies.GBP), [], [])
     const morningSlot = timeslotSpec(nineAm, time24("12:00"), "morning slot");
     const afternoonSlot = timeslotSpec(time24("13:00"), time24("16:00"), "afternoon slot");
+    const theService = serviceFns.setStartTimes(service("Mobile Carwash", "Mobile Carwash", [anySuitableResource(van)], 120,  price(3500, currencies.GBP), [], []), [morningSlot, afternoonSlot])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -234,7 +234,7 @@ describe("given a mobile carwash service that requires one of several interchang
     test("we have availability when we have one resource", () => {
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
-            resourceAvailability: [resourceDayAvailability(fungibleResource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
+            resourceAvailability: [resourceDayAvailability(resource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date))
         if (outcome._type === 'error.response') {
@@ -251,7 +251,7 @@ describe("given a mobile carwash service that requires one of several interchang
 
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
-            resourceAvailability: [resourceDayAvailability(fungibleResource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
+            resourceAvailability: [resourceDayAvailability(resource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date))
         if (outcome._type === 'error.response') {
@@ -268,8 +268,8 @@ describe("given a mobile carwash service that requires one of several interchang
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [
-                resourceDayAvailability(fungibleResource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
-                resourceDayAvailability(fungibleResource(van, "Van#2"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
+                resourceDayAvailability(resource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
+                resourceDayAvailability(resource(van, "Van#2"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date))
         if (outcome._type === 'error.response') {
@@ -284,10 +284,10 @@ describe("given a mobile carwash service that requires one of several interchang
 
 describe("given a gym that offers personal training with specific trainers, and is available monday to friday 9am to 5pm", () => {
     const personalTrainer = resourceType("personalTrainer")
-    const ptMike = fungibleResource(personalTrainer, "ptMike")
-    const ptMete = fungibleResource(personalTrainer, "ptMete")
+    const ptMike = resource(personalTrainer, "ptMike")
+    const ptMete = resource(personalTrainer, "ptMete")
     const bothPtsAvailable = [resourceDayAvailability(ptMike, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]), resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
-    const theService = service("Personal Training", "Personal Training", [personalTrainer], 55, false, price(3500, currencies.GBP), [], [])
+    const theService = service("Personal Training", "Personal Training", [anySuitableResource(personalTrainer)], 55,  price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -344,15 +344,15 @@ describe("given a gym that offers personal training with specific trainers, and 
 describe("given a gym that offers personal training requiring a specific trainer and a specific gym room, and is available monday to friday 9am to 5pm", () => {
     const personalTrainer = resourceType("personalTrainer");
     const gymRoom = resourceType("gymRoom");
-    const ptMike = fungibleResource(personalTrainer, "ptMike");
-    const ptMete = fungibleResource(personalTrainer, "ptMete");
-    const roomA = fungibleResource(gymRoom, "roomA");
+    const ptMike = resource(personalTrainer, "ptMike");
+    const ptMete = resource(personalTrainer, "ptMete");
+    const roomA = resource(gymRoom, "roomA");
     const requiredResources = [
         resourceDayAvailability(ptMike, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(roomA, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
-    const theService = service("Personal Training", "Personal Training", [personalTrainer, gymRoom], 55, false, price(3500, currencies.GBP), [], []);
+    const theService = service("Personal Training", "Personal Training", [anySuitableResource(personalTrainer), anySuitableResource(gymRoom)], 55,  price(3500, currencies.GBP), [], []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -414,11 +414,11 @@ describe("given a gym that offers personal training requiring a specific trainer
 
 describe("given a dog walking service that can take up to 6 dogs at 09.00, and is open monday to friday", () => {
     const dogIntake = resourceType("dogs", true);
-    const sixDogs = fungibleResource(dogIntake, "Dog")
+    const sixDogs = resource(dogIntake, "Dog")
     const requiredResources = [
         resourceDayAvailability(sixDogs, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(6))]),
     ];
-    const theService = service("Dog Walk", "Dog Walk", [dogIntake], 480, false, price(3500, currencies.GBP), [], []);
+    const theService = service("Dog Walk", "Dog Walk", [anySuitableResource(dogIntake)], 480,  price(3500, currencies.GBP), [], []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -506,9 +506,9 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
 describe("given a hair salon that offers configurable services, and is available monday to friday 9am to 5pm", () => {
     const hairStylist = resourceType("hairStylist");
     const colouringMachine = resourceType("colouringMachine");
-    const mikeStylist = fungibleResource(hairStylist, "Mike");
-    const meteStylist = fungibleResource(hairStylist, "Mete");
-    const colouringMachine1 = fungibleResource(colouringMachine, "Colouring Machine 1");
+    const mikeStylist = resource(hairStylist, "Mike");
+    const meteStylist = resource(hairStylist, "Mete");
+    const colouringMachine1 = resource(colouringMachine, "Colouring Machine 1");
     const requiredResources = [
         resourceDayAvailability(mikeStylist, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(meteStylist, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
@@ -517,7 +517,7 @@ describe("given a hair salon that offers configurable services, and is available
     const colouring = serviceOption("Colouring", "Colouring", price(1500, currencies.GBP), false, duration(minutes(20)), [colouringMachine], []);
     const cutting = serviceOption("Cutting", "Cutting", price(2000, currencies.GBP), false, duration(minutes(30)), [], []);
     const curling = serviceOption("Curling", "Curling", price(2500, currencies.GBP), false, duration(minutes(40)), [], []);
-    const theService = serviceFns.addOptions(service("Hair styling", "Hair styling", [hairStylist], 30, false, price(3500, currencies.GBP), [], []), [colouring, cutting, curling]);
+    const theService = serviceFns.addOptions(service("Hair styling", "Hair styling", [anySuitableResource(hairStylist)], 30,  price(3500, currencies.GBP), [], []), [colouring, cutting, curling]);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -549,18 +549,18 @@ describe("given a hair salon that offers configurable services, and is available
 
 describe("given a yoga studio with two instructors and two rooms", () => {
     const room = resourceType("room", true);
-    const instructor = resourceType("instructor", false);
-    const smallRoom = fungibleResource(room, "Small Room");
-    const largeRoom = fungibleResource(room, "Large Room");
-    const mikeInstructor = fungibleResource(instructor, "Mike");
-    const meteInstructor = fungibleResource(instructor, "Mete");
+    const instructor = resourceType("instructor");
+    const smallRoom = resource(room, "Small Room");
+    const largeRoom = resource(room, "Large Room");
+    const mikeInstructor = resource(instructor, "Mike");
+    const meteInstructor = resource(instructor, "Mete");
     const requiredResources = [
         resourceDayAvailability(smallRoom, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(10))]),
         resourceDayAvailability(largeRoom, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(18))]),
         resourceDayAvailability(mikeInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(meteInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
-    const theService = service("Yoga", "Yoga", [room, instructor], 60, false, price(3500, currencies.GBP), [], []);
+    const theService = service("Yoga", "Yoga", [specificResource(smallRoom), specificResource(mikeInstructor)], 60,  price(3500, currencies.GBP), [], []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -589,24 +589,8 @@ describe("given a yoga studio with two instructors and two rooms", () => {
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 
-    test("we have availability if we have only one booking", () => {
-        const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(smallRoom.id, capacity(1)), resourceAssignment(mikeInstructor.id)], "confirmed");
-        const mutatedConfig: AvailabilityConfiguration = {
-            ...config,
-            resourceAvailability: requiredResources,
-        };
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date));
-        if (outcome._type === "error.response") {
-            throw new Error(`${outcome.errorCode}: ${outcome.errorMessage ?? ""}`);
-        }
-
-        const available = outcome.value;
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
-        expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
-    });
-
-    // test("we have no availability if the room is full", () => {
-    //     const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(smallRoom.id, capacity(10)), resourceAssignment(mikeInstructor.id)], "confirmed");
+    // test("we have availability if we have only one booking", () => {
+    //     const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(smallRoom.id, capacity(1)), resourceAssignment(mikeInstructor.id)], "confirmed");
     //     const mutatedConfig: AvailabilityConfiguration = {
     //         ...config,
     //         resourceAvailability: requiredResources,
@@ -618,7 +602,23 @@ describe("given a yoga studio with two instructors and two rooms", () => {
     //
     //     const available = outcome.value;
     //     const times = available.map((a) => startTimeFns.toTime24(a.startTime));
-    //     expect(times).toEqual([time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
+    //     expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     // });
+
+    test("we have no availability if the room is full", () => {
+        const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(smallRoom.id, capacity(10)), resourceAssignment(mikeInstructor.id)], "confirmed");
+        const mutatedConfig: AvailabilityConfiguration = {
+            ...config,
+            resourceAvailability: requiredResources,
+        };
+        const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date));
+        if (outcome._type === "error.response") {
+            throw new Error(`${outcome.errorCode}: ${outcome.errorMessage ?? ""}`);
+        }
+
+        const available = outcome.value;
+        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        expect(times).toEqual([time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
+    });
 })
 

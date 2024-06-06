@@ -11,13 +11,13 @@ import {
     GBP,
     isoDate,
     price,
-    fungibleResource,
+    resource,
     resourceDayAvailability,
     resourceType,
     service,
     time24,
     timePeriod,
-    timezone, availabilityBlock
+    timezone, availabilityBlock, anySuitableResource
 } from "../src/types.js";
 import {calculateAvailability} from '../src/index.js';
 
@@ -35,7 +35,7 @@ const availability = businessAvailability([
 ], timezone('Europe/London'));
 
 const staff = resourceType('staff');
-const amy = fungibleResource(staff, "Amy");
+const amy = resource(staff, "Amy");
 const resources = [amy];
 
 const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
@@ -45,7 +45,7 @@ const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(isoDate("2021-05-26"), nineToTen),
 ].map(when => availabilityBlock(when))))
 
-const bicycleRepair = service('Bicycle Repair','Bicycle Repair', [staff], 5, false, price(3500, GBP), [], []);
+const bicycleRepair = service('Bicycle Repair','Bicycle Repair', [anySuitableResource(staff)], 5, price(3500, GBP), [], []);
 const services = [bicycleRepair];
 
 const config = businessConfiguration(availability, resourceAvailability, services, [],[], [],discreteStartTimes(morningCheckInTimes), null);

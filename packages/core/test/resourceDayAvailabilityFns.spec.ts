@@ -3,7 +3,7 @@ import {
     availabilityBlock,
     capacity,
     dayAndTimePeriod,
-    fungibleResource,
+    resource,
     isoDate,
     resourceDayAvailability,
     resourceDayAvailabilityFns,
@@ -13,7 +13,7 @@ import {
 } from "../src/index.js";
 
 const aResourceType = resourceType("test resource type", true)
-const aResource = fungibleResource(aResourceType, "test resource")
+const aResource = resource(aResourceType, "test resource")
 const aprilFirstNineToFive = dayAndTimePeriod(isoDate("2021-04-01"), timePeriod(time24("09:00"), time24("17:00")))
 const aprilSecondNineToFive = dayAndTimePeriod(isoDate("2021-04-02"), timePeriod(time24("09:00"), time24("17:00")))
 const availabilityOnAprilFirst = resourceDayAvailability(aResource, [availabilityBlock(aprilFirstNineToFive, capacity(2))])

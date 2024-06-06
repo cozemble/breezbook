@@ -1,6 +1,7 @@
 import {
     addOn,
     addOnId,
+    anySuitableResource,
     coupon,
     couponCode,
     couponId,
@@ -12,9 +13,10 @@ import {
     percentageAsRatio,
     percentageCoupon,
     price,
-    fungibleResource,
+    resource,
     resourceType,
     service,
+    serviceFns,
     serviceId,
     tenantId,
     time24,
@@ -37,35 +39,34 @@ const polish = addOn('Polish', price(500, GBP), false, 'We will polish your car'
 const cleanSeats = addOn('Clean seats', price(2000, GBP), true, null, addOnId('addOn-clean-seats'));
 const cleanCarpets = addOn('Clean carpets', price(2000, GBP), false, 'We will clean the foot well carpets', addOnId('addOn-clean-carpets'));
 const van = resourceType('van');
-const van1 = fungibleResource(van, 'Van 1');
-const van2 = fungibleResource(van, 'Van 2');
+const van1 = resource(van, 'Van 1');
+const van2 = resource(van, 'Van 2');
 const resources = [van1, van2];
-const smallCarWash = service(
+const nineToOne = timeslotSpec(nineAm, onePm, '09:00 - 13:00', id('timeSlot#1'));
+const oneToFour = timeslotSpec(onePm, fourPm, '13:00 - 16:00', id('timeSlot#2'));
+const fourToSix = timeslotSpec(fourPm, sixPm, '16:00 - 18:00', id('timeSlot#3'));
+const timeslots = [nineToOne, oneToFour, fourToSix]
+const smallCarWash = serviceFns.setStartTimes(service(
     'Small Car Wash',
     'Small Car Wash',
-    [van],
+    [anySuitableResource(van)],
     120,
-    true,
     price(1000, GBP),
     [wax.id, polish.id],
     [carwashForm.id],
     serviceId('smallCarWash.id')
-);
-const mediumCarWash = service('Medium Car Wash', 'Medium Car Wash', [van], 120, true, price(1500, GBP), [wax.id, polish.id], [], serviceId('mediumCarWash.id'));
-const largeCarWash = service(
+), timeslots);
+const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableResource(van)], 120, price(1500, GBP), [wax.id, polish.id], [], serviceId('mediumCarWash.id')), timeslots);
+const largeCarWash = serviceFns.setStartTimes(service(
     'Large Car Wash',
     'Large Car Wash',
-    [van],
+    [anySuitableResource(van)],
     120,
-    true,
     price(2000, GBP),
     [wax.id, polish.id, cleanSeats.id, cleanCarpets.id],
     [],
     serviceId('largeCarWash.id')
-);
-const nineToOne = timeslotSpec(nineAm, onePm, '09:00 - 13:00', id('timeSlot#1'));
-const oneToFour = timeslotSpec(onePm, fourPm, '13:00 - 16:00', id('timeSlot#2'));
-const fourToSix = timeslotSpec(fourPm, sixPm, '16:00 - 18:00', id('timeSlot#3'));
+), timeslots);
 
 const fortyPercentMoreToday = timeBasedPriceAdjustmentSpec(daysFromToday(0), percentageBasedPriceAdjustment(0.4), id('40% more today'));
 const twentyFivePercentMoreTomorrow = timeBasedPriceAdjustmentSpec(daysFromToday(1), percentageBasedPriceAdjustment(0.25), id('25% more tomorrow'));
@@ -92,7 +93,7 @@ export const carwash = {
     twentyFivePercentMoreTomorrow,
     tenPercentMoreDayAfterTomorrow,
     pricingRules: [fortyPercentMoreToday, twentyFivePercentMoreTomorrow, tenPercentMoreDayAfterTomorrow],
-    timeslots: [nineToOne, oneToFour, fourToSix],
+    timeslots,
     wax,
     polish,
     cleanSeats,
