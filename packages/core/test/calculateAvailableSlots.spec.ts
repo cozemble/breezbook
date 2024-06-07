@@ -1,5 +1,6 @@
 import {describe, expect, test} from 'vitest'
 import {
+    anySuitableResource,
     availability,
     availabilityBlock,
     AvailabilityConfiguration,
@@ -15,12 +16,12 @@ import {
     duration,
     ErrorResponse,
     exactTimeAvailability,
-    resource,
     isoDate,
     minutes,
     mondayToFriday,
     periodicStartTime,
     price,
+    resource,
     resourceAssignment,
     resourceDayAvailability,
     resourceDayAvailabilityFns,
@@ -29,10 +30,12 @@ import {
     serviceFns,
     serviceOption,
     serviceRequest,
+    specificResource,
     startTimeFns,
     time24,
+    time24Fns,
     timePeriod,
-    timeslotSpec, anySuitableResource, specificResource
+    timeslotSpec
 } from "../src/index.js";
 import {makeBusinessAvailability, makeBusinessHours} from "../src/makeBusinessAvailability.js";
 
@@ -41,7 +44,7 @@ const nineAm = time24("09:00")
 const fivePm = time24("17:00")
 
 describe("given a chatbot service that requires no resources, and is available monday to friday 9am to 5pm", () => {
-    const theService = service("Chatbot Therapy", "Chatbot Therapy", [], 60,  price(3500, currencies.GBP), [], [])
+    const theService = service("Chatbot Therapy", "Chatbot Therapy", [], 60, price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -60,7 +63,7 @@ describe("given a chatbot service that requires no resources, and is available m
 
     test("having lots of bookings makes no difference, as no resources are required", () => {
         const expectedTimes = [time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]
-        const bookings = expectedTimes.map(time => booking(customerId(), theService.id, date, exactTimeAvailability(time), [], "confirmed"))
+        const bookings = expectedTimes.map(time => booking(customerId(), theService, date, timePeriod(time, time24Fns.addMinutes(time, 60)), [], "confirmed"))
         const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(theService, date))
         if (outcome._type === 'error.response') {
             throw new Error(outcome.errorCode)
@@ -151,7 +154,7 @@ describe("given a chatbot service that requires no resources, and is available m
 
 describe("given a carwash service that requires one of several interchangeable washers for each service, and is available monday to friday 9am to 5pm", () => {
     const carwasher = resourceType("carWasher")
-    const theService = service("Carwash", "Carwash", [anySuitableResource(carwasher)], 45,  price(3500, currencies.GBP), [], [])
+    const theService = service("Carwash", "Carwash", [anySuitableResource(carwasher)], 45, price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -180,7 +183,7 @@ describe("given a carwash service that requires one of several interchangeable w
     })
 
     test("we lose availability when a booking takes all the resources", () => {
-        const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(time24("10:00")), [], "confirmed")
+        const theBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), [], "confirmed")
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [resourceDayAvailability(resource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
@@ -196,7 +199,7 @@ describe("given a carwash service that requires one of several interchangeable w
     })
 
     test("we keep availability when a booking takes a resource, but there are extra resources available", () => {
-        const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(time24("10:00")), [], "confirmed")
+        const theBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), [], "confirmed")
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [
@@ -218,7 +221,7 @@ describe("given a mobile carwash service that requires one of several interchang
     const van = resourceType("Van")
     const morningSlot = timeslotSpec(nineAm, time24("12:00"), "morning slot");
     const afternoonSlot = timeslotSpec(time24("13:00"), time24("16:00"), "afternoon slot");
-    const theService = serviceFns.setStartTimes(service("Mobile Carwash", "Mobile Carwash", [anySuitableResource(van)], 120,  price(3500, currencies.GBP), [], []), [morningSlot, afternoonSlot])
+    const theService = serviceFns.setStartTimes(service("Mobile Carwash", "Mobile Carwash", [anySuitableResource(van)], 120, price(3500, currencies.GBP), [], []), [morningSlot, afternoonSlot])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -247,7 +250,7 @@ describe("given a mobile carwash service that requires one of several interchang
     })
 
     test("we lose availability when a booking takes all the resources", () => {
-        const theBooking = booking(customerId(), theService.id, date, morningSlot, [], "confirmed")
+        const theBooking = booking(customerId(), theService, date, morningSlot.slot, [], "confirmed")
 
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
@@ -263,7 +266,7 @@ describe("given a mobile carwash service that requires one of several interchang
         expect(times).toEqual([time24("13:00")])
     })
     test("we keep availability when a booking takes a resource, but there are extra resources available", () => {
-        const theBooking = booking(customerId(), theService.id, date, morningSlot, [], "confirmed")
+        const theBooking = booking(customerId(), theService, date, morningSlot.slot, [], "confirmed")
 
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
@@ -287,7 +290,7 @@ describe("given a gym that offers personal training with specific trainers, and 
     const ptMike = resource(personalTrainer, "ptMike")
     const ptMete = resource(personalTrainer, "ptMete")
     const bothPtsAvailable = [resourceDayAvailability(ptMike, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]), resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
-    const theService = service("Personal Training", "Personal Training", [anySuitableResource(personalTrainer)], 55,  price(3500, currencies.GBP), [], [])
+    const theService = service("Personal Training", "Personal Training", [anySuitableResource(personalTrainer)], 55, price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -313,7 +316,7 @@ describe("given a gym that offers personal training with specific trainers, and 
     })
 
     test("we lose availability when a booking takes the pt", () => {
-        const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(ptMike.id)], "confirmed")
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")), [resourceAssignment(ptMike.id)], "confirmed")
 
         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
         const outcome = availability.calculateAvailableSlotsForResource(mutatedConfig, [theBooking], serviceRequest(theService, date), ptMike.id)
@@ -352,7 +355,7 @@ describe("given a gym that offers personal training requiring a specific trainer
         resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(roomA, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
-    const theService = service("Personal Training", "Personal Training", [anySuitableResource(personalTrainer), anySuitableResource(gymRoom)], 55,  price(3500, currencies.GBP), [], []);
+    const theService = service("Personal Training", "Personal Training", [anySuitableResource(personalTrainer), anySuitableResource(gymRoom)], 55, price(3500, currencies.GBP), [], []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -394,8 +397,8 @@ describe("given a gym that offers personal training requiring a specific trainer
     });
 
     test("we lose availability when a booking takes either the personal trainer or the gym room", () => {
-        const trainerBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(ptMete.id), resourceAssignment(roomA.id)], "confirmed");
-        const roomBooking = booking(customerId(), theService.id, date, exactTimeAvailability(time24("10:00")), [resourceAssignment(ptMike.id), resourceAssignment(roomA.id)], "confirmed");
+        const trainerBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")), [resourceAssignment(ptMete.id), resourceAssignment(roomA.id)], "confirmed");
+        const roomBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("10:55")), [resourceAssignment(ptMike.id), resourceAssignment(roomA.id)], "confirmed");
 
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
@@ -418,7 +421,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     const requiredResources = [
         resourceDayAvailability(sixDogs, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(6))]),
     ];
-    const theService = service("Dog Walk", "Dog Walk", [anySuitableResource(dogIntake)], 480,  price(3500, currencies.GBP), [], []);
+    const theService = service("Dog Walk", "Dog Walk", [anySuitableResource(dogIntake)], 480, price(3500, currencies.GBP), [], []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -448,7 +451,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     });
 
     test("there is availability is we have some bookings, but capacity remains", () => {
-        const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(sixDogs.id, capacity(5))], "confirmed");
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(5))], "confirmed");
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
@@ -464,7 +467,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     });
 
     test("there is no availability when we have bookings that use all the capacity", () => {
-        const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(sixDogs.id, capacity(6))], "confirmed");
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(6))], "confirmed");
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
@@ -480,9 +483,9 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     });
 
     test("capacity consumption is tracked across the aggregate of bookings", () => {
-        const fourDogs = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(sixDogs.id, capacity(4))], "confirmed");
-        const oneDog = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(sixDogs.id, capacity(1))], "confirmed");
-        const oneMoreDog = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(sixDogs.id, capacity(1))], "confirmed");
+        const fourDogs = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(4))], "confirmed");
+        const oneDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(1))], "confirmed");
+        const oneMoreDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(1))], "confirmed");
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
@@ -517,7 +520,7 @@ describe("given a hair salon that offers configurable services, and is available
     const colouring = serviceOption("Colouring", "Colouring", price(1500, currencies.GBP), false, duration(minutes(20)), [colouringMachine], []);
     const cutting = serviceOption("Cutting", "Cutting", price(2000, currencies.GBP), false, duration(minutes(30)), [], []);
     const curling = serviceOption("Curling", "Curling", price(2500, currencies.GBP), false, duration(minutes(40)), [], []);
-    const theService = serviceFns.addOptions(service("Hair styling", "Hair styling", [anySuitableResource(hairStylist)], 30,  price(3500, currencies.GBP), [], []), [colouring, cutting, curling]);
+    const theService = serviceFns.addOptions(service("Hair styling", "Hair styling", [anySuitableResource(hairStylist)], 30, price(3500, currencies.GBP), [], []), [colouring, cutting, curling]);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -560,7 +563,7 @@ describe("given a yoga studio with two instructors and two rooms", () => {
         resourceDayAvailability(mikeInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(meteInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
-    const theService = service("Yoga", "Yoga", [specificResource(smallRoom), specificResource(mikeInstructor)], 60,  price(3500, currencies.GBP), [], []);
+    const theService = service("Yoga", "Yoga", [specificResource(smallRoom), specificResource(mikeInstructor)], 60, price(3500, currencies.GBP), [], []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -606,7 +609,7 @@ describe("given a yoga studio with two instructors and two rooms", () => {
     // });
 
     test("we have no availability if the room is full", () => {
-        const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(smallRoom.id, capacity(10)), resourceAssignment(mikeInstructor.id)], "confirmed");
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("10:00")), [resourceAssignment(smallRoom.id, capacity(10)), resourceAssignment(mikeInstructor.id)], "confirmed");
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,

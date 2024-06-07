@@ -19,7 +19,7 @@ export interface NoRefundRuleFound {
 export type RefundJudgementResult = RefundPossible | BookingIsInThePast | NoRefundRuleFound;
 
 export function findRefundRule(booking: Booking, policy: RefundPolicy, clock: Clock): RefundJudgementResult {
-	const bookingStartTime = booking.slot._type === 'timeslot.spec' ? booking.slot.slot.from : booking.slot.time;
+	const bookingStartTime = booking.period.from
 	const bookingDate = isoDateFns.toJavascriptDate(booking.date, bookingStartTime);
 	const hoursBeforeBookingStart = jsDateFns.hoursUntil(clock.now(), bookingDate);
 	if (hoursBeforeBookingStart < 0) {

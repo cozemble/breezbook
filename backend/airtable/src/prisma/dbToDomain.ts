@@ -37,7 +37,7 @@ import {
     serviceId,
     tenantSettings,
     TenantSettings,
-    time24,
+    time24, timePeriod,
     timePeriodFns,
     timeslotSpec,
     TimeslotSpec,
@@ -77,14 +77,8 @@ export function toDomainTimeslotSpec(ts: DbTimeSlot): TimeslotSpec {
 }
 
 export function toDomainBooking(b: DbBooking, timeslots: TimeslotSpec[], services: Service[]): Booking {
-    const slot = b.time_slot_id
-        ? mandatory(
-            timeslots.find((ts) => ts.id.value === b.time_slot_id),
-            `No timeslot with id ${b.time_slot_id}`
-        )
-        : exactTimeAvailability(time24(b.start_time_24hr));
     const service = serviceFns.findService(services, serviceId(b.service_id));
-    return booking(customerId(b.customer_id), service, isoDate(b.date), slot, []);
+    return booking(customerId(b.customer_id), service, isoDate(b.date), timePeriod(time24(b.start_time_24hr), time24(b.end_time_24hr)), []);
 }
 
 export function toDomainAddOn(a: DbAddOn): DomainAddOn {

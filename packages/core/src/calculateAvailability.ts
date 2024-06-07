@@ -4,8 +4,8 @@ import {
     availabilityBlock,
     BookableSlot,
     BookableTimes,
-    bookableTimeSlot,
-    Booking,
+    bookableTimeSlot, booking,
+    Booking, bookingFns,
     BusinessAvailability,
     BusinessConfiguration,
     DayAndTimePeriod,
@@ -40,14 +40,9 @@ interface BookingWithResourceUsage {
     resources: Resource[];
 }
 
-interface ResourceTimeSlot {
-    resourceId: ResourceId;
-    allocation: DayAndTimePeriod;
-}
-
-export function calcBookingPeriod(booking: Booking, serviceDuration: number): DayAndTimePeriod {
-    return dayAndTimePeriod(booking.date, calcSlotPeriod(booking.slot, serviceDuration));
-}
+// export function calcBookingPeriod(booking: Booking, serviceDuration: number): DayAndTimePeriod {
+//     return dayAndTimePeriod(booking.date, calcSlotPeriod(booking.slot, serviceDuration));
+// }
 
 export function calcSlotPeriod(slot: BookableSlot, serviceDuration: number): TimePeriod {
     if (slot._type === 'exact.time.availability') {
@@ -59,7 +54,7 @@ export function calcSlotPeriod(slot: BookableSlot, serviceDuration: number): Tim
 function assignResourcesToBookings(config: BusinessConfiguration, bookings: Booking[]): BookingWithResourceUsage[] {
     return bookings.map((booking) => {
         const bookedService = booking.service;
-        const serviceTime = calcBookingPeriod(booking, bookedService.duration);
+        const serviceTime = bookingFns.calcPeriod(booking)
         const resourceOutcome = resourceRequirementFns.matchRequirements(config.resourceAvailability, serviceTime, bookedService.resourceRequirements);
         if (resourceOutcome._type === 'error.response') {
             throw errorResponseFns.toError(resourceOutcome);
@@ -184,7 +179,7 @@ function hasResourcesForSlot(
 ): boolean {
     const slotDayAndTime = dayAndTimePeriod(date, calcSlotPeriod(slot, service.duration));
     const resourcesUsedDuringSlot = bookingWithResourceUsage
-        .filter((r) => dayAndTimePeriodFns.overlaps(calcBookingPeriod(r.booking, service.duration), slotDayAndTime))
+        .filter((r) => dayAndTimePeriodFns.overlaps(bookingFns.calcPeriod(r.booking), slotDayAndTime))
         .flatMap((r) => r.resources);
     const availableResourcesForSlot = availableResources.filter((ra) => ra.availability.some((da) => dayAndTimePeriodFns.overlaps(da.when, slotDayAndTime)));
     const resourcesTypesAvailable = availableResourcesForSlot

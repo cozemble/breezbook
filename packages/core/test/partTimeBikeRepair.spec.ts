@@ -17,7 +17,7 @@ import {
     service,
     time24,
     timePeriod,
-    timezone, availabilityBlock, anySuitableResource
+    timezone, availabilityBlock, anySuitableResource, time24Fns
 } from "../src/types.js";
 import {calculateAvailability} from '../src/index.js';
 
@@ -53,10 +53,10 @@ const config = businessConfiguration(availability, resourceAvailability, service
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
 const mete = customer('Mete', 'Bora', 'mete@email.com', "+14155552672");
 
-const mikeOnMonday = booking(mike.id, bicycleRepair, isoDate('2021-05-24'), exactTimeAvailability(nineAm), []);
-const meteOnMonday = booking(mete.id, bicycleRepair, isoDate('2021-05-24'), exactTimeAvailability(nineTen), []);
-const mikeOnTuesday = booking(mike.id, bicycleRepair, isoDate('2021-05-25'), exactTimeAvailability(nineTwenty), []);
-const meteOnTuesday = booking(mete.id, bicycleRepair, isoDate('2021-05-25'), exactTimeAvailability(nineAm), []);
+const mikeOnMonday = booking(mike.id, bicycleRepair, isoDate('2021-05-24'), timePeriod(nineAm, time24Fns.addMinutes(nineAm,5)), []);
+const meteOnMonday = booking(mete.id, bicycleRepair, isoDate('2021-05-24'), timePeriod(nineTen, time24Fns.addMinutes(nineTen,5)), []);
+const mikeOnTuesday = booking(mike.id, bicycleRepair, isoDate('2021-05-25'), timePeriod(nineTwenty, time24Fns.addMinutes(nineTwenty,5)), []);
+const meteOnTuesday = booking(mete.id, bicycleRepair, isoDate('2021-05-25'), timePeriod(nineAm, time24Fns.addMinutes(nineAm,5)), []);
 
 const existingBookings = [mikeOnMonday, meteOnMonday, mikeOnTuesday, meteOnTuesday];
 

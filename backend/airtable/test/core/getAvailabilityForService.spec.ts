@@ -14,7 +14,7 @@ test('if resource is available and there are no bookings, then we have service a
 });
 
 test('if some but not all resources are assigned to a timeslot, then we still have service availability for that timeslot', () => {
-	const bookingForVan1 = booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave, []);
+	const bookingForVan1 = booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave.slot, []);
 	const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([bookingForVan1]), carwash.smallCarWash.id, today, today);
 	expect(availability).toBeDefined();
 	expect(availability.slots[today.value]).toBeDefined();
@@ -22,8 +22,8 @@ test('if some but not all resources are assigned to a timeslot, then we still ha
 });
 
 test('if all resources are assigned to a timeslot, then we have no service availability for that timeslot', () => {
-	const bookingForVan1 = booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave, []);
-	const bookingForVan2 = booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave, []);
+	const bookingForVan1 = booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave.slot, []);
+	const bookingForVan2 = booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave.slot, []);
 	const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([bookingForVan1, bookingForVan2]), carwash.smallCarWash.id, today, today);
 	expect(availability).toBeDefined();
 	expect(availability.slots[today.value]).toBeDefined();
@@ -32,7 +32,7 @@ test('if all resources are assigned to a timeslot, then we have no service avail
 
 test('cancelled bookings do not count against availability', () => {
 	const theBooking:Booking = {
-		...booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave, []),
+		...booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave.slot, []),
 		status: 'cancelled'
 	};
 	const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([theBooking]), carwash.smallCarWash.id, today, today);

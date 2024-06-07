@@ -1,6 +1,7 @@
 import {
     availabilityBlock,
     Booking,
+    bookingFns,
     BusinessAvailability,
     dayAndTimePeriod,
     DayAndTimePeriod,
@@ -95,8 +96,8 @@ function fullyResourcedBooking(booking: Booking, resourceAllocation: ResourceAll
     }
 }
 
-function assignResourcesToBooking(booking: Booking, resources: ResourceDayAvailability[], service: Service): FullyResourcedBooking | ErrorResponse {
-    const resourceOutcome = resourceRequirementFns.matchRequirements(resources, dayAndTimePeriod(booking.date, calcSlotPeriod(booking.slot, service.duration)), service.resourceRequirements)
+function assignResourcesToBooking(booking: Booking, resources: ResourceDayAvailability[]): FullyResourcedBooking | ErrorResponse {
+    const resourceOutcome = resourceRequirementFns.matchRequirements(resources, bookingFns.calcPeriod(booking), booking.service.resourceRequirements)
     if (resourceOutcome._type === 'error.response') {
         return resourceOutcome
     }
@@ -104,28 +105,27 @@ function assignResourcesToBooking(booking: Booking, resources: ResourceDayAvaila
 }
 
 
-function subtractTimePeriod(period: DayAndTimePeriod, booking: Booking, service: Service): DayAndTimePeriod[] {
+function subtractTimePeriod(period: DayAndTimePeriod, booking: Booking): DayAndTimePeriod[] {
     if (period.day.value !== booking.date.value) {
         return [period]
     }
-    const servicePeriod = calcSlotPeriod(booking.slot, service.duration)
-    return dayAndTimePeriodFns.splitPeriod(period, dayAndTimePeriod(booking.date, servicePeriod))
+    return dayAndTimePeriodFns.splitPeriod(period, bookingFns.calcPeriod(booking))
 }
 
-function subtractCapacity(resourcedBooking: FullyResourcedBooking, r: ResourceDayAvailability, service: Service): ResourceDayAvailability {
+function subtractCapacity(resourcedBooking: FullyResourcedBooking, r: ResourceDayAvailability): ResourceDayAvailability {
     const assigned = mandatory(resourcedBooking.booking.assignedResources.find(assigned => assigned.resource.value === r.resource.id.value), `No assigned resource for resource '${r.resource.id.value}'`)
-    return resourceDayAvailabilityFns.subtractCapacity(r, dayAndTimePeriod(resourcedBooking.booking.date, calcSlotPeriod(resourcedBooking.booking.slot, service.duration)), assigned.capacity)
+    return resourceDayAvailabilityFns.subtractCapacity(r, bookingFns.calcPeriod(resourcedBooking.booking), assigned.capacity)
 }
 
 function subtractResources(resourcedBooking: FullyResourcedBooking, remainingResources: ResourceDayAvailability[], service: Service): ResourceDayAvailability[] {
     return remainingResources.map(r => {
         if (resourcedBooking.resourceAllocation.some(alloc => alloc.resource.id.value === r.resource.id.value)) {
             if (r.resource.type.hasCapacity) {
-                return subtractCapacity(resourcedBooking, r, service);
+                return subtractCapacity(resourcedBooking, r);
             } else {
                 return {
                     ...r,
-                    availability: r.availability.flatMap(a => subtractTimePeriod(a.when, resourcedBooking.booking, service).map(p => availabilityBlock(p, a.capacity)))
+                    availability: r.availability.flatMap(a => subtractTimePeriod(a.when, resourcedBooking.booking).map(p => availabilityBlock(p, a.capacity)))
                 }
             }
         }
@@ -136,7 +136,7 @@ function subtractResources(resourcedBooking: FullyResourcedBooking, remainingRes
 function calcActualResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookings: Booking[], service: Service): ResourceDayAvailability[] | ErrorResponse {
     let remainingResources = resourceAvailability
     for (const booking of bookings) {
-        const resourcedBookingOutcome = assignResourcesToBooking(booking, remainingResources, service)
+        const resourcedBookingOutcome = assignResourcesToBooking(booking, remainingResources)
         if (resourcedBookingOutcome._type === 'error.response') {
             return resourcedBookingOutcome
         }

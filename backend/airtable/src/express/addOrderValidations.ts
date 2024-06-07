@@ -108,7 +108,7 @@ export function validateAvailability(everythingForAvailability: EverythingForAva
     for (let i = 0; i < order.basket.lines.length; i++) {
         const line = order.basket.lines[i];
         const service = everythingForAvailabilityFns.findService(everythingForAvailability, line.serviceId);
-        const projectedBooking = booking(order.customer.id, service, line.date, line.timeslot, []);
+        const projectedBooking = booking(order.customer.id, service, line.date, line.timeslot.slot, []);
         projectedBookings.push(projectedBooking);
         try {
             applyBookingsToResourceAvailability(

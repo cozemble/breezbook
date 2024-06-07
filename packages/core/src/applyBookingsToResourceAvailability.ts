@@ -2,7 +2,7 @@ import {errorResponseFns} from "./utils.js";
 import {
     availabilityBlock,
     AvailabilityBlock,
-    Booking,
+    Booking, bookingFns,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
     isoDateFns,
@@ -10,12 +10,11 @@ import {
     resourceRequirementFns,
     values
 } from "./types.js";
-import {calcBookingPeriod} from "./calculateAvailability.js";
 
 export function applyBookingsToResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookings: Booking[]): ResourceDayAvailability[] {
     return bookings.reduce((resourceAvailability, booking) => {
         const service = booking.service;
-        const bookingPeriod = calcBookingPeriod(booking, service.duration);
+        const bookingPeriod = bookingFns.calcPeriod(booking);
         const resourceOutcome = resourceRequirementFns.matchRequirements(resourceAvailability, bookingPeriod, service.resourceRequirements);
         if (resourceOutcome._type === 'error.response') {
             throw errorResponseFns.toError(resourceOutcome)

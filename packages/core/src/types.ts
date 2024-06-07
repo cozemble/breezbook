@@ -413,7 +413,7 @@ export interface Booking {
     id: BookingId;
     customerId: CustomerId;
     date: IsoDate;
-    slot: BookableSlot;
+    period: TimePeriod;
     service: Service;
     assignedResources: ResourceAssignment[];
     status: 'confirmed' | 'cancelled';
@@ -455,7 +455,7 @@ export function booking(
     customerId: CustomerId,
     service: Service,
     date: IsoDate,
-    slot: BookableSlot,
+    period: TimePeriod,
     assignedResources: ResourceAssignment[],
     status: 'confirmed' | 'cancelled' = 'confirmed',
     id = bookingId(uuidv4())
@@ -464,11 +464,18 @@ export function booking(
         id,
         customerId,
         date,
-        slot,
+        period,
         status,
         assignedResources,
         service
     };
+}
+
+export const bookingFns = {
+
+    calcPeriod(booking: Booking): DayAndTimePeriod {
+        return dayAndTimePeriod(booking.date, booking.period);
+    }
 }
 
 export interface MoneyInMinorUnits extends ValueType<number> {
@@ -481,17 +488,6 @@ export function moneyInMinorUnits(value: number): MoneyInMinorUnits {
         value
     };
 }
-
-// export interface NumberWithoutDecimalPlaces extends ValueType<number> {
-// 	_type: 'number.without.decimal.places';
-// }
-//
-// export function numberWithoutDecimalPlaces(value: number): NumberWithoutDecimalPlaces {
-// 	return {
-// 		_type: 'number.without.decimal.places',
-// 		value
-// 	};
-// }
 
 export interface Currency extends ValueType<string> {
     _type: 'currency';

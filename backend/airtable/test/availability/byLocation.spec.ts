@@ -6,7 +6,7 @@ import {
     carwash,
     environmentId,
     isoDate,
-    locationId,
+    locationId, mandatory,
     tenantEnvironmentLocation,
     tenantId
 } from "@breezbook/packages-core";
@@ -30,19 +30,19 @@ describe("Given a gym with services at various locations", () => {
     })
 
     test("harlow has gym, pt and massage as possible services", async () => {
-        const location = await byLocation.findServices(prisma, harlow)
+        const location = mandatory(await byLocation.findServices(prisma, harlow),`harlow services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.massage30mins])
     })
 
     test("ware has gym, pt and swim as possible services", async () => {
-        const location = await byLocation.findServices(prisma, ware)
+        const location = mandatory(await byLocation.findServices(prisma, ware),`ware services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.swim30mins])
     });
 
     test("stortford has gym, yoga and swim as possible services", async () => {
-        const location = await byLocation.findServices(prisma, stortford)
+        const location = mandatory(await byLocation.findServices(prisma, stortford),`stortford services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.yoga1Hr, multiLocationGym.swim30mins])
     })
