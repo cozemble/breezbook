@@ -1,4 +1,4 @@
-import {errorResponseFns, mandatory} from "./utils.js";
+import {errorResponseFns} from "./utils.js";
 import {
     availabilityBlock,
     AvailabilityBlock,
@@ -6,18 +6,18 @@ import {
     DayAndTimePeriod,
     dayAndTimePeriodFns,
     isoDateFns,
-    ResourceDayAvailability, resourceRequirementFns,
-    Service,
+    ResourceDayAvailability,
+    resourceRequirementFns,
     values
 } from "./types.js";
 import {calcBookingPeriod} from "./calculateAvailability.js";
 
-export function applyBookingsToResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookings: Booking[], services: Service[]): ResourceDayAvailability[] {
+export function applyBookingsToResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookings: Booking[]): ResourceDayAvailability[] {
     return bookings.reduce((resourceAvailability, booking) => {
-        const service = mandatory(services.find(s => values.isEqual(s.id, booking.serviceId)), `Service with id ${booking.serviceId.value} not found`);
+        const service = booking.service;
         const bookingPeriod = calcBookingPeriod(booking, service.duration);
         const resourceOutcome = resourceRequirementFns.matchRequirements(resourceAvailability, bookingPeriod, service.resourceRequirements);
-        if(resourceOutcome._type === 'error.response') {
+        if (resourceOutcome._type === 'error.response') {
             throw errorResponseFns.toError(resourceOutcome)
         }
         const firstSuitableResources = resourceOutcome.value
@@ -39,7 +39,7 @@ function fitTime(block: AvailabilityBlock, fitTimes: DayAndTimePeriod[]): Availa
     if (fitTimesForDay.length === 0) {
         return [];
     }
-    const periods =  fitTimesForDay.map(bh => {
+    const periods = fitTimesForDay.map(bh => {
         if (dayAndTimePeriodFns.intersects(bh, block.when)) {
             return dayAndTimePeriodFns.intersection(bh, block.when);
         }

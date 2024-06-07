@@ -58,10 +58,7 @@ export function calcSlotPeriod(slot: BookableSlot, serviceDuration: number): Tim
 
 function assignResourcesToBookings(config: BusinessConfiguration, bookings: Booking[]): BookingWithResourceUsage[] {
     return bookings.map((booking) => {
-        const bookedService = mandatory(
-            config.services.find((s) => values.isEqual(s.id, booking.serviceId)),
-            `Service with id ${booking.serviceId.value} not found`
-        );
+        const bookedService = booking.service;
         const serviceTime = calcBookingPeriod(booking, bookedService.duration);
         const resourceOutcome = resourceRequirementFns.matchRequirements(config.resourceAvailability, serviceTime, bookedService.resourceRequirements);
         if (resourceOutcome._type === 'error.response') {
@@ -230,7 +227,7 @@ export function calculateAvailability(
     const bookingsInDateRange = bookings.filter((b) => b.date >= fromDate && b.date <= toDate);
     const dates = isoDateFns.listDays(fromDate, toDate);
     const actualResourceAvailability = fitAvailability(
-        applyBookingsToResourceAvailability(config.resourceAvailability, bookingsInDateRange, config.services),
+        applyBookingsToResourceAvailability(config.resourceAvailability, bookingsInDateRange),
         config.availability.availability
     );
     if (service.startTimes) {

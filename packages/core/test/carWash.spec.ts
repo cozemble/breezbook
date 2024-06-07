@@ -1,22 +1,24 @@
 import {expect, test} from 'vitest'
 
 import {
+    availabilityBlock,
     bookableTimeSlot,
     booking,
     businessAvailability,
     businessConfiguration,
     customer,
     dayAndTimePeriod,
-    isoDate, minutes, duration,
+    duration,
+    isoDate,
+    minutes,
     periodicStartTime,
     resourceDayAvailability,
     ResourcedTimeSlot,
     resourcedTimeSlot,
     timePeriod,
-    timezone, availabilityBlock
+    timezone
 } from "../src/types.js";
-import {calculateAvailability} from "../src/index.js";
-import {carwash} from "../src/fixtures/carwash.js";
+import {calculateAvailability, carwash} from "../src/index.js";
 
 const may23 = isoDate("2021-05-23");
 const availability = businessAvailability([
@@ -24,7 +26,6 @@ const availability = businessAvailability([
     dayAndTimePeriod(isoDate("2021-05-24"), carwash.nineToSix),
     dayAndTimePeriod(isoDate("2021-05-25"), carwash.nineToSix),
 ], timezone('Europe/London'));
-
 
 const resourceAvailability = carwash.resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(may23, carwash.nineToSix),
@@ -38,10 +39,10 @@ const config = businessConfiguration(availability, resourceAvailability, carwash
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
 const mete = customer('Mete', 'Bora', 'mete@email.com', "+14155552672");
 
-const mikeOnMonday = booking(mike.id, carwash.smallCarWash.id, isoDate('2021-05-24'), carwash.nineToOne, []);
-const meteOnMonday = booking(mete.id, carwash.mediumCarWash.id, isoDate('2021-05-24'), carwash.nineToOne, []);
-const mikeOnTuesday = booking(mike.id, carwash.mediumCarWash.id, isoDate('2021-05-25'), carwash.oneToFour, []);
-const meteOnTuesday = booking(mete.id, carwash.largeCarWash.id, isoDate('2021-05-25'), carwash.fourToSix, []);
+const mikeOnMonday = booking(mike.id, carwash.smallCarWash, isoDate('2021-05-24'), carwash.nineToOne, []);
+const meteOnMonday = booking(mete.id, carwash.mediumCarWash, isoDate('2021-05-24'), carwash.nineToOne, []);
+const mikeOnTuesday = booking(mike.id, carwash.mediumCarWash, isoDate('2021-05-25'), carwash.oneToFour, []);
+const meteOnTuesday = booking(mete.id, carwash.largeCarWash, isoDate('2021-05-25'), carwash.fourToSix, []);
 
 const existingBookings = [mikeOnMonday, meteOnMonday, mikeOnTuesday, meteOnTuesday];
 

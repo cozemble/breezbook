@@ -10,7 +10,7 @@ import {
     timePeriodFns,
     TimeslotSpec
 } from '@breezbook/packages-core';
-import {EverythingForAvailability} from './getEverythingForAvailability.js';
+import {EverythingForAvailability, everythingForAvailabilityFns} from './getEverythingForAvailability.js';
 import {errorResponse, ErrorResponse, pricedBasketFns, PricedCreateOrderRequest} from '@breezbook/backend-api-types';
 import {
     applyBookingsToResourceAvailability
@@ -103,17 +103,17 @@ export function validateServiceForms(everythingForTenant: EverythingForAvailabil
     return null;
 }
 
-export function validateAvailability(everythingForTenant: EverythingForAvailability, order: PricedCreateOrderRequest) {
-    const projectedBookings: Booking[] = [...everythingForTenant.bookings];
+export function validateAvailability(everythingForAvailability: EverythingForAvailability, order: PricedCreateOrderRequest) {
+    const projectedBookings: Booking[] = [...everythingForAvailability.bookings];
     for (let i = 0; i < order.basket.lines.length; i++) {
         const line = order.basket.lines[i];
-        const projectedBooking = booking(order.customer.id, line.serviceId, line.date, line.timeslot, []);
+        const service = everythingForAvailabilityFns.findService(everythingForAvailability, line.serviceId);
+        const projectedBooking = booking(order.customer.id, service, line.date, line.timeslot, []);
         projectedBookings.push(projectedBooking);
         try {
             applyBookingsToResourceAvailability(
-                everythingForTenant.businessConfiguration.resourceAvailability,
-                projectedBookings,
-                everythingForTenant.businessConfiguration.services
+                everythingForAvailability.businessConfiguration.resourceAvailability,
+                projectedBookings
             );
         } catch (e: unknown) {
             return errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.serviceId.value} in order line ${i}`);

@@ -922,3 +922,21 @@ And I think it is right.  I asked it to check my dev diary to see what I modelle
 by moving it to service.  It could see no reason.  Indeed it found reasons in my diary that make modelling capacity on service as probably
 more sensible.  It also pointed out that while the capacity of `Small room` might be 10, for a given service - one that uses lots of equipment for example -
 the capacity might be less.  Am sold. Refactor here we come.
+
+## Maintaining the right energy level for clean refactoring
+
+You know I do feel that moving capacity to service is the right design move.  But so much has gone into modeling capacity on the resource
+that it's a medium sized task.  The fact that I did this work yesterday and they day before, makes me feel tired about taking this new work
+on.  If I do not enter this refactor with the right energy and enthusiasm, I will will be looking for short-cuts.  Having the right 
+energy is a super important part of clean refactoring.  So I'm going to take a break and come back to when I don't feel attached to
+what I did yesterday.
+
+# Fri 7 Jun 2024
+
+Starting on this refactor to shift capacity from resource to service.  I think I found a bug, permitted to exist due to the fact 
+that none of my tests have a scenario involving bookings with different service durations.  My code is using the duration of the
+required service to calculate the end time of the booking.  So rolled back my refactor effort to do the following:
+
+1. Add a full `Service` instance to `Booking` instead of `serviceId`
+2. Replacing `slot` on `Booking` with a start time and end time, because this Booking model is to calculate availability, not to
+   store or request bookings.  The end time is calculated from the start time and the duration of the service.

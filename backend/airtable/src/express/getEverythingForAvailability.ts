@@ -25,7 +25,7 @@ import {
     TenantSettings,
     time24,
     timePeriod,
-    values, availabilityBlock
+    values, availabilityBlock, ServiceId, Service
 } from '@breezbook/packages-core';
 import {makeBusinessAvailability} from './makeBusinessAvailability.js';
 import {
@@ -84,6 +84,16 @@ export function everythingForAvailability(
         tenantSettings,
         tenantEnvironment
     };
+}
+
+export const everythingForAvailabilityFns = {
+
+    findService(everythingForAvailability: EverythingForAvailability, serviceId: ServiceId):Service {
+        return mandatory(
+            everythingForAvailability.businessConfiguration.services.find((s) => values.isEqual(s.id, serviceId)),
+            `Service with id ${serviceId.value} not found`
+        );
+    }
 }
 
 interface FlattenedResourceDayAvailability {
@@ -231,12 +241,13 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
         )
         : undefined;
     const mappedTimeSlots = availabilityData.timeSlots.map(toDomainTimeslotSpec);
+    const services = availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots))
 
     return everythingForAvailability(
         businessConfiguration(
             makeBusinessAvailability(availabilityData.businessHours, availabilityData.blockedTime, dates),
             makeResourceAvailability(mappedResourceTypes, availabilityData.resources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates),
-            availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots)),
+            services,
             mappedAddOns,
             mappedTimeSlots,
             mappedForms,
@@ -244,7 +255,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
             customerForm ? customerForm.id : null
         ),
         availabilityData.pricingRules.map((pr) => toDomainPricingRule(pr)),
-        availabilityData.bookings.map((b) => toDomainBooking(b, mappedTimeSlots)),
+        availabilityData.bookings.map((b) => toDomainBooking(b, mappedTimeSlots, services)),
         coupons,
         toDomainTenantSettings(availabilityData.tenantSettings),
         tenantEnvironment

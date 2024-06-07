@@ -414,7 +414,7 @@ export interface Booking {
     customerId: CustomerId;
     date: IsoDate;
     slot: BookableSlot;
-    serviceId: ServiceId;
+    service: Service;
     assignedResources: ResourceAssignment[];
     status: 'confirmed' | 'cancelled';
     formData?: unknown;
@@ -453,7 +453,7 @@ export function resourceAssignment(resource: ResourceId, theCapacity = capacity(
 
 export function booking(
     customerId: CustomerId,
-    serviceId: ServiceId,
+    service: Service,
     date: IsoDate,
     slot: BookableSlot,
     assignedResources: ResourceAssignment[],
@@ -467,7 +467,7 @@ export function booking(
         slot,
         status,
         assignedResources,
-        serviceId
+        service
     };
 }
 
@@ -810,6 +810,14 @@ export const serviceFns = {
             ...service,
             startTimes
         }
+    },
+    findService(services: Service[], serviceId: ServiceId): Service {
+        const found = services.find(s => values.isEqual(s.id, serviceId));
+        if (!found) {
+            throw new Error(`No service found with id ${serviceId.value}`);
+        }
+        return found;
+
     }
 }
 
