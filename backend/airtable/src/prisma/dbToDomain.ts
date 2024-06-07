@@ -14,7 +14,7 @@ import {
     addOnId,
     anySuitableResource,
     booking,
-    Booking,
+    Booking, capacity,
     currency,
     customerId,
     dayAndTimePeriod,
@@ -64,6 +64,7 @@ export function toDomainService(dbService: DbService, resourceTypes: ResourceTyp
         price(priceAmount, currency(dbService.price_currency)),
         permittedAddOns,
         forms,
+        capacity(1),
         serviceId(dbService.id)
     );
     if (dbService.requires_time_slot) {

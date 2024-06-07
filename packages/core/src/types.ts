@@ -768,7 +768,8 @@ export interface Service {
     permittedAddOns: AddOnId[];
     serviceFormIds: FormId[];
     options: ServiceOption[];
-    startTimes: StartTime[] | null
+    startTimes: StartTime[] | null;
+    capacity: Capacity;
 }
 
 export interface ServiceOptionId extends ValueType<string> {
@@ -825,6 +826,7 @@ export function service(
     price: Price,
     permittedAddOns: AddOnId[],
     serviceFormIds: FormId[],
+    theCapacity = capacity(1),
     id = serviceId(uuidv4())
 ): Service {
     return {
@@ -836,6 +838,7 @@ export function service(
         price,
         permittedAddOns,
         serviceFormIds,
+        capacity: theCapacity,
         options: [],
         startTimes: null
     };

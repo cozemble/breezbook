@@ -2,6 +2,7 @@ import {
     addOn,
     addOnId,
     anySuitableResource,
+    capacity,
     coupon,
     couponCode,
     couponId,
@@ -54,9 +55,10 @@ const smallCarWash = serviceFns.setStartTimes(service(
     price(1000, GBP),
     [wax.id, polish.id],
     [carwashForm.id],
+    capacity(1),
     serviceId('smallCarWash.id')
 ), timeslots);
-const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableResource(van)], 120, price(1500, GBP), [wax.id, polish.id], [], serviceId('mediumCarWash.id')), timeslots);
+const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableResource(van)], 120, price(1500, GBP), [wax.id, polish.id], [], capacity(1), serviceId('mediumCarWash.id')), timeslots);
 const largeCarWash = serviceFns.setStartTimes(service(
     'Large Car Wash',
     'Large Car Wash',
@@ -65,6 +67,7 @@ const largeCarWash = serviceFns.setStartTimes(service(
     price(2000, GBP),
     [wax.id, polish.id, cleanSeats.id, cleanCarpets.id],
     [],
+    capacity(1),
     serviceId('largeCarWash.id')
 ), timeslots);
 
