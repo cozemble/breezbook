@@ -88,11 +88,33 @@ interface FullyResourcedBooking {
     resourceAllocation: ResourceAllocation[]
 }
 
-function fullyResourcedBooking(booking: Booking, resourceAllocation: ResourceAllocation[] = []): FullyResourcedBooking {
+export function fullyResourcedBooking(booking: Booking, resourceAllocation: ResourceAllocation[] = []): FullyResourcedBooking {
     return {
         _type: "fully.resourced.booking",
         booking,
         resourceAllocation
+    }
+}
+
+export const fullyResourcedBookingFns = {
+    maxResourceUsage(resourcedBookings: FullyResourcedBooking[]): Map<Resource, number> {
+        const resourcePeriods: Map<Resource, TimePeriod[]> = new Map<Resource, TimePeriod[]>()
+        return resourcedBookings.reduce((acc, resourcedBooking) => {
+            resourcedBooking.resourceAllocation.forEach(alloc => {
+                const resource = alloc.resource
+                if (!acc.get(resource)) {
+                    acc.set(resource, 1)
+                }
+                const overlapsExistingPeriod = (resourcePeriods.get(resource) ?? []).some(existingPeriod => timePeriodFns.intersects(existingPeriod, resourcedBooking.booking.period))
+                if (overlapsExistingPeriod) {
+                    const count = mandatory(acc.get(resource), `No count for resource '${resource.id.value}'`)
+                    acc.set(resource, count + 1)
+                }
+                const periods = resourcePeriods.get(resource) ?? []
+                resourcePeriods.set(resource, [...periods, resourcedBooking.booking.period])
+            })
+            return acc
+        }, new Map<Resource, number>())
     }
 }
 
@@ -117,7 +139,7 @@ function subtractCapacity(resourcedBooking: FullyResourcedBooking, r: ResourceDa
     return resourceDayAvailabilityFns.subtractCapacity(r, bookingFns.calcPeriod(resourcedBooking.booking), assigned.capacity)
 }
 
-function subtractResources(resourcedBooking: FullyResourcedBooking, remainingResources: ResourceDayAvailability[], service: Service): ResourceDayAvailability[] {
+function subtractResources(resourcedBooking: FullyResourcedBooking, remainingResources: ResourceDayAvailability[]): ResourceDayAvailability[] {
     return remainingResources.map(r => {
         if (resourcedBooking.resourceAllocation.some(alloc => alloc.resource.id.value === r.resource.id.value)) {
             if (r.resource.type.hasCapacity) {
@@ -140,7 +162,7 @@ function calcActualResourceAvailability(resourceAvailability: ResourceDayAvailab
         if (resourcedBookingOutcome._type === 'error.response') {
             return resourcedBookingOutcome
         }
-        remainingResources = subtractResources(resourcedBookingOutcome, remainingResources, service)
+        remainingResources = subtractResources(resourcedBookingOutcome, remainingResources)
     }
     return remainingResources
 }
@@ -246,4 +268,38 @@ export const availability = {
         }
         return availability.calculateAvailableSlots(mutatedConfig, bookings.filter(b => b.assignedResources.some(rid => rid.resource.value === resourceId.value)), serviceRequest)
     }
+}
+
+export interface ResourceBookingOutcome {
+    _type: 'resource.booking.outcome'
+    when: DayAndTimePeriod
+    remainingAvailability: ResourceDayAvailability[]
+    bookings: FullyResourcedBooking[]
+}
+
+function resourceBookingOutcome(when: DayAndTimePeriod, remainingAvailability: ResourceDayAvailability[], bookings: FullyResourcedBooking[]): ResourceBookingOutcome {
+    return {
+        _type: "resource.booking.outcome",
+        when,
+        remainingAvailability,
+        bookings
+    }
+}
+
+export function resourceBookings(when: DayAndTimePeriod, bookings: Booking[], rda: ResourceDayAvailability[]): ResourceBookingOutcome | ErrorResponse {
+    let outcome = resourceBookingOutcome(when, rda, [])
+    for (const booking of bookings) {
+        if (dayAndTimePeriodFns.intersects(bookingFns.calcPeriod(booking), when)) {
+            const resourcedBookingOutcome = assignResourcesToBooking(booking, outcome.remainingAvailability)
+            if (resourcedBookingOutcome._type === 'error.response') {
+                return resourcedBookingOutcome
+            }
+            const resourcedBookings = [...outcome.bookings, resourcedBookingOutcome]
+            const countedResources = fullyResourcedBookingFns.maxResourceUsage(resourcedBookings)
+            const exhaustedResources = [...countedResources.entries()].filter(([_, count]) => count >= booking.service.capacity.value).map(([resource, _]) => resource)
+            const reducedAvailability = exhaustedResources.reduce((acc, resource) => resourceDayAvailabilityFns.dropAvailability(when, resource, acc), outcome.remainingAvailability)
+            outcome = resourceBookingOutcome(when, reducedAvailability, resourcedBookings)
+        }
+    }
+    return outcome
 }

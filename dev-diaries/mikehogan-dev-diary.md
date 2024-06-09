@@ -940,3 +940,11 @@ required service to calculate the end time of the booking.  So rolled back my re
 1. Add a full `Service` instance to `Booking` instead of `serviceId`
 2. Replacing `slot` on `Booking` with a start time and end time, because this Booking model is to calculate availability, not to
    store or request bookings.  The end time is calculated from the start time and the duration of the service.
+
+## Sometimes the current solution is one case of a more general case
+
+Case in point being the addition of capacity.  It seemed like I had to add a new thing to the model, but in fact, the current model
+was based on every service having a capacity of 1.  When I first added capacity, I added special if statements to the current code
+to check if capacity was involved.  But later I realised that the current code, with capacity set to 1, satisifed the current
+need of resource availability dropping out if a booking was made by subtracting booking capacity (also implicitly 1) from
+remaining capacity.

@@ -1039,6 +1039,13 @@ export const availabilityBlockFns = {
                 .filter(block => block.capacity.value > 0)
         }
         return [a]
+    },
+    dropAvailability(when: DayAndTimePeriod, block: AvailabilityBlock):AvailabilityBlock[] {
+        if(dayAndTimePeriodFns.intersects(block.when, when)) {
+            const split = dayAndTimePeriodFns.splitPeriod(block.when, when)
+            return split.map(dt => availabilityBlock(dt, block.capacity))
+        }
+        return [block];
     }
 }
 
@@ -1079,6 +1086,17 @@ export const resourceDayAvailabilityFns = {
             ...resourceDayAvailability,
             availability: deDupedBlocks
         }
+    },
+    dropAvailability(when: DayAndTimePeriod, resource: Resource, acc: ResourceDayAvailability[]):ResourceDayAvailability[] {
+        return acc.map(rda => {
+            if (rda.resource.id.value === resource.id.value) {
+                return {
+                    ...rda,
+                    availability: rda.availability.flatMap(block => availabilityBlockFns.dropAvailability(when, block))
+                }
+            }
+            return rda
+        });
     }
 }
 
@@ -1159,7 +1177,9 @@ export const timePeriodFns = {
         return period.to.value > period2.to.value;
     },
     intersects(period: TimePeriod, period2: TimePeriod) {
-        // return true if period2 has any time inside period
+        if (timePeriodFns.sequential(period, period2) || timePeriodFns.sequential(period2, period)) {
+            return false;
+        }
         return (
             (period2.from.value >= period.from.value && period2.from.value <= period.to.value) ||
             (period2.to.value >= period.from.value && period2.to.value <= period.to.value) ||
@@ -1177,6 +1197,9 @@ export const timePeriodFns = {
     },
     equals(period: TimePeriod, period2: TimePeriod) {
         return period.from.value === period2.from.value && period.to.value === period2.to.value;
+    },
+    sequential(period: TimePeriod, period2: TimePeriod) {
+        return period.to.value === period2.from.value;
     }
 };
 

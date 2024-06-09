@@ -15,3 +15,18 @@ test("overlapping time periods", () => {
     expect(timePeriodFns.overlaps(nineToTen,nineFifteenToNineThirty)).toBe(true);
     expect(timePeriodFns.overlaps(nineToTen,nineToTen)).toBe(true);
 })
+
+test("intersecting time periods", () => {
+    expect(timePeriodFns.intersects(nineToTen,tenToEleven)).toBe(false);
+    expect(timePeriodFns.intersects(tenToEleven,nineToTen)).toBe(false);
+    expect(timePeriodFns.intersects(eightFiftyToTenOhFive,nineToTen)).toBe(true);
+    expect(timePeriodFns.intersects(nineToTen,eightFiftyToTenOhFive)).toBe(true);
+
+    expect(timePeriodFns.intersects(nineToTen,nineFifteenToNineThirty)).toBe(true);
+    expect(timePeriodFns.intersects(nineToTen,nineToTen)).toBe(true);
+});
+
+test("sequential time periods", () => {
+    expect(timePeriodFns.sequential(nineToTen,tenToEleven)).toBe(true);
+    expect(timePeriodFns.sequential(tenToEleven,nineToTen)).toBe(false);
+});
