@@ -286,7 +286,7 @@ function resourceBookingOutcome(when: DayAndTimePeriod, remainingAvailability: R
     }
 }
 
-export function resourceBookings(when: DayAndTimePeriod, bookings: Booking[], rda: ResourceDayAvailability[]): ResourceBookingOutcome | ErrorResponse {
+export function resourceBookings(rda: ResourceDayAvailability[], bookings: Booking[], when: DayAndTimePeriod): ResourceBookingOutcome | ErrorResponse {
     let outcome = resourceBookingOutcome(when, rda, [])
     for (const booking of bookings) {
         if (dayAndTimePeriodFns.intersects(bookingFns.calcPeriod(booking), when)) {

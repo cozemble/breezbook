@@ -948,3 +948,10 @@ was based on every service having a capacity of 1.  When I first added capacity,
 to check if capacity was involved.  But later I realised that the current code, with capacity set to 1, satisifed the current
 need of resource availability dropping out if a booking was made by subtracting booking capacity (also implicitly 1) from
 remaining capacity.
+
+# Sun 9 Jun 2024
+
+shifting tack - trying to see if I can test drive out resourcing bookings in a given time period, as means of checking availability 
+in a given timeslot.  The idea being that I can pass each candidate time period to this function, saying: please resource all
+bookings in this period, and let me know what resource remains.  Then I'll see if there is enough for the service I am checking
+availability of.
