@@ -5,6 +5,7 @@ import {
     availabilityBlock,
     AvailabilityConfiguration,
     availabilityConfiguration,
+    AvailableSlot,
     blockedTime,
     booking,
     businessAvailability,
@@ -15,14 +16,13 @@ import {
     discreteStartTimes,
     duration,
     ErrorResponse,
-    exactTimeAvailability,
+    errorResponseFns,
     isoDate,
     minutes,
     mondayToFriday,
     periodicStartTime,
     price,
     resource,
-    resourceAssignment,
     resourceDayAvailability,
     resourceDayAvailabilityFns,
     resourceType,
@@ -32,6 +32,7 @@ import {
     serviceRequest,
     specificResource,
     startTimeFns,
+    Success,
     time24,
     time24Fns,
     timePeriod,
@@ -52,23 +53,15 @@ describe("given a chatbot service that requires no resources, and is available m
         periodicStartTime(duration(minutes(60))))
 
     test("if the service takes one hour, we can do 8 services a day", () => {
-        const outcome = availability.calculateAvailableSlots(config, [], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
     test("having lots of bookings makes no difference, as no resources are required", () => {
         const expectedTimes = [time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]
-        const bookings = expectedTimes.map(time => booking(customerId(), theService, date, timePeriod(time, time24Fns.addMinutes(time, 60)), [], "confirmed"))
-        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-        const available = outcome.value
+        const bookings = expectedTimes.map(time => booking(customerId(), theService, date, timePeriod(time, time24Fns.addMinutes(time, 60))))
+        const available = expectSlots(availability.calculateAvailableSlots(config, bookings, serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual(expectedTimes)
     })
@@ -78,11 +71,7 @@ describe("given a chatbot service that requires no resources, and is available m
             ...config,
             availability: makeBusinessAvailability(makeBusinessHours(mondayToFriday, time24("09:00"), time24("17:00")), [blockedTime(date, time24("10:00"), time24("11:00"))], [date])
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
@@ -92,11 +81,7 @@ describe("given a chatbot service that requires no resources, and is available m
             ...config,
             availability: makeBusinessAvailability(makeBusinessHours(mondayToFriday, time24("09:00"), time24("17:00")), [blockedTime(date, time24("09:30"), time24("11:00"))], [date])
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
@@ -106,22 +91,14 @@ describe("given a chatbot service that requires no resources, and is available m
             ...config,
             startTimeSpec: periodicStartTime(duration(minutes(30)))
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("09:30"), time24("10:00"), time24("10:30"), time24("11:00"), time24("11:30"), time24("12:00"), time24("12:30"), time24("13:00"), time24("13:30"), time24("14:00"), time24("14:30"), time24("15:00"), time24("15:30"), time24("16:00")])
     })
 
     test("if the service takes two hours, we can do 7 services a day", () => {
         const longerService = {...theService, duration: 120}
-        const outcome = availability.calculateAvailableSlots(config, [], serviceRequest(longerService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(longerService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00")])
     })
@@ -131,11 +108,7 @@ describe("given a chatbot service that requires no resources, and is available m
             ...config,
             startTimeSpec: discreteStartTimes([time24("09:00"), time24("10:00"), time24("13:00"), time24("14:00")])
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("13:00"), time24("14:00")])
 
@@ -152,6 +125,15 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 })
 
+function expectSlots(outcome: Success<AvailableSlot[]> | ErrorResponse): AvailableSlot[] {
+    expect(outcome._type).toBe("success")
+    if (outcome._type === "error.response") {
+        throw errorResponseFns.toError(outcome)
+    }
+    return outcome.value
+
+}
+
 describe("given a carwash service that requires one of several interchangeable washers for each service, and is available monday to friday 9am to 5pm", () => {
     const carwasher = resourceType("carWasher")
     const theService = service("Carwash", "Carwash", [anySuitableResource(carwasher)], 45, price(3500, currencies.GBP), [], [])
@@ -162,9 +144,8 @@ describe("given a carwash service that requires one of several interchangeable w
         periodicStartTime(duration(minutes(60))))
 
     test("there is no availability where there are no resources", () => {
-        const outcome = availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)) as ErrorResponse
-        expect(outcome.errorCode).toBe(availability.errorCodes.noResourcesAvailable)
-        expect(outcome.errorMessage).toBeDefined()
+        const slots = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)))
+        expect(slots).toHaveLength(0)
     })
 
     test("we have availability when we have one resource", () => {
@@ -172,46 +153,31 @@ describe("given a carwash service that requires one of several interchangeable w
             ...config,
             resourceAvailability: [resourceDayAvailability(resource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
     test("we lose availability when a booking takes all the resources", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), [], "confirmed")
+        const theBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), "confirmed")
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [resourceDayAvailability(resource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
     test("we keep availability when a booking takes a resource, but there are extra resources available", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), [], "confirmed")
+        const theBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), "confirmed")
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [
                 resourceDayAvailability(resource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
                 resourceDayAvailability(resource(carwasher, "Washer#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
@@ -229,9 +195,8 @@ describe("given a mobile carwash service that requires one of several interchang
         periodicStartTime(duration(minutes(60))))
 
     test("there is no availability where there are no resources", () => {
-        const outcome = availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)) as ErrorResponse
-        expect(outcome.errorCode).toBe(availability.errorCodes.noResourcesAvailable)
-        expect(outcome.errorMessage).toBeDefined()
+        const outcome = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)))
+        expect(outcome).toHaveLength(0)
     })
 
     test("we have availability when we have one resource", () => {
@@ -239,34 +204,24 @@ describe("given a mobile carwash service that requires one of several interchang
             ...config,
             resourceAvailability: [resourceDayAvailability(resource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("13:00")])
     })
 
     test("we lose availability when a booking takes all the resources", () => {
-        const theBooking = booking(customerId(), theService, date, morningSlot.slot, [], "confirmed")
+        const theBooking = booking(customerId(), theService, date, morningSlot.slot, "confirmed")
 
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: [resourceDayAvailability(resource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("13:00")])
     })
     test("we keep availability when a booking takes a resource, but there are extra resources available", () => {
-        const theBooking = booking(customerId(), theService, date, morningSlot.slot, [], "confirmed")
+        const theBooking = booking(customerId(), theService, date, morningSlot.slot, "confirmed")
 
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
@@ -274,75 +229,54 @@ describe("given a mobile carwash service that requires one of several interchang
                 resourceDayAvailability(resource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
                 resourceDayAvailability(resource(van, "Van#2"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date))
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-
-        const available = outcome.value
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("13:00")])
     })
 })
 
-describe("given a gym that offers personal training with specific trainers, and is available monday to friday 9am to 5pm", () => {
-    const personalTrainer = resourceType("personalTrainer")
-    const ptMike = resource(personalTrainer, "ptMike")
-    const ptMete = resource(personalTrainer, "ptMete")
-    const bothPtsAvailable = [resourceDayAvailability(ptMike, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]), resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
-    const theService = service("Personal Training", "Personal Training", [anySuitableResource(personalTrainer)], 55, price(3500, currencies.GBP), [], [])
-    const config = availabilityConfiguration(
-        makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
-        [],
-        [],
-        periodicStartTime(duration(minutes(60))))
-
-    test("there is no availability where there are no personal trainers", () => {
-        const outcome = availability.calculateAvailableSlotsForResource(config, [], serviceRequest(theService, date), ptMike.id) as ErrorResponse
-        expect(outcome.errorCode).toBe(availability.errorCodes.noResourcesAvailable)
-        expect(outcome.errorMessage).toBeDefined()
-    })
-
-    test("we have availability when the pt available", () => {
-        const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
-        const outcome = availability.calculateAvailableSlotsForResource(mutatedConfig, [], serviceRequest(theService, date), ptMike.id)
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-
-        const available = outcome.value
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
-        expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
-    })
-
-    test("we lose availability when a booking takes the pt", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")), [resourceAssignment(ptMike.id)], "confirmed")
-
-        const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
-        const outcome = availability.calculateAvailableSlotsForResource(mutatedConfig, [theBooking], serviceRequest(theService, date), ptMike.id)
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-
-        const available = outcome.value
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
-        expect(times).toEqual([time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
-    })
-
-    test("we keep availability when a booking takes the a different pt", () => {
-        const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(ptMete.id)], "confirmed")
-        const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
-
-        const outcome = availability.calculateAvailableSlotsForResource(mutatedConfig, [theBooking], serviceRequest(theService, date), ptMike.id)
-        if (outcome._type === 'error.response') {
-            throw new Error(outcome.errorCode)
-        }
-
-        const available = outcome.value
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
-        expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
-    })
-});
+// describe("given a gym that offers personal training with specific trainers, and is available monday to friday 9am to 5pm", () => {
+//     const personalTrainer = resourceType("personalTrainer")
+//     const ptMike = resource(personalTrainer, "ptMike")
+//     const ptMete = resource(personalTrainer, "ptMete")
+//     const bothPtsAvailable = [resourceDayAvailability(ptMike, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]), resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
+//     const theService = service("Personal Training", "Personal Training", [anySuitableResource(personalTrainer)], 55, price(3500, currencies.GBP), [], [])
+//     const config = availabilityConfiguration(
+//         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
+//         [],
+//         [],
+//         periodicStartTime(duration(minutes(60))))
+//
+//     test("there is no availability where there are no personal trainers", () => {
+//         const outcome = expectSlots(availability.calculateAvailableSlotsForResource(config, [], serviceRequest(theService, date), ptMike.id))
+//         expect(outcome).toHaveLength(0)
+//     })
+//
+//     test("we have availability when the pt available", () => {
+//         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
+//         const available = expectSlots(availability.calculateAvailableSlotsForResource(mutatedConfig, [], serviceRequest(theService, date), ptMike.id))
+//         const times = available.map(a => startTimeFns.toTime24(a.startTime))
+//         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
+//     })
+//
+//     test("we lose availability when a booking takes the pt", () => {
+//         const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")))
+//
+//         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
+//         const available = expectSlots(availability.calculateAvailableSlotsForResource(mutatedConfig, [theBooking], serviceRequest(theService, date), ptMike.id))
+//         const times = available.map(a => startTimeFns.toTime24(a.startTime))
+//         expect(times).toEqual([time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
+//     })
+//
+//     test("we keep availability when a booking takes the a different pt", () => {
+//         const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")))
+//         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
+//
+//         const available = expectSlots(availability.calculateAvailableSlotsForResource(mutatedConfig, [theBooking], serviceRequest(theService, date), ptMike.id))
+//         const times = available.map(a => startTimeFns.toTime24(a.startTime))
+//         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
+//     })
+// });
 
 describe("given a gym that offers personal training requiring a specific trainer and a specific gym room, and is available monday to friday 9am to 5pm", () => {
     const personalTrainer = resourceType("personalTrainer");
@@ -368,17 +302,15 @@ describe("given a gym that offers personal training requiring a specific trainer
             ...config,
             resourceAvailability: resourceDayAvailabilityFns.reduceToResource(requiredResources, ptMike.id),
         };
-        const trainerOnlyOutcome = availability.calculateAvailableSlots(trainerOnlyConfig, [], serviceRequest(theService, date)) as ErrorResponse;
-        expect(trainerOnlyOutcome.errorCode).toBe(availability.errorCodes.noResourcesAvailable);
-        expect(trainerOnlyOutcome.errorMessage).toBeDefined();
+        const trainerOnlyOutcome = expectSlots(availability.calculateAvailableSlots(trainerOnlyConfig, [], serviceRequest(theService, date)))
+        expect(trainerOnlyOutcome).toHaveLength(0);
 
         const roomOnlyConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: resourceDayAvailabilityFns.reduceToResource(requiredResources, roomA.id),
         };
-        const roomOnlyOutcome = availability.calculateAvailableSlots(roomOnlyConfig, [], serviceRequest(theService, date)) as ErrorResponse;
-        expect(roomOnlyOutcome.errorCode).toBe(availability.errorCodes.noResourcesAvailable);
-        expect(roomOnlyOutcome.errorMessage).toBeDefined();
+        const roomOnlyOutcome = expectSlots(availability.calculateAvailableSlots(roomOnlyConfig, [], serviceRequest(theService, date)));
+        expect(roomOnlyOutcome).toHaveLength(0);
     });
 
     test("we have availability when both the personal trainer and the gym room are available", () => {
@@ -386,30 +318,21 @@ describe("given a gym that offers personal training requiring a specific trainer
             ...config,
             resourceAvailability: requiredResources,
         };
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date));
-        if (outcome._type === "error.response") {
-            throw new Error(outcome.errorCode);
-        }
-
-        const available = outcome.value;
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)));
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 
     test("we lose availability when a booking takes either the personal trainer or the gym room", () => {
-        const trainerBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")), [resourceAssignment(ptMete.id), resourceAssignment(roomA.id)], "confirmed");
-        const roomBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("10:55")), [resourceAssignment(ptMike.id), resourceAssignment(roomA.id)], "confirmed");
+        const trainerBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")), "confirmed");
+        const roomBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("10:55")));
 
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
         };
 
-        const trainerBookingOutcome = availability.calculateAvailableSlots(mutatedConfig, [trainerBooking, roomBooking], serviceRequest(theService, date));
-        if (trainerBookingOutcome._type === "error.response") {
-            throw new Error(trainerBookingOutcome.errorCode);
-        }
-        const trainerBookingAvailable = trainerBookingOutcome.value;
+        const trainerBookingAvailable = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [trainerBooking, roomBooking], serviceRequest(theService, date)));
         const trainerBookingTimes = trainerBookingAvailable.map((a) => startTimeFns.toTime24(a.startTime));
         expect(trainerBookingTimes).toEqual([time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
@@ -421,7 +344,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     const requiredResources = [
         resourceDayAvailability(sixDogs, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(6))]),
     ];
-    const theService = service("Dog Walk", "Dog Walk", [anySuitableResource(dogIntake)], 480, price(3500, currencies.GBP), [], []);
+    const theService = service("Dog Walk", "Dog Walk", [anySuitableResource(dogIntake)], 480, price(3500, currencies.GBP), [], [], capacity(6));
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -430,9 +353,8 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     );
 
     test("there is no availability when we have no resources", () => {
-        const outcome = availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)) as ErrorResponse;
-        expect(outcome.errorCode).toBe(availability.errorCodes.noResourcesAvailable);
-        expect(outcome.errorMessage).toBeDefined();
+        const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)))
+        expect(available).toHaveLength(0);
     });
 
     test("there is availability when we have the resource", () => {
@@ -440,69 +362,47 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
             ...config,
             resourceAvailability: requiredResources,
         };
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date));
-        if (outcome._type === "error.response") {
-            throw new Error(outcome.errorCode);
-        }
-
-        const available = outcome.value;
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)));
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([time24("09:00")]);
     });
 
-    test("there is availability is we have some bookings, but capacity remains", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(5))], "confirmed");
+    test("there is availability if we have some bookings, but capacity remains", () => {
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), "confirmed", capacity(5));
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
         };
-        const outcome = availability.calculateAvailableSlotsForResource(mutatedConfig, [theBooking], serviceRequest(theService, date), sixDogs.id);
-        if (outcome._type === "error.response") {
-            throw new Error(outcome.errorCode);
-        }
-
-        const available = outcome.value;
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)));
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([time24("09:00")]);
     });
 
     test("there is no availability when we have bookings that use all the capacity", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(6))], "confirmed");
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), "confirmed", capacity(6));
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
         };
-        const outcome = availability.calculateAvailableSlotsForResource(mutatedConfig, [theBooking], serviceRequest(theService, date), sixDogs.id);
-        if (outcome._type === "error.response") {
-            throw new Error(outcome.errorCode);
-        }
-
-        const available = outcome.value;
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)));
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([]);
     });
 
     test("capacity consumption is tracked across the aggregate of bookings", () => {
-        const fourDogs = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(4))], "confirmed");
-        const oneDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(1))], "confirmed");
-        const oneMoreDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [resourceAssignment(sixDogs.id, capacity(1))], "confirmed");
+        const fourDogs = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), "confirmed", capacity(4));
+        const oneDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), "confirmed", capacity(1));
+        const oneMoreDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), "confirmed", capacity(1));
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
         };
-        const outcome = availability.calculateAvailableSlotsForResource(mutatedConfig, [fourDogs, oneDog], serviceRequest(theService, date), sixDogs.id);
-        if (outcome._type === "error.response") {
-            throw new Error(outcome.errorCode);
-        }
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [fourDogs, oneDog], serviceRequest(theService, date)));
 
-        expect(outcome.value.map((a) => startTimeFns.toTime24(a.startTime))).toEqual([time24("09:00")]);
+        expect(available.map((a) => startTimeFns.toTime24(a.startTime))).toEqual([time24("09:00")]);
 
-        const outcome2 = availability.calculateAvailableSlotsForResource(mutatedConfig, [fourDogs, oneDog, oneMoreDog], serviceRequest(theService, date), sixDogs.id);
-        if (outcome2._type === "error.response") {
-            throw new Error(outcome2.errorCode);
-        }
-
-        expect(outcome2.value.map((a) => startTimeFns.toTime24(a.startTime))).toEqual([]);
+        const outcome2 = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [fourDogs, oneDog, oneMoreDog], serviceRequest(theService, date)));
+        expect(outcome2.map((a) => startTimeFns.toTime24(a.startTime))).toEqual([]);
     });
 });
 
@@ -529,9 +429,8 @@ describe("given a hair salon that offers configurable services, and is available
     );
 
     test("there is no availability when we have no resources", () => {
-        const outcome = availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)) as ErrorResponse;
-        expect(outcome.errorCode).toBe(availability.errorCodes.noResourcesAvailable);
-        expect(outcome.errorMessage).toBeDefined();
+        const outcome = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)));
+        expect(outcome).toHaveLength(0);
     });
 
     test("there is availability when we have the resources", () => {
@@ -539,12 +438,7 @@ describe("given a hair salon that offers configurable services, and is available
             ...config,
             resourceAvailability: requiredResources,
         };
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date));
-        if (outcome._type === "error.response") {
-            throw new Error(outcome.errorCode);
-        }
-
-        const available = outcome.value;
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)));
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
@@ -572,9 +466,8 @@ describe("given a yoga studio with two instructors and two rooms", () => {
     );
 
     test("there is no availability when we have no resources", () => {
-        const outcome = availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)) as ErrorResponse;
-        expect(outcome.errorCode).toBe(availability.errorCodes.noResourcesAvailable);
-        expect(outcome.errorMessage).toBeDefined();
+        const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)));
+        expect(available).toHaveLength(0);
     });
 
     test("there is availability when we have the resources", () => {
@@ -582,18 +475,13 @@ describe("given a yoga studio with two instructors and two rooms", () => {
             ...config,
             resourceAvailability: requiredResources,
         };
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date));
-        if (outcome._type === "error.response") {
-            throw new Error(outcome.errorCode);
-        }
-
-        const available = outcome.value;
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)));
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 
     // test("we have availability if we have only one booking", () => {
-    //     const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(smallRoom.id, capacity(1)), resourceAssignment(mikeInstructor.id)], "confirmed");
+    //     const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("10:00")), [resourceAssignment(smallRoom.id, capacity(1)), resourceAssignment(mikeInstructor.id)], "confirmed");
     //     const mutatedConfig: AvailabilityConfiguration = {
     //         ...config,
     //         resourceAvailability: requiredResources,
@@ -609,17 +497,12 @@ describe("given a yoga studio with two instructors and two rooms", () => {
     // });
 
     test("we have no availability if the room is full", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("10:00")), [resourceAssignment(smallRoom.id, capacity(10)), resourceAssignment(mikeInstructor.id)], "confirmed");
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("10:00")), "confirmed", capacity(10));
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
         };
-        const outcome = availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date));
-        if (outcome._type === "error.response") {
-            throw new Error(`${outcome.errorCode}: ${outcome.errorMessage ?? ""}`);
-        }
-
-        const available = outcome.value;
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)));
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });

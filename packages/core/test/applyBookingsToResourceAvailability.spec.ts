@@ -1,6 +1,8 @@
 import {expect, test} from 'vitest'
 import {applyBookingsToResourceAvailability} from "../src/applyBookingsToResourceAvailability.js";
 import {
+    anySuitableResource,
+    availabilityBlock,
     booking,
     customerId,
     dayAndTimePeriod,
@@ -12,13 +14,12 @@ import {
     resourceType,
     service,
     time24,
-    timePeriod,
-    timeslotSpec, availabilityBlock, anySuitableResource
+    timePeriod
 } from "../src/types.js";
 
 const van = resourceType('van');
 const van1 = resource(van, "Van 1");
-const carWash = service('Car Wash','Car wash', [anySuitableResource(van)], 120,  price(1000, GBP), [], []);
+const carWash = service('Car Wash', 'Car wash', [anySuitableResource(van)], 120, price(1000, GBP), [], []);
 const nineAm = time24('09:00')
 const tenAm = time24('10:00')
 const elevenAm = time24('11:00')
@@ -31,13 +32,13 @@ test("no bookings leaves all availability", () => {
 
 test("booking of same length as resource availability", () => {
     const resourceAvailability = [resourceDayAvailability(van1, [availabilityBlock(dayAndTimePeriod(isoDate("2021-05-23"), timePeriod(nineAm, tenAm)))])];
-    const bookings = [booking(customerId("1"), carWash, isoDate("2021-05-23"), timePeriod(nineAm, tenAm), [])];
+    const bookings = [booking(customerId("1"), carWash, isoDate("2021-05-23"), timePeriod(nineAm, tenAm))];
     expect(applyBookingsToResourceAvailability(resourceAvailability, bookings)).toEqual([resourceDayAvailability(van1, [])]);
 })
 
 test("booking that ends before resource availability ends", () => {
     const resourceAvailability = [resourceDayAvailability(van1, [availabilityBlock(dayAndTimePeriod(isoDate("2021-05-23"), timePeriod(nineAm, sixPm)))])];
-    const bookings = [booking(customerId("1"), carWash, isoDate("2021-05-23"), timePeriod(nineAm, tenAm), [])];
+    const bookings = [booking(customerId("1"), carWash, isoDate("2021-05-23"), timePeriod(nineAm, tenAm))];
     expect(applyBookingsToResourceAvailability(resourceAvailability, bookings)).toEqual([resourceDayAvailability(van1, [availabilityBlock(dayAndTimePeriod(isoDate("2021-05-23"), timePeriod(tenAm, sixPm)))])]);
 })
 
@@ -49,6 +50,6 @@ test("booking that starts after resource availability starts", () => {
 
 test("booking that starts and ends in the middle of a resource availability", () => {
     const resourceAvailability = [resourceDayAvailability(van1, [availabilityBlock(dayAndTimePeriod(isoDate("2021-05-23"), timePeriod(nineAm, sixPm)))])];
-    const bookings = [booking(customerId("1"), carWash, isoDate("2021-05-23"), timePeriod(tenAm, elevenAm), [])];
+    const bookings = [booking(customerId("1"), carWash, isoDate("2021-05-23"), timePeriod(tenAm, elevenAm))];
     expect(applyBookingsToResourceAvailability(resourceAvailability, bookings)).toEqual([resourceDayAvailability(van1, [availabilityBlock(dayAndTimePeriod(isoDate("2021-05-23"), timePeriod(nineAm, tenAm))), availabilityBlock(dayAndTimePeriod(isoDate("2021-05-23"), timePeriod(elevenAm, sixPm)))])]);
 })

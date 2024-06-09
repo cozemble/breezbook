@@ -955,3 +955,29 @@ shifting tack - trying to see if I can test drive out resourcing bookings in a g
 in a given timeslot.  The idea being that I can pass each candidate time period to this function, saying: please resource all
 bookings in this period, and let me know what resource remains.  Then I'll see if there is enough for the service I am checking
 availability of.
+
+## Confusing modelling of resource assignment to bookings
+
+Some time back I introduced an array of allocated resources to `Booking`.  I know the intention behind this decision was to record
+bookings that have been made against a hard resource assignment.  For example, a personal training session with an individual named
+personal trainer.  This contrasts with a booking against any van of a pool of vans that can drive out and deliver a mobile car wash
+service.
+
+The confusion I am experiencing now is that my logic for calculating availability for a given time slot, is to first try to allocated
+resources to all existing bookings, then see if there is sufficient remaining resource to satisfy the given service.
+
+So some resources on some bookings are predefined.  And other resources on some bookings are assigned during availability checking.
+
+This distinction is not obvious.
+
+I think I need to make it clear that resource assignments in `Bookings` are something like `specificResourceAssignments`.  And to help
+clarify that, I can make these contain the `SpecificResource` that they originated from.  Actually, that will not work.  Because the 
+`assignedResources` on `Booking` were intended to record how many of a given resource were consumed by the booking i.e. how much capacity
+of the given resource was consumed by the booking.
+
+Now that capacity is moving from `Resource` to `Service`, similarly booked capacity must move from `ResourceAssignment` to the `Booking`
+itself.
+
+Oh gosh, even more confusion in the statement above.  Recording a list of `SpecificResource` requirements against the booking is
+redunant, because the list of `SpecificResource` requirements is already on the `Service` and the `Booking` has a reference to the
+service.  So I can drop this `resourceAssignment` field on Booking.

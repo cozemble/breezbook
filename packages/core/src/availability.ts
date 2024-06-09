@@ -1,5 +1,4 @@
 import {
-    availabilityBlock,
     Booking,
     bookingFns,
     BusinessAvailability,
@@ -12,21 +11,19 @@ import {
     Resource,
     ResourceDayAvailability,
     resourceDayAvailabilityFns,
-    ResourceId,
     ResourceRequirement,
     resourceRequirementFns,
-    ResourceType,
     Service,
     ServiceOption,
     StartTimeSpec,
     time24Fns,
+    timePeriod,
     TimePeriod,
     timePeriodFns,
     TimeslotSpec,
     TwentyFourHourClockTime
 } from "./types.js";
 import {errorResponse, ErrorResponse, mandatory, success, Success} from "./utils.js";
-import {calcSlotPeriod} from "./calculateAvailability.js";
 
 export type StartTime = TimeslotSpec | ExactTimeAvailability
 
@@ -103,12 +100,12 @@ export const fullyResourcedBookingFns = {
             resourcedBooking.resourceAllocation.forEach(alloc => {
                 const resource = alloc.resource
                 if (!acc.get(resource)) {
-                    acc.set(resource, 1)
+                    acc.set(resource, resourcedBooking.booking.bookedCapacity.value)
                 }
                 const overlapsExistingPeriod = (resourcePeriods.get(resource) ?? []).some(existingPeriod => timePeriodFns.intersects(existingPeriod, resourcedBooking.booking.period))
                 if (overlapsExistingPeriod) {
                     const count = mandatory(acc.get(resource), `No count for resource '${resource.id.value}'`)
-                    acc.set(resource, count + 1)
+                    acc.set(resource, count + resourcedBooking.booking.bookedCapacity.value)
                 }
                 const periods = resourcePeriods.get(resource) ?? []
                 resourcePeriods.set(resource, [...periods, resourcedBooking.booking.period])
@@ -126,62 +123,6 @@ function assignResourcesToBooking(booking: Booking, resources: ResourceDayAvaila
     return fullyResourcedBooking(booking, resourceOutcome.value.map(r => resourceAllocation(r.requirement, r.match.resource)))
 }
 
-
-function subtractTimePeriod(period: DayAndTimePeriod, booking: Booking): DayAndTimePeriod[] {
-    if (period.day.value !== booking.date.value) {
-        return [period]
-    }
-    return dayAndTimePeriodFns.splitPeriod(period, bookingFns.calcPeriod(booking))
-}
-
-function subtractCapacity(resourcedBooking: FullyResourcedBooking, r: ResourceDayAvailability): ResourceDayAvailability {
-    const assigned = mandatory(resourcedBooking.booking.assignedResources.find(assigned => assigned.resource.value === r.resource.id.value), `No assigned resource for resource '${r.resource.id.value}'`)
-    return resourceDayAvailabilityFns.subtractCapacity(r, bookingFns.calcPeriod(resourcedBooking.booking), assigned.capacity)
-}
-
-function subtractResources(resourcedBooking: FullyResourcedBooking, remainingResources: ResourceDayAvailability[]): ResourceDayAvailability[] {
-    return remainingResources.map(r => {
-        if (resourcedBooking.resourceAllocation.some(alloc => alloc.resource.id.value === r.resource.id.value)) {
-            if (r.resource.type.hasCapacity) {
-                return subtractCapacity(resourcedBooking, r);
-            } else {
-                return {
-                    ...r,
-                    availability: r.availability.flatMap(a => subtractTimePeriod(a.when, resourcedBooking.booking).map(p => availabilityBlock(p, a.capacity)))
-                }
-            }
-        }
-        return r
-    })
-}
-
-function calcActualResourceAvailability(resourceAvailability: ResourceDayAvailability[], bookings: Booking[], service: Service): ResourceDayAvailability[] | ErrorResponse {
-    let remainingResources = resourceAvailability
-    for (const booking of bookings) {
-        const resourcedBookingOutcome = assignResourcesToBooking(booking, remainingResources)
-        if (resourcedBookingOutcome._type === 'error.response') {
-            return resourcedBookingOutcome
-        }
-        remainingResources = subtractResources(resourcedBookingOutcome, remainingResources)
-    }
-    return remainingResources
-}
-
-function resourcesAreAvailable(resourceTypes: ResourceType[], time: DayAndTimePeriod, actualAvailableResources: ResourceDayAvailability[]): boolean {
-    return resourceTypes.every(resourceType =>
-        actualAvailableResources.some(r =>
-            r.resource.type.value === resourceType.value &&
-            r.availability.some(a => dayAndTimePeriodFns.overlaps(dayAndTimePeriod(a.when.day, a.when.period), time))
-        )
-    );
-}
-
-function asTimePeriod(time: StartTime, service: Service): TimePeriod {
-    if (time._type === "timeslot.spec") {
-        return time.slot
-    }
-    return calcSlotPeriod(time, service.duration);
-}
 
 export interface AvailabilityConfiguration {
     _type: 'availability.configuration'
@@ -217,6 +158,13 @@ export function serviceRequest(service: Service, date: IsoDate, options: Service
     }
 }
 
+function toPeriod(date: IsoDate, possibleStartTime: StartTime, service: Service): DayAndTimePeriod {
+    if (possibleStartTime._type === 'timeslot.spec') {
+        return dayAndTimePeriod(date, possibleStartTime.slot)
+    }
+    return dayAndTimePeriod(date, timePeriod(possibleStartTime.time, time24Fns.addMinutes(possibleStartTime.time, service.duration)))
+}
+
 export const availability = {
     errorCodes: {
         noAvailabilityForDay: 'no.availability.for.day',
@@ -228,46 +176,26 @@ export const availability = {
                               serviceRequest: ServiceRequest): Success<AvailableSlot[]> | ErrorResponse => {
         const service = serviceRequest.service
         const date = serviceRequest.date
-        const availabilityForDay = config.availability.availability.filter(a => a.day.value === date.value)
-        if (availabilityForDay.length === 0) {
+        const businessAvailabilityForDay = config.availability.availability.filter(a => a.day.value === date.value)
+        if (businessAvailabilityForDay.length === 0) {
             return errorResponse(availability.errorCodes.noAvailabilityForDay, `No availability for date '${date.value}'`)
         }
-        const bookingsForDate = bookings.filter(b => b.date.value === date.value)
-        const resourceAvailabilityOutcome = calcActualResourceAvailability(config.resourceAvailability, bookingsForDate, service)
-        if (!Array.isArray(resourceAvailabilityOutcome)) {
-            return resourceAvailabilityOutcome
-        }
-        const unavailableResourceTypes = service.resourceRequirements.filter(requirement => {
-            if (requirement._type === 'any.suitable.resource') {
-                return !resourceAvailabilityOutcome.some(r => r.resource.type.value === requirement.requirement.value)
-            } else {
-                return !resourceAvailabilityOutcome.some(r => r.resource.id.value === requirement.resource.id.value)
+        const resourceAvailabilityForDay = config.resourceAvailability.filter(rda => rda.availability.some(block => block.when.day.value === date.value))
+        const possibleStartTimes = service.startTimes ?? calcPossibleStartTimes(config.startTimeSpec, businessAvailabilityForDay, service).map(exactTimeAvailability);
+        const result = [] as AvailableSlot[]
+        for (const possibleStartTime of possibleStartTimes) {
+            const period = toPeriod(date, possibleStartTime, service)
+            const resourceOutcome = resourceBookings(resourceAvailabilityForDay, bookings, period)
+            if (resourceOutcome._type === 'error.response') {
+                return resourceOutcome
             }
-        });
-
-        if (unavailableResourceTypes.length > 0) {
-            return errorResponse(availability.errorCodes.noResourcesAvailable, `Do not have resources for service '${service.id.value}'. Missing resource types: ${JSON.stringify(unavailableResourceTypes)}`)
+            const matchOutcome = resourceRequirementFns.matchRequirements(resourceOutcome.remainingAvailability, period, service.resourceRequirements)
+            if (matchOutcome._type === "success") {
+                result.push(availableSlot(service, period.day, exactTimeAvailability(period.period.from), []))
+            }
         }
-
-        const possibleStartTimes = service.startTimes ?? calcPossibleStartTimes(config.startTimeSpec, availabilityForDay, service).map(exactTimeAvailability);
-        const startTimesWithResources = possibleStartTimes.filter(time => {
-            const timePeriod = dayAndTimePeriod(date, asTimePeriod(time, service));
-            const matched = resourceRequirementFns.matchRequirements(resourceAvailabilityOutcome, timePeriod, service.resourceRequirements);
-            return matched._type === 'success';
-        });
-
-        return success(startTimesWithResources.map(t => availableSlot(service, date, t, [])));
+        return success(result)
     },
-    calculateAvailableSlotsForResource: (config: AvailabilityConfiguration,
-                                         bookings: Booking[],
-                                         serviceRequest: ServiceRequest,
-                                         resourceId: ResourceId): Success<AvailableSlot[]> | ErrorResponse => {
-        const mutatedConfig: AvailabilityConfiguration = {
-            ...config,
-            resourceAvailability: resourceDayAvailabilityFns.reduceToResource(config.resourceAvailability, resourceId)
-        }
-        return availability.calculateAvailableSlots(mutatedConfig, bookings.filter(b => b.assignedResources.some(rid => rid.resource.value === resourceId.value)), serviceRequest)
-    }
 }
 
 export interface ResourceBookingOutcome {

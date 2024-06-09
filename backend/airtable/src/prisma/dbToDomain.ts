@@ -79,7 +79,7 @@ export function toDomainTimeslotSpec(ts: DbTimeSlot): TimeslotSpec {
 
 export function toDomainBooking(b: DbBooking, timeslots: TimeslotSpec[], services: Service[]): Booking {
     const service = serviceFns.findService(services, serviceId(b.service_id));
-    return booking(customerId(b.customer_id), service, isoDate(b.date), timePeriod(time24(b.start_time_24hr), time24(b.end_time_24hr)), []);
+    return booking(customerId(b.customer_id), service, isoDate(b.date), timePeriod(time24(b.start_time_24hr), time24(b.end_time_24hr)));
 }
 
 export function toDomainAddOn(a: DbAddOn): DomainAddOn {

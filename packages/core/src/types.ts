@@ -415,7 +415,7 @@ export interface Booking {
     date: IsoDate;
     period: TimePeriod;
     service: Service;
-    assignedResources: ResourceAssignment[];
+    bookedCapacity: Capacity;
     status: 'confirmed' | 'cancelled';
     formData?: unknown;
 }
@@ -437,27 +437,13 @@ export const capacityFns = {
     },
 }
 
-export interface ResourceAssignment {
-    _type: 'resource.assignment';
-    resource: ResourceId;
-    capacity: Capacity
-}
-
-export function resourceAssignment(resource: ResourceId, theCapacity = capacity(1)): ResourceAssignment {
-    return {
-        _type: 'resource.assignment',
-        resource,
-        capacity: theCapacity
-    };
-}
-
 export function booking(
     customerId: CustomerId,
     service: Service,
     date: IsoDate,
     period: TimePeriod,
-    assignedResources: ResourceAssignment[],
     status: 'confirmed' | 'cancelled' = 'confirmed',
+    bookedCapacity = capacity(1),
     id = bookingId(uuidv4())
 ): Booking {
     return {
@@ -466,8 +452,8 @@ export function booking(
         date,
         period,
         status,
-        assignedResources,
-        service
+        service,
+        bookedCapacity
     };
 }
 
@@ -1040,8 +1026,8 @@ export const availabilityBlockFns = {
         }
         return [a]
     },
-    dropAvailability(when: DayAndTimePeriod, block: AvailabilityBlock):AvailabilityBlock[] {
-        if(dayAndTimePeriodFns.intersects(block.when, when)) {
+    dropAvailability(when: DayAndTimePeriod, block: AvailabilityBlock): AvailabilityBlock[] {
+        if (dayAndTimePeriodFns.intersects(block.when, when)) {
             const split = dayAndTimePeriodFns.splitPeriod(block.when, when)
             return split.map(dt => availabilityBlock(dt, block.capacity))
         }
@@ -1087,7 +1073,7 @@ export const resourceDayAvailabilityFns = {
             availability: deDupedBlocks
         }
     },
-    dropAvailability(when: DayAndTimePeriod, resource: Resource, acc: ResourceDayAvailability[]):ResourceDayAvailability[] {
+    dropAvailability(when: DayAndTimePeriod, resource: Resource, acc: ResourceDayAvailability[]): ResourceDayAvailability[] {
         return acc.map(rda => {
             if (rda.resource.id.value === resource.id.value) {
                 return {
