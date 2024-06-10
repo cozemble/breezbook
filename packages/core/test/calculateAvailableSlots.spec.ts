@@ -330,17 +330,23 @@ describe("given a medical centre and an appointment type that requires two docto
 
     test("one doctor can be specified explictly", () => {
         const mutatedConfig = setAvailability(config, [doctorMikeAvailability, doctorMeteAvailability, roomAAvailability, roomBAvailability])
-        const mutatedService = serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorMike))
+        const mutatedService = serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorMike, lead))
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(mutatedService, date)))
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const leadDoctorIds = Array.from(new Set(available.map((a) => a.resourceAllocation.find((r) => r.requirement.role === lead)?.resource.id.value)))
+        expect(leadDoctorIds).toEqual([doctorMike.id.value])
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     })
 
     test("both doctors can be specified explictly", () => {
         const mutatedConfig = setAvailability(config, [doctorMikeAvailability, doctorMeteAvailability, roomAAvailability, roomBAvailability])
-        const mutatedService = serviceFns.replaceRequirement(serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorMike)), anySuitableResource(doctor, assistant), specificResource(doctorMete))
+        const mutatedService = serviceFns.replaceRequirement(serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorMike, lead)), anySuitableResource(doctor, assistant), specificResource(doctorMete, assistant))
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(mutatedService, date)))
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const leadDoctorIds = Array.from(new Set(available.map((a) => a.resourceAllocation.find((r) => r.requirement.role === lead)?.resource.id.value)))
+        expect(leadDoctorIds).toEqual([doctorMike.id.value])
+        const assistantDoctorIds = Array.from(new Set(available.map((a) => a.resourceAllocation.find((r) => r.requirement.role === assistant)?.resource.id.value)))
+        expect(assistantDoctorIds).toEqual([doctorMete.id.value])
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     })
 
@@ -415,7 +421,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     const dogIntake = resourceType("dogs");
     const sixDogs = resource(dogIntake, "Dog")
     const requiredResources = [
-        resourceDayAvailability(sixDogs, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(6))]),
+        resourceDayAvailability(sixDogs, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
     const theService = service("Dog Walk", "Dog Walk", [anySuitableResource(dogIntake)], 480, price(3500, currencies.GBP), [], [], capacity(6));
     const config = availabilityConfiguration(
@@ -525,8 +531,8 @@ describe("given a yoga studio with two instructors and two rooms", () => {
     const mikeInstructor = resource(instructor, "Mike");
     const meteInstructor = resource(instructor, "Mete");
     const requiredResources = [
-        resourceDayAvailability(smallRoom, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(10))]),
-        resourceDayAvailability(largeRoom, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(18))]),
+        resourceDayAvailability(smallRoom, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
+        resourceDayAvailability(largeRoom, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(mikeInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(meteInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];

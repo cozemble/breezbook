@@ -712,6 +712,7 @@ export interface AnySuitableResource {
 export interface SpecificResource {
     _type: 'specific.resource'
     resource: Resource
+    role: Role | null
 }
 
 export function anySuitableResource(requirement: ResourceType, role: Role | null = null): AnySuitableResource {
@@ -722,10 +723,11 @@ export function anySuitableResource(requirement: ResourceType, role: Role | null
     }
 }
 
-export function specificResource(resource: Resource): SpecificResource {
+export function specificResource(resource: Resource, role: Role | null = null): SpecificResource {
     return {
         _type: 'specific.resource',
-        resource
+        resource,
+        role
     }
 }
 
@@ -767,10 +769,10 @@ export const resourceRequirementFns = {
     },
     equals(a: ResourceRequirement, b: ResourceRequirement): boolean {
         if (a._type === 'any.suitable.resource' && b._type === 'any.suitable.resource') {
-            return a.requirement.value === b.requirement.value && a.role === b.role;
+            return a.requirement.value === b.requirement.value && a.role?.value === b.role?.value;
         }
         if (a._type === 'specific.resource' && b._type === 'specific.resource') {
-            return values.isEqual(a.resource.id, b.resource.id);
+            return values.isEqual(a.resource.id, b.resource.id) && a.role?.value === b.role?.value;
         }
         return false;
     }
@@ -834,7 +836,7 @@ export const serviceFns = {
         return found;
 
     },
-    replaceRequirement(theService: Service, existing: ResourceRequirement, replacement: ResourceRequirement):Service {
+    replaceRequirement(theService: Service, existing: ResourceRequirement, replacement: ResourceRequirement): Service {
         return {
             ...theService,
             resourceRequirements: theService.resourceRequirements.map(r => resourceRequirementFns.equals(r, existing) ? replacement : r)
