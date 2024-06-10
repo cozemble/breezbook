@@ -46,7 +46,7 @@ export const gym = {
             'Personal Training 55 mins',
             'Personal Training 55 mins',
             [anySuitableResource(personalTrainer)],
-            55,
+            minutes(55),
             price(5500, currencies.GBP),
             [],
             [])

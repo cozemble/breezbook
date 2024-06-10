@@ -147,7 +147,7 @@ function getServiceSummary(service: DomainService, forms: Form[]): ServiceSummar
     return {
         name: service.name,
         id: service.id.value,
-        durationMinutes: service.duration,
+        durationMinutes: service.duration.value,
         description: service.description,
         forms: service.serviceFormIds.map((id) =>
             mandatory(

@@ -10,7 +10,7 @@ import {
     dayAndTimePeriod,
     discreteStartTimes,
     GBP,
-    isoDate,
+    isoDate, minutes,
     price,
     resource,
     resourceDayAvailability,
@@ -47,7 +47,7 @@ const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
     dayAndTimePeriod(isoDate("2021-05-26"), nineToTen),
 ].map(when => availabilityBlock(when))))
 
-const bicycleRepair = service('Bicycle Repair', 'Bicycle Repair', [anySuitableResource(staff)], 5, price(3500, GBP), [], []);
+const bicycleRepair = service('Bicycle Repair', 'Bicycle Repair', [anySuitableResource(staff)], minutes(5), price(3500, GBP), [], []);
 const services = [bicycleRepair];
 
 const config = businessConfiguration(availability, resourceAvailability, services, [], [], [], discreteStartTimes(morningCheckInTimes), null);
@@ -55,10 +55,10 @@ const config = businessConfiguration(availability, resourceAvailability, service
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
 const mete = customer('Mete', 'Bora', 'mete@email.com', "+14155552672");
 
-const mikeOnMonday = booking(mike.id, bicycleRepair, isoDate('2021-05-24'), timePeriod(nineAm, time24Fns.addMinutes(nineAm, 5)));
-const meteOnMonday = booking(mete.id, bicycleRepair, isoDate('2021-05-24'), timePeriod(nineTen, time24Fns.addMinutes(nineTen, 5)));
-const mikeOnTuesday = booking(mike.id, bicycleRepair, isoDate('2021-05-25'), timePeriod(nineTwenty, time24Fns.addMinutes(nineTwenty, 5)));
-const meteOnTuesday = booking(mete.id, bicycleRepair, isoDate('2021-05-25'), timePeriod(nineAm, time24Fns.addMinutes(nineAm, 5)));
+const mikeOnMonday = booking(mike.id, bicycleRepair, isoDate('2021-05-24'), timePeriod(nineAm, time24Fns.addMinutes(nineAm, minutes(5))));
+const meteOnMonday = booking(mete.id, bicycleRepair, isoDate('2021-05-24'), timePeriod(nineTen, time24Fns.addMinutes(nineTen, minutes(5))));
+const mikeOnTuesday = booking(mike.id, bicycleRepair, isoDate('2021-05-25'), timePeriod(nineTwenty, time24Fns.addMinutes(nineTwenty, minutes(5))));
+const meteOnTuesday = booking(mete.id, bicycleRepair, isoDate('2021-05-25'), timePeriod(nineAm, time24Fns.addMinutes(nineAm, minutes(5))));
 
 const existingBookings = [mikeOnMonday, meteOnMonday, mikeOnTuesday, meteOnTuesday];
 

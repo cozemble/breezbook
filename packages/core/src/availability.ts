@@ -8,6 +8,8 @@ import {
     ExactTimeAvailability,
     exactTimeAvailability,
     IsoDate,
+    minuteFns,
+    minutes,
     Resource,
     ResourceDayAvailability,
     resourceDayAvailabilityFns,
@@ -59,7 +61,7 @@ export interface AvailableSlot {
 }
 
 export function availableSlot(service: Service, date: IsoDate, startTime: StartTime, resourceAllocation: ResourceAllocation[]): AvailableSlot {
-    if(resourceAllocation.length !== service.resourceRequirements.length) {
+    if (resourceAllocation.length !== service.resourceRequirements.length) {
         throw new Error(`Resource allocation count mismatch for service '${service.id.value}' - expected ${service.resourceRequirements.length} got ${resourceAllocation.length}`)
     }
     return {
@@ -168,6 +170,11 @@ function toPeriod(date: IsoDate, possibleStartTime: StartTime, service: Service)
     return dayAndTimePeriod(date, timePeriod(possibleStartTime.time, time24Fns.addMinutes(possibleStartTime.time, service.duration)))
 }
 
+function toService(serviceRequest: ServiceRequest): Service {
+    const duration = [serviceRequest.service.duration, ...serviceRequest.options.map(o => o.duration.value)].reduce((acc, d) => minuteFns.sum(acc, d), minutes(0))
+    return {...serviceRequest.service, duration}
+}
+
 export const availability = {
     errorCodes: {
         noAvailabilityForDay: 'no.availability.for.day',
@@ -177,13 +184,13 @@ export const availability = {
     calculateAvailableSlots: (config: AvailabilityConfiguration,
                               bookings: Booking[],
                               serviceRequest: ServiceRequest): Success<AvailableSlot[]> | ErrorResponse => {
-        const service = serviceRequest.service
         const date = serviceRequest.date
         const businessAvailabilityForDay = config.availability.availability.filter(a => a.day.value === date.value)
         if (businessAvailabilityForDay.length === 0) {
             return errorResponse(availability.errorCodes.noAvailabilityForDay, `No availability for date '${date.value}'`)
         }
         const resourceAvailabilityForDay = config.resourceAvailability.filter(rda => rda.availability.some(block => block.when.day.value === date.value))
+        const service = toService(serviceRequest)
         const possibleStartTimes = service.startTimes ?? calcPossibleStartTimes(config.startTimeSpec, businessAvailabilityForDay, service).map(exactTimeAvailability);
         const result = [] as AvailableSlot[]
         for (const possibleStartTime of possibleStartTimes) {

@@ -141,7 +141,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
             slug: service.id.value.replace('/.id/', ''),
             name: service.name,
             description: service.description,
-            duration_minutes: service.duration,
+            duration_minutes: service.duration.value,
             price: service.price.amount.value,
             price_currency: service.price.currency.value,
             permitted_add_on_ids: addOnIds,

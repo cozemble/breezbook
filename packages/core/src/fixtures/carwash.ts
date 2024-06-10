@@ -10,7 +10,7 @@ import {
     GBP,
     id,
     isoDate,
-    locationId,
+    locationId, minutes,
     percentageAsRatio,
     percentageCoupon,
     price,
@@ -51,19 +51,19 @@ const smallCarWash = serviceFns.setStartTimes(service(
     'Small Car Wash',
     'Small Car Wash',
     [anySuitableResource(van)],
-    120,
+    minutes(120),
     price(1000, GBP),
     [wax.id, polish.id],
     [carwashForm.id],
     capacity(1),
     serviceId('smallCarWash.id')
 ), timeslots);
-const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableResource(van)], 120, price(1500, GBP), [wax.id, polish.id], [], capacity(1), serviceId('mediumCarWash.id')), timeslots);
+const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableResource(van)], minutes(120), price(1500, GBP), [wax.id, polish.id], [], capacity(1), serviceId('mediumCarWash.id')), timeslots);
 const largeCarWash = serviceFns.setStartTimes(service(
     'Large Car Wash',
     'Large Car Wash',
     [anySuitableResource(van)],
-    120,
+    minutes(120),
     price(2000, GBP),
     [wax.id, polish.id, cleanSeats.id, cleanCarpets.id],
     [],

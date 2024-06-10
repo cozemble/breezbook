@@ -33,7 +33,15 @@
  *
  * 7. Channel-Based Pricing: Different prices for different booking channels, such as online versus in-person.
  */
-import {dayAndTimePeriod, DayAndTimePeriod, dayAndTimePeriodFns, price, Price, ResourcedTimeSlot} from './types.js';
+import {
+    dayAndTimePeriod,
+    DayAndTimePeriod,
+    dayAndTimePeriodFns,
+    minutes,
+    price,
+    Price,
+    ResourcedTimeSlot
+} from './types.js';
 import {calcSlotPeriod} from './calculateAvailability.js';
 import {AvailableSlot} from "./availability.js";
 
@@ -109,7 +117,7 @@ function applyPriceAdjustment(slot: PricedSlot, pricingRule: TimeBasedPriceAdjus
 }
 
 function applyTimeBasedPriceAdjustment(slot: PricedSlot, pricingRule: TimeBasedPriceAdjustment): PricedSlot {
-    const period = slot.slot._type === 'resourced.time.slot' ? calcSlotPeriod(slot.slot.slot, slot.slot.service.duration) : calcSlotPeriod(slot.slot.startTime, 0)
+    const period = slot.slot._type === 'resourced.time.slot' ? calcSlotPeriod(slot.slot.slot, slot.slot.service.duration) : calcSlotPeriod(slot.slot.startTime, minutes(0))
     const dayTime = dayAndTimePeriod(slot.slot.date, period);
     const overlaps = dayAndTimePeriodFns.overlaps(pricingRule.time, dayTime);
     if (overlaps) {

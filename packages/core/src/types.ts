@@ -49,6 +49,13 @@ export function minutes(value: number): Minutes {
     };
 }
 
+export const minuteFns = {
+
+    sum(acc: Minutes, d: Minutes) {
+        return minutes(acc.value + d.value);
+    }
+}
+
 export interface LocationId extends ValueType<string> {
     _type: 'location.id';
 }
@@ -236,7 +243,8 @@ export function duration(value: Minutes): Duration {
 }
 
 export const time24Fns = {
-    addMinutes: (time: TwentyFourHourClockTime, minutes: number): TwentyFourHourClockTime => {
+    addMinutes: (time: TwentyFourHourClockTime, addition: Minutes): TwentyFourHourClockTime => {
+        const minutes = addition.value;
         const [hours, mins] = time.value.split(':').map((s) => parseInt(s, 10));
         if (hours === undefined || mins === undefined || isNaN(hours) || isNaN(minutes)) {
             throw new Error(`Invalid time format ${time.value}. Expected HH:MM`);
@@ -832,7 +840,7 @@ export interface Service {
     id: ServiceId;
     name: string;
     description: string;
-    duration: number;
+    duration: Minutes;
     resourceRequirements: ResourceRequirement[]
     price: Price;
     permittedAddOns: AddOnId[];
@@ -898,7 +906,7 @@ export function service(
     name: string,
     description: string,
     resourceRequirements: ResourceRequirement[],
-    duration: number,
+    duration: Minutes,
     price: Price,
     permittedAddOns: AddOnId[],
     serviceFormIds: FormId[],
@@ -1237,7 +1245,7 @@ export const timePeriodFns = {
         const result: TwentyFourHourClockTime[] = []
         while (currentTime.value < period.to.value) {
             result.push(currentTime);
-            currentTime = time24Fns.addMinutes(currentTime, duration.value.value)
+            currentTime = time24Fns.addMinutes(currentTime, duration.value)
         }
         return result
     },
