@@ -323,3 +323,22 @@ export function upsertLocation(create: Prisma.locationsCreateArgs['data']): Upse
     const entityId = compositeKey("id", mandatory(create.id, "Location ID"))
     return makeUpsert('locations', entityId, create)
 }
+
+export type UpsertForm = Upsert<Prisma.formsCreateArgs['data'], Prisma.formsUpdateArgs['data'], Prisma.formsUpdateArgs['where']>
+
+export function upsertForm(create: Prisma.formsCreateArgs['data']): UpsertForm {
+    const entityId = compositeKey("id", mandatory(create.id, "Form ID"))
+    return makeUpsert('forms', entityId, create)
+}
+
+export type UpsertServiceForm = Upsert<Prisma.service_formsCreateArgs['data'], Prisma.service_formsUpdateArgs['data'], Prisma.service_formsUpdateArgs['where']>
+
+export function upsertServiceForm(create: Prisma.service_formsCreateArgs['data']): UpsertServiceForm {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "Tenant ID"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "service_id", mandatory(create.service_id, "service_id"),
+        "form_id", mandatory(create.form_id, "form_id"))
+    return makeUpsert('service_forms', entityId, create)
+}
+

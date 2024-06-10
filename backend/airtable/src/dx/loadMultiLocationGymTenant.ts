@@ -3,6 +3,7 @@ import {makeTestId} from "./testIds.js";
 import {
     upsertBlockedTime,
     upsertBusinessHours,
+    upsertForm,
     upsertLocation,
     upsertResource,
     upsertResourceAvailability,
@@ -10,6 +11,7 @@ import {
     upsertResourceMarkup,
     upsertResourceType,
     upsertService,
+    upsertServiceForm,
     upsertServiceLocation,
     upsertTenant,
     upsertTenantBranding,
@@ -17,6 +19,7 @@ import {
 } from "../prisma/breezPrismaMutations.js";
 import {prismaMutationToPromise} from "../infra/prismaMutations.js";
 import {Upsert} from "../mutation/mutations.js";
+import {JsonSchemaForm} from "@breezbook/packages-core";
 
 const tenant_id = 'breezbook-gym';
 const environment_id = 'dev';
@@ -300,7 +303,15 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             iana_timezone: 'Europe/London'
         }
     )])
-    await runUpserts(prisma, [
+    await runUpserts(prisma, [upsertForm({
+        id: goalsForm.id.value,
+        tenant_id,
+        environment_id,
+        name: goalsForm.name,
+        description: goalsForm.description ?? goalsForm.name,
+        definition: goalsForm as any
+    })])
+    const serviceUpserts = [
         upsertService({
             id: gym1Hr,
             tenant_id,
@@ -372,7 +383,15 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
                 requires_time_slot: false
             }
         )
-    ]);
+    ]
+    await runUpserts(prisma, serviceUpserts);
+    await runUpserts(prisma, serviceUpserts.map(su => upsertServiceForm({
+        tenant_id,
+        environment_id,
+        service_id: su.create.data.id,
+        form_id: goalsForm.id.value,
+        rank: 0
+    })))
 
     await runUpserts(prisma, [
         // All locations have a gym service
@@ -401,4 +420,26 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
     )])
 }
 
+const goalsForm: JsonSchemaForm = {
+    "_type": "json.schema.form",
+    "id": {
+        "_type": "form.id",
+        "value": "goals-form"
+    },
+    "name": "Goals Form",
+    "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+            "goals": {
+                "type": "string",
+                "description": "What are your fitness goals"
+            },
+        },
+        "required": [
+            "goals",
+        ],
+        "additionalProperties": false
+    }
+};
 
