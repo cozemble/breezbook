@@ -490,17 +490,18 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
 describe("given a hair salon that offers configurable services, and is available monday to friday 9am to 5pm", () => {
     const hairStylist = resourceType("hairStylist");
     const colouringMachine = resourceType("colouringMachine");
+    const someSharedResource = resourceType("sharedResource")
     const mikeStylist = resource(hairStylist, "Mike");
     const meteStylist = resource(hairStylist, "Mete");
     const colouringMachine1 = resource(colouringMachine, "Colouring Machine 1");
-    const requiredResources = [
+    const sharedResource1 = resource(someSharedResource, "Shared Resource");
+    const stylistsAvailable = [
         resourceDayAvailability(mikeStylist, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(meteStylist, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
-        resourceDayAvailability(colouringMachine1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
-    const colouring = serviceOption("Colouring", "Colouring", price(1500, currencies.GBP), false, duration(minutes(20)), [colouringMachine], []);
-    const cutting = serviceOption("Cutting", "Cutting", price(2000, currencies.GBP), false, duration(minutes(30)), [], []);
-    const curling = serviceOption("Curling", "Curling", price(2500, currencies.GBP), false, duration(minutes(40)), [], []);
+    const colouring = serviceOption("Colouring", "Colouring", price(1500, currencies.GBP), false, duration(minutes(20)), [anySuitableResource(colouringMachine)], []);
+    const cutting = serviceOption("Cutting", "Cutting", price(2000, currencies.GBP), false, duration(minutes(30)), [anySuitableResource(someSharedResource)], []);
+    const curling = serviceOption("Curling", "Curling", price(2500, currencies.GBP), false, duration(minutes(40)), [anySuitableResource(someSharedResource)], []);
     const theService = serviceFns.addOptions(service("Hair styling", "Hair styling", [anySuitableResource(hairStylist)], minutes(30), price(3500, currencies.GBP), [], []), [colouring, cutting, curling]);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
@@ -515,24 +516,35 @@ describe("given a hair salon that offers configurable services, and is available
     });
 
     test("there is availability when we have the resources", () => {
-        const mutatedConfig: AvailabilityConfiguration = {
-            ...config,
-            resourceAvailability: requiredResources,
-        };
+        const mutatedConfig = setAvailability(config, stylistsAvailable);
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)));
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 
     test("adding a service option that lengthens the service, reduces the number of available slots", () => {
-        const mutatedConfig: AvailabilityConfiguration = {
-            ...config,
-            resourceAvailability: requiredResources,
-        };
+        const sharedResourceAvailable = resourceDayAvailability(sharedResource1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]);
+        const mutatedConfig = setAvailability(config, [...stylistsAvailable, sharedResourceAvailable]);
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date, [curling])));
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00")]);
     });
+
+    test("adding a service option that requires a resource, drops availabilty when the resource is not available", () => {
+        const colouringMachineAvailableNineToEleven = resourceDayAvailability(colouringMachine1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, time24("11:00"))))]);
+        const mutatedConfig = setAvailability(config, [...stylistsAvailable, colouringMachineAvailableNineToEleven]);
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date, [colouring])));
+        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        expect(times).toEqual([time24("09:00"), time24("10:00")]);
+    });
+
+    test("service option resource requirements are reduced to the min required", () => {
+        const sharedResourceAvailableNineToTwelve = resourceDayAvailability(sharedResource1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, time24("12:00"))))]);
+        const mutatedConfig = setAvailability(config, [...stylistsAvailable, sharedResourceAvailableNineToTwelve]);
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date, [curling, cutting])));
+        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        expect(times).toEqual([time24("09:00"), time24("10:00")]);
+    })
 });
 
 describe("given a yoga studio with two instructors and two rooms", () => {

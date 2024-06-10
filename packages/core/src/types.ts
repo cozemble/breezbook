@@ -821,6 +821,15 @@ export const resourceRequirementFns = {
         }
         return false;
     },
+    sameRequirement(a: ResourceRequirement, b: ResourceRequirement): boolean {
+        if (a._type === 'any.suitable.resource' && b._type === 'any.suitable.resource') {
+            return a.requirement.value === b.requirement.value;
+        }
+        if (a._type === 'specific.resource' && b._type === 'specific.resource') {
+            return values.isEqual(a.resource.id, b.resource.id);
+        }
+        return false;
+    },
     validateRequirements(resourceRequirements: ResourceRequirement[]): ErrorResponse | null {
         const resourcesAndRoles = resourceRequirements.map(r => {
             if (r._type === 'any.suitable.resource') {
@@ -869,7 +878,7 @@ export interface ServiceOption {
     price: Price;
     requiresQuantity: boolean;
     duration: Duration;
-    resourceTypes: ResourceType[];
+    resourceRequirements: ResourceRequirement[];
     forms: FormId[]
 }
 
@@ -938,7 +947,7 @@ export function serviceOption(
     price: Price,
     requiresQuantity: boolean,
     duration: Duration,
-    resourceTypes: ResourceType[],
+    resourceRequirements: ResourceRequirement[],
     forms: FormId[],
     id = serviceOptionId(uuidv4())
 ): ServiceOption {
@@ -950,7 +959,7 @@ export function serviceOption(
         price,
         requiresQuantity,
         duration,
-        resourceTypes,
+        resourceRequirements,
         forms
     };
 }

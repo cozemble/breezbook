@@ -172,7 +172,15 @@ function toPeriod(date: IsoDate, possibleStartTime: StartTime, service: Service)
 
 function toService(serviceRequest: ServiceRequest): Service {
     const duration = [serviceRequest.service.duration, ...serviceRequest.options.map(o => o.duration.value)].reduce((acc, d) => minuteFns.sum(acc, d), minutes(0))
-    return {...serviceRequest.service, duration}
+    const resourceRequirements = [...serviceRequest.service.resourceRequirements]
+    for (const option of serviceRequest.options) {
+        for (const resourceRequirement of option.resourceRequirements) {
+            if (!resourceRequirements.some(r => resourceRequirementFns.sameRequirement(r, resourceRequirement))) {
+                resourceRequirements.push(resourceRequirement)
+            }
+        }
+    }
+    return {...serviceRequest.service, duration, resourceRequirements}
 }
 
 export const availability = {
