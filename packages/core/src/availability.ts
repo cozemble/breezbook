@@ -55,16 +55,14 @@ export interface AvailableSlot {
     service: Service
     date: IsoDate
     startTime: StartTime
-    resourceAllocation: ResourceAllocation[]
 }
 
-export function availableSlot(service: Service, date: IsoDate, startTime: StartTime, resourceAllocation: ResourceAllocation[]): AvailableSlot {
+export function availableSlot(service: Service, date: IsoDate, startTime: StartTime): AvailableSlot {
     return {
         _type: "available.slot",
         service,
         date,
         startTime,
-        resourceAllocation
     }
 }
 
@@ -191,7 +189,7 @@ export const availability = {
             }
             const matchOutcome = resourceRequirementFns.matchRequirements(resourceOutcome.remainingAvailability, period, service.resourceRequirements)
             if (matchOutcome._type === "success") {
-                result.push(availableSlot(service, period.day, exactTimeAvailability(period.period.from), []))
+                result.push(availableSlot(service, period.day, exactTimeAvailability(period.period.from)))
             }
         }
         return success(result)

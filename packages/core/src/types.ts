@@ -692,9 +692,21 @@ export function price(amountInMinorUnits: number, currency: Currency): Price {
     };
 }
 
+export interface Role extends ValueType<string> {
+    _type: 'role';
+}
+
+export function role(value: string): Role {
+    return {
+        _type: 'role',
+        value
+    };
+}
+
 export interface AnySuitableResource {
     _type: 'any.suitable.resource'
     requirement: ResourceType
+    role: Role | null
 }
 
 export interface SpecificResource {
@@ -702,10 +714,11 @@ export interface SpecificResource {
     resource: Resource
 }
 
-export function anySuitableResource(requirement: ResourceType): AnySuitableResource {
+export function anySuitableResource(requirement: ResourceType, role: Role | null = null): AnySuitableResource {
     return {
         _type: 'any.suitable.resource',
-        requirement
+        requirement,
+        role
     }
 }
 
@@ -723,6 +736,13 @@ export interface RequirementMatch {
     match: ResourceDayAvailability
 }
 
+export function requirementMatch(requirement: ResourceRequirement, match: ResourceDayAvailability): RequirementMatch {
+    return {
+        requirement,
+        match
+    }
+}
+
 export const resourceRequirementFns = {
     errorCodes: {
         noSuitableResource: 'no.suitable.resource'
@@ -731,14 +751,28 @@ export const resourceRequirementFns = {
         const matched: RequirementMatch[] = [];
         for (const requirement of requirements) {
             const availableResources = requirement._type === 'any.suitable.resource' ? available.filter(ra => ra.resource.type.value === requirement.requirement.value) : available.filter(ra => ra.resource.id.value === requirement.resource.id.value);
-            const availableResource = availableResources.find(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da.when, period)));
-            if (availableResource) {
-                matched.push({requirement, match: availableResource});
+            const possibleResources = availableResources.filter(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da.when, period)));
+            if (possibleResources.length > 0) {
+                const availableResource = possibleResources.find(r => !matched.some(m => m.match.resource.id === r.resource.id))
+                if (availableResource) {
+                    matched.push({requirement, match: availableResource});
+                } else {
+                    return errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement - it's already booked`, requirement);
+                }
             } else {
                 return errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement`, requirement);
             }
         }
         return success(matched)
+    },
+    equals(a: ResourceRequirement, b: ResourceRequirement): boolean {
+        if (a._type === 'any.suitable.resource' && b._type === 'any.suitable.resource') {
+            return a.requirement.value === b.requirement.value && a.role === b.role;
+        }
+        if (a._type === 'specific.resource' && b._type === 'specific.resource') {
+            return values.isEqual(a.resource.id, b.resource.id);
+        }
+        return false;
     }
 }
 
@@ -799,6 +833,12 @@ export const serviceFns = {
         }
         return found;
 
+    },
+    replaceRequirement(theService: Service, existing: ResourceRequirement, replacement: ResourceRequirement):Service {
+        return {
+            ...theService,
+            resourceRequirements: theService.resourceRequirements.map(r => resourceRequirementFns.equals(r, existing) ? replacement : r)
+        }
     }
 }
 

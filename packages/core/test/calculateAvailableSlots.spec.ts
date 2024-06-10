@@ -7,6 +7,7 @@ import {
     availabilityConfiguration,
     AvailableSlot,
     blockedTime,
+    Booking,
     booking,
     businessAvailability,
     capacity,
@@ -23,12 +24,15 @@ import {
     periodicStartTime,
     price,
     resource,
+    ResourceDayAvailability,
     resourceDayAvailability,
     resourceDayAvailabilityFns,
     resourceType,
+    role,
     service,
     serviceFns,
     serviceOption,
+    ServiceRequest,
     serviceRequest,
     specificResource,
     startTimeFns,
@@ -277,6 +281,75 @@ describe("given a mobile carwash service that requires one of several interchang
 //         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
 //     })
 // });
+
+function expectNoAvailability(config: AvailabilityConfiguration, serviceRequest: ServiceRequest, bookings: Booking[] = []) {
+    const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest)
+    if (outcome._type === "error.response") {
+        throw errorResponseFns.toError(outcome)
+    }
+
+    expect(outcome._type).toBe("success")
+    expect(outcome.value).toHaveLength(0)
+}
+
+function setAvailability(config: AvailabilityConfiguration, resources: ResourceDayAvailability[]): AvailabilityConfiguration {
+    return {...config, resourceAvailability: resources}
+}
+
+describe("given a medical centre and an appointment type that requires two doctors", () => {
+    const doctor = resourceType("doctor")
+    const examinationRoom = resourceType("examinationRoom")
+    const doctorMike = resource(doctor, "doctorMike")
+    const doctorMete = resource(doctor, "doctorMete")
+    const doctorNo = resource(doctor, "doctorNo")
+    const roomA = resource(examinationRoom, "roomA")
+    const roomB = resource(examinationRoom, "roomB")
+    const doctorMikeAvailability = resourceDayAvailability(doctorMike, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])
+    const doctorMeteAvailability = resourceDayAvailability(doctorMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])
+    const roomAAvailability = resourceDayAvailability(roomA, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])
+    const roomBAvailability = resourceDayAvailability(roomB, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])
+    const lead = role('lead');
+    const assistant = role('assistant');
+    const theService = service("Consultation", "Consultation", [anySuitableResource(doctor, lead), anySuitableResource(doctor, assistant), anySuitableResource(examinationRoom)], 60, price(3500, currencies.GBP), [], [])
+    const config = availabilityConfiguration(
+        makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
+        [],
+        [],
+        periodicStartTime(duration(minutes(60))))
+
+    test("there is no availability when there is insufficient resource", () => {
+        expectNoAvailability(config, serviceRequest(theService, date))
+        expectNoAvailability(setAvailability(config, [doctorMikeAvailability]), serviceRequest(theService, date))
+        expectNoAvailability(setAvailability(config, [doctorMeteAvailability]), serviceRequest(theService, date))
+        expectNoAvailability(setAvailability(config, [roomAAvailability]), serviceRequest(theService, date))
+        expectNoAvailability(setAvailability(config, [roomBAvailability]), serviceRequest(theService, date))
+        expectNoAvailability(setAvailability(config, [doctorMikeAvailability, doctorMeteAvailability]), serviceRequest(theService, date))
+        expectNoAvailability(setAvailability(config, [roomAAvailability, roomAAvailability]), serviceRequest(theService, date))
+        expectNoAvailability(setAvailability(config, [doctorMeteAvailability, roomAAvailability]), serviceRequest(theService, date))
+    })
+
+    test("one doctor can be specified explictly", () => {
+        const mutatedConfig = setAvailability(config, [doctorMikeAvailability, doctorMeteAvailability, roomAAvailability, roomBAvailability])
+        const mutatedService = serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorMike))
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(mutatedService, date)))
+        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
+    })
+
+    test("both doctors can be specified explictly", () => {
+        const mutatedConfig = setAvailability(config, [doctorMikeAvailability, doctorMeteAvailability, roomAAvailability, roomBAvailability])
+        const mutatedService = serviceFns.replaceRequirement(serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorMike)), anySuitableResource(doctor, assistant), specificResource(doctorMete))
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(mutatedService, date)))
+        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
+    })
+
+    test("specifying a doctor that is not resourced results in no availability", () => {
+        const mutatedConfig = setAvailability(config, [doctorMikeAvailability, doctorMeteAvailability, roomAAvailability, roomBAvailability])
+        const mutatedService = serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorNo))
+        expectNoAvailability(mutatedConfig, serviceRequest(mutatedService, date))
+    });
+})
 
 describe("given a gym that offers personal training requiring a specific trainer and a specific gym room, and is available monday to friday 9am to 5pm", () => {
     const personalTrainer = resourceType("personalTrainer");
