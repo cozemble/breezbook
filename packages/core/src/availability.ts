@@ -119,7 +119,7 @@ export const fullyResourcedBookingFns = {
 }
 
 function assignResourcesToBooking(booking: Booking, resources: ResourceDayAvailability[]): FullyResourcedBooking | ErrorResponse {
-    const resourceOutcome = resourceRequirementFns.matchRequirements(resources, bookingFns.calcPeriod(booking), booking.service.resourceRequirements)
+    const resourceOutcome = resourceRequirementFns.matchRequirements(resources, bookingFns.calcPeriod(booking), booking.service.resourceRequirements, booking.fixedResourceAllocation)
     if (resourceOutcome._type === 'error.response') {
         return resourceOutcome
     }
@@ -192,7 +192,7 @@ export const availability = {
             if (resourceOutcome._type === 'error.response') {
                 return resourceOutcome
             }
-            const matchOutcome = resourceRequirementFns.matchRequirements(resourceOutcome.remainingAvailability, period, service.resourceRequirements)
+            const matchOutcome = resourceRequirementFns.matchRequirements(resourceOutcome.remainingAvailability, period, service.resourceRequirements, [])
             if (matchOutcome._type === "success") {
                 result.push(availableSlot(service, period.day, exactTimeAvailability(period.period.from), matchOutcome.value.map(r => resourceAllocation(r.requirement, r.match.resource))))
             }

@@ -3,7 +3,7 @@ import {PriceAdjustment} from './calculatePrice.js';
 import dayjs from 'dayjs';
 import {ToWords} from "to-words";
 import {StartTime} from "./availability.js";
-import {errorResponse, ErrorResponse, success, Success} from "./utils.js";
+import {errorResponse, ErrorResponse, errorResponseFns, mandatory, success, Success} from "./utils.js";
 
 export interface ValueType<T> {
     _type: unknown;
@@ -162,13 +162,22 @@ export const isoDateFns = {
         return date1.value < date2.value;
     },
     max(...dates: IsoDate[]) {
-        return dates.reduce((max, date) => (this.gte(date, max) ? date : max), dates[0]);
+        if (dates.length === 0) {
+            throw new Error('No dates to compare');
+        }
+        return dates.reduce((max, date) => (this.gte(date, max) ? date : max), mandatory(dates[0], `No dates to compare`))
     },
     min(...dates: IsoDate[]) {
-        return dates.reduce((min, date) => (this.lte(date, min) ? date : min), dates[0]);
+        if (dates.length === 0) {
+            throw new Error('No dates to compare');
+        }
+        return dates.reduce((min, date) => (this.lte(date, min) ? date : min), mandatory(dates[0], `No dates to compare`));
     },
     toJavascriptDate(date: IsoDate, time: TwentyFourHourClockTime) {
         const [year, month, day] = date.value.split('-').map((s) => parseInt(s, 10));
+        if (!year || !month || !day) {
+            throw new Error(`Invalid date format ${date.value}. Expected YYYY-MM-DD`);
+        }
         const [hours, minutes] = time.value.split(':').map((s) => parseInt(s, 10));
         return new Date(year, month - 1, day, hours, minutes);
     },
@@ -228,9 +237,10 @@ export function duration(value: Minutes): Duration {
 
 export const time24Fns = {
     addMinutes: (time: TwentyFourHourClockTime, minutes: number): TwentyFourHourClockTime => {
-        const timeParts = time.value.split(':');
-        const hours = parseInt(timeParts[0]);
-        const mins = parseInt(timeParts[1]);
+        const [hours, mins] = time.value.split(':').map((s) => parseInt(s, 10));
+        if (hours === undefined || mins === undefined || isNaN(hours) || isNaN(minutes)) {
+            throw new Error(`Invalid time format ${time.value}. Expected HH:MM`);
+        }
         const newMins = mins + minutes;
         const newHours = hours + Math.floor(newMins / 60);
         const newMinsMod60 = newMins % 60;
@@ -242,6 +252,9 @@ export const time24Fns = {
     },
     toWords(time: TwentyFourHourClockTime): string {
         const [hours, minutes] = time.value.split(':').map((s) => parseInt(s, 10));
+        if (hours === undefined || minutes === undefined || isNaN(hours) || isNaN(minutes)) {
+            throw new Error(`Invalid time format ${time.value}. Expected HH:MM`);
+        }
         const amPm = hours < 12 ? 'am' : 'pm';
         const adjustedHours = amPm === 'pm' ? hours - 12 : hours;
         const adjustedMinutes = minutes < 10 ? `zero ${minutes}` : minutes;
@@ -407,6 +420,20 @@ export function customer(firstName: string, lastName: string, emailStr: string, 
 
 export type BookableSlot = ExactTimeAvailability | TimeslotSpec;
 
+export interface FixedResourceAllocation {
+    _type: 'fixed.resource.allocation';
+    requirementId: ResourceRequirementId;
+    resourceId: ResourceId;
+}
+
+export function fixedResourceAllocation(requirementId: ResourceRequirementId, resourceId: ResourceId): FixedResourceAllocation {
+    return {
+        _type: 'fixed.resource.allocation',
+        requirementId,
+        resourceId
+    };
+}
+
 export interface Booking {
     id: BookingId;
     customerId: CustomerId;
@@ -415,7 +442,7 @@ export interface Booking {
     service: Service;
     bookedCapacity: Capacity;
     status: 'confirmed' | 'cancelled';
-    fixedResourceAllocation: SpecificResource[]
+    fixedResourceAllocation: FixedResourceAllocation[]
     formData?: unknown;
 }
 
@@ -436,7 +463,7 @@ export function booking(
     date: IsoDate,
     period: TimePeriod,
     bookedCapacity = capacity(1),
-    fixedResourceAllocation: SpecificResource[] = [],
+    fixedResourceAllocation: FixedResourceAllocation[] = [],
     id = bookingId(uuidv4())
 ): Booking {
     return {
@@ -638,7 +665,7 @@ export const priceFns = {
         if (currencies.some((c) => c !== currencies[0])) {
             throw new Error(`Cannot add prices with different currencies: ${currencies.join(', ')}`);
         }
-        return prices.reduce((total, aPrice) => price(total.amount.value + aPrice.amount.value, total.currency), price(0, prices[0].currency));
+        return prices.reduce((total, aPrice) => price(total.amount.value + aPrice.amount.value, total.currency), price(0, mandatory(prices[0], `Must have at least one price`).currency));
     },
     multiply(thePrice: Price, quantity: number) {
         return price(thePrice.amount.value * quantity, thePrice.currency);
@@ -693,42 +720,42 @@ export function price(amountInMinorUnits: number, currency: Currency): Price {
     };
 }
 
-export interface Role extends ValueType<string> {
-    _type: 'role';
+export interface ResourceRequirementId extends ValueType<string> {
+    _type: 'resource.requirement.id';
 }
 
-export function role(value: string): Role {
+export function resourceRequirementId(value = uuidv4()): ResourceRequirementId {
     return {
-        _type: 'role',
+        _type: 'resource.requirement.id',
         value
     };
 }
 
 export interface AnySuitableResource {
     _type: 'any.suitable.resource'
+    id: ResourceRequirementId
     requirement: ResourceType
-    role: Role | null
 }
 
 export interface SpecificResource {
     _type: 'specific.resource'
+    id: ResourceRequirementId
     resource: Resource
-    role: Role | null
 }
 
-export function anySuitableResource(requirement: ResourceType, role: Role | null = null): AnySuitableResource {
+export function anySuitableResource(requirement: ResourceType, id = resourceRequirementId()): AnySuitableResource {
     return {
         _type: 'any.suitable.resource',
         requirement,
-        role
+        id
     }
 }
 
-export function specificResource(resource: Resource, role: Role | null = null): SpecificResource {
+export function specificResource(resource: Resource, id = resourceRequirementId()): SpecificResource {
     return {
         _type: 'specific.resource',
         resource,
-        role
+        id
     }
 }
 
@@ -746,14 +773,23 @@ export function requirementMatch(requirement: ResourceRequirement, match: Resour
     }
 }
 
+function getAvailableResources(fixedResourceAllocation: FixedResourceAllocation[], requirement: AnySuitableResource | SpecificResource, available: ResourceDayAvailability[]): ResourceDayAvailability[] {
+    const maybeOverride = fixedResourceAllocation.find(fra => fra.requirementId.value === requirement.id.value);
+    if (maybeOverride) {
+        return available.filter(ra => ra.resource.id.value === maybeOverride.resourceId.value);
+    }
+    return requirement._type === 'any.suitable.resource' ? available.filter(ra => ra.resource.type.value === requirement.requirement.value) : available.filter(ra => ra.resource.id.value === requirement.resource.id.value);
+}
+
 export const resourceRequirementFns = {
     errorCodes: {
-        noSuitableResource: 'no.suitable.resource'
+        noSuitableResource: 'no.suitable.resource',
+        repeatedResourceAndRole: 'repeated.resource.and.role',
     },
-    matchRequirements: (available: ResourceDayAvailability[], period: DayAndTimePeriod, requirements: ResourceRequirement[]): Success<RequirementMatch[]> | ErrorResponse<ResourceRequirement> => {
+    matchRequirements: (available: ResourceDayAvailability[], period: DayAndTimePeriod, requirements: ResourceRequirement[], fixedResourceAllocation: FixedResourceAllocation[]): Success<RequirementMatch[]> | ErrorResponse<ResourceRequirement> => {
         const matched: RequirementMatch[] = [];
         for (const requirement of requirements) {
-            const availableResources = requirement._type === 'any.suitable.resource' ? available.filter(ra => ra.resource.type.value === requirement.requirement.value) : available.filter(ra => ra.resource.id.value === requirement.resource.id.value);
+            const availableResources = getAvailableResources(fixedResourceAllocation, requirement, available);
             const possibleResources = availableResources.filter(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da.when, period)));
             if (possibleResources.length > 0) {
                 const availableResource = possibleResources.find(r => !matched.some(m => m.match.resource.id === r.resource.id))
@@ -770,12 +806,25 @@ export const resourceRequirementFns = {
     },
     equals(a: ResourceRequirement, b: ResourceRequirement): boolean {
         if (a._type === 'any.suitable.resource' && b._type === 'any.suitable.resource') {
-            return a.requirement.value === b.requirement.value && a.role?.value === b.role?.value;
+            return a.requirement.value === b.requirement.value && a.id?.value === b.id?.value;
         }
         if (a._type === 'specific.resource' && b._type === 'specific.resource') {
-            return values.isEqual(a.resource.id, b.resource.id) && a.role?.value === b.role?.value;
+            return values.isEqual(a.resource.id, b.resource.id) && a.id?.value === b.id?.value;
         }
         return false;
+    },
+    validateRequirements(resourceRequirements: ResourceRequirement[]): ErrorResponse | null {
+        const resourcesAndRoles = resourceRequirements.map(r => {
+            if (r._type === 'any.suitable.resource') {
+                return {key: r.requirement, role: r.id}
+            }
+            return {key: r.resource.id, role: r.id}
+        })
+        const firstDuplicate = resourcesAndRoles.find((r, i) => resourcesAndRoles.slice(i + 1).find(rr => values.isEqual(r.key, rr.key) && r.role?.value === rr.role?.value))
+        if (firstDuplicate) {
+            return errorResponse(resourceRequirementFns.errorCodes.repeatedResourceAndRole, `Duplicate resource requirement found for ${JSON.stringify(firstDuplicate)}`)
+        }
+        return null
     }
 }
 
@@ -856,6 +905,10 @@ export function service(
     theCapacity = capacity(1),
     id = serviceId(uuidv4())
 ): Service {
+    const requirementError = resourceRequirementFns.validateRequirements(resourceRequirements);
+    if (requirementError) {
+        throw errorResponseFns.toError(requirementError)
+    }
     return {
         id,
         name,

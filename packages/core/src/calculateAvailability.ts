@@ -51,7 +51,7 @@ function assignResourcesToBookings(config: BusinessConfiguration, bookings: Book
     return bookings.map((booking) => {
         const bookedService = booking.service;
         const serviceTime = bookingFns.calcPeriod(booking)
-        const resourceOutcome = resourceRequirementFns.matchRequirements(config.resourceAvailability, serviceTime, bookedService.resourceRequirements);
+        const resourceOutcome = resourceRequirementFns.matchRequirements(config.resourceAvailability, serviceTime, bookedService.resourceRequirements, []);
         if (resourceOutcome._type === 'error.response') {
             throw errorResponseFns.toError(resourceOutcome);
         }

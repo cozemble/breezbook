@@ -15,7 +15,7 @@ export function applyBookingsToResourceAvailability(resourceAvailability: Resour
     return bookings.reduce((resourceAvailability, booking) => {
         const service = booking.service;
         const bookingPeriod = bookingFns.calcPeriod(booking);
-        const resourceOutcome = resourceRequirementFns.matchRequirements(resourceAvailability, bookingPeriod, service.resourceRequirements);
+        const resourceOutcome = resourceRequirementFns.matchRequirements(resourceAvailability, bookingPeriod, service.resourceRequirements, []);
         if (resourceOutcome._type === 'error.response') {
             throw errorResponseFns.toError(resourceOutcome)
         }
