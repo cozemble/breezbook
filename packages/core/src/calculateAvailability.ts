@@ -4,8 +4,9 @@ import {
     availabilityBlock,
     BookableSlot,
     BookableTimes,
-    bookableTimeSlot, booking,
-    Booking, bookingFns,
+    bookableTimeSlot,
+    Booking,
+    bookingFns,
     BusinessAvailability,
     BusinessConfiguration,
     DayAndTimePeriod,
@@ -22,7 +23,6 @@ import {
     ResourceDayAvailability,
     resourcedTimeSlot,
     ResourcedTimeSlot,
-    ResourceId,
     resourceRequirementFns,
     ResourceType,
     Service,
@@ -39,10 +39,6 @@ interface BookingWithResourceUsage {
     booking: Booking;
     resources: Resource[];
 }
-
-// export function calcBookingPeriod(booking: Booking, serviceDuration: number): DayAndTimePeriod {
-//     return dayAndTimePeriod(booking.date, calcSlotPeriod(booking.slot, serviceDuration));
-// }
 
 export function calcSlotPeriod(slot: BookableSlot, serviceDuration: number): TimePeriod {
     if (slot._type === 'exact.time.availability') {

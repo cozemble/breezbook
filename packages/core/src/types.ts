@@ -415,6 +415,7 @@ export interface Booking {
     service: Service;
     bookedCapacity: Capacity;
     status: 'confirmed' | 'cancelled';
+    fixedResourceAllocation: SpecificResource[]
     formData?: unknown;
 }
 
@@ -435,6 +436,7 @@ export function booking(
     date: IsoDate,
     period: TimePeriod,
     bookedCapacity = capacity(1),
+    fixedResourceAllocation: SpecificResource[] = [],
     id = bookingId(uuidv4())
 ): Booking {
     return {
@@ -442,9 +444,10 @@ export function booking(
         customerId,
         date,
         period,
-        status:"confirmed",
+        status: "confirmed",
         service,
-        bookedCapacity
+        bookedCapacity,
+        fixedResourceAllocation
     };
 }
 
