@@ -22,7 +22,7 @@ export function applyBookingsToResourceAvailability(resourceAvailability: Resour
         const firstSuitableResources = resourceOutcome.value
         return resourceAvailability.map(ra => {
             if (firstSuitableResources.find(r => values.isEqual(r.match.resource.id, ra.resource.id))) {
-                const amendedPeriods = ra.availability.flatMap(block => dayAndTimePeriodFns.splitPeriod(block.when, bookingPeriod).map(p => availabilityBlock(p, block.capacity)))
+                const amendedPeriods = ra.availability.flatMap(block => dayAndTimePeriodFns.splitPeriod(block.when, bookingPeriod).map(p => availabilityBlock(p)))
                 return {
                     ...ra,
                     availability: amendedPeriods
@@ -44,7 +44,7 @@ function fitTime(block: AvailabilityBlock, fitTimes: DayAndTimePeriod[]): Availa
         }
         return undefined;
     }).filter(bh => bh !== undefined) as DayAndTimePeriod[];
-    return periods.map(p => availabilityBlock(p, block.capacity));
+    return periods.map(p => availabilityBlock(p));
 }
 
 export function fitAvailability(resourceAvailability: ResourceDayAvailability[], fitTimes: DayAndTimePeriod[]): ResourceDayAvailability[] {

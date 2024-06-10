@@ -75,7 +75,7 @@ export function doCancellationRequest(
     theBooking: DbBooking,
     clock = new SystemClock()
 ): HttpError | CancellationGranted {
-    const mappedResourceTypes = resourceTypes.map((rt) => resourceType(rt.id, false));
+    const mappedResourceTypes = resourceTypes.map((rt) => resourceType(rt.id));
     const mappedTimeslots = timeslots.map(toDomainTimeslotSpec);
     const mappedServices = services.map(s => toDomainService(s, mappedResourceTypes, [], mappedTimeslots))
     const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));

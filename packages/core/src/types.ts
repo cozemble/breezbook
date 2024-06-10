@@ -261,11 +261,10 @@ export const time24Fns = {
     }
 };
 
-export function resourceType(value: string, hasCapacity = false): ResourceType {
+export function resourceType(value: string): ResourceType {
     return {
         _type: 'resource.type',
         value,
-        hasCapacity
     };
 }
 
@@ -278,7 +277,6 @@ export function timezone(value: string): Timezone {
 
 export interface ResourceType extends ValueType<string> {
     _type: 'resource.type';
-    hasCapacity: boolean;
 }
 
 export interface BookingId extends ValueType<string> {
@@ -1004,42 +1002,22 @@ export interface BookableTimes {
 export interface AvailabilityBlock {
     _type: 'availability.block';
     when: DayAndTimePeriod;
-    capacity: Capacity;
 }
 
 export const availabilityBlockFns = {
-
-    subtractCapacity(a: AvailabilityBlock, when: DayAndTimePeriod, capacity: Capacity): AvailabilityBlock[] {
-        if (dayAndTimePeriodFns.intersects(a.when, when)) {
-            const split = dayAndTimePeriodFns.splitPeriod(a.when, when, true)
-            return split.map(dt => availabilityBlock(dt, a.capacity))
-                .map(block => {
-                    if (dayAndTimePeriodFns.overlaps(block.when, when)) {
-                        return {
-                            ...block,
-                            capacity: capacityFns.subtract(block.capacity, capacity)
-                        }
-                    }
-                    return block
-                })
-                .filter(block => block.capacity.value > 0)
-        }
-        return [a]
-    },
     dropAvailability(when: DayAndTimePeriod, block: AvailabilityBlock): AvailabilityBlock[] {
         if (dayAndTimePeriodFns.intersects(block.when, when)) {
             const split = dayAndTimePeriodFns.splitPeriod(block.when, when)
-            return split.map(dt => availabilityBlock(dt, block.capacity))
+            return split.map(dt => availabilityBlock(dt))
         }
         return [block];
     }
 }
 
-export function availabilityBlock(when: DayAndTimePeriod, theCapacity = capacity(1)): AvailabilityBlock {
+export function availabilityBlock(when: DayAndTimePeriod): AvailabilityBlock {
     return {
         _type: 'availability.block',
         when,
-        capacity: theCapacity
     };
 }
 
@@ -1058,20 +1036,6 @@ export function resourceDayAvailability(resource: Resource, availability: Availa
 export const resourceDayAvailabilityFns = {
     reduceToResource: (resourceDayAvailabilities: ResourceDayAvailability[], resourceId: ResourceId): ResourceDayAvailability[] => {
         return resourceDayAvailabilities.filter((rda) => rda.resource.id.value === resourceId.value);
-    },
-    subtractCapacity(resourceDayAvailability: ResourceDayAvailability, when: DayAndTimePeriod, capacity: Capacity): ResourceDayAvailability {
-        const subtractedBlocks = resourceDayAvailability.availability.flatMap(a => availabilityBlockFns.subtractCapacity(a, when, capacity))
-        const deDupedBlocks = subtractedBlocks.reduce((acc, block) => {
-            const existingBlock = acc.find(b => dayAndTimePeriodFns.equals(b.when, block.when))
-            if (existingBlock) {
-                return acc
-            }
-            return [...acc, block]
-        }, [] as AvailabilityBlock[])
-        return {
-            ...resourceDayAvailability,
-            availability: deDupedBlocks
-        }
     },
     dropAvailability(when: DayAndTimePeriod, resource: Resource, acc: ResourceDayAvailability[]): ResourceDayAvailability[] {
         return acc.map(rda => {

@@ -206,8 +206,8 @@ Ah bugger - prisma does not support ltree.
 
 # Thu 18 Apr 2024
 
-I added code into the app yesterday to set-up a test tenant when it boots against an empty database.  All works fine
-when running it using node, and when running the docker image locally, but it fails with: 
+I added code into the app yesterday to set-up a test tenant when it boots against an empty database. All works fine
+when running it using node, and when running the docker image locally, but it fails with:
 
 ```
 PrismaClientInitializationError: 
@@ -223,79 +223,93 @@ Timed out fetching a new connection from the connection pool. More info: http://
 }
 ```
 
-when the image is run on Google Cloud Run.  The env vars seem the same to me.  So am now adding a 20 sec delay between the app booting
-and attempting to acquire a pooled connection, to see if that makes a difference.  It did not.  Neither did adding `?pgBouncer=true` to the
-database connection url.  Turning on prisma logging at `info` level revealed nothing.  Now adding an endpoint to do the
-setup, to see why endpoints work and this auto-setup does not.  So when I call the same code in an endpoint, it works fine.
-Going to try calling the endpoint after the app boots, and see if that solves the issue.  So calling the endpoint right after the app
-boots also fails with the same error.  This time trying to call it using the public endpoint, rather than the internal one.
-That worked.  WTF?
+when the image is run on Google Cloud Run. The env vars seem the same to me. So am now adding a 20 sec delay between the
+app booting
+and attempting to acquire a pooled connection, to see if that makes a difference. It did not. Neither did
+adding `?pgBouncer=true` to the
+database connection url. Turning on prisma logging at `info` level revealed nothing. Now adding an endpoint to do the
+setup, to see why endpoints work and this auto-setup does not. So when I call the same code in an endpoint, it works
+fine.
+Going to try calling the endpoint after the app boots, and see if that solves the issue. So calling the endpoint right
+after the app
+boots also fails with the same error. This time trying to call it using the public endpoint, rather than the internal
+one.
+That worked. WTF?
 
 # Fri 19 Apr 2024
-The work I did a few days ago, adding an optional `location_id` to `services` and other tables, means I can have a 
-service at global space shared by all locations, or a service at one local space.  But I can't have a service at two 
-of three locations.  I think this is a better way to model the domain.  So now we're talking about a mapping between
-services and locations.  So it sounds like a `service_locations` table is calling.
 
-My mind finds it easier to work with examples, so I'm going to model a gym in several locations, offering different 
+The work I did a few days ago, adding an optional `location_id` to `services` and other tables, means I can have a
+service at global space shared by all locations, or a service at one local space. But I can't have a service at two
+of three locations. I think this is a better way to model the domain. So now we're talking about a mapping between
+services and locations. So it sounds like a `service_locations` table is calling.
+
+My mind finds it easier to work with examples, so I'm going to model a gym in several locations, offering different
 services, some of them global, some of them local, and others in several locations.
 
-In doing this, setting up a multi-location gym model, it became obvious that location needs to be on 
-`resource_availability`, rather on `resources`.  This is because a resource can be available at one location for one
-period of time, and at another location for another period of time.  So I'm going to move `location_id` to 
+In doing this, setting up a multi-location gym model, it became obvious that location needs to be on
+`resource_availability`, rather on `resources`. This is because a resource can be available at one location for one
+period of time, and at another location for another period of time. So I'm going to move `location_id` to
 `resource_availability`.
 
 # Sun 21 Apr 2024
-Still working through the multi-location model of a gym, testing as I go.  It's fun :)  My tests are against a massive
-fixture that models the gym with three locations, which is a bit hard for newcomers to follow, I expect.  But the 
-reason I am pursuing it is that the fixture is prisma code, that uses prismock in my tests, but real prisma when 
-inserting into the database a test tenant.  Is this a sensible trade-off?  Let's see how it plays out.
 
-Anyway, first cut of location support done.  Here is the fixture that sets up 
+Still working through the multi-location model of a gym, testing as I go. It's fun :)  My tests are against a massive
+fixture that models the gym with three locations, which is a bit hard for newcomers to follow, I expect. But the
+reason I am pursuing it is that the fixture is prisma code, that uses prismock in my tests, but real prisma when
+inserting into the database a test tenant. Is this a sensible trade-off? Let's see how it plays out.
+
+Anyway, first cut of location support done. Here is the fixture that sets up
 [a multi-location gym](https://github.com/cozemble/breezbook/blob/9262682c14520974299c2aca0bb4cf706228306e/backend/airtable/src/dx/loadMultiLocationGymTenant.ts#L1)
-and here are [the tests for it](https://github.com/cozemble/breezbook/blob/8accf91e4e909aacc226d1b791d539afba1a8de0/backend/airtable/test/availability/byLocation.spec.ts#L15)
+and here
+are [the tests for it](https://github.com/cozemble/breezbook/blob/8accf91e4e909aacc226d1b791d539afba1a8de0/backend/airtable/test/availability/byLocation.spec.ts#L15)
 
 # Mon 22 Apr 2024
+
 Deploying location stuff now.
 
-Had a thought about IDs in this multi-environment infra we've got.  Right now, a service has its own `service_id` as a primary key.
-It also has a `tenant_id` and an `environment_id`.  Having a `service_id` is kinda nice, because it makes foreign key management easy.
+Had a thought about IDs in this multi-environment infra we've got. Right now, a service has its own `service_id` as a
+primary key.
+It also has a `tenant_id` and an `environment_id`. Having a `service_id` is kinda nice, because it makes foreign key
+management easy.
 But if I used a compound key of `tenant_id`,`environment_id` and `service_id`, then it would be really easy to copy data
-from environment to environment.  There would be no need to worry about tracking primary key re-mapping between services
-and locations and orders etc - just change the `environment_id`.  It would make testing out data changes in an environment almost
-trivial.  And it would make pulling data down from production to a test environment almost trivial. One of those to stew on.
+from environment to environment. There would be no need to worry about tracking primary key re-mapping between services
+and locations and orders etc - just change the `environment_id`. It would make testing out data changes in an
+environment almost
+trivial. And it would make pulling data down from production to a test environment almost trivial. One of those to stew
+on.
 
 # Fri 26 Apr 2024
 
-Loaded all the services for the car wash business.  There are many services.  So it looks like we'll need to provide
+Loaded all the services for the car wash business. There are many services. So it looks like we'll need to provide
 some kind of categorisation ability.
 
 # Sat 27 Apr 2024
-In terms of onboarding our first customer, I'm writing scripts to import their data from excel files.  Do things that
-don't scale they say.  While I decided that replicating booking data into Airtable was the way to go to give this
+
+In terms of onboarding our first customer, I'm writing scripts to import their data from excel files. Do things that
+don't scale they say. While I decided that replicating booking data into Airtable was the way to go to give this
 client extensibilty in terms of automation of their business, I decided to not implement import of configuration data
 from Airtable.
 
-Where this goes ultimately, I'm not sure.  I thought my blinding insight was to not make a database this time, to focus
-instead on making an excellent booking experience backed by Airtable/SmartSuite etc.  I'm continually back and forth on
-this.  Taking this approach might be nice to get started, but is it something people are looking for?  Would 
-"the shopify of bookings" be a better long term offering?  Shopify does everything an ecommerce business could want.
+Where this goes ultimately, I'm not sure. I thought my blinding insight was to not make a database this time, to focus
+instead on making an excellent booking experience backed by Airtable/SmartSuite etc. I'm continually back and forth on
+this. Taking this approach might be nice to get started, but is it something people are looking for? Would
+"the shopify of bookings" be a better long term offering? Shopify does everything an ecommerce business could want.
 Should breezbook take the same line for booking based businesses?
 
 To be honest, I think the real reason I felt excited about using Airtable was the backend, was that it enabled my client
 to set-up Gmail automations, and I am fearful of adding any Google integrations into my apps due to the expense of the
-security reviews that are seemingly required to get my app verified.  So this is a decision based on fear and
-ignorance.  I need to find someone who has been down this road before.
+security reviews that are seemingly required to get my app verified. So this is a decision based on fear and
+ignorance. I need to find someone who has been down this road before.
 
-I just did a search on perplexity.ai, and it seems that what I fear is the case.  I can understand why Google have put 
+I just did a search on perplexity.ai, and it seems that what I fear is the case. I can understand why Google have put
 this in place, but gosh it's a pita to get a small side project started.  
-[This person](https://www.reddit.com/r/GoogleAppsScript/comments/os2kap/oauth_scope_verification_for_publishing_an_app_to/) 
+[This person](https://www.reddit.com/r/GoogleAppsScript/comments/os2kap/oauth_scope_verification_for_publishing_an_app_to/)
 says that unless your product is going to make $25k a year, don't bother.
 
 # Mon 29 Apr 2024
 
-It's time to make my Airtable OAuth Application be a production version.  For that, I need a Privacy Policy and Terms of
-Service.  I asked Claude 
+It's time to make my Airtable OAuth Application be a production version. For that, I need a Privacy Policy and Terms of
+Service. I asked Claude
 
 _What questions would you ask me if I wanted you to generate a privacy policy for my new booking/appointmenting SaaS?_
 
@@ -307,42 +321,46 @@ and it returned:
 4. Do you share any personal data with third parties? If so, who are they, and for what purpose?
 5. How do you protect the personal data you collect (e.g., encryption, access controls, security measures)?
 6. How long do you retain the personal data, and what is your data deletion policy?
-7. Do you use cookies or similar tracking technologies on your website/platform? If so, what types of cookies and for what purpose?
+7. Do you use cookies or similar tracking technologies on your website/platform? If so, what types of cookies and for
+   what purpose?
 8. Do you transfer any personal data internationally? If so, to which countries and under what legal mechanisms?
 9. How can users access, update, or delete their personal data?
 10. How do you handle personal data of minors (if applicable)?
 11. How do you communicate changes to your privacy policy to users?
 12. What is your process for handling data breaches or security incidents?
-13. Are there any industry-specific regulations or compliance requirements that apply to your SaaS (e.g., HIPAA for healthcare-related services)?
+13. Are there any industry-specific regulations or compliance requirements that apply to your SaaS (e.g., HIPAA for
+    healthcare-related services)?
 14. In which jurisdictions do you operate, and are there any specific privacy laws that apply (e.g., GDPR, CCPA)?
 
-So I'm going to turn my privacy policy into a file in github (the benefit of open source) and then link to it from my website
+So I'm going to turn my privacy policy into a file in github (the benefit of open source) and then link to it from my
+website
 
 # Tue 30 Apr 2024
 
-Turning attention to airtable integration again.  Nat has provided me the Airtable base and tables that he wants to map
-Breebook bookings into.  At this stage I feel the need for a tool that does this:
+Turning attention to airtable integration again. Nat has provided me the Airtable base and tables that he wants to map
+Breebook bookings into. At this stage I feel the need for a tool that does this:
 
- * Connects to an airtable base and inspects the tables
- * Connects to my postgres database, and allows me to filter down to source tables, and from there down to source records,
-   by specifying a filter query (by tenant id and environment id in this case).  This might be impractical in the general
-   case, but what I'm after is some means of stating what my source record payloads are.  Pasting a bunch of exemplar 
-   payloads into textboxes would also be ok.
- * Define my mapping plan and see which source records it selects, and what airtable mutations it emits
+* Connects to an airtable base and inspects the tables
+* Connects to my postgres database, and allows me to filter down to source tables, and from there down to source
+  records,
+  by specifying a filter query (by tenant id and environment id in this case). This might be impractical in the general
+  case, but what I'm after is some means of stating what my source record payloads are. Pasting a bunch of exemplar
+  payloads into textboxes would also be ok.
+* Define my mapping plan and see which source records it selects, and what airtable mutations it emits
 
-I'm going to do this in a unit test for now, which might be the better engineering approach.  But I can't help but think
+I'm going to do this in a unit test for now, which might be the better engineering approach. But I can't help but think
 that there is a generic product sitting under this need.
 
 # Wed 1 May 2024
 
-Wow, I still have Inngest concurrency misunderstood.  Concurrency applies to steps, not to functions.  So if I have
+Wow, I still have Inngest concurrency misunderstood. Concurrency applies to steps, not to functions. So if I have
 a function with three steps and a concurrency of 1, then I launch 3 instances of the function, Instance 1 step 1 will
-run, and Instance 2 and 3 will pause.  But then when Instance 1 step 1 finishes, it is not clear to me if Instance 2
-step 1 will run, or if Instance 1 step 2 will run.  
+run, and Instance 2 and 3 will pause. But then when Instance 1 step 1 finishes, it is not clear to me if Instance 2
+step 1 will run, or if Instance 1 step 2 will run.
 
 I have asked [here](https://discord.com/channels/842170679536517141/1235217182137389057)
 
-So my replication steps for airtable replication have a race condition in them.  Here are my Inngest steps:
+So my replication steps for airtable replication have a race condition in them. Here are my Inngest steps:
 
 1. I find the next event to replicate,
 2. I replicate it to airtable,
@@ -360,14 +378,14 @@ Let's say the order of events is:
 1. upsert customer
 2. upsert booking
 
-In function 1 runs and eagerly grabs event 1, then function 2 runs and grabs event 2, then function 1 fails to 
+In function 1 runs and eagerly grabs event 1, then function 2 runs and grabs event 2, then function 1 fails to
 send the customer to airtable, function 2 could be scheduled next and send the booking to airtable without the
 customer having made it first.
 
-So one option is to put all the work of the function into one step.  That is, find the next event, send it to airtable,
-record the airtable record id, then mark the event as done.  The issue here is that unit of work will be retried as a 
-whole if any issue happens in it.  If an error happens when recording the airtable record id for a create action, and
-then the entire unit of work is retried, then the record will be created again in airtable.  Not acceptable.
+So one option is to put all the work of the function into one step. That is, find the next event, send it to airtable,
+record the airtable record id, then mark the event as done. The issue here is that unit of work will be retried as a
+whole if any issue happens in it. If an error happens when recording the airtable record id for a create action, and
+then the entire unit of work is retried, then the record will be created again in airtable. Not acceptable.
 
 So the next thing I am going to try is to implement a locking mechanism as the first step in the Inngest function.
 
@@ -377,136 +395,149 @@ Here is pseudo code:
 const inngest = require("inngest");
 
 const replicateEventsFunction = inngest.createFunction(
-  { name: "Replicate Events" },
-  { tenantId, environmentId },
-  async () => {
-    const lockKey = `${tenantId}_${environmentId}`;
+    {name: "Replicate Events"},
+    {tenantId, environmentId},
+    async () => {
+        const lockKey = `${tenantId}_${environmentId}`;
 
-    // Step 1: Acquire the lock
-    await inngest.step("Acquire Lock", async () => {
-      const lockAcquired = await acquireLock(lockKey);
-      if (!lockAcquired) {
-        throw new Error("Failed to acquire lock");
-      }
-    });
+        // Step 1: Acquire the lock
+        await inngest.step("Acquire Lock", async () => {
+            const lockAcquired = await acquireLock(lockKey);
+            if (!lockAcquired) {
+                throw new Error("Failed to acquire lock");
+            }
+        });
 
-    // Step 2: Find the next event to replicate
-    const event = await inngest.step("Find Next Event", async () => {
-      return findNextEvent(tenantId, environmentId);
-    });
+        // Step 2: Find the next event to replicate
+        const event = await inngest.step("Find Next Event", async () => {
+            return findNextEvent(tenantId, environmentId);
+        });
 
-    if (event) {
-      // Step 3: Replicate the event to Airtable
-      const airtableRecordId = await inngest.step("Replicate to Airtable", async () => {
-        return replicateToAirtable(event);
-      });
+        if (event) {
+            // Step 3: Replicate the event to Airtable
+            const airtableRecordId = await inngest.step("Replicate to Airtable", async () => {
+                return replicateToAirtable(event);
+            });
 
-      // Step 4: Record the Airtable record ID against the source record ID
-      await inngest.step("Record Airtable ID", async () => {
-        await recordAirtableId(event, airtableRecordId);
-      });
+            // Step 4: Record the Airtable record ID against the source record ID
+            await inngest.step("Record Airtable ID", async () => {
+                await recordAirtableId(event, airtableRecordId);
+            });
 
-      // Step 5: Mark the event as replicated
-      await inngest.step("Mark Event as Replicated", async () => {
-        await markEventAsReplicated(event);
-      });
+            // Step 5: Mark the event as replicated
+            await inngest.step("Mark Event as Replicated", async () => {
+                await markEventAsReplicated(event);
+            });
+        }
+
+        // Step 6: Release the lock
+        await inngest.step("Release Lock", async () => {
+            await releaseLock(lockKey);
+        });
     }
-
-    // Step 6: Release the lock
-    await inngest.step("Release Lock", async () => {
-      await releaseLock(lockKey);
-    });
-  }
 );
 ```
 
 And I will use a simple table in postgres to house the lock:
 
 ```postgresql
-CREATE TABLE locks (
-  lock_key VARCHAR(255) PRIMARY KEY,
-  acquired_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE locks
+(
+    lock_key    VARCHAR(255) PRIMARY KEY,
+    acquired_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-There may be some down-side to this with Inngests "fair" queueing system. If a function with the lock has a failure, 
-and there are 20 other functions queued, Inngest will give time to those other 20 functions, not knowing that they are 
-destined to fail. So it will take some time for a retry to come around to the function with the lock.  But I am open to 
+There may be some down-side to this with Inngests "fair" queueing system. If a function with the lock has a failure,
+and there are 20 other functions queued, Inngest will give time to those other 20 functions, not knowing that they are
+destined to fail. So it will take some time for a retry to come around to the function with the lock. But I am open to
 correction on this.
 
-In any case, this is a theoretical issue, because there will seldom be more than two functions running at a time.  
+In any case, this is a theoretical issue, because there will seldom be more than two functions running at a time.
 
-Actually, I could code it so that if a function fails to acquire a lock, it exits early as a success, because the given 
+Actually, I could code it so that if a function fails to acquire a lock, it exits early as a success, because the given
 tenant-environment combination is being handled.
 
-That seems to work ok-ish.  The problem now is when a function acquires the lock, but then fails to complete, the lock 
-remains.  To be honest tho, I think I prefer this, because it stops the line for the given tenant-environment pair, 
-allowing other pairs to progress.  When it comes to fixing replication issues, I prefer a stop-the-line approach.
+That seems to work ok-ish. The problem now is when a function acquires the lock, but then fails to complete, the lock
+remains. To be honest tho, I think I prefer this, because it stops the line for the given tenant-environment pair,
+allowing other pairs to progress. When it comes to fixing replication issues, I prefer a stop-the-line approach.
 
 # Thu 2 May 2024
 
 Some notes I made in the past on airtable replication:
 
 While working on this booking/appointmenting app, I need to get data from it into airtable.
-Zapier and make.com can map data from webhooks to airtable tables.  And the same can be used to
-push changes in airtable back to my app.  But I have the following requirements:
+Zapier and make.com can map data from webhooks to airtable tables. And the same can be used to
+push changes in airtable back to my app. But I have the following requirements:
 
 1. I do not want to have to maintain mappings between the primary keys in my app (which might be composite)
-   and the airtable record ids.  I want the integration layer to handle this.
+   and the airtable record ids. I want the integration layer to handle this.
 2. I want to be able to setup and change the mappings between my app and airtable using an API
 3. I want the mapping definition to be easy to read and understand
 4. Pushing from my app to airtable can be done by incremental record building, because airtable has weak data integrity
-   rules.  So I can build part of an airtable customer record from one table as one push and the remainder from another table
-   as a second push.  But going the other way - from airtable to my app - works differently.  If a customer is split across
+   rules. So I can build part of an airtable customer record from one table as one push and the remainder from another
+   table
+   as a second push. But going the other way - from airtable to my app - works differently. If a customer is split
+   across
    two tables in airtable, lets say first name and last name come from one table and the customer email and phone number
    come from another table, but all four fields are required in my app, then I want this record merging to happen in
    the integration layer, and I want it to be easy to configure.
 
 Zapier and make.com do not seem to solve this well, and I'm not aware of any existing product that does all of the above
-in a way that I like.  Whalesync is expensive.
+in a way that I like. Whalesync is expensive.
 
 # Fri 3 May 2024
 
-Important mini-lesson today.  The replicateEvent step in my Inngest airtable integration converts a breezbook mutation
-into one or more airtable mutations.  The airtable mutations are then sent to airtable.  I had an error just now
-about "422 Unprocessable Entity".  But because I combined the conversion and the sending into one step, I had no natural
+Important mini-lesson today. The replicateEvent step in my Inngest airtable integration converts a breezbook mutation
+into one or more airtable mutations. The airtable mutations are then sent to airtable. I had an error just now
+about "422 Unprocessable Entity". But because I combined the conversion and the sending into one step, I had no natural
 inspection point of what payload I was sending to airtable. So, I'm refactoring now to separate the conversion and the
-sending into two steps.  I can easily inspect the return value of the conversion step to see what I'm sending to airtable.
+sending into two steps. I can easily inspect the return value of the conversion step to see what I'm sending to
+airtable.
 
 # Sat 4 May 2024
 
-I made a mistake yesterday in extracting the prep of airtable mutation commands as its own step.  One of the mappings
-from breezbook mutations to airtable mutations, involved a one to many, specifically 
+I made a mistake yesterday in extracting the prep of airtable mutation commands as its own step. One of the mappings
+from breezbook mutations to airtable mutations, involved a one to many, specifically
 [this mapping](https://github.com/cozemble/breezbook/blob/a681501e322cc841eeddde849f1e6a1990529fbb/backend/airtable/src/airtable/natsCarWashAirtableMapping.ts#L120).
 
 This mapping converts an `upsert` on `booking_service_form_values` to a `Car details` airtable record, and updates the
-`Bookings` record with new information, and a reference to the `Car details`.  You will notice that the `Car details`
+`Bookings` record with new information, and a reference to the `Car details`. You will notice that the `Car details`
 reference (from `Bookings`) is a `lookup`.
 
 But of course at the time of planning the mutations, we don't yet know the airtable record of the upserted `Car details`
-record, so the lookup will fail.  So: when planning the airtable mutations, the `lookup` fields must be left as they are,
+record, so the lookup will fail. So: when planning the airtable mutations, the `lookup` fields must be left as they are,
 and dereferenced only when the airtable record ids are known i.e. at application time.
 
 ---------------------------------------
 
-Need to start thinking about getting notified when a replication to airtable message fails.  Asked perplexity, and got
+Need to start thinking about getting notified when a replication to airtable message fails. Asked perplexity, and got
 this:
 
-Yes, Inngest does indeed offer built-in functionality to handle failures and send notifications, including to Slack, 
-without requiring you to manually code this into each step of your functions. According to the Inngest documentation, 
-you can utilize the `inngest/function.failed` event to handle all failed functions in a centralized manner. This 
+Yes, Inngest does indeed offer built-in functionality to handle failures and send notifications, including to Slack,
+without requiring you to manually code this into each step of your functions. According to the Inngest documentation,
+you can utilize the `inngest/function.failed` event to handle all failed functions in a centralized manner. This
 feature allows you to set up notifications to external systems like Slack whenever a function fails.
 
 Here’s how you can set up a function in Inngest to send a Slack notification when a function fails:
 
 1.Create a Slack App and Incoming Webhook:
- * First, create a Slack app and enable incoming webhooks to receive notifications. You will get a webhook URL which you will use to send messages from Inngest.
+
+* First, create a Slack app and enable incoming webhooks to receive notifications. You will get a webhook URL which you
+  will use to send messages from Inngest.
+
 2. Set Up the Inngest Function:
- * You can define a function in Inngest that triggers on the inngest/function.failed event. This function will execute when any of your other functions fail.
+
+* You can define a function in Inngest that triggers on the inngest/function.failed event. This function will execute
+  when any of your other functions fail.
+
 3. Configure the Function to Send Notifications to Slack:
- * Within this function, you can use the Slack Web API to send a notification to your designated Slack channel. You will need to use the webhook URL obtained from Slack.
+
+* Within this function, you can use the Slack Web API to send a notification to your designated Slack channel. You will
+  need to use the webhook URL obtained from Slack.
 
 Here is an example of how you might define this in Inngest:
+
 ```javascript
 import {client} from "@slack/web-api";
 
@@ -531,77 +562,76 @@ export default inngest.createFunction({
 });
 ```
 
-This function listens for the `inngest/function.failed` event and sends a message to a Slack channel with details 
-about the failure. This setup allows you to centralize error handling and notification, enhancing the operability and 
+This function listens for the `inngest/function.failed` event and sends a message to a Slack channel with details
+about the failure. This setup allows you to centralize error handling and notification, enhancing the operability and
 monitoring of your functions without embedding notification logic directly into each function.
-
 
 # Mon 6 May 2024
 
 Deleted a bunch of database migration scripts that I played around with when trying to find a solution for airtable
-migration.  I'm continually zapping the "prod" database because we have no users yet.  Nice situation, but that will 
+migration. I'm continually zapping the "prod" database because we have no users yet. Nice situation, but that will
 soon change.
 
-Today's main focus is getting payment confirmation stripe webhooks correctly integrated.  What they will need to do
-is record the amount paid against the order, and that amount will be replicated to airtable.  Then airtable knows the
+Today's main focus is getting payment confirmation stripe webhooks correctly integrated. What they will need to do
+is record the amount paid against the order, and that amount will be replicated to airtable. Then airtable knows the
 booking has been paid for, and can send out the confirmation email.
 
 # Tue 7 May 2024
 
-When looking into marking stripe payment against bookings, I rediscovered that a booking comes from an order, and an 
-order can have many bookings.  So I only had an order to associate a payment against.  Which is fine, but the issue is
-that the unit of replication to airtable is the booking.  So, I decided I needed the total cost of a booking to be 
-recorded against the booking.  Which meand changing what comes from the front end in terms of order placement.
+When looking into marking stripe payment against bookings, I rediscovered that a booking comes from an order, and an
+order can have many bookings. So I only had an order to associate a payment against. Which is fine, but the issue is
+that the unit of replication to airtable is the booking. So, I decided I needed the total cost of a booking to be
+recorded against the booking. Which meand changing what comes from the front end in terms of order placement.
 
-We had a CreateOrderRequest that was build just for the needs of placing an order.  At the same time, we had 
-PricedBasket, which supports the UI render line item details on costs.  And this is what I now need at the backend. So
+We had a CreateOrderRequest that was build just for the needs of placing an order. At the same time, we had
+PricedBasket, which supports the UI render line item details on costs. And this is what I now need at the backend. So
 I refactored CreateOrderRequest our of the codebase, in favour of using PricedBasket as the means of placing an order.
 
-All that's needed in addition to the PricedBasket is the Customer and the payment method.  Actually feels more natural.
+All that's needed in addition to the PricedBasket is the Customer and the payment method. Actually feels more natural.
 
 And all the existing validations have been ported over to the PricedBasket.
 
 # Wed 8 May 2024
 
-I'm finding myself having to expose more tables into airtable to achieve the behaviours I want in airtable.  Two 
+I'm finding myself having to expose more tables into airtable to achieve the behaviours I want in airtable. Two
 examples:
 
 1. I find myself having to add "Order lines" to airtable, and replicate the Price of the Order Line to Airtable, so I
-can pull up the total cost of a booking in airtable.
+   can pull up the total cost of a booking in airtable.
 2. This morning I find myself considering having to replicate Orders to Airtable, because the payment method is on the
-order.  The payment can be "full payment at point of booking", "payment following delivery of service", and 
-"deposit with balance paid following delivery of service".  The reason airtable needs this data is to help decide when 
-to send the confirmation email.  In the case of full payment or deposit-and-balcne, it's when the confirmation from 
-stripe comes in.  In the case of payment following service, the confirm email goes straight away.
+   order. The payment can be "full payment at point of booking", "payment following delivery of service", and
+   "deposit with balance paid following delivery of service". The reason airtable needs this data is to help decide when
+   to send the confirmation email. In the case of full payment or deposit-and-balcne, it's when the confirmation from
+   stripe comes in. In the case of payment following service, the confirm email goes straight away.
 
 I'd like my replicate engine enable me to hide the fact that there are Orders and Order lines underpinning the bookings.
 The folks managing bookings in airtable don't need this noise.
 
-In both cases above, the relevant values from Order Line and Order are airtable lookup fields, i.e. pulled into the 
+In both cases above, the relevant values from Order Line and Order are airtable lookup fields, i.e. pulled into the
 Booking record.
 
 So what crossed my mind is that the replication engine permits the marking of certain tables as "shadow tables", meaning
-that the engine maintains their state, and enables the necessary lookups into these shadow tables.  The right values
+that the engine maintains their state, and enables the necessary lookups into these shadow tables. The right values
 get to airtable, but the noise is hidden.
 
 It is possible to hide tables in airtable, but nevertheless, in the spirit of removing friction, I think we should shoot
 for something similar to this "shadow table" concept.
 
-There will be data privacy issues in doing this.  Still feels like what I'd like to have though.
+There will be data privacy issues in doing this. Still feels like what I'd like to have though.
 
 # Sat 11 May 2024
 
-I think we have done everything necessary to launch with Nat.  There are some UX snags that have to be worked thru, but
-all the parts of the system are done.  UI, availability, booking, payment, replication to airtable.  In airtable, 
+I think we have done everything necessary to launch with Nat. There are some UX snags that have to be worked thru, but
+all the parts of the system are done. UI, availability, booking, payment, replication to airtable. In airtable,
 sending of notification emails.
 
 The plan is to switch one of Nat's services on his website to book thru breezbook, and we'll watch how bookings are
-progressing thru the use of Mouseflow, and watch for errors thru the use of Sentry.  So I can't think of anything to do
+progressing thru the use of Mouseflow, and watch for errors thru the use of Sentry. So I can't think of anything to do
 right now :)
 
-What will it be like once this goes live?  Watch for the first visit to the booking page.  See if it's clear to the 
-visitor.  Iterate on the UX and UI if not.  If a booking happens, high five!  Check it replicates correctly to airtable
-and the confirmation email goes out.  Check with the team that they are comfortable with the data layout in airtable.
+What will it be like once this goes live? Watch for the first visit to the booking page. See if it's clear to the
+visitor. Iterate on the UX and UI if not. If a booking happens, high five!  Check it replicates correctly to airtable
+and the confirmation email goes out. Check with the team that they are comfortable with the data layout in airtable.
 In time, switch all of Nat's services over to breezbook.
 
 Then will we need to migrate customers and bookings from his existing booking systems, those being docsndata and acuity?
@@ -614,55 +644,56 @@ In terms of ops, mouseflow, sentry and inngest error reporting to slack should g
 We've been on a bit of a go-slow for the last few days, waiting for Nat to make some decisions and give us the go-ahead
 to launch with one of his services.
 
-But today I started playing around with adding a voicebot to breezbook.  I initially played with OpenAI text to speech
-but then I realised that there is much more than text to speech when it comes to making a voicebot.  You need to deal
-with interruptions being one major thing.  And you need to make sure people don't jail break your prompt and make it
-say "breezbook sucks".  And you need a neat way to hook it up to phone numbers etc.
+But today I started playing around with adding a voicebot to breezbook. I initially played with OpenAI text to speech
+but then I realised that there is much more than text to speech when it comes to making a voicebot. You need to deal
+with interruptions being one major thing. And you need to make sure people don't jail break your prompt and make it
+say "breezbook sucks". And you need a neat way to hook it up to phone numbers etc.
 
-So I played around with Vapi.ai.  I was initially worried that there would be no flexibility in configuring a voicebot
-on the fly for all my tenants.  This is because all I saw were low code demos. But thanks to perplexity, I soon realised
-that it can totally define voicebots on the fly.  You supply a config object.
+So I played around with Vapi.ai. I was initially worried that there would be no flexibility in configuring a voicebot
+on the fly for all my tenants. This is because all I saw were low code demos. But thanks to perplexity, I soon realised
+that it can totally define voicebots on the fly. You supply a config object.
 
 So I got a POC running with a hard coded prompt, simulating the main points of Nat's car wash in a hard coded manner. It
-did really well.  There must be a ton of extra prompting that vapi adds, because the agent was saying things that were
-not in my prompt.  Correct things that a normal person would say.  I was impressed.
+did really well. There must be a ton of extra prompting that vapi adds, because the agent was saying things that were
+not in my prompt. Correct things that a normal person would say. I was impressed.
 
 So now I am making an endpoint that returns this prompt for a given tenant/environment/location tuple, and from that
 we're close to having a very nice, custom voicebot for breezbook.
 
 # Fri 24 May 2024
 
-The initial vapi agent shows promise.  But the user could be coming to the agent with a number of intents.  For example,
-they might want to book a car wash, or they might want to know the opening hours, they might want to cancel or 
-reschedule.  I can't put everything needed for all cases into the initial prompt.  So I'm investigating how to deal with
-conditional conversation flow.  I know vapi supports `sendMessage()` and it purports to extend the prompt.  But vapi 
-also supports function calling. So I want to understand if responses from function calls can be prompt extensions or 
+The initial vapi agent shows promise. But the user could be coming to the agent with a number of intents. For example,
+they might want to book a car wash, or they might want to know the opening hours, they might want to cancel or
+reschedule. I can't put everything needed for all cases into the initial prompt. So I'm investigating how to deal with
+conditional conversation flow. I know vapi supports `sendMessage()` and it purports to extend the prompt. But vapi
+also supports function calling. So I want to understand if responses from function calls can be prompt extensions or
 just data.
 
 Actually working on this, and getting to the point of adding in functions to book slots, made me realise that requiring
-only email for customers right now is wrong. I need to make phone number a core customer record component too, and it 
-needs to identify the customer.  So I'm going to make this change now.  Which raises an interesting issue.  Customers
-that originate thru a voice bot will have a phone number, but no email.  There is no neat way to get an email address
-over the phone when the operator is an LLM powered voice bot.  So this turns the whole email-address-identifies-customer
-thing on its head.  Do I have to make both phone number and email optional?  Actually phone number can be acquired thru
+only email for customers right now is wrong. I need to make phone number a core customer record component too, and it
+needs to identify the customer. So I'm going to make this change now. Which raises an interesting issue. Customers
+that originate thru a voice bot will have a phone number, but no email. There is no neat way to get an email address
+over the phone when the operator is an LLM powered voice bot. So this turns the whole email-address-identifies-customer
+thing on its head. Do I have to make both phone number and email optional? Actually phone number can be acquired thru
 both channels, so maybe that's the unique attribute.
 
-Maybe the voicebot never contacts a customer unless they provide their first name, email and phone number in a form to 
-initiate the call?  The database would have a table of `contact_requests` containing this information, optionally 
-relating to a customer via email address and/or phone number.  Right, so the voicebot can expect this information to be
+Maybe the voicebot never contacts a customer unless they provide their first name, email and phone number in a form to
+initiate the call? The database would have a table of `contact_requests` containing this information, optionally
+relating to a customer via email address and/or phone number. Right, so the voicebot can expect this information to be
 known serverside, and maybe even some of it (first name) is in the prompt.
 
 # Sat 25 May 2024
 
-My docker image for google cloud run that represents pretty much all of my backend has blown up from about 230MB to 
-830MB.  On a bit of a trip to learn why.  bundlephobia does not show anything massive in terms of included packages.
-Although body-parser is larger than I realised.  So I am not running `du -sk` commands inside the image itself.  And 
+My docker image for google cloud run that represents pretty much all of my backend has blown up from about 230MB to
+830MB. On a bit of a trip to learn why. bundlephobia does not show anything massive in terms of included packages.
+Although body-parser is larger than I realised. So I am not running `du -sk` commands inside the image itself. And
 learning lots:
 
-1. The `.bin` folder in node_modules is there.  Pretty sure I don't need that.
-2. The .pnpm directory is there, and it's huge.  Given that the app is installed and compiled and ready to run at this 
-stage, I think I can delete it.  Same for `.modules.yaml`.  Except of course that .pnpm is where the actual packages are
-and node_modules just soft links to them.  So I can't delete it.
+1. The `.bin` folder in node_modules is there. Pretty sure I don't need that.
+2. The .pnpm directory is there, and it's huge. Given that the app is installed and compiled and ready to run at this
+   stage, I think I can delete it. Same for `.modules.yaml`. Except of course that .pnpm is where the actual packages
+   are
+   and node_modules just soft links to them. So I can't delete it.
 
 So it looks like `inngest` is indirectly pulling in:
 
@@ -675,32 +706,32 @@ So it looks like `inngest` is indirectly pulling in:
 
 Now I'm going to try using `esbuild` to bundle the index.js for me, because it will tree shake the unused code.
 
-This is proving to be a bit of a pain in the ass, as Prisma requires native binaries to work.  Now fiddling around with
-copying those into the right place in my Dockerfile.  This might prove brittle.  But in any case, the docker image size
+This is proving to be a bit of a pain in the ass, as Prisma requires native binaries to work. Now fiddling around with
+copying those into the right place in my Dockerfile. This might prove brittle. But in any case, the docker image size
 is now about 16MB.
 
 # Mon 27 May 2024
 
 Nat is being slow about making changes on his side to launch breez on his site, so I'm doing work to help our contact
-in Oz see what breez can do for his multi-location gym.  Yesterday I added an endpoint to list resources by resource
-type, and added images and markup to resources.  This is because gym bookings typically start by choosing a personal
-trainer first.  I realised this morning that this endpoint needs to be location sensitive too, so will fix that asap.
+in Oz see what breez can do for his multi-location gym. Yesterday I added an endpoint to list resources by resource
+type, and added images and markup to resources. This is because gym bookings typically start by choosing a personal
+trainer first. I realised this morning that this endpoint needs to be location sensitive too, so will fix that asap.
 Then the plan is to make a rudimentary user interface to prove that the mechanics work. Then myself and Mete can plan
 how to roll this kind of booking experience into breez, as a booking-journey-type choice that users have.
 
 # Tue 28 May 2024
 
 I asked the IntelliJ AI to convert the prisma create code we have to create the test tenants, into upsert code, because
-I want the definition of the test tenants to change, as the app and database changes.  It did a terrible job, so I'm 
-doing it manually.  In the process, I am willing in the definition of the `mutation` types for each of the database 
-tables.  This will come in handy when we start doing the admin functions and endpoints.
+I want the definition of the test tenants to change, as the app and database changes. It did a terrible job, so I'm
+doing it manually. In the process, I am willing in the definition of the `mutation` types for each of the database
+tables. This will come in handy when we start doing the admin functions and endpoints.
 
-What I realised in doing this is that must mutations are fully specified by their create clause.  Usually the update
-part is the create clause minus the primary key.  And the where clause is the primary key.  Two little helper functions,
-`omit` and `pick` make this simple.  So making the code a bit more compact during this process.
+What I realised in doing this is that must mutations are fully specified by their create clause. Usually the update
+part is the create clause minus the primary key. And the where clause is the primary key. Two little helper functions,
+`omit` and `pick` make this simple. So making the code a bit more compact during this process.
 
-I'm changing the multi-location gym tenant into upsert code first.  Once that is done, I will change the app boot 
-sequence to always attempt to make this upsert.  This will get personal trainer images and markup into the database, so 
+I'm changing the multi-location gym tenant into upsert code first. Once that is done, I will change the app boot
+sequence to always attempt to make this upsert. This will get personal trainer images and markup into the database, so
 we can start work on the new booking sequence - that being:
 
 1. Pick the resource (a personal trainer)
@@ -708,20 +739,21 @@ we can start work on the new booking sequence - that being:
 3. Choose a data and time
 4. Make the booking, tying that resource to the booking
 
-Hmm, these mutations of mine have been living a charmed existence.  All those used so far have a single field primary 
-key, called `id`.  Now when it comes to modelling `resource_images` as a mutation, it has a composite primary key, of
-fields `resource_id` and `context`.  I can think of two options:
+Hmm, these mutations of mine have been living a charmed existence. All those used so far have a single field primary
+key, called `id`. Now when it comes to modelling `resource_images` as a mutation, it has a composite primary key, of
+fields `resource_id` and `context`. I can think of two options:
 
 1. Change this (and all tables) to always have a single field primary key
 2. Change my modelling of keys in mutations to support composites
 
-If my airtable integration code, which is based on mutations, is to be most generic and useful, then supporting 
-composite keys is the first one to try.  So going to check-in and explore that option.
+If my airtable integration code, which is based on mutations, is to be most generic and useful, then supporting
+composite keys is the first one to try. So going to check-in and explore that option.
 
 ## The value of making my docker containers smaller
+
 Some days back I spend a lot of time paring down the size of my docker files, by using `esbuild` to bundle my code, and
-by removing unnecessary files from the image.  I did this because I was surprised to see the size of the image had blown
-out to 830MB.  I got it down to 16MB.  Now:
+by removing unnecessary files from the image. I did this because I was surprised to see the size of the image had blown
+out to 830MB. I got it down to 16MB. Now:
 
 1. Builds are faster
 2. Pushes to the registry are faster
@@ -729,8 +761,8 @@ out to 830MB.  I got it down to 16MB.  Now:
 
 # Wed 29 May 2024
 
-Entity id handling in airtable replication is based on composite keys, in terms of source records (breezbook) and 
-destination airtable records, even though airtable record ids are single values.  This is just the more generic 
+Entity id handling in airtable replication is based on composite keys, in terms of source records (breezbook) and
+destination airtable records, even though airtable record ids are single values. This is just the more generic
 approach to replication
 
 # Fri 31 May 2024
@@ -739,21 +771,21 @@ I'm on a plane trying to test drive my way to a uniform code structure to get av
 
 1. Booking against time slots with fungible resources - i.e. a car wash in London with any van
 2. Booking against time slots with non-fungible resources - a named doctor doing a home visit at a specific time slot
-3. Booking from a list of start times with fungible resources - i.e. a drop in car wash at 10am with anyone who is 
-    available
+3. Booking from a list of start times with fungible resources - i.e. a drop in car wash at 10am with anyone who is
+   available
 4. Booking from a list of start times with non-fungible resources - i.e. 10am personal training session with PT Mike
 
-Any because I have only case 1 before, the code and supporting types are very much shaped by that.  Requires a bit of an
-exploration.  Might be that doing it on a plane is not ideal.
+Any because I have only case 1 before, the code and supporting types are very much shaped by that. Requires a bit of an
+exploration. Might be that doing it on a plane is not ideal.
 
-Let's see if I can start by naming the types in the above cases.  Actually, are these cases exhaustive?  They are a
-combination of StartTimeAbstraction & ResourceAllocation.  And maybe the general case is that a StartTime might need 
-more than one resource allocated.  The resource requirement would be specified by the Service.  So maybe the abstraction
+Let's see if I can start by naming the types in the above cases. Actually, are these cases exhaustive? They are a
+combination of StartTimeAbstraction & ResourceAllocation. And maybe the general case is that a StartTime might need
+more than one resource allocated. The resource requirement would be specified by the Service. So maybe the abstraction
 is StartTime & ResourceAllocation[] & Service.
 
 The specification of a Fungible resource is simply the resource type i.e. pick any one resource of the given type.
-A NonFungible resource is a resource id - a specific personal trainer for example. A Start Time is either a Timeslot or 
-a time of day, like 09:15.  And a Service is a service.
+A NonFungible resource is a resource id - a specific personal trainer for example. A Start Time is either a Timeslot or
+a time of day, like 09:15. And a Service is a service.
 
 I think some options for the name of this type, given that it expresses when a given service can be provided, and how it
 can be resourced are:
@@ -766,14 +798,14 @@ Lets go with AvailableSlot
 
 ---------------------------
 
-Several hours later, this is going surprisingly well.  I think not having internet might be the reason.  I understand
-the problem domain, and I just got on with writing tests, writing code, refactoring, thinking.  If I had the net, I'd
+Several hours later, this is going surprisingly well. I think not having internet might be the reason. I understand
+the problem domain, and I just got on with writing tests, writing code, refactoring, thinking. If I had the net, I'd
 be asking ChatGPT for ideas, and I'd be getting notifications, leading to distraction.
 
 # Mon 3 Jun 2024
 
 For the last few days, I've been the exact opposite of [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it)
-, which was a bit of a mantra for me here-to-fore.  I've been test driving availability logic for as many different
+, which was a bit of a mantra for me here-to-fore. I've been test driving availability logic for as many different
 scenarios as I can think of:
 
 1. Purely digital servicw with no resource contraints
@@ -787,7 +819,7 @@ I am going to extend this list with the following:
 
 1. Dog walker that can take 6 dogs at 08.30
 2. Yoga class that can take up to 12 people at 18.00
-3. Hair salon booking, where the service is configurable from a pick list of sub-services that contribute time and 
+3. Hair salon booking, where the service is configurable from a pick list of sub-services that contribute time and
    price, like
 
 3.1 Haircut
@@ -799,42 +831,42 @@ I am going to extend this list with the following:
 
 # Tue 4 Jun 2024
 
-Realised this morning that putting `capacity` on `resource` is the wrong place.  It should be on the 
-`ResourceDayAvailability`, because capacity changes with time.  A dog walker might add or remove resource at any time,
-and a mobile car wash might add and remove a van at any time.  A yoga class might be able to take 12 people at 18.00,
-but only 6 at 08.30.  So I'm going to move `capacity` to `ResourceDayAvailability`.
+Realised this morning that putting `capacity` on `resource` is the wrong place. It should be on the
+`ResourceDayAvailability`, because capacity changes with time. A dog walker might add or remove resource at any time,
+and a mobile car wash might add and remove a van at any time. A yoga class might be able to take 12 people at 18.00,
+but only 6 at 08.30. So I'm going to move `capacity` to `ResourceDayAvailability`.
 
 ----------------
 
 Extending my availability logic to deal with more cases, seems to cause me to quite frequently replace a simple value
-with that value wrapped in context.  Examples:
+with that value wrapped in context. Examples:
 
 1. ResourceDayAvailability got a capacity field added
 2. Calculating availability took a service id, but now services can have options added, so the service id is now wrapped
-   in a ServiceRequest object, that also carries the ids of the service options.  It will also eventually carry the 
+   in a ServiceRequest object, that also carries the ids of the service options. It will also eventually carry the
    requested add-ons and their quantities, I suspect
-3. Bookings have a service id, and from that the duration was implied.  But now services can have variable duration, 
+3. Bookings have a service id, and from that the duration was implied. But now services can have variable duration,
    so Booking will carry its duration explicitly.
 
 # Wed 5 Jun 2024
 
 Working on the domain logic, yesterday I added a `ServiceRequest` type, that wrapped a plain `serviceId`, and added more
-context like the service options and add-ons.  But I specified the service and options and add-ons using ids.  The 
-domain logic works better with the full objects, not the ids.  I guess I am of a mind to use ids because some part of my
-mind is thinking about the HTTP endpoints that are eventually going to front this logic.  So I think I need to resist
+context like the service options and add-ons. But I specified the service and options and add-ons using ids. The
+domain logic works better with the full objects, not the ids. I guess I am of a mind to use ids because some part of my
+mind is thinking about the HTTP endpoints that are eventually going to front this logic. So I think I need to resist
 this temptation, and see what happens to by business logic when it has full objects to deal with.
 
 ## Support for services that are "classes"
 
-I worked into a test case of a yoga studio with two instructors and two rooms.  I tried to show that if one of the rooms
-was full, the booking I was trying to make was impossible.  But the availability logic found _a_ room available, so was 
-happy to proceed.  So what I need is to check availability against a particular instructor and a particular room.  There
-is a domain concept called "class" in this case, a yoga class.  I would model a class more generally as a resource 
+I worked into a test case of a yoga studio with two instructors and two rooms. I tried to show that if one of the rooms
+was full, the booking I was trying to make was impossible. But the availability logic found _a_ room available, so was
+happy to proceed. So what I need is to check availability against a particular instructor and a particular room. There
+is a domain concept called "class" in this case, a yoga class. I would model a class more generally as a resource
 group.
 
-Might a yoga studio now be a bit different to resourcing that I have done here to fore.  The car wash and delivery 
-companies work to time slots.  Personal training tries to fill the day.  But a third type of resourcing is a published
-time table.  These would be basically pre-allocated non-fungible resources to a service.  I think I can model this 
+Might a yoga studio now be a bit different to resourcing that I have done here to fore. The car wash and delivery
+companies work to time slots. Personal training tries to fill the day. But a third type of resourcing is a published
+time table. These would be basically pre-allocated non-fungible resources to a service. I think I can model this
 without too much compromise with what I currently have.
 
 1. We have two instructors and a large room and a small room
@@ -846,48 +878,48 @@ without too much compromise with what I currently have.
    when the instructor changes, the service will have to be re-resourced, and renamed, which will affect past bookings
    linked to the service
 6. So with these two named services, I can book one or the other.
-7. How do I fix the start time to 18.00?  All the resources involved will have resource availability of "all day"
+7. How do I fix the start time to 18.00? All the resources involved will have resource availability of "all day"
 
 There does seem to be at least three ways to express times available:
 
-1. Time slots.  Good for mobile services (doctor visit, mobile car wash and dog treatments, deliveries).  We can be there
+1. Time slots. Good for mobile services (doctor visit, mobile car wash and dog treatments, deliveries). We can be there
    between 9am and 11am
-2. Any time of day, or sections of the day, and the booker chooses.  What's a good name for this?  ChatGPT suggests
+2. Any time of day, or sections of the day, and the booker chooses. What's a good name for this? ChatGPT suggests
    'Flexible Scheduling'
-3. Timetable.  A service might be available at 9am, 13.00 and 17.00.  A particular yoga session for example.
+3. Timetable. A service might be available at 9am, 13.00 and 17.00. A particular yoga session for example.
 
-If a service has time slots, then 1 and 3 are the same?  The fact that `Service` as the boolean `requiresTimeslot` 
-suggests that maybe this is true.  Drop this boolean and add an optional array of `TimeSlot` to `Service` and we're
+If a service has time slots, then 1 and 3 are the same? The fact that `Service` as the boolean `requiresTimeslot`
+suggests that maybe this is true. Drop this boolean and add an optional array of `TimeSlot` to `Service` and we're
 good?
 
 So, concluding: services to have optional time slots, and the ability to express a need for one or more fungible and
-non-fungible resources.  Also, services to have start and end dates (or versions?) to handle changes over time.
+non-fungible resources. Also, services to have start and end dates (or versions?) to handle changes over time.
 
 This way, and service that starts at 18.00 that requires Mike and the Small Room, is "Yoga with Mike in the Small Room"
 
 ## Enjoying modelling this domain
 
-I got to say, I'm very engrossed and thoroughly enjoying modelling this domain.  I'm adding explicit resource 
-requirements to services now - supporting any resource or a given type, or a given resource.  Going through the code and
-patching this up, writing tests for new behaviour, it really feels like I'm "working the code" and it's coming into a 
-better shape. I'm enjoying it because its just domain classes and logic, disconnected from databases and http.  I can go
-fast and explore the domain cheaply this way.  Data objects are becoming more coherent in their contents, and better 
-named.  Functions are going into the right place.  It's starting to feel stable.
+I got to say, I'm very engrossed and thoroughly enjoying modelling this domain. I'm adding explicit resource
+requirements to services now - supporting any resource or a given type, or a given resource. Going through the code and
+patching this up, writing tests for new behaviour, it really feels like I'm "working the code" and it's coming into a
+better shape. I'm enjoying it because its just domain classes and logic, disconnected from databases and http. I can go
+fast and explore the domain cheaply this way. Data objects are becoming more coherent in their contents, and better
+named. Functions are going into the right place. It's starting to feel stable.
 
 # Thu 6 Jun 2024
 
 It seems to me that I am working with at least three different kinds of "model" in this work of modelling the domain of
 bookings and appointments:
 
-1. The business logic model - fully hydrated in-memory objects, with all the context they need to do their job, and a 
-suite of functions to carry out the business logic like checking availability, making bookings, etc.  
+1. The business logic model - fully hydrated in-memory objects, with all the context they need to do their job, and a
+   suite of functions to carry out the business logic like checking availability, making bookings, etc.
 2. The database model - the tables and relationships that are needed to store the configuration and user data
-3. The configuration model - how the business logic model is expressed by the user.  For example, a business logic 
-model of `Service` has the possible start times in it.  But expressing how a business thinks of start times is not by
-listing start times on each service.  They may say that booking options begin on the hour, or on the half hour.  They
-might list explicit blocks of time.  They may express a series of time slots.  So the configuration model is the medium
-in which the rules of the business are expressed.  These are stored in the database as different models.  And they are 
-converted into business logic models when the business logic needs them.
+3. The configuration model - how the business logic model is expressed by the user. For example, a business logic
+   model of `Service` has the possible start times in it. But expressing how a business thinks of start times is not by
+   listing start times on each service. They may say that booking options begin on the hour, or on the half hour. They
+   might list explicit blocks of time. They may express a series of time slots. So the configuration model is the medium
+   in which the rules of the business are expressed. These are stored in the database as different models. And they are
+   converted into business logic models when the business logic needs them.
 
 ## one instructor and many people in a room
 
@@ -899,85 +931,167 @@ const instructor = resourceType("instructor");
 const smallRoom = resource(room, "Small Room");
 const mikeInstructor = resource(instructor, "Mike");
 const requiredResources = [
-        resourceDayAvailability(smallRoom, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(10))]),
-        resourceDayAvailability(mikeInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
-    ];
-const theService = service("Yoga with Mike in the Small Room", "Yoga with Mike in the Small Room", [specificResource(smallRoom), specificResource(mikeInstructor)], 60,  price(3500, currencies.GBP), [], []);
+    resourceDayAvailability(smallRoom, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(10))]),
+    resourceDayAvailability(mikeInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
+];
+const theService = service("Yoga with Mike in the Small Room", "Yoga with Mike in the Small Room", [specificResource(smallRoom), specificResource(mikeInstructor)], 60, price(3500, currencies.GBP), [], []);
 const theBooking = booking(customerId(), theService.id, date, exactTimeAvailability(nineAm), [resourceAssignment(smallRoom.id, capacity(1)), resourceAssignment(mikeInstructor.id)], "confirmed");
 ```
 
-The intention here is to permit 10 bookings of Yoga with Mike in the Small Room at 09.00.  But the current code counts out `specificResource(mikeInstructor)` following the first booking.  
-The intention is not well expressed or modelled. This idea is that the capacity of the small room "transfers" magically to Mike being associated with it.
+The intention here is to permit 10 bookings of Yoga with Mike in the Small Room at 09.00. But the current code counts
+out `specificResource(mikeInstructor)` following the first booking.  
+The intention is not well expressed or modelled. This idea is that the capacity of the small room "transfers" magically
+to Mike being associated with it.
 
-I can't just say that if a any resource requirement has a capacity, then it transfers to the entire list of resource requirements.  
-Imagine if there was an instructor, a room that can take 10 people, and only 6 pilates machines.  The aggregate capacity would be 6, not 10.
+I can't just say that if a any resource requirement has a capacity, then it transfers to the entire list of resource
+requirements.  
+Imagine if there was an instructor, a room that can take 10 people, and only 6 pilates machines. The aggregate capacity
+would be 6, not 10.
 
-Is this the general rule?  If there is capacity involved, the capacity of the group is the min of all capacities?
+Is this the general rule? If there is capacity involved, the capacity of the group is the min of all capacities?
 
 I can't help think there is a better way to express this.
 
 ## Claude suggests moving the capacity to the service
 
-And I think it is right.  I asked it to check my dev diary to see what I modelled capacity on resource, and if there is anything I would lose
-by moving it to service.  It could see no reason.  Indeed it found reasons in my diary that make modelling capacity on service as probably
-more sensible.  It also pointed out that while the capacity of `Small room` might be 10, for a given service - one that uses lots of equipment for example -
-the capacity might be less.  Am sold. Refactor here we come.
+And I think it is right. I asked it to check my dev diary to see what I modelled capacity on resource, and if there is
+anything I would lose
+by moving it to service. It could see no reason. Indeed it found reasons in my diary that make modelling capacity on
+service as probably
+more sensible. It also pointed out that while the capacity of `Small room` might be 10, for a given service - one that
+uses lots of equipment for example -
+the capacity might be less. Am sold. Refactor here we come.
 
 ## Maintaining the right energy level for clean refactoring
 
-You know I do feel that moving capacity to service is the right design move.  But so much has gone into modeling capacity on the resource
-that it's a medium sized task.  The fact that I did this work yesterday and they day before, makes me feel tired about taking this new work
-on.  If I do not enter this refactor with the right energy and enthusiasm, I will will be looking for short-cuts.  Having the right 
-energy is a super important part of clean refactoring.  So I'm going to take a break and come back to when I don't feel attached to
+You know I do feel that moving capacity to service is the right design move. But so much has gone into modeling capacity
+on the resource
+that it's a medium sized task. The fact that I did this work yesterday and they day before, makes me feel tired about
+taking this new work
+on. If I do not enter this refactor with the right energy and enthusiasm, I will will be looking for short-cuts. Having
+the right
+energy is a super important part of clean refactoring. So I'm going to take a break and come back to when I don't feel
+attached to
 what I did yesterday.
 
 # Fri 7 Jun 2024
 
-Starting on this refactor to shift capacity from resource to service.  I think I found a bug, permitted to exist due to the fact 
-that none of my tests have a scenario involving bookings with different service durations.  My code is using the duration of the
-required service to calculate the end time of the booking.  So rolled back my refactor effort to do the following:
+Starting on this refactor to shift capacity from resource to service. I think I found a bug, permitted to exist due to
+the fact
+that none of my tests have a scenario involving bookings with different service durations. My code is using the duration
+of the
+required service to calculate the end time of the booking. So rolled back my refactor effort to do the following:
 
 1. Add a full `Service` instance to `Booking` instead of `serviceId`
-2. Replacing `slot` on `Booking` with a start time and end time, because this Booking model is to calculate availability, not to
-   store or request bookings.  The end time is calculated from the start time and the duration of the service.
+2. Replacing `slot` on `Booking` with a start time and end time, because this Booking model is to calculate
+   availability, not to
+   store or request bookings. The end time is calculated from the start time and the duration of the service.
 
 ## Sometimes the current solution is one case of a more general case
 
-Case in point being the addition of capacity.  It seemed like I had to add a new thing to the model, but in fact, the current model
-was based on every service having a capacity of 1.  When I first added capacity, I added special if statements to the current code
-to check if capacity was involved.  But later I realised that the current code, with capacity set to 1, satisifed the current
-need of resource availability dropping out if a booking was made by subtracting booking capacity (also implicitly 1) from
+Case in point being the addition of capacity. It seemed like I had to add a new thing to the model, but in fact, the
+current model
+was based on every service having a capacity of 1. When I first added capacity, I added special if statements to the
+current code
+to check if capacity was involved. But later I realised that the current code, with capacity set to 1, satisifed the
+current
+need of resource availability dropping out if a booking was made by subtracting booking capacity (also implicitly 1)
+from
 remaining capacity.
 
 # Sun 9 Jun 2024
 
-shifting tack - trying to see if I can test drive out resourcing bookings in a given time period, as means of checking availability 
-in a given timeslot.  The idea being that I can pass each candidate time period to this function, saying: please resource all
-bookings in this period, and let me know what resource remains.  Then I'll see if there is enough for the service I am checking
+shifting tack - trying to see if I can test drive out resourcing bookings in a given time period, as means of checking
+availability
+in a given timeslot. The idea being that I can pass each candidate time period to this function, saying: please resource
+all
+bookings in this period, and let me know what resource remains. Then I'll see if there is enough for the service I am
+checking
 availability of.
 
 ## Confusing modelling of resource assignment to bookings
 
-Some time back I introduced an array of allocated resources to `Booking`.  I know the intention behind this decision was to record
-bookings that have been made against a hard resource assignment.  For example, a personal training session with an individual named
-personal trainer.  This contrasts with a booking against any van of a pool of vans that can drive out and deliver a mobile car wash
+Some time back I introduced an array of allocated resources to `Booking`. I know the intention behind this decision was
+to record
+bookings that have been made against a hard resource assignment. For example, a personal training session with an
+individual named
+personal trainer. This contrasts with a booking against any van of a pool of vans that can drive out and deliver a
+mobile car wash
 service.
 
-The confusion I am experiencing now is that my logic for calculating availability for a given time slot, is to first try to allocated
+The confusion I am experiencing now is that my logic for calculating availability for a given time slot, is to first try
+to allocated
 resources to all existing bookings, then see if there is sufficient remaining resource to satisfy the given service.
 
-So some resources on some bookings are predefined.  And other resources on some bookings are assigned during availability checking.
+So some resources on some bookings are predefined. And other resources on some bookings are assigned during availability
+checking.
 
 This distinction is not obvious.
 
-I think I need to make it clear that resource assignments in `Bookings` are something like `specificResourceAssignments`.  And to help
-clarify that, I can make these contain the `SpecificResource` that they originated from.  Actually, that will not work.  Because the 
-`assignedResources` on `Booking` were intended to record how many of a given resource were consumed by the booking i.e. how much capacity
+I think I need to make it clear that resource assignments in `Bookings` are something
+like `specificResourceAssignments`. And to help
+clarify that, I can make these contain the `SpecificResource` that they originated from. Actually, that will not work.
+Because the
+`assignedResources` on `Booking` were intended to record how many of a given resource were consumed by the booking i.e.
+how much capacity
 of the given resource was consumed by the booking.
 
-Now that capacity is moving from `Resource` to `Service`, similarly booked capacity must move from `ResourceAssignment` to the `Booking`
+Now that capacity is moving from `Resource` to `Service`, similarly booked capacity must move from `ResourceAssignment`
+to the `Booking`
 itself.
 
-Oh gosh, even more confusion in the statement above.  Recording a list of `SpecificResource` requirements against the booking is
-redunant, because the list of `SpecificResource` requirements is already on the `Service` and the `Booking` has a reference to the
-service.  So I can drop this `resourceAssignment` field on Booking.
+Oh gosh, even more confusion in the statement above. Recording a list of `SpecificResource` requirements against the
+booking is
+redunant, because the list of `SpecificResource` requirements is already on the `Service` and the `Booking` has a
+reference to the
+service. So I can drop this `resourceAssignment` field on Booking.
+
+## Finally have capacity modeled on service
+
+Capacity is now modeled on service. And booked capacity is modeled on booking. And resource usage is based on booked
+capacity.
+Oh, that means that reporting availability should also be capacity based. A slot might be reported as available, with
+capacity of 1
+and the customer might be intending to book 2. But I think I will leave that refactor for another day.
+
+The final step is to remove all concepts of `capacity` that are still on `Resource` and `ResourceType`.
+
+# Mon 10 Jun 2024
+I removed the tests that "showed" how we could check availability of personal training against a single personal trainer.
+The implementation reduced the available resources to just the required personal trainer, and then ran the usual algo.
+This approach makes it impossible to book a personal trainer AND some other resource.  In which case my mind thought
+of just replacing all personal trainers in the available resources list with the personal trainer requested.  This makes
+it impossible to ever request a booking with two named personal trainers.  While an example of such a case does not readily
+present itself, it it still a limit I would like to avoid coding into the solution.  Maybe a particular medical appointment
+requires two named doctors, who knows.  So booking against a single resource is not well implemented by reducing the list
+of available resources.
+
+So it might be better, I thought this morning, to take advantage of the fact that we have a business logic model, and separate
+database and configuration models.  In the latter two, it can make sense for resource requirements to be expressed at the
+service level.  In fact it definitely makes sense that a service can state that it requires a personal trainer and a training
+room.  If we expressed resource requirements differently in the business logic model, by putting the resource requirements
+on the `ServiceRequest` rather than the `Service`, this positions us to make service requests with different kinds of 
+resource requirements.  
+
+The `Service` in the database model can be configured to require any personal trainer and any training
+room, and that is entirely appropriate.  To retain current behaviour, the resource requirements on the service that comes
+from the database will be copied into the `ServiceRequest`.  This is logically equivalent to resource requirements being
+on the business logic `Service`.  But then it opens the door to later cases of the service request overriding the request
+of any personal trainer to a particular personal trainer.
+
+Now, to deal with the hypothetical case of requesting two specific personal trainers or doctors, the resource requirement
+should have an id, or maybe a `role` attribute, so we can be precise about which requirement we are specifying a specific
+resource for.  
+
+This will be a fairly large refactoring.  Oh wow - is it even required?  If I add an id or role to a resource requirement,
+then the existing resource requirements on the business logic `Service` model can be configured in any way, and I don't
+need to mess with the `ServiceRequest` object.  I think my mind didn't go here initially this morning, because I am still
+viewing business logic `Service` as a database or configuration object, and in some way immutable.  I can of course configure
+this with the exact requirements the use case needs.
+
+I think I can drive this out by making a series of test cases around the resourcing of two doctors for an appointment. 
+The possible resource requirement expressions would be:
+
+1. Any doctor for both slots - has to be a different doctor, so test what happens when there is only one doctor
+2. One specific doctor, and one random doctor.  Again, has to be different.
+3. Specific doctors for both slots

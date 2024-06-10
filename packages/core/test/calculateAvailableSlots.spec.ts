@@ -339,7 +339,7 @@ describe("given a gym that offers personal training requiring a specific trainer
 });
 
 describe("given a dog walking service that can take up to 6 dogs at 09.00, and is open monday to friday", () => {
-    const dogIntake = resourceType("dogs", true);
+    const dogIntake = resourceType("dogs");
     const sixDogs = resource(dogIntake, "Dog")
     const requiredResources = [
         resourceDayAvailability(sixDogs, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)), capacity(6))]),
@@ -445,7 +445,7 @@ describe("given a hair salon that offers configurable services, and is available
 });
 
 describe("given a yoga studio with two instructors and two rooms", () => {
-    const room = resourceType("room", true);
+    const room = resourceType("room");
     const instructor = resourceType("instructor");
     const smallRoom = resource(room, "Small Room");
     const largeRoom = resource(room, "Large Room");

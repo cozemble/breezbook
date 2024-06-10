@@ -70,7 +70,7 @@ function applyBookedTimeSlotsToResourceAvailability(resourceAvailability: Resour
     return resourceAvailability.map((ra) => {
         if (bookedSlot.resources.find((r) => values.isEqual(r.id, ra.resource.id))) {
             const slotPeriod = dayAndTimePeriod(bookedSlot.date, calcSlotPeriod(bookedSlot.slot, bookedSlot.service.duration))
-            const newBlocks = ra.availability.flatMap(block => dayAndTimePeriodFns.splitPeriod(block.when, slotPeriod).map(p => availabilityBlock(p, block.capacity)))
+            const newBlocks = ra.availability.flatMap(block => dayAndTimePeriodFns.splitPeriod(block.when, slotPeriod).map(p => availabilityBlock(p)))
             return {
                 ...ra,
                 availability: newBlocks
