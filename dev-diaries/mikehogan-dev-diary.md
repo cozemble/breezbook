@@ -1095,3 +1095,12 @@ The possible resource requirement expressions would be:
 1. Any doctor for both slots - has to be a different doctor, so test what happens when there is only one doctor
 2. One specific doctor, and one random doctor.  Again, has to be different.
 3. Specific doctors for both slots
+
+## Rediscovering the need for resource allocation on booking
+Just now I changed a design interpretation around resources on service.  That being, that resource requirements on Service
+are particular to the request for availability.  But previously I said, and designed around, the idea that resource requirements
+on the service were fixed, containing requests for any suitable resource in some cases, and specific resources in others.
+I built on this design decision that idea that bookings did not need to keep their resource allocation, because it existed
+on the bookings service.  I have now broken that design rule.  So I need to return resourceAllocations to Booking.  I think
+though, that I only need to stick `SpecificResource` on the booking, because requirements for any suitable resource can still
+be satisfied dynamically during availability checking.

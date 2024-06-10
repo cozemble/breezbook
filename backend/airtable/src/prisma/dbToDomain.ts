@@ -14,7 +14,7 @@ import {
     addOnId,
     anySuitableResource,
     booking,
-    Booking, capacity,
+    Booking, bookingFns, capacity,
     currency,
     customerId,
     dayAndTimePeriod,
@@ -79,7 +79,11 @@ export function toDomainTimeslotSpec(ts: DbTimeSlot): TimeslotSpec {
 
 export function toDomainBooking(b: DbBooking, timeslots: TimeslotSpec[], services: Service[]): Booking {
     const service = serviceFns.findService(services, serviceId(b.service_id));
-    return booking(customerId(b.customer_id), service, isoDate(b.date), timePeriod(time24(b.start_time_24hr), time24(b.end_time_24hr)));
+    const domainBooking = booking(customerId(b.customer_id), service, isoDate(b.date), timePeriod(time24(b.start_time_24hr), time24(b.end_time_24hr)));
+    if(b.status === 'cancelled') {
+        return bookingFns.cancel(domainBooking);
+    }
+    return domainBooking;
 }
 
 export function toDomainAddOn(a: DbAddOn): DomainAddOn {

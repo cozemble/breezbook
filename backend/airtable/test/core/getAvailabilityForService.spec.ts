@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { getAvailabilityForService } from '../../src/core/getAvailabilityForService.js';
-import {Booking, booking, carwash, customerId, isoDate} from '@breezbook/packages-core';
+import {Booking, booking, carwash, customerId, isoDate, mandatory} from '@breezbook/packages-core';
 import { everythingForCarWashTenantWithDynamicPricing } from '../helper.js';
 
 const today = isoDate();
@@ -43,5 +43,5 @@ test('cancelled bookings do not count against availability', () => {
 
 test('pricing can be dynamic', () => {
 	const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([]), carwash.smallCarWash.id, today, today);
-	expect(availability.slots[today.value][0].priceWithNoDecimalPlaces).toBe(1400);
+	expect(availability.slots[today.value]?.[0]?.priceWithNoDecimalPlaces).toBe(1400);
 });

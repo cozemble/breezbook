@@ -53,10 +53,10 @@ describe("fullyResourcedBookingFns.maxResourceUsage", () => {
     });
 
     test("usage count is begins with the booked capacity", () => {
-        const dogIntake = resourceType("dogs", true);
+        const dogIntake = resourceType("dogs");
         const sixDogs = resource(dogIntake, "Dog")
         const theService = service("Dog Walk", "Dog Walk", [anySuitableResource(dogIntake)], 480, price(3500, currencies.GBP), [], [], capacity(6));
-        const booking1 = booking(customerId(), theService, date, carwash.nineToOne.slot, "confirmed", capacity(5))
+        const booking1 = booking(customerId(), theService, date, carwash.nineToOne.slot, capacity(5))
         const count = fullyResourcedBookingFns.maxResourceUsage([
             fullyResourcedBooking(booking1, [resourceAllocation(theService.resourceRequirements[0] as AnySuitableResource, sixDogs)]),
         ])
@@ -64,11 +64,11 @@ describe("fullyResourcedBookingFns.maxResourceUsage", () => {
     })
 
     test("usage count is sums the booked capacity", () => {
-        const dogIntake = resourceType("dogs", true);
+        const dogIntake = resourceType("dogs");
         const sixDogs = resource(dogIntake, "Dog")
         const theService = service("Dog Walk", "Dog Walk", [anySuitableResource(dogIntake)], 480, price(3500, currencies.GBP), [], [], capacity(6));
-        const booking1 = booking(customerId(), theService, date, carwash.nineToOne.slot, "confirmed", capacity(2))
-        const booking2 = booking(customerId(), theService, date, carwash.nineToOne.slot, "confirmed", capacity(4))
+        const booking1 = booking(customerId(), theService, date, carwash.nineToOne.slot, capacity(2))
+        const booking2 = booking(customerId(), theService, date, carwash.nineToOne.slot, capacity(4))
         const count = fullyResourcedBookingFns.maxResourceUsage([
             fullyResourcedBooking(booking1, [resourceAllocation(theService.resourceRequirements[0] as AnySuitableResource, sixDogs)]),
             fullyResourcedBooking(booking2, [resourceAllocation(theService.resourceRequirements[0] as AnySuitableResource, sixDogs)]),

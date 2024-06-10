@@ -34,7 +34,7 @@ import {
 } from '@prisma/client';
 import {TenantEnvironment} from '@breezbook/packages-core';
 
-export {
+export type {
     resource_availability as DbResourceAvailability,
     resources as DbResource,
     resource_types as DbResourceType,

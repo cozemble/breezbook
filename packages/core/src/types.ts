@@ -429,18 +429,11 @@ export function capacity(value: number): Capacity {
     };
 }
 
-export const capacityFns = {
-    subtract: (capacity1: Capacity, capacity2: Capacity): Capacity => {
-        return capacity(capacity1.value - capacity2.value);
-    },
-}
-
 export function booking(
     customerId: CustomerId,
     service: Service,
     date: IsoDate,
     period: TimePeriod,
-    status: 'confirmed' | 'cancelled' = 'confirmed',
     bookedCapacity = capacity(1),
     id = bookingId(uuidv4())
 ): Booking {
@@ -449,16 +442,21 @@ export function booking(
         customerId,
         date,
         period,
-        status,
+        status:"confirmed",
         service,
         bookedCapacity
     };
 }
 
 export const bookingFns = {
-
     calcPeriod(booking: Booking): DayAndTimePeriod {
         return dayAndTimePeriod(booking.date, booking.period);
+    },
+    cancel(booking: Booking): Booking {
+        return {
+            ...booking,
+            status: 'cancelled'
+        };
     }
 }
 
