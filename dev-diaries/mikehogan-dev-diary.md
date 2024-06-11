@@ -1104,3 +1104,44 @@ I built on this design decision that idea that bookings did not need to keep the
 on the bookings service.  I have now broken that design rule.  So I need to return resourceAllocations to Booking.  I think
 though, that I only need to stick `SpecificResource` on the booking, because requirements for any suitable resource can still
 be satisfied dynamically during availability checking.
+
+# Tue 11 Jun 2024
+I think I have quite good coverage of availability scenarios at this stage.  What I learned here will affect how pricing and booking
+is done.  For example, a booking can have service options now.  It can also have fixed resources, for cases where I am booking a
+personal training session with an individual trainer.
+
+I went deep on availability and resourcing and scheduling.  Now I need to balance that a bit by going wide in terms of end to end
+scenarios.  I want to test drive out that understanding at the endpoint level.  To make the endpoints more testable tho, I'm
+of the mind that I need to shift away from `express` request and response objects, to `http4t`.  It makes much more sense
+to just treat http requests and responses as objects.  And I want to follow the spirit of _server as function_, so dependencies 
+will be provided as a function param.
+
+## The importance of great developer experience
+Maybe a bit of a nothing statement, but if you plan to work on a codebase for a long time, as I do with this one, its essential
+to keep the developer experience high.  The codebase should, over time, become increasingly fun to work with, and increasingly
+intuitive.  Refactoring the endpoints so they are based on `http4t` is a case in point.  No benefit to the end user, but a big
+benefit to the developer.
+
+## Attracting people to breezbook
+I potentially fun way to attract people to breezbook is to provide a zero-auth playground for people to quickly configure the
+essence of their business and see how it would look on breezbook.  Some options might be:
+
+Ask "do you have an existing website"
+If Yes: Get colours, company name, tag line, logo, services and prices.
+
+If No: Ask for company name and tag line. Infer business and correct. Purposes services and correct. Propose resources and correct. 
+Propose add-ons and correct. Propose availability type and correct. Leave locations out, but make obvious it's possible. Same 
+for other sidelined features.
+
+Visitors see:
+- booking journey
+- website
+
+Visitors can configure:
+- colours
+- font
+- logo assistant
+
+Configuration endures thru sign up and accelerates start.
+
+

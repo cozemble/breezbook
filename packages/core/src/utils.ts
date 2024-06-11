@@ -18,6 +18,15 @@ export function success<T>(value: T): Success<T> {
     return {_type: 'success', value};
 }
 
+export interface Failure<T = unknown> {
+    _type: 'failure';
+    value: T;
+}
+
+export function failure<T>(value: T): Failure<T> {
+    return {_type: 'failure', value};
+}
+
 export interface ErrorResponse<V = any> {
     _type: 'error.response';
     errorCode: string;

@@ -229,6 +229,9 @@ importers:
       '@breezbook/packages-voicebot-prompting':
         specifier: workspace:*
         version: link:../../packages/voicebot-prompting
+      '@http4t/core':
+        specifier: ^0.4.119
+        version: 0.4.119
       '@prisma/client':
         specifier: 5.9.1
         version: 5.9.1(prisma@5.9.1)
@@ -1978,6 +1981,10 @@ packages:
   /@fontsource/fira-mono@4.5.10:
     resolution: {integrity: sha512-bxUnRP8xptGRo8YXeY073DSpfK74XpSb0ZyRNpHV9WvLnJ7TwPOjZll8hTMin7zLC6iOp59pDZ8EQDj1gzgAQQ==}
     dev: true
+
+  /@http4t/core@0.4.119:
+    resolution: {integrity: sha512-Cf8Uq7ALBlVDWw/Uh3ELgSQsBD/6NZAaTF36XXY3kUz/HNy1aOul610m47SWWcIymiF34iMoMoRaWg9flzYyCQ==}
+    dev: false
 
   /@humanwhocodes/config-array@0.11.14:
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
