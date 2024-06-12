@@ -50,7 +50,7 @@ const resourceAvailability = resources.map(r => resourceDayAvailability(r, [
 const bicycleRepair = service('Bicycle Repair', 'Bicycle Repair', [anySuitableResource(staff)], minutes(5), price(3500, GBP), [], []);
 const services = [bicycleRepair];
 
-const config = businessConfiguration(availability, resourceAvailability, services, [], [], [], discreteStartTimes(morningCheckInTimes), null);
+const config = businessConfiguration(availability, resources,resourceAvailability, services, [], [], [], discreteStartTimes(morningCheckInTimes), null);
 
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
 const mete = customer('Mete', 'Bora', 'mete@email.com', "+14155552672");

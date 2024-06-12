@@ -6,7 +6,8 @@ import {
     carwash,
     environmentId,
     isoDate,
-    locationId, mandatory,
+    locationId,
+    mandatory,
     tenantEnvironmentLocation,
     tenantId
 } from "@breezbook/packages-core";
@@ -30,19 +31,19 @@ describe("Given a gym with services at various locations", () => {
     })
 
     test("harlow has gym, pt and massage as possible services", async () => {
-        const location = mandatory(await byLocation.findServices(prisma, harlow),`harlow services`)
+        const location = mandatory(await byLocation.findServices(prisma, harlow), `harlow services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.massage30mins])
     })
 
     test("ware has gym, pt and swim as possible services", async () => {
-        const location = mandatory(await byLocation.findServices(prisma, ware),`ware services`)
+        const location = mandatory(await byLocation.findServices(prisma, ware), `ware services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.swim30mins])
     });
 
     test("stortford has gym, yoga and swim as possible services", async () => {
-        const location = mandatory(await byLocation.findServices(prisma, stortford),`stortford services`)
+        const location = mandatory(await byLocation.findServices(prisma, stortford), `stortford services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.yoga1Hr, multiLocationGym.swim30mins])
     })
@@ -81,12 +82,12 @@ describe("Given a gym with services at various locations", () => {
         expect(daysAtStortford).toEqual(['2024-12-24', '2024-12-26', '2024-12-27'])
     });
 
-    test("ptMike is at harlow mon-friday, and ptMete is there on tue", async () => {
+    test("ptMike is at harlow mon-friday, and ptMete is there on tue and sat", async () => {
         const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
         const ptMikeDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.when.day.value))
         expect(ptMikeDays).toEqual(['2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26'])
         const ptMeteDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMete).flatMap(ra => ra.availability.map(a => a.when.day.value))
-        expect(ptMeteDays).toEqual(['2024-04-23'])
+        expect(ptMeteDays).toEqual(['2024-04-20', '2024-04-23', '2024-04-27'])
     })
 
     test("if a resource has blocked out time, they are not available", async () => {

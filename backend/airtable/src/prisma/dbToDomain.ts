@@ -3,6 +3,7 @@ import {
     DbBooking,
     DbForm,
     DbPricingRule,
+    DbResource,
     DbService,
     DbServiceForm,
     DbServiceResourceRequirement,
@@ -32,12 +33,20 @@ import {
     price,
     PricingRule,
     PricingRuleSpec,
+    resource,
+    Resource,
+    resourceFns,
+    resourceId,
+    ResourceRequirement,
+    resourceRequirementId,
     ResourceType,
+    resourceTypeFns,
     service,
     Service as DomainService,
     Service,
     serviceFns,
     serviceId,
+    specificResource,
     tenantSettings,
     TenantSettings,
     time24,
@@ -50,20 +59,23 @@ import {
 } from '@breezbook/packages-core';
 import {timeBasedPriceAdjustment} from '@breezbook/packages-core/dist/calculatePrice.js';
 
-export function toDomainService(dbService: DbService, resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], timeslots: TimeslotSpec[], resourceRequirements: DbServiceResourceRequirement[]): DomainService {
-    const mappedResourceTypes = resourceRequirements.filter(rr => rr.service_id === dbService.id).map((rr) =>
-        mandatory(
-            resourceTypes.find((rtt) => rtt.value === rr.resource_type),
-            `No resource type ${rr.resource_type} for service ${dbService.id}`
-        )
-    );
+function toDomainResourceRequirement(rr: DbServiceResourceRequirement, resourceTypes: ResourceType[], mappedResources: Resource[]): ResourceRequirement {
+    if (rr.requirement_type === 'specific_resource') {
+        return specificResource(resourceFns.findById(mappedResources, resourceId(rr.id)), resourceRequirementId(rr.id))
+    } else {
+        return anySuitableResource(resourceTypeFns.findByValue(resourceTypes, mandatory(rr.resource_type, `No resource type`)), resourceRequirementId(rr.id))
+    }
+}
+
+export function toDomainService(dbService: DbService, resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], timeslots: TimeslotSpec[], resourceRequirements: DbServiceResourceRequirement[], mappedResources: Resource[]): DomainService {
+    const mappedResourceRequirements = resourceRequirements.filter(rr => rr.service_id === dbService.id).map(rr => toDomainResourceRequirement(rr, resourceTypes, mappedResources));
     const permittedAddOns = dbService.permitted_add_on_ids.map((id) => addOnId(id));
     const forms = dbServiceForms.filter((sf) => sf.service_id === dbService.id).map((sf) => formId(sf.form_id));
     const priceAmount = (typeof dbService.price === "object" && "toNumber" in dbService.price) ? dbService.price.toNumber() : dbService.price;
     let theService = service(
         dbService.name,
         dbService.description,
-        mappedResourceTypes.map((rt) => anySuitableResource(rt)),
+        mappedResourceRequirements,
         minutes(dbService.duration_minutes),
         price(priceAmount, currency(dbService.price_currency)),
         permittedAddOns,
@@ -119,4 +131,8 @@ export function toDomainPricingRule(rule: DbPricingRule): PricingRule {
         return timeBasedPriceAdjustment(toDayAndTimePeriod(pricingRuleSpec.timeSpec), pricingRuleSpec.adjustment);
     }
     throw new Error(`Unknown pricing rule spec ${pricingRuleSpec._type}`);
+}
+
+export function toDomainResource(r: DbResource, resourceTypes: ResourceType[]): Resource {
+    return resource(resourceTypeFns.findByValue(resourceTypes, r.resource_type), r.name, resourceId(r.id))
 }

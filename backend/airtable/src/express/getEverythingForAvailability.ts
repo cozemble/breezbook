@@ -17,11 +17,8 @@ import {
     periodicStartTime,
     PricingRule,
     Resource,
-    resource,
     resourceDayAvailability,
     ResourceDayAvailability,
-    resourceId,
-    ResourceType,
     resourceType,
     Service,
     ServiceId,
@@ -56,6 +53,7 @@ import {
     toDomainBooking,
     toDomainForm,
     toDomainPricingRule,
+    toDomainResource,
     toDomainService,
     toDomainTenantSettings,
     toDomainTimeslotSpec
@@ -134,22 +132,11 @@ function resourceAvailabilityForDate(
 }
 
 export function makeResourceAvailability(
-    mappedResourceTypes: ResourceType[],
-    resources: DbResource[],
+    mappedResources: Resource[],
     resourceAvailabilities: DbResourceAvailability[],
     resourceOutage: DbResourceBlockedTime[],
     dates: IsoDate[]
 ): ResourceDayAvailability[] {
-    const mappedResources = resources.map((r) =>
-        resource(
-            mandatory(
-                mappedResourceTypes.find((rt) => rt.value === r.resource_type),
-                `No resource type ${r.resource_type}`
-            ),
-            r.name,
-            resourceId(r.id)
-        )
-    );
     let availability = dates.flatMap((date) => resourceAvailabilityForDate(date, mappedResources, resourceAvailabilities));
     availability = availability.flatMap((avail) => {
         const outages = resourceOutage.filter((ro) => ro.resource_id === avail.resource.id.value && isoDateFns.sameDay(isoDate(ro.date), avail.availability.day));
@@ -249,12 +236,16 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
         )
         : undefined;
     const mappedTimeSlots = availabilityData.timeSlots.map(toDomainTimeslotSpec);
-    const services = availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots, availabilityData.serviceResourceRequirements))
+    const mappedResources = availabilityData.resources.map((r) => toDomainResource(r, mappedResourceTypes));
+
+    const mappedResourceAvailability = makeResourceAvailability(mappedResources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates)
+    const services = availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots, availabilityData.serviceResourceRequirements, mappedResources))
 
     return everythingForAvailability(
         businessConfiguration(
             makeBusinessAvailability(availabilityData.businessHours, availabilityData.blockedTime, dates),
-            makeResourceAvailability(mappedResourceTypes, availabilityData.resources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates),
+            mappedResources,
+            mappedResourceAvailability,
             services,
             mappedAddOns,
             mappedTimeSlots,

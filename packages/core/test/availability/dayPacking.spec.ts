@@ -55,7 +55,7 @@ export const gym = {
 
 test("no availability when no resources", () => {
     const theAvailability = makeBusinessAvailability([businessHours("Monday", nineAm, sixPm)], [], [today])
-    const theBusiness = businessConfiguration(theAvailability, [], [gym.services.personalTraining55Mins], [], [], [], periodicStartTime(duration(minutes(15))), null)
+    const theBusiness = businessConfiguration(theAvailability,[], [], [gym.services.personalTraining55Mins], [], [], [], periodicStartTime(duration(minutes(15))), null)
     const response = calculateAvailability(theBusiness, [], gym.services.personalTraining55Mins.id, today, today)
     expect(response).toHaveLength(1)
     const dayAvailability = response[0] as BookableTimes
@@ -68,7 +68,7 @@ test("full availability when resources are available and no bookings", () => {
         availabilityBlock(dayAndTimePeriod(today, nineToSix)),
     ]))
 
-    const theBusiness = businessConfiguration(theAvailability, resourceAvailability, [gym.services.personalTraining55Mins], [], [], [], periodicStartTime(duration(minutes(15))), null)
+    const theBusiness = businessConfiguration(theAvailability, resources,resourceAvailability, [gym.services.personalTraining55Mins], [], [], [], periodicStartTime(duration(minutes(15))), null)
     const response = calculateAvailability(theBusiness, [], gym.services.personalTraining55Mins.id, today, today)
     expect(response).toHaveLength(1)
     const dayAvailability = response[0] as BookableTimes
@@ -115,7 +115,7 @@ test("periodic start controls the possible start times", () => {
         availabilityBlock(dayAndTimePeriod(today, nineToSix)),
     ]))
 
-    const theBusiness = businessConfiguration(theAvailability, resourceAvailability, [gym.services.personalTraining55Mins], [], [], [], periodicStartTime(duration(minutes(30))), null)
+    const theBusiness = businessConfiguration(theAvailability, resources,resourceAvailability, [gym.services.personalTraining55Mins], [], [], [], periodicStartTime(duration(minutes(30))), null)
     const response = calculateAvailability(theBusiness, [], gym.services.personalTraining55Mins.id, today, today)
     expect(response).toHaveLength(1)
     const dayAvailability = response[0] as BookableTimes

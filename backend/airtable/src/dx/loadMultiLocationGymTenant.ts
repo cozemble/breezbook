@@ -12,7 +12,8 @@ import {
     upsertResourceType,
     upsertService,
     upsertServiceForm,
-    upsertServiceLocation, upsertServiceResourceRequirement,
+    upsertServiceLocation,
+    upsertServiceResourceRequirement,
     upsertTenant,
     upsertTenantBranding,
     upsertTenantSettings
@@ -256,17 +257,27 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             start_time_24hr,
             end_time_24hr
         })))
-    // ptMete is at harlow on Tue
-    await runUpserts(prisma, [upsertResourceAvailability({
-        id: makeTestId(tenant_id, environment_id, `ptMeteAvailability.harlow#1`),
-        tenant_id,
-        environment_id,
-        resource_id: ptMete,
-        location_id: locationHarlow,
-        day_of_week: 'Tuesday',
-        start_time_24hr,
-        end_time_24hr
-    })])
+    // ptMete is at harlow on Tue and Sat
+    await runUpserts(prisma, [
+        upsertResourceAvailability({
+            id: makeTestId(tenant_id, environment_id, `ptMeteAvailability.harlow#1`),
+            tenant_id,
+            environment_id,
+            resource_id: ptMete,
+            location_id: locationHarlow,
+            day_of_week: 'Tuesday',
+            start_time_24hr,
+            end_time_24hr
+        }),upsertResourceAvailability({
+            id: makeTestId(tenant_id, environment_id, `ptMeteAvailability.harlow#2`),
+            tenant_id,
+            environment_id,
+            resource_id: ptMete,
+            location_id: locationHarlow,
+            day_of_week: 'Saturday',
+            start_time_24hr,
+            end_time_24hr
+        })])
     const massageTherapists = ['mtMete']
     await runUpserts(prisma, massageTherapists.map((masseur, index) => upsertResource({
         id: makeTestId(tenant_id, environment_id, `masseur#${index + 1}`),

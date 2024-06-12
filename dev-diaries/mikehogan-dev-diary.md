@@ -1164,8 +1164,34 @@ serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), spe
 ```
 
 Am I going to expect the frontend to know the id of the resource requirement, and state the necessary replacement?  Maybe that is
-ok actually.  In an availability check request, the frontend can provide overrides for any resource requirement.  Lets see how that
+ok actually.  In an availability check request, the frontend can provide overrides for any resource requirement.  Let's see how that
 feels.
 
+## Some hours later
+It's going kind of ok. I am test driving out the endpoint calls the frontend will make.  But I can't help but think about how it will
+know that this service (personal training) can have this resource requirement (personal trainer) overridden.  What I mean by that
+is when the frontend loads the tenant's services, how can it tell that it is legitimate to present a resource-first booking journey
+for this service?  When booking a mobile car wash, which is resourced by vans, the user does not expect to pick the van first.
+But when personal training, the user will want to be able to pick the trainer first.  They might _also_ want a route thru the app
+to pick a date first and from there any old trainer.  But in the case or personal training (or a hair styling, or massage of tutoring
+or yoga) the user will want the person-first option.
+
+Maybe this is the important distinction - this resource type is a human, and when humans are one of the resources behind a service,
+the frontend can generically present both booking journeys.
+
+This is making me consider adding an `isHuman` flag to `ResourceType`.  Is this mental?  Maybe not. Going back to my hypothetical
+case of two doctors for a medical appointment, the frontend will need to know that it can present a person-first booking journey,
+even for both doctors.  So a service that requires N human resources, can have a person-first booking journey, picking each person
+in turn.
+
+I think more generically tho, that modelling a booking journey as a series of resource selections is a better idea.  If a service requires
+N resources, then we might be better off configuring the booking journey as a series of N resource selections.  Pick doctor 1, Pick doctor 2,
+Pick venue.  Some other examples:
+
+- Equiment rental: Pick equipment, pick delivery time, pick delivery address
+- Venue booking: Pick venue, pick date, pick time
+- Vehicle Rental: Pick location, Pick vehicle, pick time
+
+Maybe this booking journey configuration can be specified just using a list of the involved resource requirements?
 
 

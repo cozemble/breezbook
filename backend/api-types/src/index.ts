@@ -1,4 +1,12 @@
-import {Form} from '@breezbook/packages-core';
+import {
+    Form,
+    resourceId,
+    ResourceId,
+    resourceRequirementId,
+    ResourceRequirementId,
+    resourceType,
+    ResourceType
+} from '@breezbook/packages-core';
 import {BookingIsInThePast} from '@breezbook/packages-core/dist/cancellation.js';
 import {v4 as uuidv4} from 'uuid';
 
@@ -119,6 +127,28 @@ export function cancellationGranted(
 
 export type CancellationGrantResponse = CancellationGranted | BookingIsInThePast;
 
+export type ResourceRequirement = AnySuitableResource | SpecificResource;
+
+export interface AnySuitableResource {
+    _type: 'any.suitable.resource';
+    id: ResourceRequirementId
+    resourceType: ResourceType
+}
+
+export interface SpecificResource {
+    _type: 'specific.resource';
+    id: ResourceRequirementId
+    resourceId: ResourceId
+}
+
+export function anySuitableResource(id: string, rt: string): AnySuitableResource {
+    return {_type: 'any.suitable.resource', id: resourceRequirementId(id), resourceType: resourceType(rt)};
+}
+
+export function specificResource(id: string, rid: string): SpecificResource {
+    return {_type: 'specific.resource', id: resourceRequirementId(id), resourceId: resourceId(rid)};
+}
+
 export interface Service {
     id: string;
     slug: string;
@@ -129,6 +159,7 @@ export interface Service {
     hasDynamicPricing: boolean;
     durationMinutes: number;
     image: string;
+    resourceRequirements: ResourceRequirement[]
 }
 
 export interface Location {

@@ -90,6 +90,7 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
     return everythingForAvailability(
         businessConfiguration(
             businessAvailability(theBusinessAvailability),
+            [carwash.van1, carwash.van2],
             theResourceAvailability,
             [carwash.smallCarWash],
             carwash.addOns,

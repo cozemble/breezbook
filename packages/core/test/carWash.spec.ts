@@ -34,7 +34,7 @@ const resourceAvailability = carwash.resources.map(r => resourceDayAvailability(
     dayAndTimePeriod(isoDate("2021-05-26"), carwash.nineToSix),
 ].map(when => availabilityBlock(when))))
 
-const config = businessConfiguration(availability, resourceAvailability, carwash.services, [], carwash.timeslots, [], periodicStartTime(duration(minutes(30))), null);
+const config = businessConfiguration(availability, carwash.resources,resourceAvailability, carwash.services, [], carwash.timeslots, [], periodicStartTime(duration(minutes(30))), null);
 
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
 const mete = customer('Mete', 'Bora', 'mete@email.com', "+14155552672");
@@ -68,7 +68,7 @@ test("resource unavailability drops slots", () => {
         dayAndTimePeriod(isoDate("2021-05-25"), carwash.nineToSix),
         dayAndTimePeriod(isoDate("2021-05-26"), carwash.nineToSix),
     ].map(when => availabilityBlock(when))))
-    const config = businessConfiguration(availability, resourceAvailability, carwash.services, [], carwash.timeslots, [], periodicStartTime(duration(30)), null);
+    const config = businessConfiguration(availability, carwash.resources,resourceAvailability, carwash.services, [], carwash.timeslots, [], periodicStartTime(duration(minutes(30))), null);
     const smallCarWashAvailability = calculateAvailability(config, existingBookings, carwash.smallCarWash.id, isoDate('2021-05-23'), isoDate('2021-05-26'));
     expect(smallCarWashAvailability[0]?.date).toEqual(isoDate('2021-05-24')); // only open from 4pm to 6pm, but resources only available from 9am to 1pm
 

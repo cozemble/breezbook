@@ -289,6 +289,16 @@ export function resourceType(value: string): ResourceType {
     };
 }
 
+export const resourceTypeFns = {
+    findByValue(resourceTypes: ResourceType[], value: string): ResourceType {
+        const found = resourceTypes.find(rt => rt.value === value);
+        if (!found) {
+            throw new Error(`No resource type with value ${value}`);
+        }
+        return found;
+    }
+}
+
 export function timezone(value: string): Timezone {
     return {
         _type: 'timezone',
@@ -987,10 +997,21 @@ export function resource(type: ResourceType, name: string, id = resourceId(uuidv
     };
 }
 
+export const resourceFns = {
+    findById(resources: Resource[], resourceId: ResourceId): Resource {
+        const found = resources.find(r => values.isEqual(r.id, resourceId));
+        if (!found) {
+            throw new Error(`No resource found with id ${resourceId.value}`);
+        }
+        return found;
+    }
+}
+
 export interface BusinessConfiguration {
     _type: 'business.configuration';
     availability: BusinessAvailability;
     resourceAvailability: ResourceDayAvailability[];
+    resources: Resource[];
     services: Service[];
     addOns: AddOn[];
     timeslots: TimeslotSpec[];
@@ -1058,7 +1079,8 @@ export function addOn(name: string, price: Price, requiresQuantity: boolean, des
 
 export function businessConfiguration(
     availability: BusinessAvailability,
-    resources: ResourceDayAvailability[],
+    resources:Resource[],
+    resourceAvailability: ResourceDayAvailability[],
     services: Service[],
     addOns: AddOn[],
     timeslots: TimeslotSpec[],
@@ -1069,7 +1091,8 @@ export function businessConfiguration(
     return {
         _type: 'business.configuration',
         availability,
-        resourceAvailability: resources,
+        resources,
+        resourceAvailability,
         services,
         timeslots,
         startTimeSpec,
