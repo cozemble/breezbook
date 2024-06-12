@@ -22,6 +22,7 @@ import {
     tenantId,
     TenantId
 } from "@breezbook/packages-core";
+import {prismaClient} from "../prisma/client.js";
 
 export interface EndpointDependencies {
     prisma: PrismaClient
@@ -123,6 +124,17 @@ export function tenantEnvironmentLocationParam(
     };
 }
 
+export function productionDeps(): EndpointDependencies {
+    return {
+        prisma: prismaClient(),
+        httpClient: {
+            handle: async () => responseOf(500, 'Not implemented')
+        },
+        eventSender: async (event) => {
+            console.log('Event sent', event);
+        }
+    }
+}
 
 export function asHandler(factory: EndpointDependenciesFactory, req: express.Request, res: express.Response): Handler {
     const httpRequest = asRequestContext(req);

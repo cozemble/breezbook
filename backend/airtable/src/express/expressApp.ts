@@ -18,12 +18,11 @@ import {onGetServicesRequest} from "./services/serviceHandlers.js";
 import {onGetTenantRequest} from "./tenants/tenantHandlers.js";
 import {withNoRequestParams} from "../infra/functionalExpress.js";
 import {setupDevEnvironment} from "../dx/setupDevEnvironment.js";
-import {getServiceAvailabilityForLocation} from "./availability/getServiceAvailabilityForLocation.js";
 import {onAirtableOauthBegin, onAirtableOauthCallback} from "./oauth/airtableConnect.js";
 import {onVapiVoiceBotPromptRequest} from "./voicebot/vapiHandlers.js";
 import {onWaitlistSignup} from "./waitlist/onWaitlistSignup.js";
 import {onListResourcesByTypeRequest} from "./resources/resourcesHandler.js";
-import {getServiceAvailabilityForLocation2} from "./availability/getServiceAvailabilityForLocation2.js";
+import {getServiceAvailabilityForLocation} from "./availability/getServiceAvailabilityForLocation.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
@@ -69,7 +68,7 @@ export function expressApp(): Express {
     });
 
     app.post('/api/:envId/:tenantId/service/:serviceId/availability/', getServiceAvailability);
-    app.post(externalApiPaths.getAvailabilityForLocation, getServiceAvailabilityForLocation2);
+    app.post(externalApiPaths.getAvailabilityForLocation, getServiceAvailabilityForLocation);
     app.post('/api/:envId/:tenantId/orders', addOrder);
     app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
     app.post('/api/:envId/:tenantId/stripe/webhook', onStripeWebhook);
