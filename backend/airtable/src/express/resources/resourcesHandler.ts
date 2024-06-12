@@ -1,29 +1,28 @@
 import express from "express";
+import {resourceType, ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-core";
+import {resources} from "../../core/resources/resources.js";
 import {
+    asHandler,
+    EndpointDependencies,
     paramExtractor,
     ParamExtractor,
     path,
+    productionDeps,
     RequestValueExtractor,
-    sendJson,
-    tenantEnvironmentLocationParam,
-    withTwoRequestParams
-} from "../../infra/functionalExpress.js";
-import {prismaClient} from "../../prisma/client.js";
-import {resourceType, ResourceType} from "@breezbook/packages-core";
-import {resources} from "../../core/resources/resources.js";
+    tenantEnvironmentLocationParam
+} from "../../infra/endpoint.js";
+import {responseOf} from "@http4t/core/responses.js";
+import {HttpResponse} from "@http4t/core/contract.js";
 
-export function resourceTypeParam(requestValue: RequestValueExtractor = path('type')): ParamExtractor<ResourceType | null> {
+export function resourceTypeParam(requestValue: RequestValueExtractor = path('type')): ParamExtractor<ResourceType> {
     return paramExtractor('type', requestValue.extractor, resourceType);
 }
 
 export async function onListResourcesByTypeRequest(req: express.Request, res: express.Response): Promise<void> {
-    await withTwoRequestParams(req, res, tenantEnvironmentLocationParam(), resourceTypeParam(), async (tenantEnvironmentLocation, resourceType) => {
-        const prisma = prismaClient();
-        const outcome = await resources.listByType(prisma, tenantEnvironmentLocation, resourceType);
-        if (Array.isArray(outcome)) {
-            sendJson(res, outcome)
-        } else {
-            res.status(400).send(outcome);
-        }
-    });
+    await asHandler(productionDeps, req, res).withTwoRequestParams(tenantEnvironmentLocationParam(), resourceTypeParam(), listResourcesByType);
+}
+
+export async function listResourcesByType(deps: EndpointDependencies, tenantEnvironmentLocation: TenantEnvironmentLocation, resourceType: ResourceType): Promise<HttpResponse> {
+    const outcome = await resources.listByType(deps.prisma, tenantEnvironmentLocation, resourceType);
+    return responseOf(Array.isArray(outcome) ? 200 : 400, JSON.stringify(outcome));
 }

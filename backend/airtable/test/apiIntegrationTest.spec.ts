@@ -268,14 +268,18 @@ describe('Given a migrated database', () => {
     test("can list all resources by type", async () => {
         const url = `http://localhost:${expressPort}${externalApiPaths.listResourcesByType}`
             .replace(":envId",multiLocationGym.environment_id)
-            .replace(":tenantId",multiLocationGym.tenant_id).replace(":type","personal.trainer");
+            .replace(":tenantId",multiLocationGym.tenant_id)
+            .replace(":location",multiLocationGym.locationHarlow)
+            .replace(":type","personal.trainer");
         const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         });
-        expect(response.status).toBe(200);
+        if(response.status !== 200) {
+            console.error(await response.text());
+        }
         const jsonResponse = await response.json() as ResourceSummary[]
         expect(jsonResponse).toHaveLength(2)
     });

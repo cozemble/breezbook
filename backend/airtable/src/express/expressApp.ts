@@ -22,7 +22,7 @@ import {onAirtableOauthBegin, onAirtableOauthCallback} from "./oauth/airtableCon
 import {onVapiVoiceBotPromptRequest} from "./voicebot/vapiHandlers.js";
 import {onWaitlistSignup} from "./waitlist/onWaitlistSignup.js";
 import {onListResourcesByTypeRequest} from "./resources/resourcesHandler.js";
-import {getServiceAvailabilityForLocation} from "./availability/getServiceAvailabilityForLocation.js";
+import {onGetServiceAvailabilityForLocation} from "./availability/getServiceAvailabilityForLocation.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
@@ -68,7 +68,7 @@ export function expressApp(): Express {
     });
 
     app.post('/api/:envId/:tenantId/service/:serviceId/availability/', getServiceAvailability);
-    app.post(externalApiPaths.getAvailabilityForLocation, getServiceAvailabilityForLocation);
+    app.post(externalApiPaths.getAvailabilityForLocation, onGetServiceAvailabilityForLocation);
     app.post('/api/:envId/:tenantId/orders', addOrder);
     app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
     app.post('/api/:envId/:tenantId/stripe/webhook', onStripeWebhook);
@@ -108,7 +108,7 @@ export const externalApiPaths = {
     airtableOauthBegin: '/v1/connect/airtable/oauth2/authorize',
     airtableOauthCallback: '/v1/connect/airtable/oauth2/callback',
     vapiVoiceBotPrompt: '/api/:envId/:tenantId/:locationId/voicebot/vapi/prompt',
-    listResourcesByType: '/api/:envId/:tenantId/resources/:type/list',
+    listResourcesByType: '/api/:envId/:tenantId/:locationId/resources/:type/list',
     waitlistSignup: '/api/signup/waitlist',
 }
 

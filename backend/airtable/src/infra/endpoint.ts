@@ -16,7 +16,7 @@ import {
     serviceId,
     ServiceId,
     success,
-    Success,
+    Success, TenantEnvironment, tenantEnvironment,
     tenantEnvironmentLocation,
     TenantEnvironmentLocation,
     tenantId,
@@ -33,6 +33,10 @@ export interface EndpointDependencies {
 export type EndpointDependenciesFactory = (request: RequestContext) => EndpointDependencies;
 
 export interface Handler {
+    withTwoRequestParams<A, B>(aParam: ParamExtractor<A>,
+                               bParam: ParamExtractor<B>,
+                               f: (deps: EndpointDependencies, a: A, b: B) => Promise<HttpResponse>): Promise<void>
+
     withFourRequestParams<A, B, C, D>(aParam: ParamExtractor<A>,
                                       bParam: ParamExtractor<B>,
                                       cParam: ParamExtractor<C>,
@@ -103,10 +107,25 @@ export function locationIdParam(requestValue: RequestValueExtractor = path('loca
 }
 
 export function tenantEnvironmentLocationParam(
-    tenantIdExtractor: RequestValueExtractor = path('tenantId'),
-    environmentIdExtractor: RequestValueExtractor = path('envId'),
     locationIdExtractor: RequestValueExtractor = path('locationId')
 ): ParamExtractor<TenantEnvironmentLocation> {
+    return (req: RequestContext) => {
+        const tenantEnv = tenantEnvironmentParam()(req);
+        if (tenantEnv._type === 'failure') {
+            return tenantEnv;
+        }
+        const locationId = locationIdParam(locationIdExtractor)(req);
+        if (locationId._type === 'failure') {
+            return locationId;
+        }
+        return success(tenantEnvironmentLocation(tenantEnv.value.environmentId, tenantEnv.value.tenantId, locationId.value));
+    };
+}
+
+export function tenantEnvironmentParam(
+    tenantIdExtractor: RequestValueExtractor = path('tenantId'),
+    environmentIdExtractor: RequestValueExtractor = path('envId')
+): ParamExtractor<TenantEnvironment> {
     return (req: RequestContext) => {
         const tenantId = tenantIdParam(tenantIdExtractor)(req);
         if (tenantId._type === 'failure') {
@@ -116,11 +135,7 @@ export function tenantEnvironmentLocationParam(
         if (environmentId._type === 'failure') {
             return environmentId;
         }
-        const locationId = locationIdParam(locationIdExtractor)(req);
-        if (locationId._type === 'failure') {
-            return locationId;
-        }
-        return success(tenantEnvironmentLocation(environmentId.value, tenantId.value, locationId.value));
+        return success(tenantEnvironment(environmentId.value, tenantId.value));
     };
 }
 
@@ -140,10 +155,24 @@ export function asHandler(factory: EndpointDependenciesFactory, req: express.Req
     const httpRequest = asRequestContext(req);
     const deps = factory(httpRequest);
     return {
+        async withTwoRequestParams<A, B>(aParam: ParamExtractor<A>,
+                                         bParam: ParamExtractor<B>,
+                                         fn: (deps: EndpointDependencies, a: A, b: B) => Promise<HttpResponse>): Promise<void> {
+            const a = aParam(httpRequest);
+            if (a._type === 'failure') {
+                return asExpressResponse(a.value, res);
+            }
+            const b = bParam(httpRequest);
+            if (b._type === 'failure') {
+                return asExpressResponse(b.value, res);
+            }
+            const response = await fn(deps, a.value, b.value);
+            asExpressResponse(response, res);
+        },
         async withFourRequestParams<A, B, C, D>(aParam: ParamExtractor<A>,
-                                          bParam: ParamExtractor<B>,
-                                          cParam: ParamExtractor<C>,
-                                          dParam: ParamExtractor<D>, fn: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<HttpResponse>): Promise<void> {
+                                                bParam: ParamExtractor<B>,
+                                                cParam: ParamExtractor<C>,
+                                                dParam: ParamExtractor<D>, fn: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<HttpResponse>): Promise<void> {
             const a = aParam(httpRequest);
             if (a._type === 'failure') {
                 return asExpressResponse(a.value, res);
