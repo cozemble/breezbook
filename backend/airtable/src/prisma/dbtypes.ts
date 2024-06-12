@@ -30,7 +30,9 @@ import {
     tenants,
     time_slots,
     payment_method,
-    resource_images,resource_markup
+    resource_images,
+    resource_markup,
+    service_resource_requirements
 } from '@prisma/client';
 import {TenantEnvironment} from '@breezbook/packages-core';
 
@@ -67,7 +69,8 @@ export type {
     simple_kv_store as DbSimpleKvStore,
     payment_method as DbPaymentMethod,
     resource_images as DbResourceImage,
-    resource_markup as DbResourceMarkup
+    resource_markup as DbResourceMarkup,
+    service_resource_requirements as DbServiceResourceRequirement
 };
 
 export interface TenantEnvironmentPair {

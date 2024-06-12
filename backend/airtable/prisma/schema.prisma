@@ -415,30 +415,32 @@ model resource_blocked_time {
 }
 
 model resource_types {
-  id             String      @id
-  tenant_id      String
-  environment_id String
-  name           String
-  created_at     DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime    @default(now()) @db.Timestamptz(6)
-  tenants        tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  resources      resources[]
+  id                            String                          @id
+  tenant_id                     String
+  environment_id                String
+  name                          String
+  created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  tenants                       tenants                         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  resources                     resources[]
+  service_resource_requirements service_resource_requirements[]
 }
 
 model resources {
-  id                    String                  @id
-  tenant_id             String
-  environment_id        String
-  resource_type         String
-  name                  String
-  created_at            DateTime                @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime                @default(now()) @db.Timestamptz(6)
-  resource_availability resource_availability[]
-  resource_blocked_time resource_blocked_time[]
-  resource_images       resource_images[]
-  resource_markup       resource_markup[]
-  resource_types        resource_types          @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants               tenants                 @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id                            String                          @id
+  tenant_id                     String
+  environment_id                String
+  resource_type                 String
+  name                          String
+  created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  resource_availability         resource_availability[]
+  resource_blocked_time         resource_blocked_time[]
+  resource_images               resource_images[]
+  resource_markup               resource_markup[]
+  resource_types                resource_types                  @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                       tenants                         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  service_resource_requirements service_resource_requirements[]
 }
 
 model schemaversion {
@@ -493,26 +495,28 @@ model service_locations {
 }
 
 model services {
-  id                      String              @id
-  tenant_id               String
-  environment_id          String
-  slug                    String
-  name                    String
-  description             String
-  duration_minutes        Int
-  price                   Decimal             @db.Decimal
-  price_currency          String
-  permitted_add_on_ids    String[]
-  resource_types_required String[]
-  requires_time_slot      Boolean
-  created_at              DateTime            @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime            @default(now()) @db.Timestamptz(6)
-  bookings                bookings[]
-  order_lines             order_lines[]
-  service_forms           service_forms[]
-  service_images          service_images[]
-  service_locations       service_locations[]
-  tenants                 tenants             @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id                            String                          @id
+  tenant_id                     String
+  environment_id                String
+  slug                          String
+  name                          String
+  description                   String
+  duration_minutes              Int
+  price                         Decimal                         @db.Decimal
+  price_currency                String
+  permitted_add_on_ids          String[]
+  requires_time_slot            Boolean
+  start_date                    DateTime                        @default(now()) @db.Timestamptz(6)
+  end_date                      DateTime?                       @db.Timestamptz(6)
+  created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  bookings                      bookings[]
+  order_lines                   order_lines[]
+  service_forms                 service_forms[]
+  service_images                service_images[]
+  service_locations             service_locations[]
+  service_resource_requirements service_resource_requirements[]
+  tenants                       tenants                         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([tenant_id, environment_id, slug])
 }
@@ -609,6 +613,7 @@ model tenants {
   service_forms                    service_forms[]
   service_images                   service_images[]
   service_locations                service_locations[]
+  service_resource_requirements    service_resource_requirements[]
   services                         services[]
   tenant_branding                  tenant_branding[]
   tenant_images                    tenant_images[]
@@ -671,6 +676,23 @@ model resource_markup {
   @@id([resource_id, context])
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model service_resource_requirements {
+  id               String                    @id
+  tenant_id        String
+  environment_id   String
+  service_id       String
+  requirement_type resource_requirement_type
+  resource_id      String?
+  resource_type    String?
+  created_at       DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime                  @default(now()) @db.Timestamptz(6)
+  resources        resources?                @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resource_types   resource_types?           @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services         services                  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants          tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
 enum booking_event_type {
   cancelled
   amended
@@ -693,4 +715,9 @@ enum payment_method {
   upfront
   on_delivery
   deposit_and_balance_on_delivery
+}
+
+enum resource_requirement_type {
+  any_suitable
+  specific_resource
 }

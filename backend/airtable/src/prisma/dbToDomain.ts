@@ -5,6 +5,7 @@ import {
     DbPricingRule,
     DbService,
     DbServiceForm,
+    DbServiceResourceRequirement,
     DbTenantSettings,
     DbTimeSlot
 } from './dbtypes.js';
@@ -49,11 +50,11 @@ import {
 } from '@breezbook/packages-core';
 import {timeBasedPriceAdjustment} from '@breezbook/packages-core/dist/calculatePrice.js';
 
-export function toDomainService(dbService: DbService, resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], timeslots: TimeslotSpec[]): DomainService {
-    const mappedResourceTypes = dbService.resource_types_required.map((rt) =>
+export function toDomainService(dbService: DbService, resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], timeslots: TimeslotSpec[], resourceRequirements: DbServiceResourceRequirement[]): DomainService {
+    const mappedResourceTypes = resourceRequirements.filter(rr => rr.service_id === dbService.id).map((rr) =>
         mandatory(
-            resourceTypes.find((rtt) => rtt.value === rt),
-            `No resource type ${rt}`
+            resourceTypes.find((rtt) => rtt.value === rr.resource_type),
+            `No resource type ${rr.resource_type} for service ${dbService.id}`
         )
     );
     const permittedAddOns = dbService.permitted_add_on_ids.map((id) => addOnId(id));

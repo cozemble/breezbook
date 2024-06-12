@@ -342,3 +342,10 @@ export function upsertServiceForm(create: Prisma.service_formsCreateArgs['data']
     return makeUpsert('service_forms', entityId, create)
 }
 
+export type UpsertServiceResourceRequirement = Upsert<Prisma.service_resource_requirementsCreateArgs['data'], Prisma.service_resource_requirementsUpdateArgs['data'], Prisma.service_resource_requirementsUpdateArgs['where']>
+
+export function upsertServiceResourceRequirement(create: Prisma.service_resource_requirementsCreateArgs['data']): UpsertServiceResourceRequirement {
+    const entityId = compositeKey("id", mandatory(create.id, "Service Resource Requirement ID"))
+    return makeUpsert('service_resource_requirements', entityId, create)
+}
+

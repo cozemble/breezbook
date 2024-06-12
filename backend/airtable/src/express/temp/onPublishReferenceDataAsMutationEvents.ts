@@ -1,7 +1,7 @@
 import express from 'express';
 import {tenantEnvironmentParam, withOneRequestParam} from '../../infra/functionalExpress.js';
 import {prismaClient} from '../../prisma/client.js';
-import {upsertAddOn, upsertService} from '../../prisma/breezPrismaMutations.js';
+import {upsertAddOn, upsertService, upsertServiceResourceRequirement} from '../../prisma/breezPrismaMutations.js';
 import {compositeKeyFns} from "../../mutation/mutations.js";
 import {PrismaClient} from "@prisma/client";
 import {TenantEnvironment} from '@breezbook/packages-core';
@@ -14,6 +14,12 @@ export async function publishReferenceData(prisma: PrismaClient, tenantEnvironme
         }
     });
     const services = await prisma.services.findMany({
+        where: {
+            tenant_id: tenantEnvironment.tenantId.value,
+            environment_id: tenantEnvironment.environmentId.value
+        }
+    });
+    const serviceRequirements = await prisma.service_resource_requirements.findMany({
         where: {
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value
@@ -46,12 +52,20 @@ export async function publishReferenceData(prisma: PrismaClient, tenantEnvironme
                 price: service.price,
                 price_currency: service.price_currency,
                 permitted_add_on_ids: service.permitted_add_on_ids,
-                resource_types_required: service.resource_types_required,
                 requires_time_slot: service.requires_time_slot
             }
         )
     );
-    const allMutations = [...addOnsAsMutations, ...servicesAsMutations];
+    const serviceRequirementsAsMutations = serviceRequirements.map(srr => upsertServiceResourceRequirement({
+        id: srr.id,
+        tenant_id: srr.tenant_id,
+        environment_id: srr.environment_id,
+        service_id: srr.service_id,
+        requirement_type: srr.requirement_type,
+        resource_type: srr.resource_type,
+        resource_id: srr.resource_id,
+    }))
+    const allMutations = [...addOnsAsMutations, ...servicesAsMutations, ...serviceRequirementsAsMutations];
     const mutationInserts = allMutations.map((m) =>
         prisma.mutation_events.create({
             data: {

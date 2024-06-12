@@ -130,14 +130,6 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 })
 
-function expectSlots(outcome: Success<AvailableSlot[]> | ErrorResponse): AvailableSlot[] {
-    expect(outcome._type).toBe("success")
-    if (outcome._type === "error.response") {
-        throw errorResponseFns.toError(outcome)
-    }
-    return outcome.value
-
-}
 
 describe("given a carwash service that requires one of several interchangeable washers for each service, and is available monday to friday 9am to 5pm", () => {
     const carwasher = resourceType("carWasher")
@@ -283,20 +275,6 @@ describe("given a gym that offers personal training with specific trainers, and 
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 });
-
-function expectNoAvailability(config: AvailabilityConfiguration, serviceRequest: ServiceRequest, bookings: Booking[] = []) {
-    const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest)
-    if (outcome._type === "error.response") {
-        throw errorResponseFns.toError(outcome)
-    }
-
-    expect(outcome._type).toBe("success")
-    expect(outcome.value).toHaveLength(0)
-}
-
-function setAvailability(config: AvailabilityConfiguration, resources: ResourceDayAvailability[]): AvailabilityConfiguration {
-    return {...config, resourceAvailability: resources}
-}
 
 describe("given a medical centre and an appointment type that requires two doctors", () => {
     const doctor = resourceType("doctor")
@@ -611,3 +589,25 @@ describe("given a yoga studio with two instructors and two rooms", () => {
     });
 })
 
+function expectSlots(outcome: Success<AvailableSlot[]> | ErrorResponse): AvailableSlot[] {
+    expect(outcome._type).toBe("success")
+    if (outcome._type === "error.response") {
+        throw errorResponseFns.toError(outcome)
+    }
+    return outcome.value
+
+}
+
+function expectNoAvailability(config: AvailabilityConfiguration, serviceRequest: ServiceRequest, bookings: Booking[] = []) {
+    const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest)
+    if (outcome._type === "error.response") {
+        throw errorResponseFns.toError(outcome)
+    }
+
+    expect(outcome._type).toBe("success")
+    expect(outcome.value).toHaveLength(0)
+}
+
+function setAvailability(config: AvailabilityConfiguration, resources: ResourceDayAvailability[]): AvailabilityConfiguration {
+    return {...config, resourceAvailability: resources}
+}

@@ -99,6 +99,7 @@ export const byLocation = {
 
         const services = await byLocation.findServices(prisma, location).then(l => l ? l.service_locations.map(s => s.services) : [])
         const findMany = findManyForTenant(tenantEnv);
+        const serviceResourceRequirements = await findMany(prisma.service_resource_requirements, {});
         const resourceTypes = await findMany(prisma.resource_types, {});
         const businessHours = await byLocation.findBusinessHours(prisma, location);
         const blockedTime = await byLocation.findBlockedime(prisma, location, fromDate, toDate);
@@ -134,6 +135,7 @@ export const byLocation = {
             resourceAvailability,
             resourceOutage,
             services,
+            serviceResourceRequirements,
             timeSlots,
             pricingRules,
             resourceTypes,

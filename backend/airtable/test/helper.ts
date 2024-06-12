@@ -35,6 +35,7 @@ import {
     percentageBasedPriceAdjustment,
     timeBasedPriceAdjustment
 } from '@breezbook/packages-core/dist/calculatePrice.js';
+import {HttpResponse} from "@http4t/core/contract.js";
 
 export const today = isoDate();
 export const tomorrow = isoDateFns.addDays(isoDate(), 1);
@@ -106,4 +107,11 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
         tenantSettings(timezone('Europe/London'), customerForm.id),
         tenantEnvironment(environmentId('dev'), tenantId('tenant#1'))
     );
+}
+
+export function expectJson<T = any>(response:HttpResponse): T {
+    if(response.status !== 200) {
+        throw new Error(`Expected 200 response but got ${response.status}`);
+    }
+    return JSON.parse(response.body) as T;
 }

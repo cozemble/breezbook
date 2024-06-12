@@ -145,8 +145,17 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
             price: service.price.amount.value,
             price_currency: service.price.currency.value,
             permitted_add_on_ids: addOnIds,
-            resource_types_required: ['vanResourceType'],
             requires_time_slot: true
+        }))
+    });
+    await prisma.service_resource_requirements.createMany({
+        data: carwash.services.map(s => ({
+            id: `${s.id.value}-resource-requirement-vanResourceType`,
+            service_id: s.id.value,
+            tenant_id,
+            environment_id,
+            requirement_type: 'any_suitable',
+            resource_type: 'vanResourceType'
         }))
     });
     await prisma.service_locations.createMany({

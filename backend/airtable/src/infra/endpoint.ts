@@ -26,8 +26,8 @@ import {prismaClient} from "../prisma/client.js";
 
 export interface EndpointDependencies {
     prisma: PrismaClient
-    httpClient: HttpHandler
-    eventSender: (event: { name: string, data: any }) => Promise<void>
+    // httpClient: HttpHandler
+    // eventSender: (event: { name: string, data: any }) => Promise<void>
 }
 
 export type EndpointDependenciesFactory = (request: RequestContext) => EndpointDependencies;
@@ -140,14 +140,12 @@ export function tenantEnvironmentParam(
 }
 
 export function productionDeps(): EndpointDependencies {
+    return specifiedDeps(prismaClient());
+}
+
+export function specifiedDeps(prisma: PrismaClient): EndpointDependencies {
     return {
-        prisma: prismaClient(),
-        httpClient: {
-            handle: async () => responseOf(500, 'Not implemented')
-        },
-        eventSender: async (event) => {
-            console.log('Event sent', event);
-        }
+        prisma
     }
 }
 

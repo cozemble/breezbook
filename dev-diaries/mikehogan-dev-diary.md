@@ -1144,4 +1144,28 @@ Visitors can configure:
 
 Configuration endures thru sign up and accelerates start.
 
+# Wed 12 Jun 2024
+Am test driving the end to end flow of booking a personal training session with a chosen personal trainer.  I have listed
+the personal trainers, so I can imagine the user choosing one.  The next thing they will do is check availability of personal
+training sessions with that trainer.  I already have an availability checking endpoint.  Is this kind of availability check - 
+one in which one of the resources is fixed - a new kind of availability check, or the existing availability check with some
+query params.
+
+The general case, is to have a service that requires N resources, some of which might be fixed by the service, some of which 
+might be "any suitable resource".  The general case is that in the availability check, I can specify one or more resources
+to be overridden.
+
+But how to do that unambiguously?  My imaginary example of two doctors being required for a medical appointment - how can I say
+that I want to be specific about one of them, but not the other?  When I went through this in the availability check, I added
+an id to each resource requirement, so I could be precise about overrides:
+
+```typescript
+serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorMike, lead))
+```
+
+Am I going to expect the frontend to know the id of the resource requirement, and state the necessary replacement?  Maybe that is
+ok actually.  In an availability check request, the frontend can provide overrides for any resource requirement.  Lets see how that
+feels.
+
+
 

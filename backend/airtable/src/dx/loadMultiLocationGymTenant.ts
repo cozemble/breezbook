@@ -12,7 +12,7 @@ import {
     upsertResourceType,
     upsertService,
     upsertServiceForm,
-    upsertServiceLocation,
+    upsertServiceLocation, upsertServiceResourceRequirement,
     upsertTenant,
     upsertTenantBranding,
     upsertTenantSettings
@@ -323,7 +323,6 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             price: 1500,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
-            resource_types_required: [],
             requires_time_slot: false
         }),
         upsertService({
@@ -337,7 +336,6 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             price: 7000,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
-            resource_types_required: [makeTestId(tenant_id, environment_id, `resource.personal.trainer`)],
             requires_time_slot: false
         }),
         upsertService({
@@ -351,7 +349,6 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             price: 7900,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
-            resource_types_required: [makeTestId(tenant_id, environment_id, `resource.yoga.instructor`)],
             requires_time_slot: false
         }),
         upsertService({
@@ -365,7 +362,6 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             price: 4900,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
-            resource_types_required: [makeTestId(tenant_id, environment_id, `resource.massage.therapist`)],
             requires_time_slot: false
         }),
         upsertService({
@@ -379,12 +375,37 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
                 price: 4900,
                 price_currency: 'GBP',
                 permitted_add_on_ids: [],
-                resource_types_required: [],
                 requires_time_slot: false
             }
         )
     ]
     await runUpserts(prisma, serviceUpserts);
+    await runUpserts(prisma, [
+        upsertServiceResourceRequirement({
+            id: makeTestId(tenant_id, environment_id, `serviceRequirement.${pt1Hr}`),
+            tenant_id,
+            environment_id,
+            service_id: pt1Hr,
+            requirement_type: 'any_suitable',
+            resource_type: makeTestId(tenant_id, environment_id, `resource.personal.trainer`)
+        }),
+        upsertServiceResourceRequirement({
+            id: makeTestId(tenant_id, environment_id, `serviceRequirement.${yoga1Hr}`),
+            tenant_id,
+            environment_id,
+            service_id: yoga1Hr,
+            requirement_type: 'any_suitable',
+            resource_type: makeTestId(tenant_id, environment_id, `resource.yoga.instructor`)
+        }),
+        upsertServiceResourceRequirement({
+            id: makeTestId(tenant_id, environment_id, `serviceRequirement.${massage30mins}`),
+            tenant_id,
+            environment_id,
+            service_id: massage30mins,
+            requirement_type: 'any_suitable',
+            resource_type: makeTestId(tenant_id, environment_id, `resource.massage.therapist`)
+        }),
+    ])
     await runUpserts(prisma, serviceUpserts.map(su => upsertServiceForm({
         tenant_id,
         environment_id,

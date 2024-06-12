@@ -1,4 +1,5 @@
 import {
+    availabilityBlock,
     Booking,
     businessConfiguration,
     BusinessConfiguration,
@@ -8,24 +9,27 @@ import {
     dayAndTimePeriodFns,
     duration,
     formId,
-    Resource,
     isoDate,
     IsoDate,
     isoDateFns,
-    mandatory, minutes,
+    mandatory,
+    minutes,
     periodicStartTime,
     PricingRule,
+    Resource,
     resource,
     resourceDayAvailability,
     ResourceDayAvailability,
     resourceId,
     ResourceType,
     resourceType,
+    Service,
+    ServiceId,
     TenantEnvironment,
     TenantSettings,
     time24,
     timePeriod,
-    values, availabilityBlock, ServiceId, Service
+    values
 } from '@breezbook/packages-core';
 import {makeBusinessAvailability} from './makeBusinessAvailability.js';
 import {
@@ -42,6 +46,7 @@ import {
     DbResourceType,
     DbService,
     DbServiceForm,
+    DbServiceResourceRequirement,
     DbTenantSettings,
     DbTimeSlot,
     findManyForTenant
@@ -88,7 +93,7 @@ export function everythingForAvailability(
 
 export const everythingForAvailabilityFns = {
 
-    findService(everythingForAvailability: EverythingForAvailability, serviceId: ServiceId):Service {
+    findService(everythingForAvailability: EverythingForAvailability, serviceId: ServiceId): Service {
         return mandatory(
             everythingForAvailability.businessConfiguration.services.find((s) => values.isEqual(s.id, serviceId)),
             `Service with id ${serviceId.value} not found`
@@ -176,6 +181,7 @@ export interface AvailabilityData {
     resourceAvailability: DbResourceAvailability[];
     resourceOutage: DbResourceBlockedTime[];
     services: DbService[];
+    serviceResourceRequirements: DbServiceResourceRequirement[]
     timeSlots: DbTimeSlot[];
     pricingRules: DbPricingRule[];
     resourceTypes: DbResourceType[];
@@ -198,6 +204,7 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
     const resourceAvailability = await findMany(prisma.resource_availability, {});
     const resourceOutage = await findMany(prisma.resource_blocked_time, dateWhereOpts);
     const services = await findMany(prisma.services, {});
+    const serviceResourceRequirements = await findMany(prisma.service_resource_requirements, {});
     const timeSlots = await findMany(prisma.time_slots, {});
     const pricingRules = await findMany(prisma.pricing_rules, {});
     const resourceTypes = await findMany(prisma.resource_types, {});
@@ -214,6 +221,7 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
         resourceAvailability,
         resourceOutage,
         services,
+        serviceResourceRequirements,
         timeSlots,
         pricingRules,
         resourceTypes,
@@ -241,7 +249,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
         )
         : undefined;
     const mappedTimeSlots = availabilityData.timeSlots.map(toDomainTimeslotSpec);
-    const services = availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots))
+    const services = availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots, availabilityData.serviceResourceRequirements))
 
     return everythingForAvailability(
         businessConfiguration(

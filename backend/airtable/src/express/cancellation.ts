@@ -16,7 +16,7 @@ import {
     DbCancellationGrant,
     DbRefundRule,
     DbResourceType,
-    DbService,
+    DbService, DbServiceResourceRequirement,
     DbTimeSlot
 } from '../prisma/dbtypes.js';
 import {dbBridge, DbExpressBridge, DbResourceFinder, namedDbResourceFinder} from '../infra/dbExpressBridge.js';
@@ -26,6 +26,7 @@ import {CancellationGranted, cancellationGranted} from '@breezbook/backend-api-t
 import {updateBooking, updateCancellationGrant} from '../prisma/breezPrismaMutations.js';
 import {jsDateFns} from '@breezbook/packages-core/dist/jsDateFns.js';
 import {Mutations, mutations} from '../mutation/mutations.js';
+import {service_locations} from "@prisma/client";
 
 function findBookingById(bookingId: BookingId): DbResourceFinder<DbBooking> {
     return (prisma, tenantEnvironment) => {
@@ -73,11 +74,12 @@ export function doCancellationRequest(
     resourceTypes: DbResourceType[],
     services: DbService[],
     theBooking: DbBooking,
+    serviceResourceRequirements: DbServiceResourceRequirement[],
     clock = new SystemClock()
 ): HttpError | CancellationGranted {
     const mappedResourceTypes = resourceTypes.map((rt) => resourceType(rt.id));
     const mappedTimeslots = timeslots.map(toDomainTimeslotSpec);
-    const mappedServices = services.map(s => toDomainService(s, mappedResourceTypes, [], mappedTimeslots))
+    const mappedServices = services.map(s => toDomainService(s, mappedResourceTypes, [], mappedTimeslots, serviceResourceRequirements))
     const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));
     const refundJudgement = findRefundRule(toDomainBooking(theBooking, mappedTimeslots, mappedServices), theRefundPolicy, clock);
     if (refundJudgement._type === 'refund.possible') {
@@ -92,31 +94,18 @@ export function doCancellationRequest(
 export async function requestCancellationGrant(req: express.Request, res: express.Response): Promise<void> {
     await withTwoRequestParams(req, res, dbBridge(), bookingIdParam(), async (db, bookingId) => {
         await db.withResource(namedDbResourceFinder('Booking', findBookingById(bookingId)), async (theBooking) => {
-            const refundRules = await db.prisma.refund_rules.findMany({
+            const whereTenantEnv = {
                 where: {
                     tenant_id: db.tenantEnvironment.tenantId.value,
                     environment_id: db.tenantEnvironment.environmentId.value
                 }
-            });
-            const timeslots = await db.prisma.time_slots.findMany({
-                where: {
-                    tenant_id: db.tenantEnvironment.tenantId.value,
-                    environment_id: db.tenantEnvironment.environmentId.value
-                }
-            });
-            const resourceTypes = await db.prisma.resource_types.findMany({
-                where: {
-                    tenant_id: db.tenantEnvironment.tenantId.value,
-                    environment_id: db.tenantEnvironment.environmentId.value
-                }
-            });
-            const services = await db.prisma.services.findMany({
-                where: {
-                    tenant_id: db.tenantEnvironment.tenantId.value,
-                    environment_id: db.tenantEnvironment.environmentId.value
-                }
-            });
-            const outcome = doCancellationRequest(refundRules, timeslots, resourceTypes, services, theBooking);
+            }
+            const refundRules = await db.prisma.refund_rules.findMany(whereTenantEnv);
+            const timeslots = await db.prisma.time_slots.findMany(whereTenantEnv);
+            const resourceTypes = await db.prisma.resource_types.findMany(whereTenantEnv);
+            const services = await db.prisma.services.findMany(whereTenantEnv);
+            const serviceResourceRequirements = await db.prisma.service_resource_requirements.findMany(whereTenantEnv);
+            const outcome = doCancellationRequest(refundRules, timeslots, resourceTypes, services, theBooking, serviceResourceRequirements);
             if (outcome._type === 'http.error') {
                 return res.status(outcome.status).send(outcome.message);
             }
