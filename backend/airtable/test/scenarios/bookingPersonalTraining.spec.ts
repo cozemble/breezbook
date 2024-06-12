@@ -16,7 +16,13 @@ import {
 } from "@breezbook/packages-core";
 import {ResourceSummary} from "../../src/core/resources/resources.js";
 import {expectJson} from "../helper.js";
-import {AnySuitableResource, AvailabilityResponse, Tenant} from "@breezbook/backend-api-types";
+import {
+    AnySuitableResource,
+    AvailabilityResponse,
+    Tenant,
+    unpricedBasket,
+    unpricedBasketLine
+} from "@breezbook/backend-api-types";
 import {
     getServiceAvailabilityForLocation,
     ServiceAvailabilityRequest
@@ -29,6 +35,8 @@ const harlow = locationId(multiLocationGym.locationHarlow)
 const personalTrainer = resourceType('personal.trainer')
 const tenantEnvLoc = tenantEnvironmentLocation(env, tenant, harlow);
 const personalTraining = serviceId(multiLocationGym.pt1Hr)
+const friday = isoDate('2024-06-14')
+const saturday = isoDate('2024-06-15')
 
 describe("given the test gym tenant", () => {
     let deps: EndpointDependencies;
@@ -49,27 +57,28 @@ describe("given the test gym tenant", () => {
         // Mike is not in Harlow on Saturday
         const requestForMikeOnSaturday:ServiceAvailabilityRequest = {
             serviceId: personalTraining,
-            fromDate: isoDate('2024-06-15'),
-            toDate: isoDate('2024-06-15'),
+            fromDate: saturday,
+            toDate: saturday,
             requirementOverrides: [{
                 requirementId: personalTrainerRequirement.id,
                 resourceId: resourceId(ptMike.id)
             }]
         }
         const mikesAvailabilityOnSaturday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocation(deps, tenantEnvLoc, requestForMikeOnSaturday))
-        expect(mikesAvailabilityOnSaturday.slots['2024-06-15']).toBeUndefined()
+        expect(mikesAvailabilityOnSaturday.slots[saturday.value]).toBeUndefined()
 
         const requestForMikeOnFriday:ServiceAvailabilityRequest = {
             serviceId: personalTraining,
-            fromDate: isoDate('2024-06-14'),
-            toDate: isoDate('2024-06-14'),
+            fromDate: friday,
+            toDate: friday,
             requirementOverrides: [{
                 requirementId: personalTrainerRequirement.id,
                 resourceId: resourceId(ptMike.id)
             }]
         }
         const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocation(deps, tenantEnvLoc, requestForMikeOnFriday))
-        expect(mikeOnFriday.slots['2024-06-14']).toHaveLength(17)
-        console.log(ptMike)
+        expect(mikeOnFriday.slots[friday.value]).toHaveLength(17)
+        const firstSlot = mikeOnFriday.slots[friday.value][0]
+        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow,[], friday, firstSlot, [])])
     });
 })

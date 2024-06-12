@@ -1174,7 +1174,7 @@ is when the frontend loads the tenant's services, how can it tell that it is leg
 for this service?  When booking a mobile car wash, which is resourced by vans, the user does not expect to pick the van first.
 But when personal training, the user will want to be able to pick the trainer first.  They might _also_ want a route thru the app
 to pick a date first and from there any old trainer.  But in the case or personal training (or a hair styling, or massage of tutoring
-or yoga) the user will want the person-first option.
+or yoga) the user will want the person-first option somewhere in the app.
 
 Maybe this is the important distinction - this resource type is a human, and when humans are one of the resources behind a service,
 the frontend can generically present both booking journeys.
@@ -1185,8 +1185,8 @@ even for both doctors.  So a service that requires N human resources, can have a
 in turn.
 
 I think more generically tho, that modelling a booking journey as a series of resource selections is a better idea.  If a service requires
-N resources, then we might be better off configuring the booking journey as a series of N resource selections.  Pick doctor 1, Pick doctor 2,
-Pick venue.  Some other examples:
+N resources, then we might be better off configuring the booking journey as a series of 0 to N resource selections.  
+i.e. Pick doctor 1, Pick doctor 2, Pick venue.  Some other examples:
 
 - Equiment rental: Pick equipment, pick delivery time, pick delivery address
 - Venue booking: Pick venue, pick date, pick time
