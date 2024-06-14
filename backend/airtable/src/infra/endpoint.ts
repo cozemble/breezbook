@@ -1,7 +1,6 @@
-import {HttpHandler, HttpResponse} from "@http4t/core/contract.js";
+import {HttpResponse} from "@http4t/core/contract.js";
 import {PrismaClient} from "@prisma/client";
-import express from "express";
-import {asExpressResponse, asRequestContext, RequestContext} from "./http/expressHttp4t.js";
+import {asRequestContext, RequestContext, sendExpressResponse} from "./http/expressHttp4t.js";
 import {responseOf} from "@http4t/core/responses.js";
 import {query as http4tQuery} from "@http4t/core/queries.js";
 import {
@@ -16,18 +15,19 @@ import {
     serviceId,
     ServiceId,
     success,
-    Success, TenantEnvironment, tenantEnvironment,
+    Success,
+    TenantEnvironment,
+    tenantEnvironment,
     tenantEnvironmentLocation,
     TenantEnvironmentLocation,
     tenantId,
     TenantId
 } from "@breezbook/packages-core";
 import {prismaClient} from "../prisma/client.js";
+import express from "express";
 
 export interface EndpointDependencies {
     prisma: PrismaClient
-    // httpClient: HttpHandler
-    // eventSender: (event: { name: string, data: any }) => Promise<void>
 }
 
 export type EndpointDependenciesFactory = (request: RequestContext) => EndpointDependencies;
@@ -35,13 +35,13 @@ export type EndpointDependenciesFactory = (request: RequestContext) => EndpointD
 export interface Handler {
     withTwoRequestParams<A, B>(aParam: ParamExtractor<A>,
                                bParam: ParamExtractor<B>,
-                               f: (deps: EndpointDependencies, a: A, b: B) => Promise<HttpResponse>): Promise<void>
+                               f: (deps: EndpointDependencies, a: A, b: B) => Promise<HttpResponse>): Promise<HttpResponse>
 
     withFourRequestParams<A, B, C, D>(aParam: ParamExtractor<A>,
                                       bParam: ParamExtractor<B>,
                                       cParam: ParamExtractor<C>,
                                       dParam: ParamExtractor<D>,
-                                      f: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<HttpResponse>): Promise<void>
+                                      f: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<HttpResponse>): Promise<HttpResponse>
 }
 
 export interface RequestValueExtractor {
@@ -88,7 +88,6 @@ export function paramExtractor<T>(
         return success(factoryFn(paramValue));
     };
 }
-
 
 export function serviceIdParam(requestValue: RequestValueExtractor = path('serviceId')): ParamExtractor<ServiceId> {
     return paramExtractor('serviceId', requestValue.extractor, serviceId);
@@ -149,46 +148,50 @@ export function specifiedDeps(prisma: PrismaClient): EndpointDependencies {
     }
 }
 
-export function asHandler(factory: EndpointDependenciesFactory, req: express.Request, res: express.Response): Handler {
-    const httpRequest = asRequestContext(req);
-    const deps = factory(httpRequest);
+export function asHandler(deps: EndpointDependencies, httpRequest: RequestContext): Handler {
     return {
         async withTwoRequestParams<A, B>(aParam: ParamExtractor<A>,
                                          bParam: ParamExtractor<B>,
-                                         fn: (deps: EndpointDependencies, a: A, b: B) => Promise<HttpResponse>): Promise<void> {
+                                         fn: (deps: EndpointDependencies, a: A, b: B) => Promise<HttpResponse>): Promise<HttpResponse> {
             const a = aParam(httpRequest);
             if (a._type === 'failure') {
-                return asExpressResponse(a.value, res);
+                return a.value;
             }
             const b = bParam(httpRequest);
             if (b._type === 'failure') {
-                return asExpressResponse(b.value, res);
+                return b.value;
             }
-            const response = await fn(deps, a.value, b.value);
-            asExpressResponse(response, res);
+            return fn(deps, a.value, b.value);
         },
         async withFourRequestParams<A, B, C, D>(aParam: ParamExtractor<A>,
                                                 bParam: ParamExtractor<B>,
                                                 cParam: ParamExtractor<C>,
-                                                dParam: ParamExtractor<D>, fn: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<HttpResponse>): Promise<void> {
+                                                dParam: ParamExtractor<D>, fn: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<HttpResponse>): Promise<HttpResponse> {
             const a = aParam(httpRequest);
             if (a._type === 'failure') {
-                return asExpressResponse(a.value, res);
+                return a.value;
             }
             const b = bParam(httpRequest);
             if (b._type === 'failure') {
-                return asExpressResponse(b.value, res);
+                return b.value;
             }
             const c = cParam(httpRequest);
             if (c._type === 'failure') {
-                return asExpressResponse(c.value, res);
+                return c.value;
             }
             const d = dParam(httpRequest);
             if (d._type === 'failure') {
-                return asExpressResponse(d.value, res);
+                return d.value;
             }
-            const response = await fn(deps, a.value, b.value, c.value, d.value);
-            asExpressResponse(response, res);
+            return fn(deps, a.value, b.value, c.value, d.value);
         }
     }
+}
+
+export type Endpoint = (deps: EndpointDependencies, req: RequestContext) => Promise<HttpResponse>;
+
+export async function expressBridge(depsFactory: EndpointDependenciesFactory, f: Endpoint, req: express.Request, res: express.Response): Promise<void> {
+    const requestContext = asRequestContext(req);
+    const deps = depsFactory(requestContext);
+    sendExpressResponse(await f(deps, requestContext), res);
 }

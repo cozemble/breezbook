@@ -1194,4 +1194,19 @@ i.e. Pick doctor 1, Pick doctor 2, Pick venue.  Some other examples:
 
 Maybe this booking journey configuration can be specified just using a list of the involved resource requirements?
 
+# Thu 13 Jun 2024
+Couple of thoughts this morning.  I was up in friend's last night with Da, and a lady was talking about booking dogs into a dog
+kennel.  They had a minimum of 3 days booking.  It made me realise that bookings are modeled using a single date.  So I think
+I need to loosen that to be a booking has a start date and an end date.  This will allow for bookings that span multiple days.
+
+It also made me realise that some booking journeys can begin with capture of a capacity amount.  How many dogs or cats are you
+booking in? Maybe there is a group booking for yoga.  So I will add this journey type to Figma for Mete to think about.  So this
+means the availability checking function should return how much capacity is available at each slot.  Right now, I am throwing
+away that information, and just returning a list of times.  I think I need to return a list of times, each with a capacity.
+
+This opened up the general topic of implicit cardinalities of '1' that can or should, in the general case, be 'N'.  For example,
+the number of days in a booking.  I began to muse on whether a booking should indeed have one more 'bookings'.  Why just one?
+Sometimes such thinking can go too far, but its still no harm in musing.  I began to wander into thinking about group bookings
+and repeat bookings.  I think I will leave this for now, tho, because the thinking was muddled.  But at least it has started.
+
 

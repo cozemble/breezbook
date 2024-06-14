@@ -3,6 +3,7 @@ import {
     asHandler,
     date,
     EndpointDependencies,
+    expressBridge,
     ParamExtractor,
     productionDeps,
     query,
@@ -14,10 +15,12 @@ import {byLocation} from "../../availability/byLocation.js";
 import {multiLocationGym} from "../../dx/loadMultiLocationGymTenant.js";
 import {getAvailabilityForService, getAvailabilityForService2} from "../../core/getAvailabilityForService.js";
 import {
+    failure,
     Failure,
     IsoDate,
-    mandatory, resourceFns,
-    ResourceId,
+    mandatory,
+    resourceFns, resourceId,
+    ResourceId, resourceRequirementId,
     ResourceRequirementId,
     ServiceId,
     specificResource,
@@ -40,9 +43,30 @@ export interface ServiceAvailabilityRequest {
     requirementOverrides: RequirementOverride[]
 }
 
+export function requirementOverridesParam(): ParamExtractor<RequirementOverride[]> {
+    return (req: RequestContext) => {
+        const bodyJson = req.request.body as any ?? {}
+        const requirementOverrides = bodyJson.requirementOverrides;
+        if (!requirementOverrides) {
+            return success([]);
+        }
+        try {
+            if (!Array.isArray(requirementOverrides)) {
+                return failure(responseOf(400, `requirementOverrides must be an array`));
+            }
+            return success(requirementOverrides.map((r: any) => ({
+                requirementId: resourceRequirementId(mandatory(r.requirementId, 'requirementId')),
+                resourceId: resourceId(mandatory(r.resourceId, 'resourceId'))
+            })));
+        } catch (e) {
+            return failure(responseOf(400, `requirementOverrides must be a JSON array`));
+        }
+    };
+}
+
 export function serviceAvailabilityRequestParam(): ParamExtractor<ServiceAvailabilityRequest> {
     return (req: RequestContext) => {
-        const params = [serviceIdParam()(req), date(query('fromDate'))(req), date(query('toDate'))(req)];
+        const params = [serviceIdParam()(req), date(query('fromDate'))(req), date(query('toDate'))(req), requirementOverridesParam()(req)];
         const firstFailure = params.find(p => p._type === 'failure');
         if (firstFailure) {
             return firstFailure as Failure<HttpResponse>;
@@ -51,14 +75,17 @@ export function serviceAvailabilityRequestParam(): ParamExtractor<ServiceAvailab
             serviceId: params[0].value,
             fromDate: params[1].value,
             toDate: params[2].value,
-            requirementOverrides: []
+            requirementOverrides: params[3].value
         } as ServiceAvailabilityRequest);
     };
 }
 
-export async function onGetServiceAvailabilityForLocation(req: express.Request, res: express.Response): Promise<void> {
-    await asHandler(productionDeps, req, res)
-        .withTwoRequestParams(tenantEnvironmentLocationParam(), serviceAvailabilityRequestParam(), getServiceAvailabilityForLocation);
+export async function onGetServiceAvailabilityForLocationExpress(req: express.Request, res: express.Response): Promise<void> {
+    await expressBridge(productionDeps, getServiceAvailabilityForLocationEndpoint, req, res)
+}
+
+export async function getServiceAvailabilityForLocationEndpoint(deps: EndpointDependencies, req: RequestContext): Promise<HttpResponse> {
+    return asHandler(deps, req).withTwoRequestParams(tenantEnvironmentLocationParam(), serviceAvailabilityRequestParam(), getServiceAvailabilityForLocation)
 }
 
 function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAvailabilityRequest): EverythingForAvailability {
@@ -67,7 +94,7 @@ function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAv
         ...theService, resourceRequirements: theService.resourceRequirements.map(req => {
             const maybeOverride = request.requirementOverrides.find(o => o.requirementId.value === req.id.value)
             if (maybeOverride) {
-                return specificResource(resourceFns.findById(e.businessConfiguration.resources,maybeOverride.resourceId), maybeOverride.requirementId)
+                return specificResource(resourceFns.findById(e.businessConfiguration.resources, maybeOverride.resourceId), maybeOverride.requirementId)
             }
             return req;
         })
@@ -81,7 +108,7 @@ function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAv
     }
 }
 
-export async function getServiceAvailabilityForLocation(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, request: ServiceAvailabilityRequest) {
+async function getServiceAvailabilityForLocation(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, request: ServiceAvailabilityRequest) {
     console.log(
         `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
     );

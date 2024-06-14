@@ -112,7 +112,7 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
 
 export function expectJson<T = any>(response:HttpResponse): T {
     if(response.status !== 200) {
-        throw new Error(`Expected 200 response but got ${response.status}`);
+        throw new Error(`Expected 200 response but got ${response.status} : ${response.body}`);
     }
     return JSON.parse(response.body) as T;
 }

@@ -2,7 +2,7 @@ import express from "express";
 import {Header, HttpRequest, HttpResponse} from "@http4t/core/contract.js";
 import {requestOf} from "@http4t/core/requests.js";
 
-export function asExpressResponse(response: HttpResponse, res: express.Response):void {
+export function sendExpressResponse(response: HttpResponse, res: express.Response): void {
     res.status(response.status)
     response.headers.forEach(h => res.setHeader(h[0], h[1]))
     if (response.body && response.body !== "") {
@@ -17,6 +17,9 @@ export interface RequestContext {
     params: { [key: string]: string };
 }
 
+export function requestContext(request: HttpRequest, params: { [key: string]: string }): RequestContext {
+    return {request, params}
+}
 
 export function asRequestContext(req: express.Request): RequestContext {
     const theHeaders = Object.keys(req.headers).reduce((acc, key) => {
@@ -27,6 +30,5 @@ export function asRequestContext(req: express.Request): RequestContext {
         }
         return acc
     }, [] as Header[])
-    const request = requestOf(req.method, req.url, req.body, ...theHeaders)
-    return {request, params: req.params}
+    return requestContext(requestOf(req.method, req.url, req.body, ...theHeaders), req.params)
 }

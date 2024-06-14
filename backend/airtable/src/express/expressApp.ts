@@ -15,14 +15,14 @@ import {onBasketPriceRequest} from './basket/basketHandler.js';
 import {onGetAccessToken} from './oauth/oauthHandlers.js';
 import {onPublishReferenceDataAsMutationEvents} from './temp/onPublishReferenceDataAsMutationEvents.js';
 import {onGetServicesRequest} from "./services/serviceHandlers.js";
-import {onGetTenantRequest} from "./tenants/tenantHandlers.js";
+import {onGetTenantRequestExpress} from "./tenants/tenantHandlers.js";
 import {withNoRequestParams} from "../infra/functionalExpress.js";
 import {setupDevEnvironment} from "../dx/setupDevEnvironment.js";
 import {onAirtableOauthBegin, onAirtableOauthCallback} from "./oauth/airtableConnect.js";
 import {onVapiVoiceBotPromptRequest} from "./voicebot/vapiHandlers.js";
 import {onWaitlistSignup} from "./waitlist/onWaitlistSignup.js";
-import {onListResourcesByTypeRequest} from "./resources/resourcesHandler.js";
-import {onGetServiceAvailabilityForLocation} from "./availability/getServiceAvailabilityForLocation.js";
+import {onListResourcesByTypeRequestExpress} from "./resources/resourcesHandler.js";
+import {onGetServiceAvailabilityForLocationExpress} from "./availability/getServiceAvailabilityForLocation.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
@@ -68,7 +68,7 @@ export function expressApp(): Express {
     });
 
     app.post('/api/:envId/:tenantId/service/:serviceId/availability/', getServiceAvailability);
-    app.post(externalApiPaths.getAvailabilityForLocation, onGetServiceAvailabilityForLocation);
+    app.post(externalApiPaths.getAvailabilityForLocation, onGetServiceAvailabilityForLocationExpress);
     app.post('/api/:envId/:tenantId/orders', addOrder);
     app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
     app.post('/api/:envId/:tenantId/stripe/webhook', onStripeWebhook);
@@ -77,11 +77,11 @@ export function expressApp(): Express {
     app.get('/api/:envId/:tenantId/coupon/validity', couponValidityCheck);
     app.post('/api/:envId/:tenantId/basket/price', onBasketPriceRequest);
     app.get(externalApiPaths.getServices, onGetServicesRequest);
-    app.get(externalApiPaths.getTenant, onGetTenantRequest);
+    app.get(externalApiPaths.getTenant, onGetTenantRequestExpress);
     app.get(externalApiPaths.airtableOauthBegin, onAirtableOauthBegin);
     app.get(externalApiPaths.airtableOauthCallback, onAirtableOauthCallback);
     app.get(externalApiPaths.vapiVoiceBotPrompt, onVapiVoiceBotPromptRequest);
-    app.get(externalApiPaths.listResourcesByType, onListResourcesByTypeRequest);
+    app.get(externalApiPaths.listResourcesByType, onListResourcesByTypeRequestExpress);
     app.post(externalApiPaths.waitlistSignup, onWaitlistSignup);
 
     app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);

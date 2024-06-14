@@ -15,7 +15,7 @@ import {toApiService} from "../services/serviceHandlers.js";
 import {
     asHandler,
     EndpointDependencies,
-    environmentIdParam,
+    environmentIdParam, expressBridge,
     paramExtractor,
     ParamExtractor,
     productionDeps,
@@ -24,6 +24,7 @@ import {
 } from "../../infra/endpoint.js";
 import {HttpResponse} from "@http4t/core/contract.js";
 import {responseOf} from "@http4t/core/responses.js";
+import {RequestContext} from "../../infra/http/expressHttp4t.js";
 
 type DbTenantAndStuff = DbTenant & {
     tenant_images: DbTenantImage[],
@@ -101,11 +102,15 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
     });
 }
 
-export async function onGetTenantRequest(req: express.Request, res: express.Response): Promise<void> {
-    await asHandler(productionDeps, req, res).withTwoRequestParams(environmentIdParam(), slugQueryParam(), getTenant)
+export async function onGetTenantRequestExpress(req: express.Request, res: express.Response): Promise<void> {
+    await expressBridge(productionDeps, onGetTenantRequestEndpoint, req, res)
 }
 
-export async function getTenant(deps: EndpointDependencies, environmentId: EnvironmentId, slug: string): Promise<HttpResponse> {
+export async function onGetTenantRequestEndpoint(deps:EndpointDependencies, req: RequestContext): Promise<HttpResponse> {
+    return asHandler(deps, req).withTwoRequestParams(environmentIdParam(), slugQueryParam(), getTenant);
+}
+
+async function getTenant(deps: EndpointDependencies, environmentId: EnvironmentId, slug: string): Promise<HttpResponse> {
     const tenant = await findTenantAndLocations(deps.prisma, slug, environmentId.value);
     if (!tenant) {
         return responseOf(404);
