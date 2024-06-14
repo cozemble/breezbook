@@ -123,8 +123,8 @@ describe('Given a migrated database', () => {
 
     test('can add an order for two car washes, each with different add-ons', async () => {
         const twoServicesPricedBasket = pricedBasket([
-            pricedBasketLine(carwash.locations.london, carwash.smallCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price)], carwash.smallCarWash.price, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), fourDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
-            pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price), pricedAddOn(carwash.polish.id, 1, carwash.polish.price)], carwash.mediumCarWash.price, priceFns.add(carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price), fiveDaysFromNow, carwash.nineToOne, [goodServiceFormData])
+            pricedBasketLine(carwash.locations.london, carwash.smallCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price)], carwash.smallCarWash.price, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
+            pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price), pricedAddOn(carwash.polish.id, 1, carwash.polish.price)], carwash.mediumCarWash.price, priceFns.add(carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price), fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
         ], priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price))
 
         const fetched = await postOrder(
@@ -146,7 +146,7 @@ describe('Given a migrated database', () => {
 
     test('can price a basket', async () => {
         const theBasket = unpricedBasket([
-            unpricedBasketLine(carwash.mediumCarWash.id, carwash.locations.london, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.fourToSix, [])
+            unpricedBasketLine(carwash.mediumCarWash.id, carwash.locations.london, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.fourToSix.slot.from, [])
         ]);
 
         const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/basket/price`, {
@@ -346,7 +346,7 @@ async function completeCancellationGrant() {
 }
 
 async function createBooking(date: IsoDate): Promise<string> {
-    const theBasket = pricedBasket([pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [], carwash.mediumCarWash.price, carwash.mediumCarWash.price, date, carwash.nineToOne, [])], carwash.mediumCarWash.price)
+    const theBasket = pricedBasket([pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [], carwash.mediumCarWash.price, carwash.mediumCarWash.price, date, carwash.nineToOne.slot.from, [])], carwash.mediumCarWash.price)
     const createOrderResponse = await insertOrder(
         tenantEnv,
         pricedCreateOrderRequest(

@@ -26,7 +26,7 @@ test('can price an empty basket', () => {
 });
 
 test('can price a basket with one line item', () => {
-    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne, [])]);
+    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne.slot.from, [])]);
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as PricedBasket;
     expect(result.total).toEqual(carwash.smallCarWash.price);
     expect(result.lines).toHaveLength(1);
@@ -35,7 +35,7 @@ test('can price a basket with one line item', () => {
 });
 
 test('uses dynamic pricing if applicable', () => {
-    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], today, carwash.nineToOne, [])]);
+    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], today, carwash.nineToOne.slot.from, [])]);
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing(), basket) as PricedBasket;
     expect(result.total).toEqual(priceFns.multiply(carwash.smallCarWash.price, 1.4));
     expect(result.lines).toHaveLength(1);
@@ -44,8 +44,8 @@ test('uses dynamic pricing if applicable', () => {
 
 test('can price a basket with multiple line items', () => {
     const basket = unpricedBasket([
-        unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne, []),
-        unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne, [])
+        unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne.slot.from, []),
+        unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne.slot.from, [])
     ]);
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as PricedBasket;
     expect(result.total).toEqual(priceFns.multiply(carwash.smallCarWash.price, 2));
@@ -56,7 +56,7 @@ test('can price a basket with multiple line items', () => {
 
 
 test('can price a basket with a coupon code', () => {
-    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne, [])], couponCode('20-percent-off'));
+    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne.slot.from, [])], couponCode('20-percent-off'));
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as PricedBasket;
     expect(result.total).toEqual(priceFns.multiply(carwash.smallCarWash.price, 0.8));
     expect(result.lines).toHaveLength(1);
@@ -65,7 +65,7 @@ test('can price a basket with a coupon code', () => {
 });
 
 test('adds the cost of add-ons to the line total and the main total', () => {
-    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [addOnOrder(carwash.wax.id)], dayBeyondDynamicPricing, carwash.nineToOne, [])]);
+    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [addOnOrder(carwash.wax.id)], dayBeyondDynamicPricing, carwash.nineToOne.slot.from, [])]);
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as PricedBasket;
     expect(result.total).toEqual(priceFns.add(carwash.smallCarWash.price, carwash.wax.price));
     expect(result.lines).toHaveLength(1);
@@ -74,7 +74,7 @@ test('adds the cost of add-ons to the line total and the main total', () => {
 
 test('issues a good error message if the coupon code is expired', () => {
     const basket = unpricedBasket(
-        [unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne, [])],
+        [unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne.slot.from, [])],
         couponCode('expired-20-percent-off')
     );
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as ErrorResponse;
@@ -83,14 +83,14 @@ test('issues a good error message if the coupon code is expired', () => {
 });
 
 test('issues a good error message if the coupon code is not found', () => {
-    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne, [])], couponCode('no-such-coupon'));
+    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne.slot.from, [])], couponCode('no-such-coupon'));
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as ErrorResponse;
     expect(result._type).toBe('error.response');
     expect(result.errorCode).toBe(addOrderErrorCodes.noSuchCoupon);
 });
 
 test('can deal with no availability on the day', () => {
-    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], today, carwash.nineToOne, [])]);
+    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], today, carwash.nineToOne.slot.from, [])]);
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as ErrorResponse;
     expect(result._type).toBe('error.response');
     expect(result.errorCode).toBe(pricingErrorCodes.pricingError);

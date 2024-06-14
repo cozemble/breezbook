@@ -26,7 +26,7 @@ const smallCarWash = carwash.smallCarWash;
 
 test('tenant has a customer form, and the customer does not have a form response', () => {
     const theCustomer = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
-    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [])], smallCarWash.price);
+    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, [])], smallCarWash.price);
     const request = pricedCreateOrderRequest(thePricedBasket, theCustomer, fullPaymentOnCheckout());
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
     expect(outcome.errorCode).toBe(addOrderErrorCodes.customerFormMissing);
@@ -34,7 +34,7 @@ test('tenant has a customer form, and the customer does not have a form response
 
 test('tenant has a customer form, and submitted form does not validate', () => {
     const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671",{});
-    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [])], smallCarWash.price);
+    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, [])], smallCarWash.price);
     const request = pricedCreateOrderRequest(thePricedBasket, mike, fullPaymentOnCheckout());
 
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
@@ -43,7 +43,7 @@ test('tenant has a customer form, and submitted form does not validate', () => {
 });
 
 test('service has a service form, and the service does not have a form response', () => {
-    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [])], smallCarWash.price);
+    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, [])], smallCarWash.price);
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
     expect(outcome.errorCode).toBe(addOrderErrorCodes.serviceFormMissing);
@@ -51,7 +51,7 @@ test('service has a service form, and the service does not have a form response'
 });
 
 test('service has a service form, and the service form is invalid', () => {
-    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [{}])], smallCarWash.price);
+    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, [{}])], smallCarWash.price);
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
     expect(outcome.errorCode).toBe(addOrderErrorCodes.serviceFormInvalid);
@@ -59,7 +59,7 @@ test('service has a service form, and the service form is invalid', () => {
 });
 
 test('error message when posted price is not the same as the server side calculated price', () => {
-    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, price(100, currency('GBP')), today, carwash.nineToOne, [goodServiceFormData])], price(100, currency('GBP')));
+    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, price(100, currency('GBP')), today, carwash.nineToOne.slot.from, [goodServiceFormData])], price(100, currency('GBP')));
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
     expect(outcome.errorCode).toBe(addOrderErrorCodes.wrongTotalPrice);
@@ -70,7 +70,7 @@ test('error message when no availability', () => {
     const booking1 = booking(customerId('customer#1'), carwash.smallCarWash, today, carwash.nineToOne.slot);
     const booking2 = booking(customerId('customer#1'), carwash.smallCarWash, today, carwash.nineToOne.slot);
 
-    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [goodServiceFormData])], smallCarWash.price);
+    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, [goodServiceFormData])], smallCarWash.price);
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing([booking1, booking2]), request) as ErrorResponse;
     expect(outcome.errorCode).toBe(addOrderErrorCodes.noAvailability);
@@ -78,7 +78,7 @@ test('error message when no availability', () => {
 });
 
 test('an order with an non-existent coupon code should fail with an error code', () => {
-    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [goodServiceFormData])], smallCarWash.price, couponCode('this-does-not-exist'));
+    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, [goodServiceFormData])], smallCarWash.price, couponCode('this-does-not-exist'));
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
     expect(outcome.errorCode).toBe(addOrderErrorCodes.noSuchCoupon);
@@ -86,7 +86,7 @@ test('an order with an non-existent coupon code should fail with an error code',
 });
 
 test('an order with an expired coupon should fail with an error code', () => {
-    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne, [goodServiceFormData])], smallCarWash.price, couponCode('expired-20-percent-off'));
+    const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, [goodServiceFormData])], smallCarWash.price, couponCode('expired-20-percent-off'));
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
     expect(outcome.errorCode).toBe(addOrderErrorCodes.expiredCoupon);
@@ -96,7 +96,7 @@ test('an order with an expired coupon should fail with an error code', () => {
 test('an order intending full payment on checkout should reserve the booking', () => {
     const pricedAdjustedByDynamicPricing = price(carwash.smallCarWash.price.amount.value * 1.4, carwash.smallCarWash.price.currency)
     const thePricedBasket = pricedBasket(
-        [pricedBasketLine(london, smallCarWash.id, [], pricedAdjustedByDynamicPricing, pricedAdjustedByDynamicPricing, today, carwash.nineToOne, [goodServiceFormData])],
+        [pricedBasketLine(london, smallCarWash.id, [], pricedAdjustedByDynamicPricing, pricedAdjustedByDynamicPricing, today, carwash.nineToOne.slot.from, [goodServiceFormData])],
         pricedAdjustedByDynamicPricing
     );
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
@@ -110,7 +110,7 @@ test('an order intending full payment on checkout should reserve the booking', (
 test('the event log for the order creation should be stored', () => {
     const pricedAdjustedByDynamicPricing = price(carwash.smallCarWash.price.amount.value * 1.4, carwash.smallCarWash.price.currency)
     const thePricedBasket = pricedBasket(
-        [pricedBasketLine(london, smallCarWash.id, [], pricedAdjustedByDynamicPricing, pricedAdjustedByDynamicPricing, today, carwash.nineToOne, [goodServiceFormData])],
+        [pricedBasketLine(london, smallCarWash.id, [], pricedAdjustedByDynamicPricing, pricedAdjustedByDynamicPricing, today, carwash.nineToOne.slot.from, [goodServiceFormData])],
         pricedAdjustedByDynamicPricing
     );
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
@@ -121,23 +121,23 @@ test('the event log for the order creation should be stored', () => {
     expect(outcome.mutations.mutations.some((m) => m._type === 'create' && m.entity === 'mutation_events')).toBeDefined();
 });
 
-test('an order with a non-existent timeslot by id should result in an error', () => {
-    const timeslot = {...carwash.oneToFour, id: id('this-does-not-exist')};
-    const pricedAdjustedByDynamicPricing = price(carwash.smallCarWash.price.amount.value * 1.4, carwash.smallCarWash.price.currency)
-    const thePricedBasket = pricedBasket(
-        [pricedBasketLine(london, smallCarWash.id, [], pricedAdjustedByDynamicPricing, pricedAdjustedByDynamicPricing, today, timeslot, [goodServiceFormData])],
-        pricedAdjustedByDynamicPricing
-    );
-    const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
-
-    const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
-    expect(outcome.errorCode).toBe(addOrderErrorCodes.noSuchTimeslotId);
-    expect(outcome.errorMessage).toBeDefined();
-});
+// test('an order with a non-existent timeslot by id should result in an error', () => {
+//     const timeslot = {...carwash.oneToFour, id: id('this-does-not-exist')};
+//     const pricedAdjustedByDynamicPricing = price(carwash.smallCarWash.price.amount.value * 1.4, carwash.smallCarWash.price.currency)
+//     const thePricedBasket = pricedBasket(
+//         [pricedBasketLine(london, smallCarWash.id, [], pricedAdjustedByDynamicPricing, pricedAdjustedByDynamicPricing, today, timeslot.slot.from, [goodServiceFormData])],
+//         pricedAdjustedByDynamicPricing
+//     );
+//     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
+//
+//     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), request) as ErrorResponse;
+//     expect(outcome.errorCode).toBe(addOrderErrorCodes.noSuchTimeslotId);
+//     expect(outcome.errorMessage).toBeDefined();
+// });
 
 test('an order with a coupon must correctly state the discount', () => {
     const thePricedBasket = pricedBasket(
-        [pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne, [goodServiceFormData])],
+        [pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])],
         priceFns.multiply(carwash.smallCarWash.price, 0.8),
         couponCode('20-percent-off'),
         price(10000000000, currency('GBP'))
@@ -151,7 +151,7 @@ test('an order with a coupon must correctly state the discount', () => {
 
 test('an order with a coupon code should apply the discount', () => {
     const thePricedBasket = pricedBasket(
-        [pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne, [goodServiceFormData])],
+        [pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])],
         priceFns.multiply(carwash.smallCarWash.price, 0.8),
         couponCode('20-percent-off'),
         priceFns.multiply(carwash.smallCarWash.price, 0.2)
@@ -167,7 +167,7 @@ test('an order with a coupon code should apply the discount', () => {
 
 test('the customer and service forms should be persisted', () => {
     const thePricedBasket = pricedBasket(
-        [pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne, [goodServiceFormData])],
+        [pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])],
         carwash.smallCarWash.price,
     );
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
@@ -187,8 +187,8 @@ test('the customer and service forms should be persisted', () => {
 test("can handle a basket with more than one line", () => {
     const thePricedBasket = pricedBasket(
         [
-            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
-            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne, [goodServiceFormData])
+            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
+            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
             ],
         priceFns.multiply(carwash.smallCarWash.price,2),
     );
@@ -203,8 +203,8 @@ test("can handle a basket with more than one line", () => {
 test("can handle a basket with more than one line on different days", () => {
     const thePricedBasket = pricedBasket(
         [
-            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne, [goodServiceFormData]),
-            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne, [goodServiceFormData])
+            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
+            pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
             ],
         priceFns.multiply(carwash.smallCarWash.price,2),
     );
@@ -219,7 +219,7 @@ test("can handle a basket with more than one line on different days", () => {
 test("not possible to make an order in the past", () => {
     const dayInThePast = isoDateFns.addDays(isoDate(), -1);
     const thePricedBasket = pricedBasket(
-        [pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, dayInThePast, carwash.nineToOne, [goodServiceFormData])],
+        [pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, dayInThePast, carwash.nineToOne.slot.from, [goodServiceFormData])],
         carwash.smallCarWash.price,
     );
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());

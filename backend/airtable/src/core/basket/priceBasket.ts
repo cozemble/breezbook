@@ -26,10 +26,10 @@ function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: Eve
             throw new Error(`No availability found for service '${line.serviceId.value}' on date '${line.date.value}'`);
         }
         const slotsForDate = (availability.slots[line.date.value] ?? []) as Availability[]
-        const availableSlot = slotsForDate.find((slot) => slot.timeslotId === line.timeslot.id.value);
+        const availableSlot = slotsForDate.find((slot) => slot.startTime24hr === line.startTime.value);
         if (!availableSlot) {
             const availableSlotIds = slotsForDate.map(a => a.timeslotId)
-            throw new Error(`Slot '${line.timeslot.id.value}' not found in availability for service '${line.serviceId.value}' on date '${line.date.value}', available slot ids are '${availableSlotIds.join(",")}'`);
+            throw new Error(`Slot '${line.startTime.value}' not found in availability for service '${line.serviceId.value}' on date '${line.date.value}', available slot ids are '${availableSlotIds.join(",")}'`);
         }
         const pricedAddOns = line.addOnIds.map((added) => {
             const addOn = mandatory(
@@ -41,7 +41,7 @@ function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: Eve
         const addOnTotal = pricedAddOns.length === 0 ? price(0, currency(availableSlot.priceCurrency)) : priceFns.add(...pricedAddOns.map((a) => a.price));
         const servicePrice = price(availableSlot.priceWithNoDecimalPlaces, currency(availableSlot.priceCurrency));
         const total = priceFns.add(servicePrice, addOnTotal);
-        return pricedBasketLine(line.locationId, line.serviceId, pricedAddOns, servicePrice, total, line.date, line.timeslot, line.serviceFormData);
+        return pricedBasketLine(line.locationId, line.serviceId, pricedAddOns, servicePrice, total, line.date, line.startTime, line.serviceFormData);
     });
 }
 

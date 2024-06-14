@@ -1,4 +1,4 @@
-import {PricedBasket, UnpricedBasket} from "./pricingTypes.js";
+import {PricedBasket} from "./pricingTypes.js";
 import {Customer, PaymentIntent} from "@breezbook/packages-core";
 
 export interface PricedCreateOrderRequest {

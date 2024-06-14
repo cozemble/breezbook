@@ -7,11 +7,19 @@ import {
     IsoDate,
     isoDateFns,
     mandatory,
-    timePeriodFns,
-    TimeslotSpec
+    time24Fns,
+    TimePeriod,
+    timePeriod,
+    timePeriodFns
 } from '@breezbook/packages-core';
 import {EverythingForAvailability, everythingForAvailabilityFns} from './getEverythingForAvailability.js';
-import {errorResponse, ErrorResponse, pricedBasketFns, PricedCreateOrderRequest} from '@breezbook/backend-api-types';
+import {
+    errorResponse,
+    ErrorResponse,
+    pricedBasketFns,
+    pricedBasketLineFns,
+    PricedCreateOrderRequest
+} from '@breezbook/backend-api-types';
 import {
     applyBookingsToResourceAvailability
 } from '@breezbook/packages-core/dist/applyBookingsToResourceAvailability.js';
@@ -54,14 +62,14 @@ export function validateOrderTotal(everythingForTenant: EverythingForAvailabilit
     return null;
 }
 
-export function validateTimeslotId(everythingForTenant: EverythingForAvailability, pricedCreateOrderRequest: PricedCreateOrderRequest): ErrorResponse | null {
-    const timeslotIds = pricedCreateOrderRequest.basket.lines.flatMap((line) => (line.timeslot._type === 'timeslot.spec' ? [line.timeslot.id] : []));
-    const invalidTimeslotIds = timeslotIds.filter((id) => !everythingForTenant.businessConfiguration.timeslots.some((ts) => ts.id.value === id.value));
-    if (invalidTimeslotIds.length > 0) {
-        return errorResponse(addOrderErrorCodes.noSuchTimeslotId, `Timeslot ids ${invalidTimeslotIds.join(', ')} not found`);
-    }
-    return null;
-}
+// export function validateTimeslotId(everythingForTenant: EverythingForAvailability, pricedCreateOrderRequest: PricedCreateOrderRequest): ErrorResponse | null {
+//     const timeslotIds = pricedCreateOrderRequest.basket.lines.flatMap((line) => (line.timeslot._type === 'timeslot.spec' ? [line.timeslot.id] : []));
+//     const invalidTimeslotIds = timeslotIds.filter((id) => !everythingForTenant.businessConfiguration.timeslots.some((ts) => ts.id.value === id.value));
+//     if (invalidTimeslotIds.length > 0) {
+//         return errorResponse(addOrderErrorCodes.noSuchTimeslotId, `Timeslot ids ${invalidTimeslotIds.join(', ')} not found`);
+//     }
+//     return null;
+// }
 
 export function validateCustomerForm(everythingForTenant: EverythingForAvailability, pricedCreateOrderRequest: PricedCreateOrderRequest): ErrorResponse | null {
     if (everythingForTenant.tenantSettings.customerFormId) {
@@ -83,7 +91,7 @@ export function validateCustomerForm(everythingForTenant: EverythingForAvailabil
 
 export function validateServiceForms(everythingForTenant: EverythingForAvailability, order: PricedCreateOrderRequest): ErrorResponse | null {
     for (let i = 0; i < order.basket.lines.length; i++) {
-        const line = order.basket.lines[i];
+        const line = mandatory(order.basket.lines[i], `Order line ${i} missing`);
         const service = mandatory(
             everythingForTenant.businessConfiguration.services.find((s) => s.id.value === line.serviceId.value),
             `Service with id ${line.serviceId.value} not found`
@@ -108,7 +116,7 @@ export function validateAvailability(everythingForAvailability: EverythingForAva
     for (let i = 0; i < order.basket.lines.length; i++) {
         const line = order.basket.lines[i];
         const service = everythingForAvailabilityFns.findService(everythingForAvailability, line.serviceId);
-        const projectedBooking = booking(order.customer.id, service, line.date, line.timeslot.slot);
+        const projectedBooking = booking(order.customer.id, service, line.date, timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, service.duration)));
         projectedBookings.push(projectedBooking);
         try {
             applyBookingsToResourceAvailability(
@@ -122,16 +130,17 @@ export function validateAvailability(everythingForAvailability: EverythingForAva
     return null;
 }
 
-function businessIsOpen(everythingForTenant: EverythingForAvailability, date: IsoDate, timeSlot: TimeslotSpec): ErrorResponse | null {
+function businessIsOpen(everythingForTenant: EverythingForAvailability, date: IsoDate, period: TimePeriod): ErrorResponse | null {
     const availability = mandatory(everythingForTenant.businessConfiguration.availability.availability.find(a => a.day.value === date.value), `Did not find business availability for date ${date.value}`);
-    if (timePeriodFns.overlaps(availability.period, timeSlot.slot)) {
+    if (timePeriodFns.overlaps(availability.period, period)) {
         return null
     }
-    return errorResponse(addOrderErrorCodes.businessIsNotOpenAtThatTime, `Business is not open at ${timeSlot.slot.from.value} on ${date.value}`)
+    return errorResponse(addOrderErrorCodes.businessIsNotOpenAtThatTime, `Business is not open at ${period.from.value} on ${date.value}`)
 }
 
 export function validateOpeningHours(everythingForTenant: EverythingForAvailability, order: PricedCreateOrderRequest): ErrorResponse | null {
-    const validationOutcomes = order.basket.lines.map(line => businessIsOpen(everythingForTenant, line.date, line.timeslot))
+
+    const validationOutcomes = order.basket.lines.map(line => businessIsOpen(everythingForTenant, line.date, pricedBasketLineFns.bookingPeriod(line, pricedBasketLineFns.findService(everythingForTenant.businessConfiguration.services, line.serviceId).duration)))
     return validationOutcomes.find(o => o != null) ?? null
 }
 

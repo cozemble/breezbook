@@ -275,7 +275,6 @@ create table order_lines
     location_id                text references locations (id)      not null,
     add_on_ids                 text[]                              not null default '{}',
     date                       text                                not null,
-    time_slot_id               text                                null     default null references time_slots (id),
     start_time_24hr            varchar(10)                         not null,
     end_time_24hr              varchar(10)                         not null,
     service_form_data          jsonb                               null     default null,
@@ -302,7 +301,6 @@ create table bookings
     date            text                                not null,
     start_time_24hr text                                not null,
     end_time_24hr   text                                not null,
-    time_slot_id    text                                null     default null references time_slots (id),
     created_at      timestamp with time zone            not null default current_timestamp,
     updated_at      timestamp with time zone            not null default current_timestamp
 );

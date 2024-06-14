@@ -92,7 +92,6 @@ model bookings {
   date                        String
   start_time_24hr             String
   end_time_24hr               String
-  time_slot_id                String?
   created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
   updated_at                  DateTime                      @default(now()) @db.Timestamptz(6)
   booking_events              booking_events[]
@@ -104,7 +103,6 @@ model bookings {
   order_lines                 order_lines                   @relation(fields: [order_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services                    services                      @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  time_slots                  time_slots?                   @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   cancellation_grants         cancellation_grants[]
   reservations                reservations[]
 }
@@ -271,27 +269,25 @@ model oauth_tokens {
 }
 
 model order_lines {
-  id                         String      @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id                         String     @id @default(dbgenerated("extensions.uuid_generate_v4()"))
   tenant_id                  String
   environment_id             String
   order_id                   String
   service_id                 String
   location_id                String
-  add_on_ids                 String[]    @default([])
+  add_on_ids                 String[]   @default([])
   date                       String
-  time_slot_id               String?
-  start_time_24hr            String      @db.VarChar(10)
-  end_time_24hr              String      @db.VarChar(10)
+  start_time_24hr            String     @db.VarChar(10)
+  end_time_24hr              String     @db.VarChar(10)
   service_form_data          Json?
   total_price_in_minor_units Int
   total_price_currency       String
-  created_at                 DateTime    @default(now()) @db.Timestamptz(6)
-  updated_at                 DateTime    @default(now()) @db.Timestamptz(6)
+  created_at                 DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime   @default(now()) @db.Timestamptz(6)
   bookings                   bookings[]
-  locations                  locations   @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services                   services    @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                    tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  time_slots                 time_slots? @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations                  locations  @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services                   services   @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                    tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model order_payments {
@@ -622,20 +618,18 @@ model tenants {
 }
 
 model time_slots {
-  id              String        @id
+  id              String     @id
   tenant_id       String
   environment_id  String
   location_id     String?
   description     String
-  start_time_24hr String        @db.VarChar(10)
-  end_time_24hr   String        @db.VarChar(10)
+  start_time_24hr String     @db.VarChar(10)
+  end_time_24hr   String     @db.VarChar(10)
   tag             String?
-  created_at      DateTime      @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
-  bookings        bookings[]
-  order_lines     order_lines[]
-  locations       locations?    @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants         tenants       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  created_at      DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime   @default(now()) @db.Timestamptz(6)
+  locations       locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants         tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model prospects {

@@ -15,7 +15,6 @@ import {
     validateOpeningHours,
     validateOrderTotal, validateServiceDates,
     validateServiceForms,
-    validateTimeslotId
 } from './addOrderValidations.js';
 import {doInsertOrder} from './doInsertOrder.js';
 import {ErrorResponse, OrderCreatedResponse, PricedCreateOrderRequest} from '@breezbook/backend-api-types';
@@ -43,7 +42,7 @@ function withValidationsPerformed<T>(everythingForTenant: EverythingForAvailabil
     const validationFns = [
         () => validateServiceDates(everythingForTenant, pricedCreateOrderRequest),
         () => validateOpeningHours(everythingForTenant, pricedCreateOrderRequest),
-        () => validateTimeslotId(everythingForTenant, pricedCreateOrderRequest),
+        // () => validateTimeslotId(everythingForTenant, pricedCreateOrderRequest),
         () => validateCustomerForm(everythingForTenant, pricedCreateOrderRequest),
         () => validateServiceForms(everythingForTenant, pricedCreateOrderRequest),
         () => validateAvailability(everythingForTenant, pricedCreateOrderRequest),

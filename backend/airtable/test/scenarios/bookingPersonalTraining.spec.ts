@@ -3,13 +3,13 @@ import {PrismockClient} from "prismock";
 import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMultiLocationGymTenant.js";
 import {EndpointDependencies, specifiedDeps} from "../../src/infra/endpoint.js";
 import {
-    environmentId,
+    environmentId, exactTimeAvailability,
     isoDate,
     locationId,
     mandatory,
     resourceType,
     serviceId,
-    tenantId
+    tenantId, time24
 } from "@breezbook/packages-core";
 import {ResourceSummary} from "../../src/core/resources/resources.js";
 import {expectJson} from "../helper.js";
@@ -68,7 +68,7 @@ describe("given the test gym tenant", () => {
         const onFriday = `?fromDate=${friday.value}&toDate=${friday.value}`
         const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, JSON.stringify(requirementOverrides)), params)))
         expect(mikeOnFriday.slots[friday.value]).toHaveLength(17)
-        const firstSlot = mikeOnFriday.slots[friday.value][0]
-        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, firstSlot, [])])
+        const firstSlot = mandatory(mikeOnFriday.slots[friday.value][0],`No slots found for Mike on Friday`)
+        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [])])
     });
 })

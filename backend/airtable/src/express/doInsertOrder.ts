@@ -12,7 +12,7 @@ import {
 import {
     orderCreatedResponse,
     OrderCreatedResponse,
-    PricedBasketLine,
+    PricedBasketLine, pricedBasketLineFns,
     PricedCreateOrderRequest
 } from '@breezbook/backend-api-types';
 import {v4 as uuidv4} from 'uuid';
@@ -129,7 +129,6 @@ function processOrderLines(
 ): { mutations: Mutation[]; bookingIds: string[]; reservationIds: string[]; orderLineIds: string[] } {
     const tenant_id = tenantEnvironment.tenantId.value;
     const environment_id = tenantEnvironment.environmentId.value;
-    // const order = createOrderRequest.order;
 
     const mutations: Mutation[] = [];
     const shouldMakeReservations =
@@ -142,8 +141,7 @@ function processOrderLines(
             services.find((s) => s.id.value === line.serviceId.value),
             `Service with id ${line.serviceId.value} not found`
         );
-        const servicePeriod = calcSlotPeriod(line.timeslot, service.duration);
-        const time_slot_id = line.timeslot._type === 'timeslot.spec' ? line.timeslot.id.value : null;
+        const servicePeriod = pricedBasketLineFns.bookingPeriod(line, service.duration);
         const orderLineId = uuidv4();
         orderLineIds.push(orderLineId);
 
@@ -155,7 +153,6 @@ function processOrderLines(
                 order_id: orderId,
                 service_id: line.serviceId.value,
                 location_id: line.locationId.value,
-                time_slot_id: time_slot_id,
                 start_time_24hr: servicePeriod.from.value,
                 end_time_24hr: servicePeriod.to.value,
                 add_on_ids: line.addOnIds.map((a) => a.addOnId.value),
@@ -176,7 +173,6 @@ function processOrderLines(
                 add_on_ids: line.addOnIds.map((a) => a.addOnId.value),
                 order_id: orderId,
                 customer_id: customer.id.value,
-                time_slot_id: line.timeslot._type === 'timeslot.spec' ? line.timeslot.id.value : undefined,
                 date: line.date.value,
                 start_time_24hr: servicePeriod.from.value,
                 end_time_24hr: servicePeriod.to.value,

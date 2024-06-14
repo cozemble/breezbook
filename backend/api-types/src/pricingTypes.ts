@@ -5,10 +5,16 @@ import {
     IsoDate,
     locationId,
     LocationId,
+    mandatory,
+    Minutes,
     Price,
+    Service,
     serviceId,
     ServiceId,
-    TimeslotSpec
+    time24Fns,
+    TimePeriod,
+    timePeriod,
+    TwentyFourHourClockTime
 } from '@breezbook/packages-core';
 
 export interface UnpricedBasketLine {
@@ -17,7 +23,7 @@ export interface UnpricedBasketLine {
     locationId: LocationId;
     addOnIds: AddOnOrder[];
     date: IsoDate;
-    timeslot: TimeslotSpec;
+    startTime: TwentyFourHourClockTime;
     serviceFormData: unknown[];
 }
 
@@ -35,7 +41,7 @@ export function unpricedBasket(lines: UnpricedBasketLine[], couponCode?: CouponC
     };
 }
 
-export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, timeslot: TimeslotSpec, serviceFormData: unknown[]): UnpricedBasketLine {
+export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[]): UnpricedBasketLine {
     const theServiceId = typeof serviceIdValue === 'string' ? serviceId(serviceIdValue) : serviceIdValue;
     const theLocationId = typeof locationIdValue === 'string' ? locationId(locationIdValue) : locationIdValue;
     return {
@@ -44,7 +50,7 @@ export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationI
         locationId: theLocationId,
         addOnIds,
         date,
-        timeslot,
+        startTime,
         serviceFormData
     };
 }
@@ -63,7 +69,7 @@ export interface PricedBasketLine {
     servicePrice: Price;
     total: Price;
     date: IsoDate;
-    timeslot: TimeslotSpec;
+    startTime: TwentyFourHourClockTime;
     serviceFormData: unknown[];
 }
 
@@ -73,6 +79,16 @@ export interface PricedBasket {
     couponCode?: CouponCode;
     discount?: Price;
     total: Price;
+}
+
+export const pricedBasketLineFns = {
+
+    bookingPeriod(line: PricedBasketLine, bookingDuration: Minutes): TimePeriod {
+        return timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, bookingDuration));
+    },
+    findService(services: Service[], serviceId: ServiceId): Service {
+        return mandatory(services.find((s) => s.id.value === serviceId.value), `Service ${serviceId.value} not found`);
+    }
 }
 
 export function pricedBasket(lines: PricedBasketLine[], total: Price, couponCode?: CouponCode, discount?: Price): PricedBasket {
@@ -86,7 +102,7 @@ export function pricedBasket(lines: PricedBasketLine[], total: Price, couponCode
 }
 
 export function pricedBasketLine(locationId: LocationId, serviceIdValue: ServiceId, addOnIds: PricedAddOn[], servicePrice: Price, total: Price, date: IsoDate,
-                                 timeslot: TimeslotSpec, serviceFormData: unknown[]
+                                 startTime: TwentyFourHourClockTime, serviceFormData: unknown[]
 ): PricedBasketLine {
     return {
         _type: 'priced.basket.line',
@@ -96,7 +112,7 @@ export function pricedBasketLine(locationId: LocationId, serviceIdValue: Service
         total,
         servicePrice,
         date,
-        timeslot,
+        startTime,
         serviceFormData
     };
 }
@@ -121,7 +137,7 @@ export const unpricedBasketFns = {
 export const pricedBasketFns = {
     toUnpricedBasket(pricedBasket: PricedBasket): UnpricedBasket {
         return unpricedBasket(pricedBasket.lines.map((line) => {
-            return unpricedBasketLine(line.serviceId, line.locationId, line.addOnIds, line.date, line.timeslot, line.serviceFormData);
+            return unpricedBasketLine(line.serviceId, line.locationId, line.addOnIds, line.date, line.startTime, line.serviceFormData);
         }), pricedBasket.couponCode);
     }
 };
