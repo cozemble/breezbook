@@ -22,6 +22,7 @@ import {externalApiPaths} from "../../src/express/expressApp.js";
 import {requestContext} from "../../src/infra/http/expressHttp4t.js";
 import {onGetTenantRequestEndpoint} from "../../src/express/tenants/tenantHandlers.js";
 import {listResourcesByTypeRequestEndpoint} from "../../src/express/resources/resourcesHandler.js";
+import {basketPriceRequestEndpoint} from "../../src/express/basket/basketHandler.js";
 
 const env = environmentId(multiLocationGym.environment_id);
 const tenant = tenantId(multiLocationGym.tenant_id);
@@ -50,7 +51,7 @@ describe("given the test gym tenant", () => {
         const theTenant = expectJson<Tenant>(await onGetTenantRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.getTenant + `?slug=${tenant.value}`), params)))
         const personalTrainingService: Service = mandatory(theTenant.services.find(s => s.id === multiLocationGym.pt1Hr), `Service ${multiLocationGym.pt1Hr} not found in ${JSON.stringify(theTenant.services)}`)
         expect(personalTrainingService.resourceRequirements).toHaveLength(1)
-        const personalTrainerRequirement = personalTrainingService.resourceRequirements[0]
+        const personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0],`No resource requirements`);
         const listOfPersonalTrainers = expectJson<ResourceSummary[]>(await listResourcesByTypeRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.listResourcesByType), {
             ...params,
             type: personalTrainer.value
@@ -67,8 +68,9 @@ describe("given the test gym tenant", () => {
 
         const onFriday = `?fromDate=${friday.value}&toDate=${friday.value}`
         const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, JSON.stringify(requirementOverrides)), params)))
-        expect(mikeOnFriday.slots[friday.value]).toHaveLength(17)
-        const firstSlot = mandatory(mikeOnFriday.slots[friday.value][0],`No slots found for Mike on Friday`)
+        expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
+        const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0],`No slots found for Mike on Friday`)
         const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [])])
+        const pricedBasket = expectJson(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket,basket), params)))
     });
 })

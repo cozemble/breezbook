@@ -195,3 +195,22 @@ export async function expressBridge(depsFactory: EndpointDependenciesFactory, f:
     const deps = depsFactory(requestContext);
     sendExpressResponse(await f(deps, requestContext), res);
 }
+
+interface ThingWithType {
+    _type: string;
+}
+
+
+export function bodyAsJsonParam<T extends ThingWithType>(expectedType: string): ParamExtractor<T> {
+    return (req: RequestContext) => {
+        const body = req.request.body as unknown as T | null;
+        if (!body) {
+            return failure(responseOf(400, `Missing required body`));
+        }
+        if (body._type !== expectedType) {
+            return failure(responseOf(400, `Posted body is not a ${expectedType}`));
+        }
+        return success(body);
+    };
+}
+

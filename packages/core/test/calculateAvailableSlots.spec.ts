@@ -130,7 +130,6 @@ describe("given a chatbot service that requires no resources, and is available m
     })
 })
 
-
 describe("given a carwash service that requires one of several interchangeable washers for each service, and is available monday to friday 9am to 5pm", () => {
     const carwasher = resourceType("carWasher")
     const theService = service("Carwash", "Carwash", [anySuitableResource(carwasher)], minutes(45), price(3500, currencies.GBP), [], [])

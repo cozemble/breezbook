@@ -7,12 +7,14 @@ import {
     customer,
     customerId,
     fullPaymentOnCheckout,
-    id, isoDate, isoDateFns,
+    isoDate,
+    isoDateFns,
     price,
     priceFns
 } from '@breezbook/packages-core';
 import {
-    everythingForCarWashTenantWithDynamicPricing, fiveDaysFromNow,
+    everythingForCarWashTenantWithDynamicPricing,
+    fiveDaysFromNow,
     fourDaysFromNow,
     goodCustomer,
     goodServiceFormData,
@@ -33,7 +35,7 @@ test('tenant has a customer form, and the customer does not have a form response
 });
 
 test('tenant has a customer form, and submitted form does not validate', () => {
-    const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671",{});
+    const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671", {});
     const thePricedBasket = pricedBasket([pricedBasketLine(london, smallCarWash.id, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, [])], smallCarWash.price);
     const request = pricedCreateOrderRequest(thePricedBasket, mike, fullPaymentOnCheckout());
 
@@ -189,8 +191,8 @@ test("can handle a basket with more than one line", () => {
         [
             pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
             pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
-            ],
-        priceFns.multiply(carwash.smallCarWash.price,2),
+        ],
+        priceFns.multiply(carwash.smallCarWash.price, 2),
     );
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
 
@@ -205,8 +207,8 @@ test("can handle a basket with more than one line on different days", () => {
         [
             pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
             pricedBasketLine(london, smallCarWash.id, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
-            ],
-        priceFns.multiply(carwash.smallCarWash.price,2),
+        ],
+        priceFns.multiply(carwash.smallCarWash.price, 2),
     );
     const request = pricedCreateOrderRequest(thePricedBasket, goodCustomer, fullPaymentOnCheckout());
 

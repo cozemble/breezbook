@@ -12,15 +12,16 @@ import {
 } from "../../infra/endpoint.js";
 import {responseOf} from "@http4t/core/responses.js";
 import {byLocation} from "../../availability/byLocation.js";
-import {multiLocationGym} from "../../dx/loadMultiLocationGymTenant.js";
-import {getAvailabilityForService, getAvailabilityForService2} from "../../core/getAvailabilityForService.js";
+import {getAvailabilityForService2} from "../../core/getAvailabilityForService.js";
 import {
     failure,
     Failure,
     IsoDate,
     mandatory,
-    resourceFns, resourceId,
-    ResourceId, resourceRequirementId,
+    resourceFns,
+    resourceId,
+    ResourceId,
+    resourceRequirementId,
     ResourceRequirementId,
     ServiceId,
     specificResource,
@@ -113,9 +114,5 @@ async function getServiceAvailabilityForLocation(deps: EndpointDependencies, ten
         `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
     );
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
-    if (tenantEnvLoc.tenantId.value === multiLocationGym.tenant_id) {
-        return responseOf(200, JSON.stringify(getAvailabilityForService2(everythingForTenant, request.serviceId, request.fromDate, request.toDate)));
-    } else {
-        return responseOf(200, JSON.stringify(getAvailabilityForService(everythingForTenant, request.serviceId, request.fromDate, request.toDate)));
-    }
+    return responseOf(200, JSON.stringify(getAvailabilityForService2(everythingForTenant, request.serviceId, request.fromDate, request.toDate)));
 }

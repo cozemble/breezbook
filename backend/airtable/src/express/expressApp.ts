@@ -1,7 +1,6 @@
 import express, {Express} from 'express';
 import cors from 'cors';
 import {logRequest} from '../infra/logRequest.js';
-import {getServiceAvailability} from './getServiceAvailability.js';
 import {addOrder} from './addOrder.js';
 import {createStripePaymentIntent, onStripeWebhook} from './stripeEndpoint.js';
 import bodyParser from 'body-parser';
@@ -11,7 +10,7 @@ import {bindInngestToExpress} from '../inngest/expressBinding.js';
 import {commitCancellation, requestCancellationGrant} from './cancellation.js';
 import {onStoreTenantSecret} from './secretManagement.js';
 import {couponValidityCheck} from './coupons/couponHandlers.js';
-import {onBasketPriceRequest} from './basket/basketHandler.js';
+import {onBasketPriceRequestExpress} from './basket/basketHandler.js';
 import {onGetAccessToken} from './oauth/oauthHandlers.js';
 import {onPublishReferenceDataAsMutationEvents} from './temp/onPublishReferenceDataAsMutationEvents.js';
 import {onGetServicesRequest} from "./services/serviceHandlers.js";
@@ -67,7 +66,6 @@ export function expressApp(): Express {
         next();
     });
 
-    app.post('/api/:envId/:tenantId/service/:serviceId/availability/', getServiceAvailability);
     app.post(externalApiPaths.getAvailabilityForLocation, onGetServiceAvailabilityForLocationExpress);
     app.post('/api/:envId/:tenantId/orders', addOrder);
     app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
@@ -75,7 +73,7 @@ export function expressApp(): Express {
     app.post('/api/:envId/:tenantId/booking/:bookingId/cancellation/grant', requestCancellationGrant);
     app.post('/api/:envId/:tenantId/booking/:bookingId/cancellation/:cancellationId/commit', commitCancellation);
     app.get('/api/:envId/:tenantId/coupon/validity', couponValidityCheck);
-    app.post('/api/:envId/:tenantId/basket/price', onBasketPriceRequest);
+    app.post(externalApiPaths.priceBasket, onBasketPriceRequestExpress);
     app.get(externalApiPaths.getServices, onGetServicesRequest);
     app.get(externalApiPaths.getTenant, onGetTenantRequestExpress);
     app.get(externalApiPaths.airtableOauthBegin, onAirtableOauthBegin);
@@ -110,6 +108,7 @@ export const externalApiPaths = {
     vapiVoiceBotPrompt: '/api/:envId/:tenantId/:locationId/voicebot/vapi/prompt',
     listResourcesByType: '/api/:envId/:tenantId/:locationId/resources/:type/list',
     waitlistSignup: '/api/signup/waitlist',
+    priceBasket: '/api/:envId/:tenantId/basket/price'
 }
 
 async function onAppStartRequest(req: express.Request, res: express.Response): Promise<void> {

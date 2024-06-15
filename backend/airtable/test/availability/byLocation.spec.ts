@@ -14,7 +14,7 @@ import {
 import {v4 as uuid} from 'uuid';
 import {byLocation} from "../../src/availability/byLocation.js";
 import {loadTestCarWashTenant} from "../../src/dx/loadTestCarWashTenant.js";
-import {getAvailabilityForService} from "../../src/core/getAvailabilityForService.js";
+import {getAvailabilityForService2} from "../../src/core/getAvailabilityForService.js";
 
 const tenant = tenantId(multiLocationGym.tenant_id)
 const env = environmentId(multiLocationGym.environment_id)
@@ -159,7 +159,7 @@ describe("Given the test car wash tenant", async () => {
         expect(everythingLondon.businessConfiguration.forms).toHaveLength(2)
         const customerForm = everythingLondon.businessConfiguration.forms.find(f => f.id.value === everythingLondon.tenantSettings.customerFormId?.value)
         expect(customerForm).toBeDefined()
-        const availability = getAvailabilityForService(everythingLondon, carwash.smallCarWash.id, isoDate('2024-04-20'), isoDate('2024-04-27'))
+        const availability = getAvailabilityForService2(everythingLondon, carwash.smallCarWash.id, isoDate('2024-04-20'), isoDate('2024-04-27'))
     });
 });
 

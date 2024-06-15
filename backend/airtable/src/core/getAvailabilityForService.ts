@@ -84,27 +84,27 @@ export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTi
     );
 }
 
-export function getAvailabilityForService(
-    everythingForAvailability: EverythingForAvailability,
-    serviceId: ServiceId,
-    fromDate: IsoDate,
-    toDate: IsoDate
-): AvailabilityResponse {
-    const service = mandatory(everythingForAvailability.businessConfiguration.services.find((s) => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
-    const availability = calculateAvailability(
-        everythingForAvailability.businessConfiguration,
-        everythingForAvailability.bookings.filter((b) => b.status === 'confirmed'),
-        serviceId,
-        fromDate,
-        toDate
-    );
-    return applyPricingRules(
-        availability,
-        everythingForAvailability.pricingRules,
-        service,
-        everythingForAvailability.businessConfiguration.addOns,
-        everythingForAvailability.businessConfiguration.forms);
-}
+// export function getAvailabilityForService(
+//     everythingForAvailability: EverythingForAvailability,
+//     serviceId: ServiceId,
+//     fromDate: IsoDate,
+//     toDate: IsoDate
+// ): AvailabilityResponse {
+//     const service = mandatory(everythingForAvailability.businessConfiguration.services.find((s) => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
+//     const availability = calculateAvailability(
+//         everythingForAvailability.businessConfiguration,
+//         everythingForAvailability.bookings.filter((b) => b.status === 'confirmed'),
+//         serviceId,
+//         fromDate,
+//         toDate
+//     );
+//     return applyPricingRules(
+//         availability,
+//         everythingForAvailability.pricingRules,
+//         service,
+//         everythingForAvailability.businessConfiguration.addOns,
+//         everythingForAvailability.businessConfiguration.forms);
+// }
 
 export function getAvailabilityForService2(
     everythingForAvailability: EverythingForAvailability,

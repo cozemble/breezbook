@@ -5,6 +5,7 @@ import {
     DbResourceAvailability,
     DbService,
     DbServiceLocation,
+    DbTimeSlot,
     findManyForTenant
 } from "../prisma/dbtypes.js";
 import {PrismaClient} from "@prisma/client";
@@ -106,7 +107,7 @@ export const byLocation = {
         const resources = await findMany(prisma.resources, {});
         const resourceAvailability = await byLocation.findResourceAvailability(prisma, location);
         const resourceOutage = await findMany(prisma.resource_blocked_time, dateWhereOpts)
-        const timeSlots = await findMany(prisma.time_slots, {});
+        const timeSlots = await byLocation.findTimeslots(prisma, location);
         const pricingRules = await findMany(prisma.pricing_rules, {});
         const addOns = await findMany(prisma.add_on, {});
         const serviceForms = await findMany(prisma.service_forms, {}, {rank: 'asc'});
@@ -157,5 +158,19 @@ export const byLocation = {
     ): Promise<EverythingForAvailability> {
         const availabilityData = await byLocation.gatherAvailabilityData(prisma, location, start, end);
         return convertAvailabilityDataIntoEverythingForAvailability(tenantEnvironment(location.environmentId, location.tenantId), start, end, availabilityData);
+    },
+    async findTimeslots(prisma: PrismaClient, location: TenantEnvironmentLocation): Promise<DbTimeSlot[]> {
+        return prisma.time_slots.findMany({
+            where: {
+                tenant_id: location.tenantId.value,
+                environment_id: location.environmentId.value,
+                OR: [
+                    {
+                        location_id: location.locationId.value
+                    }, {
+                        location_id: null
+                    }]
+            }
+        })
     }
 }

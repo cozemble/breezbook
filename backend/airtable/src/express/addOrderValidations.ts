@@ -113,8 +113,7 @@ export function validateServiceForms(everythingForTenant: EverythingForAvailabil
 
 export function validateAvailability(everythingForAvailability: EverythingForAvailability, order: PricedCreateOrderRequest) {
     const projectedBookings: Booking[] = [...everythingForAvailability.bookings];
-    for (let i = 0; i < order.basket.lines.length; i++) {
-        const line = order.basket.lines[i];
+    for (const [index, line] of order.basket.lines.entries()) {
         const service = everythingForAvailabilityFns.findService(everythingForAvailability, line.serviceId);
         const projectedBooking = booking(order.customer.id, service, line.date, timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, service.duration)));
         projectedBookings.push(projectedBooking);
@@ -124,10 +123,9 @@ export function validateAvailability(everythingForAvailability: EverythingForAva
                 projectedBookings
             );
         } catch (e: unknown) {
-            return errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.serviceId.value} in order line ${i}`);
+            return errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.serviceId.value} in order line ${index}`);
         }
-    }
-    return null;
+    }    return null;
 }
 
 function businessIsOpen(everythingForTenant: EverythingForAvailability, date: IsoDate, period: TimePeriod): ErrorResponse | null {
