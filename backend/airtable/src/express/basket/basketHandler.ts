@@ -5,8 +5,8 @@ import {TenantEnvironment, tenantEnvironmentLocation} from "@breezbook/packages-
 import {
     asHandler,
     bodyAsJsonParam,
-    EndpointDependencies,
-    expressBridge,
+    EndpointDependencies, EndpointOutcome,
+    expressBridge, httpResponseOutcome,
     ParamExtractor,
     productionDeps,
     tenantEnvironmentParam
@@ -24,20 +24,20 @@ export async function onBasketPriceRequestExpress(req: express.Request, res: exp
     await expressBridge(productionDeps, basketPriceRequestEndpoint, req, res)
 }
 
-export function basketPriceRequestEndpoint(deps: EndpointDependencies, request: RequestContext): Promise<HttpResponse> {
+export function basketPriceRequestEndpoint(deps: EndpointDependencies, request: RequestContext): Promise<EndpointOutcome[]> {
     return asHandler(deps, request).withTwoRequestParams(tenantEnvironmentParam(), unpricedBasketBody(), handlePriceBasket)
 }
 
-async function handlePriceBasket(deps: EndpointDependencies, tenantEnvironment: TenantEnvironment, unpricedBasket: UnpricedBasket): Promise<HttpResponse> {
+async function handlePriceBasket(deps: EndpointDependencies, tenantEnvironment: TenantEnvironment, unpricedBasket: UnpricedBasket): Promise<EndpointOutcome[]> {
     const {fromDate, toDate} = unpricedBasketFns.getDates(unpricedBasket);
     const locations = unpricedBasket.lines.map((line) => line.locationId);
     const allTheSameLocation = locations.every((val, i, arr) => val.value === arr[0].value);
     if (!allTheSameLocation) {
-        return responseOf(400, JSON.stringify({error: 'All line items must be for the same location'}));
+        return [httpResponseOutcome(responseOf(400, JSON.stringify({error: 'All line items must be for the same location'})))];
     }
     const location = tenantEnvironmentLocation(tenantEnvironment.environmentId, tenantEnvironment.tenantId, locations[0]);
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, location, fromDate, toDate);
     const response = priceBasket(everythingForTenant, unpricedBasket);
     const statusCode = response._type === 'error.response' ? 400 : 200;
-    return responseOf(statusCode, JSON.stringify(response));
+    return [httpResponseOutcome(responseOf(statusCode, JSON.stringify(response)))];
 }

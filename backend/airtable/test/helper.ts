@@ -15,7 +15,8 @@ import {
     environmentId,
     IsoDate,
     isoDate,
-    isoDateFns, minutes,
+    isoDateFns,
+    minutes,
     PaymentIntent,
     percentageAsRatio,
     percentageCoupon,
@@ -35,7 +36,7 @@ import {
     percentageBasedPriceAdjustment,
     timeBasedPriceAdjustment
 } from '@breezbook/packages-core/dist/calculatePrice.js';
-import {HttpResponse} from "@http4t/core/contract.js";
+import {EndpointOutcome} from "../src/infra/endpoint.js";
 
 export const today = isoDate();
 export const tomorrow = isoDateFns.addDays(isoDate(), 1);
@@ -57,7 +58,7 @@ export async function postOrder(pricedBasket: PricedBasket, customer: Customer, 
 
 }
 
-export const goodCustomer = customer('Mike', 'Hogan', 'mike@email.com',"+14155552671", {age: 30});
+export const goodCustomer = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671", {age: 30});
 
 export const goodServiceFormData = {
     make: 'Ford',
@@ -110,7 +111,15 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
     );
 }
 
-export function expectJson<T = any>(response:HttpResponse): T {
+export function expectJson<T = any>(outcome: EndpointOutcome[]): T {
+    const httpOutcome = outcome.find(o => o._type === 'http.response.outcome');
+    if(!httpOutcome) {
+        throw new Error(`Expected http response but got ${JSON.stringify(outcome)}`);
+    }
+    if(httpOutcome._type !== "http.response.outcome") {
+        throw new Error(`Expected http response but got ${httpOutcome._type}`);
+    }
+    const response = httpOutcome.response;
     if(response.status !== 200) {
         throw new Error(`Expected 200 response but got ${response.status} : ${response.body}`);
     }

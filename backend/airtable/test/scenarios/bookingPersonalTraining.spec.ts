@@ -3,13 +3,14 @@ import {PrismockClient} from "prismock";
 import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMultiLocationGymTenant.js";
 import {EndpointDependencies, specifiedDeps} from "../../src/infra/endpoint.js";
 import {
-    environmentId, exactTimeAvailability,
+    environmentId,
     isoDate,
     locationId,
     mandatory,
     resourceType,
     serviceId,
-    tenantId, time24
+    tenantId,
+    time24
 } from "@breezbook/packages-core";
 import {ResourceSummary} from "../../src/core/resources/resources.js";
 import {expectJson} from "../helper.js";
@@ -38,7 +39,7 @@ describe("given the test gym tenant", () => {
     beforeEach(async () => {
         const prisma = new PrismockClient()
         await loadMultiLocationGymTenant(prisma)
-        deps = specifiedDeps(prisma)
+        deps = specifiedDeps(prisma, () => Promise.resolve())
     })
 
     test("endpoints support an end to end booking flow", async () => {
@@ -51,7 +52,7 @@ describe("given the test gym tenant", () => {
         const theTenant = expectJson<Tenant>(await onGetTenantRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.getTenant + `?slug=${tenant.value}`), params)))
         const personalTrainingService: Service = mandatory(theTenant.services.find(s => s.id === multiLocationGym.pt1Hr), `Service ${multiLocationGym.pt1Hr} not found in ${JSON.stringify(theTenant.services)}`)
         expect(personalTrainingService.resourceRequirements).toHaveLength(1)
-        const personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0],`No resource requirements`);
+        const personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`);
         const listOfPersonalTrainers = expectJson<ResourceSummary[]>(await listResourcesByTypeRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.listResourcesByType), {
             ...params,
             type: personalTrainer.value
@@ -69,8 +70,9 @@ describe("given the test gym tenant", () => {
         const onFriday = `?fromDate=${friday.value}&toDate=${friday.value}`
         const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, JSON.stringify(requirementOverrides)), params)))
         expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
-        const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0],`No slots found for Mike on Friday`)
+        const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0], `No slots found for Mike on Friday`)
         const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [])])
-        const pricedBasket = expectJson(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket,basket), params)))
+        const pricedBasket = expectJson(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket), params)))
+
     });
 })

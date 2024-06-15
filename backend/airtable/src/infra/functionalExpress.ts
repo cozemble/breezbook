@@ -108,9 +108,6 @@ export function bodyAsJsonParam<T extends ThingWithType>(expectedType: string): 
     };
 }
 
-export function pricedCreateOrderRequest(): ParamExtractor<PricedCreateOrderRequest | null> {
-    return bodyAsJsonParam<PricedCreateOrderRequest>('priced.create.order.request');
-}
 
 export function tenantIdParam(requestValue: RequestValueExtractor = path('tenantId')): ParamExtractor<TenantId | null> {
     return paramExtractor('tenantId', requestValue.extractor, tenantId);

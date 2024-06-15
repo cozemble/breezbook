@@ -3,7 +3,8 @@ import {
     DbLocation,
     DbPricingRule,
     DbService,
-    DbServiceLocation, DbServiceResourceRequirement,
+    DbServiceLocation,
+    DbServiceResourceRequirement,
     DbTenant,
     DbTenantBranding,
     DbTenantImage
@@ -15,14 +16,16 @@ import {toApiService} from "../services/serviceHandlers.js";
 import {
     asHandler,
     EndpointDependencies,
-    environmentIdParam, expressBridge,
+    EndpointOutcome,
+    environmentIdParam,
+    expressBridge,
+    httpResponseOutcome,
     paramExtractor,
     ParamExtractor,
     productionDeps,
     query,
     RequestValueExtractor
 } from "../../infra/endpoint.js";
-import {HttpResponse} from "@http4t/core/contract.js";
 import {responseOf} from "@http4t/core/responses.js";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
 
@@ -48,7 +51,7 @@ function toApiTenant(tenant: DbTenantAndStuff): Tenant {
         heroImage: tenantImages.length > 0 ? tenantImages[0].public_image_url : 'https://picsum.photos/800/450',
         locations: tenant.locations.map(l => ({id: l.id, slug: l.slug, name: l.name})),
         theme: branding.theme,
-        services: tenant.services.map(s => toApiService(s, tenant.service_resource_requirements,tenant.pricing_rules.length > 0)),
+        services: tenant.services.map(s => toApiService(s, tenant.service_resource_requirements, tenant.pricing_rules.length > 0)),
         serviceLocations: tenant.service_locations.map(sl => ({serviceId: sl.service_id, locationId: sl.location_id}))
     }
 }
@@ -106,15 +109,15 @@ export async function onGetTenantRequestExpress(req: express.Request, res: expre
     await expressBridge(productionDeps, onGetTenantRequestEndpoint, req, res)
 }
 
-export async function onGetTenantRequestEndpoint(deps:EndpointDependencies, req: RequestContext): Promise<HttpResponse> {
+export async function onGetTenantRequestEndpoint(deps: EndpointDependencies, req: RequestContext): Promise<EndpointOutcome[]> {
     return asHandler(deps, req).withTwoRequestParams(environmentIdParam(), slugQueryParam(), getTenant);
 }
 
-async function getTenant(deps: EndpointDependencies, environmentId: EnvironmentId, slug: string): Promise<HttpResponse> {
+async function getTenant(deps: EndpointDependencies, environmentId: EnvironmentId, slug: string): Promise<EndpointOutcome[]> {
     const tenant = await findTenantAndLocations(deps.prisma, slug, environmentId.value);
     if (!tenant) {
-        return responseOf(404);
+        return [httpResponseOutcome(responseOf(404))];
     }
-    return responseOf(200, JSON.stringify(toApiTenant(tenant)))
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(toApiTenant(tenant))))]
 
 }

@@ -21,7 +21,7 @@ import {
     today
 } from './helper.js';
 import {ErrorResponse, pricedBasket, pricedBasketLine, pricedCreateOrderRequest} from '@breezbook/backend-api-types';
-import {addOrderErrorCodes, doAddOrder} from '../src/express/addOrder.js';
+import {addOrderErrorCodes, doAddOrder} from '../src/express/onAddOrderExpress.js';
 
 const london = carwash.locations.london;
 const smallCarWash = carwash.smallCarWash;

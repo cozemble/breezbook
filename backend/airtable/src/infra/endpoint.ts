@@ -25,9 +25,15 @@ import {
 } from "@breezbook/packages-core";
 import {prismaClient} from "../prisma/client.js";
 import express from "express";
+import {Mutations} from "../mutation/mutations.js";
+import {applyMutations} from "../prisma/applyMutations.js";
+import {inngest} from "../inngest/client.js";
+
+export type EventSender = (event: { name: string, data: any }) => Promise<void>;
 
 export interface EndpointDependencies {
     prisma: PrismaClient
+    eventSender: EventSender
 }
 
 export type EndpointDependenciesFactory = (request: RequestContext) => EndpointDependencies;
@@ -35,13 +41,13 @@ export type EndpointDependenciesFactory = (request: RequestContext) => EndpointD
 export interface Handler {
     withTwoRequestParams<A, B>(aParam: ParamExtractor<A>,
                                bParam: ParamExtractor<B>,
-                               f: (deps: EndpointDependencies, a: A, b: B) => Promise<HttpResponse>): Promise<HttpResponse>
+                               f: (deps: EndpointDependencies, a: A, b: B) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]>
 
     withFourRequestParams<A, B, C, D>(aParam: ParamExtractor<A>,
                                       bParam: ParamExtractor<B>,
                                       cParam: ParamExtractor<C>,
                                       dParam: ParamExtractor<D>,
-                                      f: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<HttpResponse>): Promise<HttpResponse>
+                                      f: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]>
 }
 
 export interface RequestValueExtractor {
@@ -59,7 +65,8 @@ export function path(paramName: string): RequestValueExtractor {
     return {name: paramName, extractor};
 }
 
-export type ParamExtractor<T> = (req: RequestContext) => Success<T> | Failure<HttpResponse>
+export type ParamExtractorOutcome<T = unknown> = Success<T> | Failure<HttpResponse>;
+export type ParamExtractor<T> = (req: RequestContext) => ParamExtractorOutcome<T>;
 
 export function date(requestValue: RequestValueExtractor): ParamExtractor<IsoDate> {
     return (req: RequestContext) => {
@@ -139,61 +146,95 @@ export function tenantEnvironmentParam(
 }
 
 export function productionDeps(): EndpointDependencies {
-    return specifiedDeps(prismaClient());
+    return specifiedDeps(prismaClient(), (event) => inngest.send(event).then(console.log).catch(console.error));
 }
 
-export function specifiedDeps(prisma: PrismaClient): EndpointDependencies {
+export function specifiedDeps(prisma: PrismaClient, eventSender: EventSender): EndpointDependencies {
     return {
-        prisma
+        prisma,
+        eventSender
     }
+}
+
+function failureOutcome(...outcomes: ParamExtractorOutcome[]) {
+    const firstFailure = outcomes.find(o => o._type === 'failure');
+    if (firstFailure && firstFailure._type === 'failure') {
+        return [httpResponseOutcome(firstFailure.value)];
+    }
+    throw new Error(`No failure outcome found in ${outcomes}`);
 }
 
 export function asHandler(deps: EndpointDependencies, httpRequest: RequestContext): Handler {
     return {
         async withTwoRequestParams<A, B>(aParam: ParamExtractor<A>,
                                          bParam: ParamExtractor<B>,
-                                         fn: (deps: EndpointDependencies, a: A, b: B) => Promise<HttpResponse>): Promise<HttpResponse> {
-            const a = aParam(httpRequest);
-            if (a._type === 'failure') {
-                return a.value;
+                                         fn: (deps: EndpointDependencies, a: A, b: B) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]> {
+            const [a, b] = [aParam(httpRequest), bParam(httpRequest)];
+            if (a._type === 'success' && b._type === 'success') {
+                return fn(deps, a.value, b.value);
             }
-            const b = bParam(httpRequest);
-            if (b._type === 'failure') {
-                return b.value;
-            }
-            return fn(deps, a.value, b.value);
+            return failureOutcome(a, b);
         },
         async withFourRequestParams<A, B, C, D>(aParam: ParamExtractor<A>,
                                                 bParam: ParamExtractor<B>,
                                                 cParam: ParamExtractor<C>,
-                                                dParam: ParamExtractor<D>, fn: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<HttpResponse>): Promise<HttpResponse> {
-            const a = aParam(httpRequest);
-            if (a._type === 'failure') {
-                return a.value;
+                                                dParam: ParamExtractor<D>, fn: (deps: EndpointDependencies, a: A, b: B, c: C, d: D) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]> {
+            const [a, b, c, d] = [aParam(httpRequest), bParam(httpRequest), cParam(httpRequest), dParam(httpRequest)];
+            if (a._type === 'success' && b._type === 'success' && c._type === 'success' && d._type === 'success') {
+                return fn(deps, a.value, b.value, c.value, d.value);
             }
-            const b = bParam(httpRequest);
-            if (b._type === 'failure') {
-                return b.value;
-            }
-            const c = cParam(httpRequest);
-            if (c._type === 'failure') {
-                return c.value;
-            }
-            const d = dParam(httpRequest);
-            if (d._type === 'failure') {
-                return d.value;
-            }
-            return fn(deps, a.value, b.value, c.value, d.value);
+            return failureOutcome(a, b, c, d);
         }
     }
 }
 
-export type Endpoint = (deps: EndpointDependencies, req: RequestContext) => Promise<HttpResponse>;
+interface HttpResponseOutcome {
+    _type: 'http.response.outcome';
+    response: HttpResponse;
+}
+
+interface MutationOutcome {
+    _type: 'mutation.outcome';
+    mutations: Mutations;
+    tenantEnvironment: TenantEnvironment;
+}
+
+interface SendEventOutcome {
+    _type: 'send.event.outcome';
+    event: { name: string, data: any };
+}
+
+export function httpResponseOutcome(response: HttpResponse): HttpResponseOutcome {
+    return {response, _type: 'http.response.outcome'};
+}
+
+export function mutationOutcome(tenantEnvironment: TenantEnvironment,mutations: Mutations): MutationOutcome {
+    return {mutations,tenantEnvironment, _type: 'mutation.outcome'};
+}
+
+export function sendEventOutcome(event: { name: string, data: any }): SendEventOutcome {
+    return {event, _type: 'send.event.outcome'};
+}
+
+export type EndpointOutcome = HttpResponseOutcome | MutationOutcome | SendEventOutcome;
+
+export type Endpoint = (deps: EndpointDependencies, req: RequestContext) => Promise<EndpointOutcome[]>;
 
 export async function expressBridge(depsFactory: EndpointDependenciesFactory, f: Endpoint, req: express.Request, res: express.Response): Promise<void> {
     const requestContext = asRequestContext(req);
     const deps = depsFactory(requestContext);
-    sendExpressResponse(await f(deps, requestContext), res);
+    const outcomes = await f(deps, requestContext);
+    for (const outcome of outcomes) {
+        if (outcome._type === 'http.response.outcome') {
+            sendExpressResponse(outcome.response, res);
+        }
+        if (outcome._type === 'send.event.outcome') {
+            await deps.eventSender(outcome.event);
+        }
+        if (outcome._type === 'mutation.outcome') {
+            await applyMutations(deps.prisma, outcome.tenantEnvironment, outcome.mutations.mutations)
+        }
+    }
 }
 
 interface ThingWithType {

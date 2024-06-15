@@ -3,7 +3,9 @@ import {
     asHandler,
     date,
     EndpointDependencies,
+    EndpointOutcome,
     expressBridge,
+    httpResponseOutcome,
     ParamExtractor,
     productionDeps,
     query,
@@ -85,7 +87,7 @@ export async function onGetServiceAvailabilityForLocationExpress(req: express.Re
     await expressBridge(productionDeps, getServiceAvailabilityForLocationEndpoint, req, res)
 }
 
-export async function getServiceAvailabilityForLocationEndpoint(deps: EndpointDependencies, req: RequestContext): Promise<HttpResponse> {
+export async function getServiceAvailabilityForLocationEndpoint(deps: EndpointDependencies, req: RequestContext): Promise<EndpointOutcome[]> {
     return asHandler(deps, req).withTwoRequestParams(tenantEnvironmentLocationParam(), serviceAvailabilityRequestParam(), getServiceAvailabilityForLocation)
 }
 
@@ -109,10 +111,10 @@ function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAv
     }
 }
 
-async function getServiceAvailabilityForLocation(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, request: ServiceAvailabilityRequest) {
+async function getServiceAvailabilityForLocation(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, request: ServiceAvailabilityRequest): Promise<EndpointOutcome[]> {
     console.log(
         `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
     );
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
-    return responseOf(200, JSON.stringify(getAvailabilityForService2(everythingForTenant, request.serviceId, request.fromDate, request.toDate)));
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(getAvailabilityForService2(everythingForTenant, request.serviceId, request.fromDate, request.toDate))))];
 }

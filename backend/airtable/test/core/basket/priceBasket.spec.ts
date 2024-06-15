@@ -12,7 +12,7 @@ import {
     price,
     priceFns
 } from '@breezbook/packages-core';
-import {addOrderErrorCodes} from '../../../src/express/addOrder.js';
+import {addOrderErrorCodes} from '../../../src/express/onAddOrderExpress.js';
 
 const today = isoDate();
 const dayBeyondDynamicPricing = isoDateFns.addDays(today, 10);

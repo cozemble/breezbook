@@ -23,7 +23,7 @@ import {
 import {
     applyBookingsToResourceAvailability
 } from '@breezbook/packages-core/dist/applyBookingsToResourceAvailability.js';
-import {addOrderErrorCodes} from './addOrder.js';
+import {addOrderErrorCodes} from './onAddOrderExpress.js';
 import Ajv from 'ajv';
 import {priceBasket} from "../core/basket/priceBasket.js";
 

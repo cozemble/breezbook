@@ -1,27 +1,34 @@
 import * as express from 'express';
-import {
-    handleOutcome,
-    httpJsonResponse,
-    pricedCreateOrderRequest,
-    tenantEnvironmentParam,
-    withTwoRequestParams
-} from '../infra/functionalExpress.js';
-import {customerId, isoDateFns} from '@breezbook/packages-core';
+import {customerId, isoDateFns, TenantEnvironment} from '@breezbook/packages-core';
 import {EverythingForAvailability, getEverythingForAvailability} from './getEverythingForAvailability.js';
 import {
     validateAvailability,
     validateCoupon,
     validateCustomerForm,
     validateOpeningHours,
-    validateOrderTotal, validateServiceDates,
+    validateOrderTotal,
+    validateServiceDates,
     validateServiceForms,
 } from './addOrderValidations.js';
 import {doInsertOrder} from './doInsertOrder.js';
 import {ErrorResponse, OrderCreatedResponse, PricedCreateOrderRequest} from '@breezbook/backend-api-types';
-import {prismaClient} from '../prisma/client.js';
 import {Mutations} from '../mutation/mutations.js';
 import {announceChangesToAirtable} from "../inngest/announceChangesToAirtable.js";
-import {inngest} from "../inngest/client.js";
+import {
+    asHandler,
+    bodyAsJsonParam,
+    EndpointDependencies,
+    EndpointOutcome,
+    expressBridge,
+    httpResponseOutcome,
+    mutationOutcome,
+    ParamExtractor,
+    productionDeps,
+    sendEventOutcome,
+    tenantEnvironmentParam
+} from "../infra/endpoint.js";
+import {RequestContext} from "../infra/http/expressHttp4t.js";
+import {responseOf} from "@http4t/core/responses.js";
 
 export const addOrderErrorCodes = {
     customerFormMissing: 'addOrder.customer.form.missing',
@@ -80,46 +87,55 @@ export function doAddOrder(
     });
 }
 
-export async function addOrder(req: express.Request, res: express.Response): Promise<void> {
-    await withTwoRequestParams(req, res, tenantEnvironmentParam(), pricedCreateOrderRequest(), async (tenantEnvironment, createOrderRequest) => {
-        const {fromDate, toDate} = isoDateFns.getDateRange(createOrderRequest.basket.lines.map((l) => l.date));
-        const prisma = prismaClient();
-        const everythingForAvailability = await getEverythingForAvailability(prisma, tenantEnvironment, fromDate, toDate);
-        const maybeExistingCustomer = await prisma.customers.findFirst({
-            where: {
-                OR: [
-                    {
-                        tenant_id: tenantEnvironment.tenantId.value,
-                        environment_id: tenantEnvironment.environmentId.value,
-                        email: createOrderRequest.customer.email.value
-                    },
-                    {
+function pricedCreateOrderRequest(): ParamExtractor<PricedCreateOrderRequest> {
+    return bodyAsJsonParam<PricedCreateOrderRequest>('priced.create.order.request');
+}
 
-                        tenant_id: tenantEnvironment.tenantId.value,
-                        environment_id: tenantEnvironment.environmentId.value,
-                        phone_e164: createOrderRequest.customer.phone.value
-                    }
-                ]
-            }
-        });
-        if (maybeExistingCustomer) {
-            createOrderRequest.customer.id = customerId(maybeExistingCustomer.id);
+export async function onAddOrderExpress(req: express.Request, res: express.Response): Promise<void> {
+    return expressBridge(productionDeps, onAddOrderEndpoint, req, res);
+}
+
+export async function onAddOrderEndpoint(deps: EndpointDependencies, request: RequestContext): Promise<EndpointOutcome[]> {
+    return asHandler(deps, request).withTwoRequestParams(tenantEnvironmentParam(), pricedCreateOrderRequest(), handleAddOrder);
+}
+
+async function handleAddOrder(deps: EndpointDependencies, tenantEnvironment: TenantEnvironment, orderRequest: PricedCreateOrderRequest): Promise<EndpointOutcome[]> {
+    const {fromDate, toDate} = isoDateFns.getDateRange(orderRequest.basket.lines.map((l) => l.date));
+    const prisma = deps.prisma
+    const everythingForAvailability = await getEverythingForAvailability(prisma, tenantEnvironment, fromDate, toDate);
+    const maybeExistingCustomer = await prisma.customers.findFirst({
+        where: {
+            OR: [
+                {
+                    tenant_id: tenantEnvironment.tenantId.value,
+                    environment_id: tenantEnvironment.environmentId.value,
+                    email: orderRequest.customer.email.value
+                },
+                {
+
+                    tenant_id: tenantEnvironment.tenantId.value,
+                    environment_id: tenantEnvironment.environmentId.value,
+                    phone_e164: orderRequest.customer.phone.value
+                }
+            ]
         }
-        const outcome = withValidationsPerformed(everythingForAvailability, createOrderRequest, () => {
-            return doAddOrder(everythingForAvailability, createOrderRequest);
-        });
-        if (outcome._type === 'error.response') {
-            return handleOutcome(res, prisma, tenantEnvironment, outcome);
-        }
-        const {mutations, orderCreatedResponse} = outcome;
-        try {
-            await inngest.send({
-                name: announceChangesToAirtable.deferredChangeAnnouncement,
-                data: {tenantId: tenantEnvironment.tenantId.value, environmentId: tenantEnvironment.environmentId.value}
-            });
-        } catch (e: any) {
-            console.info(`While sending ${announceChangesToAirtable.deferredChangeAnnouncement} to Inngest: ${e.message}`)
-        }
-        await handleOutcome(res, prisma, tenantEnvironment, mutations, httpJsonResponse(200, orderCreatedResponse));
     });
+    if (maybeExistingCustomer) {
+        orderRequest.customer.id = customerId(maybeExistingCustomer.id);
+    }
+    const outcome = withValidationsPerformed(everythingForAvailability, orderRequest, () => {
+        return doAddOrder(everythingForAvailability, orderRequest);
+    });
+    if (outcome._type === 'error.response') {
+        return [httpResponseOutcome(responseOf(400, JSON.stringify(outcome)))]
+    }
+    const {mutations, orderCreatedResponse} = outcome;
+    return [
+        mutationOutcome(tenantEnvironment, mutations),
+        sendEventOutcome({
+            name: announceChangesToAirtable.deferredChangeAnnouncement,
+            data: {tenantId: tenantEnvironment.tenantId.value, environmentId: tenantEnvironment.environmentId.value}
+        }),
+        httpResponseOutcome(responseOf(200, JSON.stringify(orderCreatedResponse)))
+    ];
 }
