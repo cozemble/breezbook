@@ -7,7 +7,7 @@ import {
     LocationId,
     mandatory,
     Minutes,
-    Price,
+    Price, ResourceId, ResourceRequirementId,
     Service,
     serviceId,
     ServiceId,
@@ -25,6 +25,7 @@ export interface UnpricedBasketLine {
     date: IsoDate;
     startTime: TwentyFourHourClockTime;
     serviceFormData: unknown[];
+    resourceRequirementOverrides: ResourceRequirementOverride[];
 }
 
 export interface UnpricedBasket {
@@ -41,7 +42,19 @@ export function unpricedBasket(lines: UnpricedBasketLine[], couponCode?: CouponC
     };
 }
 
-export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[]): UnpricedBasketLine {
+export interface ResourceRequirementOverride {
+    resourceRequirementId: ResourceRequirementId;
+    resourceId: ResourceId;
+}
+
+export function resourceRequirementOverride(resourceRequirementId: ResourceRequirementId, resourceId: ResourceId): ResourceRequirementOverride {
+    return {
+        resourceRequirementId,
+        resourceId
+    };
+}
+
+export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[], resourceRequirementOverrides:ResourceRequirementOverride[] = []): UnpricedBasketLine {
     const theServiceId = typeof serviceIdValue === 'string' ? serviceId(serviceIdValue) : serviceIdValue;
     const theLocationId = typeof locationIdValue === 'string' ? locationId(locationIdValue) : locationIdValue;
     return {
@@ -51,7 +64,8 @@ export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationI
         addOnIds,
         date,
         startTime,
-        serviceFormData
+        serviceFormData,
+        resourceRequirementOverrides
     };
 }
 

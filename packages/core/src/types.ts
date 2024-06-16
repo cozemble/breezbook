@@ -193,6 +193,13 @@ export const isoDateFns = {
             fromDate: this.min(...dates),
             toDate: this.max(...dates)
         };
+    },
+    next(dayOfWeek: DayOfWeek): IsoDate {
+        const twoWeeks = [...daysOfWeek, ...daysOfWeek];
+        const todayIndex = twoWeeks.indexOf(this.dayOfWeek(isoDate()));
+        const dayIndex = twoWeeks.indexOf(dayOfWeek, todayIndex);
+        const daysToAdd = dayIndex - todayIndex;
+        return this.addDays(isoDate(), daysToAdd);
     }
 };
 
@@ -1079,7 +1086,7 @@ export function addOn(name: string, price: Price, requiresQuantity: boolean, des
 
 export function businessConfiguration(
     availability: BusinessAvailability,
-    resources:Resource[],
+    resources: Resource[],
     resourceAvailability: ResourceDayAvailability[],
     services: Service[],
     addOns: AddOn[],

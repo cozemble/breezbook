@@ -67,7 +67,7 @@ export function expressApp(): Express {
     });
 
     app.post(externalApiPaths.getAvailabilityForLocation, onGetServiceAvailabilityForLocationExpress);
-    app.post('/api/:envId/:tenantId/orders', onAddOrderExpress);
+    app.post(externalApiPaths.addOrder, onAddOrderExpress);
     app.post('/api/:envId/:tenantId/orders/:orderId/paymentIntent', createStripePaymentIntent);
     app.post('/api/:envId/:tenantId/stripe/webhook', onStripeWebhook);
     app.post('/api/:envId/:tenantId/booking/:bookingId/cancellation/grant', requestCancellationGrant);
@@ -108,7 +108,8 @@ export const externalApiPaths = {
     vapiVoiceBotPrompt: '/api/:envId/:tenantId/:locationId/voicebot/vapi/prompt',
     listResourcesByType: '/api/:envId/:tenantId/:locationId/resources/:type/list',
     waitlistSignup: '/api/signup/waitlist',
-    priceBasket: '/api/:envId/:tenantId/basket/price'
+    priceBasket: '/api/:envId/:tenantId/basket/price',
+    addOrder: '/api/:envId/:tenantId/orders',
 }
 
 async function onAppStartRequest(req: express.Request, res: express.Response): Promise<void> {

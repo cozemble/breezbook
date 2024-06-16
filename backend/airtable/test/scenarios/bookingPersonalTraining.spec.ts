@@ -3,10 +3,11 @@ import {PrismockClient} from "prismock";
 import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMultiLocationGymTenant.js";
 import {EndpointDependencies, specifiedDeps} from "../../src/infra/endpoint.js";
 import {
-    environmentId,
-    isoDate,
+    customer,
+    environmentId, fullPaymentOnCheckout,
+    isoDate, isoDateFns,
     locationId,
-    mandatory,
+    mandatory, resourceId, resourceRequirementId,
     resourceType,
     serviceId,
     tenantId,
@@ -14,7 +15,14 @@ import {
 } from "@breezbook/packages-core";
 import {ResourceSummary} from "../../src/core/resources/resources.js";
 import {expectJson} from "../helper.js";
-import {AvailabilityResponse, Service, Tenant, unpricedBasket, unpricedBasketLine} from "@breezbook/backend-api-types";
+import {
+    AvailabilityResponse, PricedBasket,
+    pricedCreateOrderRequest, resourceRequirementOverride,
+    Service,
+    Tenant,
+    unpricedBasket,
+    unpricedBasketLine
+} from "@breezbook/backend-api-types";
 import {
     getServiceAvailabilityForLocationEndpoint
 } from "../../src/express/availability/getServiceAvailabilityForLocation.js";
@@ -24,14 +32,15 @@ import {requestContext} from "../../src/infra/http/expressHttp4t.js";
 import {onGetTenantRequestEndpoint} from "../../src/express/tenants/tenantHandlers.js";
 import {listResourcesByTypeRequestEndpoint} from "../../src/express/resources/resourcesHandler.js";
 import {basketPriceRequestEndpoint} from "../../src/express/basket/basketHandler.js";
+import {addOrderEndpoint} from "../../src/express/onAddOrderExpress.js";
 
 const env = environmentId(multiLocationGym.environment_id);
 const tenant = tenantId(multiLocationGym.tenant_id);
 const harlow = locationId(multiLocationGym.locationHarlow)
 const personalTrainer = resourceType('personal.trainer')
 const personalTraining = serviceId(multiLocationGym.pt1Hr)
-const friday = isoDate('2024-06-14')
-const saturday = isoDate('2024-06-15')
+const friday = isoDateFns.next('Friday')
+const saturday = isoDateFns.next('Saturday')
 
 describe("given the test gym tenant", () => {
     let deps: EndpointDependencies;
@@ -71,8 +80,10 @@ describe("given the test gym tenant", () => {
         const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, JSON.stringify(requirementOverrides)), params)))
         expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
         const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0], `No slots found for Mike on Friday`)
-        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [])])
-        const pricedBasket = expectJson(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket), params)))
-
+        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [{goals:"get fit"}], [resourceRequirementOverride(resourceRequirementId(personalTrainerRequirement.id.value), resourceId(ptMike.id))])])
+        const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket), params)))
+        const orderRequest = pricedCreateOrderRequest(pricedBasket,customer("Mike","Hogan", "mike@email.com","+14155552671"),fullPaymentOnCheckout())
+        const orderResponse = expectJson(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest), params)))
+        console.log({orderResponse})
     });
 })

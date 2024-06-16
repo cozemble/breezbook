@@ -92,10 +92,10 @@ function pricedCreateOrderRequest(): ParamExtractor<PricedCreateOrderRequest> {
 }
 
 export async function onAddOrderExpress(req: express.Request, res: express.Response): Promise<void> {
-    return expressBridge(productionDeps, onAddOrderEndpoint, req, res);
+    return expressBridge(productionDeps, addOrderEndpoint, req, res);
 }
 
-export async function onAddOrderEndpoint(deps: EndpointDependencies, request: RequestContext): Promise<EndpointOutcome[]> {
+export async function addOrderEndpoint(deps: EndpointDependencies, request: RequestContext): Promise<EndpointOutcome[]> {
     return asHandler(deps, request).withTwoRequestParams(tenantEnvironmentParam(), pricedCreateOrderRequest(), handleAddOrder);
 }
 

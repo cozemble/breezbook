@@ -5,14 +5,15 @@ import {TenantEnvironment, tenantEnvironmentLocation} from "@breezbook/packages-
 import {
     asHandler,
     bodyAsJsonParam,
-    EndpointDependencies, EndpointOutcome,
-    expressBridge, httpResponseOutcome,
+    EndpointDependencies,
+    EndpointOutcome,
+    expressBridge,
+    httpResponseOutcome,
     ParamExtractor,
     productionDeps,
     tenantEnvironmentParam
 } from "../../infra/endpoint.js";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
-import {HttpResponse} from "@http4t/core/contract.js";
 import {responseOf} from "@http4t/core/responses.js";
 import {priceBasket} from "../../core/basket/priceBasket.js";
 
