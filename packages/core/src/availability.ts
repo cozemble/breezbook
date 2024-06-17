@@ -209,7 +209,7 @@ export const availability = {
             }
             const matchOutcome = resourceRequirementFns.matchRequirements(resourceOutcome.remainingAvailability, period, service.resourceRequirements, [])
             if (matchOutcome._type === "success") {
-                result.push(availableSlot(service, period.day, exactTimeAvailability(period.period.from), matchOutcome.value.map(r => resourceAllocation(r.requirement, r.match.resource))))
+                result.push(availableSlot(service, period.day, possibleStartTime, matchOutcome.value.map(r => resourceAllocation(r.requirement, r.match.resource))))
             }
         }
         return success(result)

@@ -55,12 +55,7 @@ function createCheckoutStore() {
 					core.locationId(tenantLocation.id),
 					item.extras.map((extra) => addOnOrder(addOnId(extra.id))),
 					core.isoDate(item.time.day),
-					core.timeslotSpec(
-						core.time24(item.time.start),
-						core.time24(item.time.end),
-						'',
-						core.id(item.time.id)
-					),
+					core.time24(item.time.start),
 					[item.details]
 				);
 			});

@@ -8,7 +8,6 @@ import {
     AvailableSlot,
     BookableTimes,
     Booking,
-    calculateAvailability,
     calculatePrice,
     ErrorResponse,
     Form,
@@ -41,7 +40,7 @@ function toTimeSlotAvailability(slot: ResourcedTimeSlot | AvailableSlot, price: 
         return timeSlotAvailability(
             startTime24.value,
             startTime24.value,
-            "---",
+            slot.startTime._type === 'timeslot.spec' ? slot.startTime.slot.to.value : "---",
             startTime24.value,
             price.amount.value,
             price.currency.value

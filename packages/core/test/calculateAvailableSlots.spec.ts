@@ -201,6 +201,7 @@ describe("given a mobile carwash service that requires one of several interchang
             resourceAvailability: [resourceDayAvailability(resource(van, "Van#1"), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
+        expect(available.map(a => a.startTime).every(s => s._type === "timeslot.spec")).toBe(true)
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("13:00")])
     })
@@ -216,6 +217,7 @@ describe("given a mobile carwash service that requires one of several interchang
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("13:00")])
     })
+
     test("we keep availability when a booking takes a resource, but there are extra resources available", () => {
         const theBooking = booking(customerId(), theService, date, morningSlot.slot)
 
