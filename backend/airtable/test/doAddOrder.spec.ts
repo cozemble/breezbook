@@ -36,33 +36,19 @@ import {
     hydratedBasket,
     hydratedBasketLine
 } from '../src/express/onAddOrderExpress.js';
+import {
+    adjustServiceToDynamicPricingForToday,
+    orderForService,
+    setBasketTotal,
+    setCoupon,
+    setCustomer,
+    setDate,
+    setServiceForm
+} from "./helpers/orderHelpers.js";
 
 const london = carwash.locations.london;
 const smallCarWash = carwash.smallCarWash;
 
-function orderForService(service: Service, location: LocationId, startTime: TwentyFourHourClockTime): EverythingToCreateOrder {
-    const basket = hydratedBasket([
-        hydratedBasketLine(service, location, [], service.price, service.price, today, startTime, [goodServiceFormData])
-    ])
-    return everythingToCreateOrder(basket, goodCustomer, fullPaymentOnCheckout())
-}
-
-function setCustomer(order: EverythingToCreateOrder, customer: Customer): EverythingToCreateOrder {
-    return {...order, customer: customer};
-}
-
-function setServiceForm(order: EverythingToCreateOrder, serviceForm: unknown[], lineId = 0): EverythingToCreateOrder {
-    return {
-        ...order,
-        basket: {
-            ...order.basket,
-            lines: order.basket.lines.map((line, index) => index === lineId ? {
-                ...line,
-                serviceFormData: serviceForm
-            } : line)
-        }
-    };
-}
 
 test('tenant has a customer form, and the customer does not have a form response', () => {
     const theCustomer = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
@@ -95,10 +81,6 @@ test('service has a service form, and the service form is invalid', () => {
     expect(outcome.errorMessage).toBeDefined();
 });
 
-function setBasketTotal(order: EverythingToCreateOrder, price1: Price) {
-    return {...order, basket: {...order.basket, total: price1}};
-}
-
 test('error message when posted price is not the same as the server side calculated price', () => {
     const order = setBasketTotal(orderForService(smallCarWash, london, carwash.nineToOne.slot.from), price(100, currency('GBP')));
     const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), order) as ErrorResponse;
@@ -116,10 +98,6 @@ test('error message when no availability', () => {
     expect(outcome.errorMessage).toBeDefined();
 });
 
-function setCoupon(order: EverythingToCreateOrder, coupon: Coupon): EverythingToCreateOrder {
-    return {...order, basket: {...order.basket, coupon: coupon}};
-}
-
 test('an order with an non-existent coupon code should fail with an error code', () => {
     const order = setCoupon(orderForService(smallCarWash, london, carwash.nineToOne.slot.from), ({
         ...carwash.coupons.twentyPercentOffCoupon,
@@ -136,11 +114,6 @@ test('an order with an expired coupon should fail with an error code', () => {
     expect(outcome.errorCode).toBe(addOrderErrorCodes.expiredCoupon);
     expect(outcome.errorMessage).toBeDefined();
 });
-
-function adjustServiceToDynamicPricingForToday(service: Service) {
-    const pricedAdjustedByDynamicPricing = priceFns.multiply(service.price, 1.4)
-    return {...service, price: pricedAdjustedByDynamicPricing};
-}
 
 test('an order intending full payment on checkout should reserve the booking', () => {
     const smallCarwashWithAdjustedPrice = adjustServiceToDynamicPricingForToday(carwash.smallCarWash);
@@ -205,10 +178,6 @@ test('an order with a coupon code should apply the discount', () => {
     }
     expect(outcome.orderCreatedResponse.bookingIds).toHaveLength(1);
 });
-
-function setDate(order: EverythingToCreateOrder, date: IsoDate): EverythingToCreateOrder {
-    return {...order, basket: {...order.basket, lines: order.basket.lines.map((line) => ({...line, date}))}};
-}
 
 test('the customer and service forms should be persisted', () => {
     const order = setDate(orderForService(smallCarWash, london, carwash.nineToOne.slot.from), fourDaysFromNow)
