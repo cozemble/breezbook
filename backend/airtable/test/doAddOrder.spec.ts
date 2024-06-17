@@ -2,22 +2,15 @@ import {expect, test} from 'vitest';
 import {
     booking,
     carwash,
-    Coupon,
     couponCode,
     currency,
-    Customer,
     customer,
     customerId,
     fullPaymentOnCheckout,
-    IsoDate,
     isoDate,
     isoDateFns,
-    LocationId,
-    Price,
     price,
-    priceFns,
-    Service,
-    TwentyFourHourClockTime
+    priceFns
 } from '@breezbook/packages-core';
 import {
     everythingForCarWashTenantWithDynamicPricing,
@@ -31,7 +24,6 @@ import {ErrorResponse} from '@breezbook/backend-api-types';
 import {
     addOrderErrorCodes,
     doAddOrder,
-    EverythingToCreateOrder,
     everythingToCreateOrder,
     hydratedBasket,
     hydratedBasketLine
@@ -122,8 +114,17 @@ test('an order intending full payment on checkout should reserve the booking', (
     if (!outcome || outcome._type !== 'success') {
         throw new Error('Expected success, got ' + JSON.stringify(outcome));
     }
-    expect(outcome.mutations.mutations.some((m) => m._type === 'create' && m.entity === 'reservations')).toBeDefined();
+    expect(outcome.mutations.mutations.filter((m) => m._type === 'create' && m.entity === 'reservations')).toHaveLength(1)
 });
+
+test("an order stores resource requirements against bookings", () => {
+    const order = setDate(orderForService(smallCarWash, london, carwash.nineToOne.slot.from), fiveDaysFromNow);
+    const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing([],fiveDaysFromNow), order);
+    if (!outcome || outcome._type !== 'success') {
+        throw new Error('Expected success, got ' + JSON.stringify(outcome));
+    }
+    expect(outcome.mutations.mutations.filter((m) => m._type === 'create' && m.entity === 'booking_resource_requirements')).toHaveLength(1)
+})
 
 test('the event log for the order creation should be stored', () => {
     const smallCarwashWithAdjustedPrice = adjustServiceToDynamicPricingForToday(carwash.smallCarWash);

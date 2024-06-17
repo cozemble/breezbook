@@ -32,7 +32,8 @@ import {
     payment_method,
     resource_images,
     resource_markup,
-    service_resource_requirements
+    service_resource_requirements,
+    booking_resource_requirements
 } from '@prisma/client';
 import {TenantEnvironment} from '@breezbook/packages-core';
 
@@ -70,7 +71,8 @@ export type {
     payment_method as DbPaymentMethod,
     resource_images as DbResourceImage,
     resource_markup as DbResourceMarkup,
-    service_resource_requirements as DbServiceResourceRequirement
+    service_resource_requirements as DbServiceResourceRequirement,
+    booking_resource_requirements as DbBookingResourceRequirement
 };
 
 export interface TenantEnvironmentPair {

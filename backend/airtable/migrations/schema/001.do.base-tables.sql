@@ -305,6 +305,21 @@ create table bookings
     updated_at      timestamp with time zone            not null default current_timestamp
 );
 
+create table booking_resource_requirements
+(
+    id               text primary key,
+    tenant_id        text references tenants (tenant_id) not null,
+    environment_id   text                                not null,
+    booking_id       text references bookings (id)       not null,
+    requirement_type resource_requirement_type           not null,
+    resource_id      text references resources (id)      null     default null,
+    resource_type    text references resource_types (id) null     default null,
+    created_at       timestamp with time zone            not null default current_timestamp,
+    updated_at       timestamp with time zone            not null default current_timestamp,
+    check ((requirement_type = 'any_suitable' and resource_type is not null)
+        or (requirement_type = 'specific_resource' and resource_id is not null))
+);
+
 create type booking_event_type as enum ('cancelled', 'amended', 'completed', 'no_show');
 
 create table booking_events

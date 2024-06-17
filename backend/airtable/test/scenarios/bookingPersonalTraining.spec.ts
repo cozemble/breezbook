@@ -1,23 +1,29 @@
 import {beforeEach, describe, expect, test} from "vitest";
 import {PrismockClient} from "prismock";
 import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMultiLocationGymTenant.js";
-import {EndpointDependencies, specifiedDeps} from "../../src/infra/endpoint.js";
+import {EndpointDependencies, EndpointOutcome, specifiedDeps} from "../../src/infra/endpoint.js";
 import {
     customer,
-    environmentId, fullPaymentOnCheckout,
-    isoDate, isoDateFns,
+    environmentId,
+    fullPaymentOnCheckout,
+    isoDateFns,
     locationId,
-    mandatory, resourceId, resourceRequirementId,
+    mandatory,
+    resourceId,
+    resourceRequirementId,
     resourceType,
-    serviceId,
+    serviceId, tenantEnvironment,
     tenantId,
     time24
 } from "@breezbook/packages-core";
 import {ResourceSummary} from "../../src/core/resources/resources.js";
 import {expectJson} from "../helper.js";
 import {
-    AvailabilityResponse, PricedBasket,
-    pricedCreateOrderRequest, resourceRequirementOverride,
+    AvailabilityResponse,
+    OrderCreatedResponse,
+    PricedBasket,
+    pricedCreateOrderRequest,
+    resourceRequirementOverride,
     Service,
     Tenant,
     unpricedBasket,
@@ -33,6 +39,8 @@ import {onGetTenantRequestEndpoint} from "../../src/express/tenants/tenantHandle
 import {listResourcesByTypeRequestEndpoint} from "../../src/express/resources/resourcesHandler.js";
 import {basketPriceRequestEndpoint} from "../../src/express/basket/basketHandler.js";
 import {addOrderEndpoint} from "../../src/express/onAddOrderExpress.js";
+import {DbBookingResourceRequirement, DbResource} from "../../src/prisma/dbtypes.js";
+import {applyMutations} from "../../src/prisma/applyMutations.js";
 
 const env = environmentId(multiLocationGym.environment_id);
 const tenant = tenantId(multiLocationGym.tenant_id);
@@ -80,10 +88,30 @@ describe("given the test gym tenant", () => {
         const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, JSON.stringify(requirementOverrides)), params)))
         expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
         const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0], `No slots found for Mike on Friday`)
-        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [{goals:"get fit"}], [resourceRequirementOverride(resourceRequirementId(personalTrainerRequirement.id.value), resourceId(ptMike.id))])])
+        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [{goals: "get fit"}], [resourceRequirementOverride(resourceRequirementId(personalTrainerRequirement.id.value), resourceId(ptMike.id))])])
         const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket), params)))
-        const orderRequest = pricedCreateOrderRequest(pricedBasket,customer("Mike","Hogan", "mike@email.com","+14155552671"),fullPaymentOnCheckout())
-        const orderResponse = expectJson(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest), params)))
-        console.log({orderResponse})
+        const orderRequest = pricedCreateOrderRequest(pricedBasket, customer("Mike", "Hogan", "mike@email.com", "+14155552671"), fullPaymentOnCheckout())
+        const orderResponse = expectJson<OrderCreatedResponse>(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest), params)).then(outcomes => handleMutations(deps, outcomes)))
+        expect(orderResponse.bookingIds).toHaveLength(1)
+        const bookingId = mandatory(orderResponse.bookingIds[0], `No booking id found in ${JSON.stringify(orderResponse)}`)
+        const booking = await deps.prisma.bookings.findUnique({
+            where: {id: bookingId},
+            include: {booking_resource_requirements: true}
+        })
+        if(!booking) {
+            throw new Error(`Booking ${bookingId} not found`)
+        }
+        const resourceRequirements = mandatory(booking.booking_resource_requirements,`No resource requirements found for booking ${bookingId}`)
+        expect(resourceRequirements).toHaveLength(1)
+
     });
 })
+
+async function handleMutations(deps: EndpointDependencies, outcomes: EndpointOutcome[]):EndpointOutcome[] {
+    for (const outcome of outcomes) {
+        if(outcome._type === 'mutation.outcome') {
+            await applyMutations(deps.prisma, tenantEnvironment(env,tenant),outcome.mutations.mutations)
+        }
+    }
+    return outcomes
+}

@@ -1,24 +1,21 @@
 import {
-    calcSlotPeriod,
     Customer,
     FormId,
-    mandatory,
     orderId,
     PaymentIntent,
+    ResourceRequirement,
     Service,
     TenantEnvironment,
-    TenantSettings, timePeriodFns
+    TenantSettings,
+    timePeriodFns
 } from '@breezbook/packages-core';
-import {
-    orderCreatedResponse,
-    OrderCreatedResponse,
-    PricedBasketLine, pricedBasketLineFns,
-    PricedCreateOrderRequest
-} from '@breezbook/backend-api-types';
+import {orderCreatedResponse, OrderCreatedResponse} from '@breezbook/backend-api-types';
 import {v4 as uuidv4} from 'uuid';
 import {Prisma} from '@prisma/client';
 import {
     createBooking,
+    createBookingResourceRequirement,
+    CreateBookingResourceRequirement,
     createOrder,
     CreateOrder,
     createOrderLine,
@@ -120,13 +117,34 @@ function upsertServiceFormValues(
     return upsertBookingServiceFormValues(create, update, where);
 }
 
+function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment, requirement: ResourceRequirement, bookingId: string): CreateBookingResourceRequirement {
+    if (requirement._type === "specific.resource") {
+        return createBookingResourceRequirement({
+            id: uuidv4(),
+            tenant_id: tenantEnvironment.tenantId.value,
+            environment_id: tenantEnvironment.environmentId.value,
+            booking_id: bookingId,
+            resource_id: requirement.resource.id.value,
+            requirement_type: 'specific_resource'
+        })
+    } else {
+        return createBookingResourceRequirement({
+            id: uuidv4(),
+            tenant_id: tenantEnvironment.tenantId.value,
+            environment_id: tenantEnvironment.environmentId.value,
+            booking_id: bookingId,
+            requirement_type: 'any_suitable',
+            resource_type: requirement.requirement.value
+        })
+    }
+}
+
 function processOrderLines(
     tenantEnvironment: TenantEnvironment,
     paymentIntent: PaymentIntent,
     customer: Customer,
     lines: HydratedBasketLine[],
-    orderId: string,
-    services: Service[]
+    orderId: string
 ): { mutations: Mutation[]; bookingIds: string[]; reservationIds: string[]; orderLineIds: string[] } {
     const tenant_id = tenantEnvironment.tenantId.value;
     const environment_id = tenantEnvironment.environmentId.value;
@@ -177,6 +195,9 @@ function processOrderLines(
                 order_line_id: orderLineId
             })
         );
+        line.service.resourceRequirements.forEach((requirement) => {
+            mutations.push(toBookingResourceRequirementCreate(tenantEnvironment, requirement, bookingId));
+        });
         if (shouldMakeReservations) {
             const reservationId = uuidv4();
             reservationIds.push(reservationId);
@@ -209,7 +230,7 @@ export function doInsertOrder(
         bookingIds,
         reservationIds,
         orderLineIds
-    } = processOrderLines(tenantEnvironment, everythingToCreateOrder.paymentIntent, everythingToCreateOrder.customer, everythingToCreateOrder.basket.lines, theId.value, services);
+    } = processOrderLines(tenantEnvironment, everythingToCreateOrder.paymentIntent, everythingToCreateOrder.customer, everythingToCreateOrder.basket.lines, theId.value);
     const mutations = [
         ...upsertCustomerAsMutations(tenantEnvironment, everythingToCreateOrder.customer, tenantSettings),
         createOrderAsPrismaMutation(tenantEnvironment, everythingToCreateOrder, theId.value),

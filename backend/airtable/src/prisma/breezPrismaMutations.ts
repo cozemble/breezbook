@@ -24,6 +24,17 @@ export function createBooking(data: Prisma.bookingsCreateArgs['data']): CreateBo
     };
 }
 
+export type CreateBookingResourceRequirement = Create<Prisma.booking_resource_requirementsCreateArgs['data']>;
+
+export function createBookingResourceRequirement(data: Prisma.booking_resource_requirementsCreateArgs['data']): CreateBookingResourceRequirement {
+    return {
+        _type: 'create',
+        data,
+        entity: 'booking_resource_requirements',
+        entityId: compositeKey("id", mandatory(data.id, 'Booking ID'))
+    };
+}
+
 export type CreateReservation = Create<Prisma.reservationsCreateArgs['data']>;
 
 export function createReservation(data: Prisma.reservationsCreateArgs['data']): CreateReservation {

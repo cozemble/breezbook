@@ -79,32 +79,33 @@ model booking_service_form_values {
 }
 
 model bookings {
-  id                          String                        @id @default(dbgenerated("extensions.uuid_generate_v4()"))
-  tenant_id                   String
-  environment_id              String
-  status                      booking_status                @default(confirmed)
-  customer_id                 String
-  service_id                  String
-  location_id                 String
-  add_on_ids                  String[]
-  order_id                    String
-  order_line_id               String
-  date                        String
-  start_time_24hr             String
-  end_time_24hr               String
-  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
-  updated_at                  DateTime                      @default(now()) @db.Timestamptz(6)
-  booking_events              booking_events[]
-  booking_payments            booking_payments[]
-  booking_service_form_values booking_service_form_values[]
-  customers                   customers                     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  locations                   locations                     @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  orders                      orders                        @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  order_lines                 order_lines                   @relation(fields: [order_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services                    services                      @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  cancellation_grants         cancellation_grants[]
-  reservations                reservations[]
+  id                            String                          @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  tenant_id                     String
+  environment_id                String
+  status                        booking_status                  @default(confirmed)
+  customer_id                   String
+  service_id                    String
+  location_id                   String
+  add_on_ids                    String[]
+  order_id                      String
+  order_line_id                 String
+  date                          String
+  start_time_24hr               String
+  end_time_24hr                 String
+  created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  booking_events                booking_events[]
+  booking_payments              booking_payments[]
+  booking_resource_requirements booking_resource_requirements[]
+  booking_service_form_values   booking_service_form_values[]
+  customers                     customers                       @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  locations                     locations                       @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders                        orders                          @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order_lines                   order_lines                     @relation(fields: [order_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services                      services                        @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                       tenants                         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  cancellation_grants           cancellation_grants[]
+  reservations                  reservations[]
 }
 
 model business_hours {
@@ -417,6 +418,7 @@ model resource_types {
   name                          String
   created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
   updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  booking_resource_requirements booking_resource_requirements[]
   tenants                       tenants                         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   resources                     resources[]
   service_resource_requirements service_resource_requirements[]
@@ -430,6 +432,7 @@ model resources {
   name                          String
   created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
   updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  booking_resource_requirements booking_resource_requirements[]
   resource_availability         resource_availability[]
   resource_blocked_time         resource_blocked_time[]
   resource_images               resource_images[]
@@ -582,6 +585,7 @@ model tenants {
   blocked_time                     blocked_time[]
   booking_events                   booking_events[]
   booking_payments                 booking_payments[]
+  booking_resource_requirements    booking_resource_requirements[]
   booking_service_form_values      booking_service_form_values[]
   bookings                         bookings[]
   business_hours                   business_hours[]
@@ -684,6 +688,23 @@ model service_resource_requirements {
   resources        resources?                @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   resource_types   resource_types?           @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services         services                  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants          tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model booking_resource_requirements {
+  id               String                    @id
+  tenant_id        String
+  environment_id   String
+  booking_id       String
+  requirement_type resource_requirement_type
+  resource_id      String?
+  resource_type    String?
+  created_at       DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime                  @default(now()) @db.Timestamptz(6)
+  bookings         bookings                  @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resources        resources?                @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resource_types   resource_types?           @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants          tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
