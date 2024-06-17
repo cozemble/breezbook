@@ -120,7 +120,7 @@ function upsertServiceFormValues(
 function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment, requirement: ResourceRequirement, bookingId: string): CreateBookingResourceRequirement {
     if (requirement._type === "specific.resource") {
         return createBookingResourceRequirement({
-            id: uuidv4(),
+            id: requirement.id.value,
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value,
             booking_id: bookingId,
@@ -129,7 +129,7 @@ function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment
         })
     } else {
         return createBookingResourceRequirement({
-            id: uuidv4(),
+            id: requirement.id.value,
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value,
             booking_id: bookingId,

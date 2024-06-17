@@ -27,14 +27,18 @@ import {CancellationGranted, cancellationGranted} from '@breezbook/backend-api-t
 import {updateBooking, updateCancellationGrant} from '../prisma/breezPrismaMutations.js';
 import {jsDateFns} from '@breezbook/packages-core/dist/jsDateFns.js';
 import {Mutations, mutations} from '../mutation/mutations.js';
+import {DbBookingAndResourceRequirements} from "./getEverythingForAvailability.js";
 
-function findBookingById(bookingId: BookingId): DbResourceFinder<DbBooking> {
+function findBookingById(bookingId: BookingId): DbResourceFinder<DbBookingAndResourceRequirements> {
     return (prisma, tenantEnvironment) => {
         return prisma.bookings.findUnique({
             where: {
                 id: bookingId.value,
                 environment_id: tenantEnvironment.environmentId.value,
                 tenant_id: tenantEnvironment.tenantId.value
+            },
+            include: {
+                booking_resource_requirements: true
             }
         });
     };
@@ -73,7 +77,7 @@ export function doCancellationRequest(
     timeslots: DbTimeSlot[],
     resourceTypes: DbResourceType[],
     services: DbService[],
-    theBooking: DbBooking,
+    theBooking: DbBookingAndResourceRequirements,
     serviceResourceRequirements: DbServiceResourceRequirement[],
     resources:DbResource[],
     clock = new SystemClock()
@@ -83,7 +87,7 @@ export function doCancellationRequest(
     const mappedTimeslots = timeslots.map(toDomainTimeslotSpec);
     const mappedServices = services.map(s => toDomainService(s, mappedResourceTypes, [], mappedTimeslots, serviceResourceRequirements, mappedResources))
     const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));
-    const refundJudgement = findRefundRule(toDomainBooking(theBooking, mappedTimeslots, mappedServices), theRefundPolicy, clock);
+    const refundJudgement = findRefundRule(toDomainBooking(theBooking, mappedServices), theRefundPolicy, clock);
     if (refundJudgement._type === 'refund.possible') {
         return cancellationGranted(refundJudgement.applicableRule.percentage.value, refundJudgement.hoursToBookingStart.value, theBooking.id);
     }

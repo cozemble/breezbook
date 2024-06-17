@@ -7,6 +7,7 @@ import {updateBooking, updateCancellationGrant} from '../src/prisma/breezPrismaM
 import {jsDateFns} from '@breezbook/packages-core/dist/jsDateFns.js';
 import {HttpError} from '../src/infra/functionalExpress.js';
 import {mutations} from '../src/mutation/mutations.js';
+import {DbBookingAndResourceRequirements} from "../src/express/getEverythingForAvailability.js";
 
 test("can't get a cancellation grant for a booking in the past", () => {
     const theBooking = makeDbBooking(isoDateFns.addDays(isoDate(), -1));
@@ -23,7 +24,7 @@ test('full refund if there are no refund rules, and booking is in the future', (
 });
 
 function makeDbBooking(yesterday: IsoDate) {
-    const theBooking: DbBooking = {
+    const theBooking: DbBookingAndResourceRequirements = {
         id: 'booking-id',
         environment_id: 'environment-id',
         tenant_id: 'tenant-id',
@@ -36,7 +37,8 @@ function makeDbBooking(yesterday: IsoDate) {
         start_time_24hr: '09:00',
         end_time_24hr: '10:00',
         customer_id: 'customer-id',
-        order_id: 'order-id'
+        order_id: 'order-id',
+        booking_resource_requirements: [],
     };
     return theBooking;
 }

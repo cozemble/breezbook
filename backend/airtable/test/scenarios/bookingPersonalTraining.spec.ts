@@ -12,7 +12,7 @@ import {
     resourceId,
     resourceRequirementId,
     resourceType,
-    serviceId, tenantEnvironment,
+    serviceId, SpecificResource, tenantEnvironment,
     tenantId,
     time24
 } from "@breezbook/packages-core";
@@ -85,7 +85,7 @@ describe("given the test gym tenant", () => {
         expect(mikesAvailabilityOnSaturday.slots[saturday.value]).toBeUndefined()
 
         const onFriday = `?fromDate=${friday.value}&toDate=${friday.value}`
-        const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, JSON.stringify(requirementOverrides)), params)))
+        const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, {requirementOverrides}), params)))
         expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
         const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0], `No slots found for Mike on Friday`)
         const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [{goals: "get fit"}], [resourceRequirementOverride(resourceRequirementId(personalTrainerRequirement.id.value), resourceId(ptMike.id))])])
@@ -101,9 +101,15 @@ describe("given the test gym tenant", () => {
         if(!booking) {
             throw new Error(`Booking ${bookingId} not found`)
         }
-        const resourceRequirements = mandatory(booking.booking_resource_requirements,`No resource requirements found for booking ${bookingId}`)
+        const resourceRequirements = mandatory(booking.booking_resource_requirements,`No resource requirements found for booking ${bookingId}`) as DbBookingResourceRequirement[]
         expect(resourceRequirements).toHaveLength(1)
+        const requirement = mandatory(resourceRequirements[0], `No resource requirement found for booking ${bookingId}`)
+        expect(requirement.requirement_type).toBe("specific_resource")
+        expect(requirement.resource_id).toBe(ptMike.id)
 
+        // resource should now be consumed
+        const mikeOnFridayAgain = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, {requirementOverrides}), params)))
+        expect(mikeOnFridayAgain.slots[friday.value]).toHaveLength(15)
     });
 })
 

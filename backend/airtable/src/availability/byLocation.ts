@@ -125,6 +125,9 @@ export const byLocation = {
                 environment_id: location.environmentId.value,
                 location_id: location.locationId.value,
                 ...dateWhereOpts,
+            },
+            include: {
+                booking_resource_requirements: true
             }
         });
 

@@ -33,9 +33,10 @@ import {
     DbAddOn,
     DbBlockedTime,
     DbBooking,
+    DbBookingResourceRequirement,
     DbBusinessHours,
     DbCoupon,
-    DbForm, DbLocation,
+    DbForm,
     DbPricingRule,
     DbResource,
     DbResourceAvailability,
@@ -161,6 +162,10 @@ export function makeResourceAvailability(
     }, [] as ResourceDayAvailability[]);
 }
 
+export type DbBookingAndResourceRequirements = DbBooking & {
+    booking_resource_requirements: DbBookingResourceRequirement[]
+};
+
 export interface AvailabilityData {
     businessHours: DbBusinessHours[];
     blockedTime: DbBlockedTime[];
@@ -174,7 +179,7 @@ export interface AvailabilityData {
     resourceTypes: DbResourceType[];
     addOns: DbAddOn[];
     serviceForms: DbServiceForm[];
-    bookings: DbBooking[];
+    bookings: DbBookingAndResourceRequirements[];
     forms: DbForm[];
     tenantSettings: DbTenantSettings;
     coupons: DbCoupon[];
@@ -197,7 +202,16 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
     const resourceTypes = await findMany(prisma.resource_types, {});
     const addOns = await findMany(prisma.add_on, {});
     const serviceForms = await findMany(prisma.service_forms, {}, {rank: 'asc'});
-    const bookings = await findMany(prisma.bookings, dateWhereOpts);
+    const bookings = await prisma.bookings.findMany({
+        where: {
+            tenant_id,
+            environment_id,
+            ...dateWhereOpts
+        },
+        include: {
+            booking_resource_requirements: true
+        }
+    })
     const forms = await findMany(prisma.forms, {});
     const tenantSettings = await prisma.tenant_settings.findFirstOrThrow({where: {tenant_id, environment_id}});
     const coupons = await findMany(prisma.coupons, {});
@@ -221,7 +235,7 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
     };
 }
 
-export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvironment: TenantEnvironment, fromDate: IsoDate, toDate: IsoDate, availabilityData: AvailabilityData,) {
+export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvironment: TenantEnvironment, fromDate: IsoDate, toDate: IsoDate, availabilityData: AvailabilityData) {
     const coupons = availabilityData.coupons.map((c) => c.definition as unknown as Coupon);
 
     const dates = isoDateFns.listDays(fromDate, toDate);
@@ -254,7 +268,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
             customerForm ? customerForm.id : null
         ),
         availabilityData.pricingRules.map((pr) => toDomainPricingRule(pr)),
-        availabilityData.bookings.map((b) => toDomainBooking(b, mappedTimeSlots, services)),
+        availabilityData.bookings.map((b) => toDomainBooking(b, services)),
         coupons,
         toDomainTenantSettings(availabilityData.tenantSettings),
         tenantEnvironment

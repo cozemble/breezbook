@@ -24,7 +24,7 @@ import {
     resourceId,
     ResourceId,
     resourceRequirementId,
-    ResourceRequirementId,
+    ResourceRequirementId, serviceFns,
     ServiceId,
     specificResource,
     success,
@@ -92,7 +92,7 @@ export async function getServiceAvailabilityForLocationEndpoint(deps: EndpointDe
 }
 
 function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAvailabilityRequest): EverythingForAvailability {
-    const theService = mandatory(e.businessConfiguration.services.find(s => s.id.value === request.serviceId.value), `Service ${request.serviceId.value} not found in ${JSON.stringify(e.businessConfiguration.services)}`)
+    const theService = serviceFns.findService(e.businessConfiguration.services,request.serviceId)
     const mutatedService = {
         ...theService, resourceRequirements: theService.resourceRequirements.map(req => {
             const maybeOverride = request.requirementOverrides.find(o => o.requirementId.value === req.id.value)

@@ -1,7 +1,6 @@
 import {
     DbAddOn,
-    DbBooking,
-    DbForm, DbLocation,
+    DbForm,
     DbPricingRule,
     DbResource,
     DbService,
@@ -23,6 +22,7 @@ import {
     customerId,
     dayAndTimePeriod,
     DayAndTimePeriod,
+    fixedResourceAllocation,
     Form,
     formId,
     id,
@@ -58,6 +58,7 @@ import {
     timezone,
 } from '@breezbook/packages-core';
 import {timeBasedPriceAdjustment} from '@breezbook/packages-core/dist/calculatePrice.js';
+import {DbBookingAndResourceRequirements} from "../express/getEverythingForAvailability.js";
 
 function toDomainResourceRequirement(rr: DbServiceResourceRequirement, resourceTypes: ResourceType[], mappedResources: Resource[]): ResourceRequirement {
     if (rr.requirement_type === 'specific_resource') {
@@ -93,9 +94,15 @@ export function toDomainTimeslotSpec(ts: DbTimeSlot): TimeslotSpec {
     return timeslotSpec(time24(ts.start_time_24hr), time24(ts.end_time_24hr), ts.description, id(ts.id));
 }
 
-export function toDomainBooking(b: DbBooking, timeslots: TimeslotSpec[], services: Service[]): Booking {
+export function toDomainBooking(b: DbBookingAndResourceRequirements, services: Service[]): Booking {
     const service = serviceFns.findService(services, serviceId(b.service_id));
-    const domainBooking = booking(customerId(b.customer_id), service, isoDate(b.date), timePeriod(time24(b.start_time_24hr), time24(b.end_time_24hr)));
+    const fixedResourceAllocations = b.booking_resource_requirements.flatMap(r => {
+        if (r.requirement_type === 'specific_resource') {
+            return [fixedResourceAllocation(resourceRequirementId(r.id), resourceId(mandatory(r.resource_id, `resource_id`)))];
+        }
+        return []
+    });
+    const domainBooking = booking(customerId(b.customer_id), service, isoDate(b.date), timePeriod(time24(b.start_time_24hr), time24(b.end_time_24hr)), capacity(1), fixedResourceAllocations);
     if (b.status === 'cancelled') {
         return bookingFns.cancel(domainBooking);
     }
