@@ -41,7 +41,7 @@ function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: Eve
         const addOnTotal = pricedAddOns.length === 0 ? price(0, currency(availableSlot.priceCurrency)) : priceFns.add(...pricedAddOns.map((a) => a.price));
         const servicePrice = price(availableSlot.priceWithNoDecimalPlaces, currency(availableSlot.priceCurrency));
         const total = priceFns.add(servicePrice, addOnTotal);
-        return pricedBasketLine(line.locationId, line.serviceId, pricedAddOns, servicePrice, total, line.date, line.startTime, line.serviceFormData);
+        return pricedBasketLine(line.locationId, line.serviceId, pricedAddOns, servicePrice, total, line.date, line.startTime, line.serviceFormData, line.resourceRequirementOverrides);
     });
 }
 

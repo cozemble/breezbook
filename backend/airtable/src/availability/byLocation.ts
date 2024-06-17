@@ -128,7 +128,6 @@ export const byLocation = {
             }
         });
 
-
         return {
             businessHours,
             blockedTime,
@@ -145,7 +144,7 @@ export const byLocation = {
             bookings,
             forms,
             tenantSettings,
-            coupons
+            coupons,
         };
     },
 

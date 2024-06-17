@@ -1,7 +1,7 @@
 import {
     DbAddOn,
     DbBooking,
-    DbForm,
+    DbForm, DbLocation,
     DbPricingRule,
     DbResource,
     DbService,
@@ -55,7 +55,7 @@ import {
     timeslotSpec,
     TimeslotSpec,
     TimeSpec,
-    timezone
+    timezone,
 } from '@breezbook/packages-core';
 import {timeBasedPriceAdjustment} from '@breezbook/packages-core/dist/calculatePrice.js';
 

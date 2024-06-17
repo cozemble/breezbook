@@ -40,7 +40,8 @@ import {
     Service,
     Tenant,
     unpricedBasket,
-    unpricedBasketLine, waitlistRegistration
+    unpricedBasketLine,
+    waitlistRegistration
 } from '@breezbook/backend-api-types';
 import {prismaClient} from '../src/prisma/client.js';
 import {PaymentIntentWebhookBody} from '../src/stripe.js';
@@ -56,6 +57,7 @@ import {insertOrder} from "./insertOrder.js";
 import {externalApiPaths} from "../src/express/expressApp.js";
 import {multiLocationGym} from "../src/dx/loadMultiLocationGymTenant.js";
 import {ResourceSummary} from "../src/core/resources/resources.js";
+import {EverythingToCreateOrderReferenceData} from "../src/express/onAddOrderExpress.js";
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
@@ -105,8 +107,8 @@ describe('Given a migrated database', () => {
 
     test('can add an order for two car washes, each with different add-ons', async () => {
         const twoServicesPricedBasket = pricedBasket([
-            pricedBasketLine(carwash.locations.london, carwash.smallCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price)], carwash.smallCarWash.price, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
-            pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price), pricedAddOn(carwash.polish.id, 1, carwash.polish.price)], carwash.mediumCarWash.price, priceFns.add(carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price), fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
+            pricedBasketLine(carwash.locations.london, carwash.smallCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price)], carwash.smallCarWash.price, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData], []),
+            pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price), pricedAddOn(carwash.polish.id, 1, carwash.polish.price)], carwash.mediumCarWash.price, priceFns.add(carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price), fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData], [])
         ], priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price))
 
         const fetched = await postOrder(
@@ -165,7 +167,12 @@ describe('Given a migrated database', () => {
         const createOrderResponse = await insertOrder(
             tenantEnv,
             pricedCreateOrderRequest(pricedBasket([], price(costInPence, currency('GBP'))), customer('Mike', 'Hogan', 'mike7@email.com', "+14155552673"), fullPaymentOnCheckout()),
-            [],
+            {
+                services: [],
+                resources: [],
+                addOns: [],
+                coupons: [],
+            },
             tenantSettings(timezone('Europe/London'), null)
         );
         const paymentIntentWebhook: PaymentIntentWebhookBody = {
@@ -249,17 +256,17 @@ describe('Given a migrated database', () => {
 
     test("can list all resources by type", async () => {
         const url = `http://localhost:${expressPort}${externalApiPaths.listResourcesByType}`
-            .replace(":envId",multiLocationGym.environment_id)
-            .replace(":tenantId",multiLocationGym.tenant_id)
-            .replace(":location",multiLocationGym.locationHarlow)
-            .replace(":type","personal.trainer");
+            .replace(":envId", multiLocationGym.environment_id)
+            .replace(":tenantId", multiLocationGym.tenant_id)
+            .replace(":location", multiLocationGym.locationHarlow)
+            .replace(":type", "personal.trainer");
         const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         });
-        if(response.status !== 200) {
+        if (response.status !== 200) {
             console.error(await response.text());
         }
         const jsonResponse = await response.json() as ResourceSummary[]
@@ -327,8 +334,17 @@ async function completeCancellationGrant() {
     return {bookingId, cancellationGrant};
 }
 
+function carwashReferenceData():EverythingToCreateOrderReferenceData {
+    return {
+        services: carwash.services,
+        resources: carwash.resources,
+        addOns: carwash.addOns,
+        coupons: [carwash.coupons.expired20PercentOffCoupon, carwash.coupons.twentyPercentOffCoupon]
+    }
+}
+
 async function createBooking(date: IsoDate): Promise<string> {
-    const theBasket = pricedBasket([pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [], carwash.mediumCarWash.price, carwash.mediumCarWash.price, date, carwash.nineToOne.slot.from, [])], carwash.mediumCarWash.price)
+    const theBasket = pricedBasket([pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [], carwash.mediumCarWash.price, carwash.mediumCarWash.price, date, carwash.nineToOne.slot.from, [], [])], carwash.mediumCarWash.price)
     const createOrderResponse = await insertOrder(
         tenantEnv,
         pricedCreateOrderRequest(
@@ -336,7 +352,7 @@ async function createBooking(date: IsoDate): Promise<string> {
             goodCustomer,
             fullPaymentOnCheckout()
         ),
-        carwash.services,
+        carwashReferenceData(),
         tenantSettings(timezone('Europe/London'), null)
     );
     expect(createOrderResponse.bookingIds).toHaveLength(1);

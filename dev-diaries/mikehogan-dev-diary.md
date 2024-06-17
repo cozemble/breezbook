@@ -1209,4 +1209,133 @@ the number of days in a booking.  I began to muse on whether a booking should in
 Sometimes such thinking can go too far, but its still no harm in musing.  I began to wander into thinking about group bookings
 and repeat bookings.  I think I will leave this for now, tho, because the thinking was muddled.  But at least it has started.
 
+# Sun 16 Jun 2024
+Consider this helper function in a test case:
 
+```typescript
+function orderForService(customer: Customer, service: Service, location: LocationId, startTime: TwentyFourHourClockTime, serviceFormData: unknown[] = [], addOns: HydratedAddOn[] = []): EverythingToCreateOrder {
+    const basket = hydratedBasket([
+        hydratedBasketLine(service, location, addOns, service.price, service.price, today, startTime, serviceFormData),
+    ])
+    return everythingToCreateOrder(basket, customer, fullPaymentOnCheckout());
+}
+
+export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, discount?: Price, total?:Price): HydratedBasket {
+    const actualTotal = total ?? priceFns.sum(lines.map((l) => l.total));
+    return {
+        _type: 'hydrated.basket',
+        lines,
+        coupon,
+        discount,
+        total: actualTotal
+    };
+}
+```
+
+In the test suite, I want to exercise configurations of basket with many of these values having different values.
+There is quite a big combination space in these functions.  Right now I am trying to create a basket line where the date
+is not today, but four days from now.  But you can see also that sometimes I want the total to be wrong, so I can test that
+we validate that.  I want a line with a coupon and discount, and sometimes the discount should be wrong, and sometimes the
+coupon should be expired.
+
+What is a nice generic programming pattern for this? 
+
+Both Claude and ChatGPT suggest that I should be using a builder pattern.  Which would work, but it involves a lot of 
+boilerplate.  
+
+Am interested in considering this approach:
+
+```typescript
+type HydratedBasketOption = (basket: HydratedBasket) => HydratedBasket;
+type HydratedBasketLineOption = (line: HydratedBasketLine) => HydratedBasketLine;
+type EverythingToCreateOrderOption = (order: EverythingToCreateOrder) => EverythingToCreateOrder;
+
+interface HydratedBasketOverrides {
+    basket: HydratedBasketOption[];
+    lines: HydratedBasketLineOption[][];
+}
+
+interface EverythingToCreateOrderOverrides {
+    everything: EverythingToCreateOrderOption[];
+    basket: HydratedBasketOverrides[];
+}
+
+const withCustomer = (customer: Customer): EverythingToCreateOrderOption => (everything) => {
+    return {...everything, customer};
+}
+
+function overrides(everything: EverythingToCreateOrderOption[], basket: HydratedBasketOverrides[] = []): EverythingToCreateOrderOverrides {
+    return {everything, basket};
+}
+
+function orderForService(service: Service, location: LocationId, startTime: TwentyFourHourClockTime, overrides: EverythingToCreateOrderOverrides): EverythingToCreateOrder {
+    const basket = hydratedBasket([
+        hydratedBasketLine(service, location, [], service.price, service.price, today, startTime, [goodServiceFormData])
+    ])
+    return overrides.everything.reduce((acc, f) => f(acc), everythingToCreateOrder(basket, goodCustomer, fullPaymentOnCheckout()));
+}
+
+test('tenant has a customer form, and the customer does not have a form response', () => {
+    const theCustomer = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
+    const order = orderForService(smallCarWash, london, carwash.nineToOne.slot.from, overrides([withCustomer(theCustomer)]));
+
+    const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing(), order) as ErrorResponse;
+    expect(outcome.errorCode).toBe(addOrderErrorCodes.customerFormMissing);
+});
+
+```
+
+That actually proved hard to read, and a bit annoying.  I asked Claude about zippers and lenses, and we ended up with this to try:
+
+```typescript
+import { Lens } from 'monocle-ts';
+
+type Mutation<T> = (value: T) => T;
+
+function updateEverythingToCreateOrder(
+    mutations: [Lens<EverythingToCreateOrder, any>, Mutation<any>][]
+): (order: EverythingToCreateOrder) => EverythingToCreateOrder {
+    return (order: EverythingToCreateOrder) => {
+        return mutations.reduce((acc, [lens, mutation]) => {
+            return lens.modify(mutation)(acc);
+        }, order);
+    };
+}
+
+test('update multiple parts of EverythingToCreateOrder using a generic function', () => {
+    const order: EverythingToCreateOrder = {
+        _type: 'everything.to.create.order',
+        basket: {
+            lines: [
+                hydratedBasketLine(smallCarWash, london, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, []),
+                hydratedBasketLine(smallCarWash, london, [], smallCarWash.price, smallCarWash.price, today, carwash.nineToOne.slot.from, []),
+            ],
+            total: priceFns.sum([smallCarWash.price, smallCarWash.price]),
+        },
+        customer: goodCustomer,
+        paymentIntent: fullPaymentOnCheckout(),
+    };
+
+    const newTotal = price(1500, 'GBP');
+    const newCustomerName = 'John Doe';
+
+    const lineToUpdate = 0;
+    const pathToLineTotal = basketLens.compose(linesLens).compose(lineLens(lineToUpdate)).compose(totalLens);
+    const pathToCustomerName = Lens.fromPath<EverythingToCreateOrder>()(['customer', 'name']);
+
+    const updatedOrder = updateEverythingToCreateOrder([
+        [pathToLineTotal, () => newTotal],
+        [pathToCustomerName, () => newCustomerName],
+    ])(order);
+
+    expect(updatedOrder.basket.lines[0].total).toEqual(newTotal);
+    expect(updatedOrder.customer.name).toEqual(newCustomerName);
+});
+```
+
+I need to get back working code tho before I try this, so I will plough along with the sub-optional pattern I have now.
+
+## The result of the above
+Actually writing simple setter() functions to make the required mutations to a default test object worked out clean enough
+and was not too onerous to work.  I suspect I was seduced by the fancier idea of lenses and zippers because I was getting
+tired or bored.  I think I will stick with the simple pattern for now.

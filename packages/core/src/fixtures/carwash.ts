@@ -10,7 +10,8 @@ import {
     GBP,
     id,
     isoDate,
-    locationId, minutes,
+    locationId,
+    minutes,
     percentageAsRatio,
     percentageCoupon,
     price,
@@ -47,10 +48,11 @@ const nineToOne = timeslotSpec(nineAm, onePm, '09:00 - 13:00', id('timeSlot#1'))
 const oneToFour = timeslotSpec(onePm, fourPm, '13:00 - 16:00', id('timeSlot#2'));
 const fourToSix = timeslotSpec(fourPm, sixPm, '16:00 - 18:00', id('timeSlot#3'));
 const timeslots = [nineToOne, oneToFour, fourToSix]
+const anySuitableVan = anySuitableResource(van);
 const smallCarWash = serviceFns.setStartTimes(service(
     'Small Car Wash',
     'Small Car Wash',
-    [anySuitableResource(van)],
+    [anySuitableVan],
     minutes(120),
     price(1000, GBP),
     [wax.id, polish.id],
@@ -58,11 +60,11 @@ const smallCarWash = serviceFns.setStartTimes(service(
     capacity(1),
     serviceId('smallCarWash.id')
 ), timeslots);
-const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableResource(van)], minutes(120), price(1500, GBP), [wax.id, polish.id], [], capacity(1), serviceId('mediumCarWash.id')), timeslots);
+const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableVan], minutes(120), price(1500, GBP), [wax.id, polish.id], [], capacity(1), serviceId('mediumCarWash.id')), timeslots);
 const largeCarWash = serviceFns.setStartTimes(service(
     'Large Car Wash',
     'Large Car Wash',
-    [anySuitableResource(van)],
+    [anySuitableVan],
     minutes(120),
     price(2000, GBP),
     [wax.id, polish.id, cleanSeats.id, cleanCarpets.id],
@@ -108,9 +110,15 @@ export const carwash = {
     mediumCarWash: mediumCarWash,
     largeCarWash: largeCarWash,
     services: [smallCarWash, mediumCarWash, largeCarWash],
-    coupons: [expired20PercentOffCoupon, twentyPercentOffCoupon],
+    coupons: {
+        expired20PercentOffCoupon,
+        twentyPercentOffCoupon
+    },
     locations: {
         london,
         liverpool
+    },
+    resourceRequirements: {
+        anySuitableVan
     }
 };

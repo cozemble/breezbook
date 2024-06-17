@@ -1,7 +1,7 @@
 import express from 'express';
 import {UnpricedBasket, unpricedBasketFns} from '@breezbook/backend-api-types';
 import {byLocation} from "../../availability/byLocation.js";
-import {TenantEnvironment, tenantEnvironmentLocation} from "@breezbook/packages-core";
+import {TenantEnvironment, mandatory, tenantEnvironmentLocation} from "@breezbook/packages-core";
 import {
     asHandler,
     bodyAsJsonParam,
@@ -32,11 +32,11 @@ export function basketPriceRequestEndpoint(deps: EndpointDependencies, request: 
 async function handlePriceBasket(deps: EndpointDependencies, tenantEnvironment: TenantEnvironment, unpricedBasket: UnpricedBasket): Promise<EndpointOutcome[]> {
     const {fromDate, toDate} = unpricedBasketFns.getDates(unpricedBasket);
     const locations = unpricedBasket.lines.map((line) => line.locationId);
-    const allTheSameLocation = locations.every((val, i, arr) => val.value === arr[0].value);
+    const allTheSameLocation = locations.every((val, i, arr) => val.value === arr[0]?.value);
     if (!allTheSameLocation) {
         return [httpResponseOutcome(responseOf(400, JSON.stringify({error: 'All line items must be for the same location'})))];
     }
-    const location = tenantEnvironmentLocation(tenantEnvironment.environmentId, tenantEnvironment.tenantId, locations[0]);
+    const location = tenantEnvironmentLocation(tenantEnvironment.environmentId, tenantEnvironment.tenantId, mandatory(locations[0],`Missing first location`));
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, location, fromDate, toDate);
     const response = priceBasket(everythingForTenant, unpricedBasket);
     const statusCode = response._type === 'error.response' ? 400 : 200;

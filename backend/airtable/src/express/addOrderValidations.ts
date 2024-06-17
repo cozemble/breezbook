@@ -23,7 +23,7 @@ import {
 import {
     applyBookingsToResourceAvailability
 } from '@breezbook/packages-core/dist/applyBookingsToResourceAvailability.js';
-import {addOrderErrorCodes} from './onAddOrderExpress.js';
+import {addOrderErrorCodes, EverythingToCreateOrder, HydratedBasket, hydratedBasketFns} from './onAddOrderExpress.js';
 import Ajv from 'ajv';
 import {priceBasket} from "../core/basket/priceBasket.js";
 
@@ -47,17 +47,17 @@ function validateForm(forms: Form[], formId: FormId, formData: unknown): string 
     }
 }
 
-export function validateOrderTotal(everythingForTenant: EverythingForAvailability, pricedBasket: PricedCreateOrderRequest): ErrorResponse | null {
-    const unpricedBasket = pricedBasketFns.toUnpricedBasket(pricedBasket.basket);
+export function validateOrderTotal(everythingForTenant: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder): ErrorResponse | null {
+    const unpricedBasket = hydratedBasketFns.toUnpricedBasket(everythingToCreateOrder.basket);
     const repricedBasket = priceBasket(everythingForTenant, unpricedBasket);
     if (repricedBasket._type === 'error.response') {
         return repricedBasket;
     }
-    if (repricedBasket.total.amount.value !== pricedBasket.basket.total.amount.value) {
-        return errorResponse(addOrderErrorCodes.wrongTotalPrice, `Expected ${repricedBasket.total.amount.value} but got ${pricedBasket.basket.total.amount.value}`);
+    if (repricedBasket.total.amount.value !== everythingToCreateOrder.basket.total.amount.value) {
+        return errorResponse(addOrderErrorCodes.wrongTotalPrice, `Expected ${repricedBasket.total.amount.value} but got ${everythingToCreateOrder.basket.total.amount.value}`);
     }
-    if (repricedBasket.discount && repricedBasket.discount.amount.value !== pricedBasket.basket.discount?.amount.value) {
-        return errorResponse(addOrderErrorCodes.incorrectDiscountAmount, `Expected discount ${repricedBasket.discount.amount.value} but got ${pricedBasket.basket.discount?.amount.value ?? 'nothing'}`);
+    if (repricedBasket.discount && repricedBasket.discount.amount.value !== everythingToCreateOrder.basket.discount?.amount.value) {
+        return errorResponse(addOrderErrorCodes.incorrectDiscountAmount, `Expected discount ${repricedBasket.discount.amount.value} but got ${everythingToCreateOrder.basket.discount?.amount.value ?? 'nothing'}`);
     }
     return null;
 }
@@ -71,15 +71,15 @@ export function validateOrderTotal(everythingForTenant: EverythingForAvailabilit
 //     return null;
 // }
 
-export function validateCustomerForm(everythingForTenant: EverythingForAvailability, pricedCreateOrderRequest: PricedCreateOrderRequest): ErrorResponse | null {
+export function validateCustomerForm(everythingForTenant: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder): ErrorResponse | null {
     if (everythingForTenant.tenantSettings.customerFormId) {
-        if (!pricedCreateOrderRequest.customer.formData) {
+        if (!everythingToCreateOrder.customer.formData) {
             return errorResponse(addOrderErrorCodes.customerFormMissing);
         } else {
             const formValidationError = validateForm(
                 everythingForTenant.businessConfiguration.forms,
                 everythingForTenant.tenantSettings.customerFormId,
-                pricedCreateOrderRequest.customer.formData
+                everythingToCreateOrder.customer.formData
             );
             if (formValidationError) {
                 return errorResponse(addOrderErrorCodes.customerFormInvalid, formValidationError);
@@ -89,16 +89,13 @@ export function validateCustomerForm(everythingForTenant: EverythingForAvailabil
     return null;
 }
 
-export function validateServiceForms(everythingForTenant: EverythingForAvailability, order: PricedCreateOrderRequest): ErrorResponse | null {
-    for (let i = 0; i < order.basket.lines.length; i++) {
-        const line = mandatory(order.basket.lines[i], `Order line ${i} missing`);
-        const service = mandatory(
-            everythingForTenant.businessConfiguration.services.find((s) => s.id.value === line.serviceId.value),
-            `Service with id ${line.serviceId.value} not found`
-        );
+export function validateServiceForms(everythingForTenant: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder): ErrorResponse | null {
+    for (let i = 0; i < everythingToCreateOrder.basket.lines.length; i++) {
+        const line = mandatory(everythingToCreateOrder.basket.lines[i], `Order line ${i} missing`);
+        const service = line.service;
         for (let serviceFormIndex = 0; serviceFormIndex < service.serviceFormIds.length; serviceFormIndex++) {
-            const serviceFormId = service.serviceFormIds[serviceFormIndex];
-            const formData = line.serviceFormData[serviceFormIndex] as unknown;
+            const serviceFormId = mandatory(service.serviceFormIds[serviceFormIndex], `Service form id missing in order line ${i}`);
+            const formData = line.serviceFormData[serviceFormIndex] as unknown
             if (!formData) {
                 return errorResponse(addOrderErrorCodes.serviceFormMissing, `Service form ${serviceFormId.value} missing in order line ${i}`);
             }
@@ -111,11 +108,11 @@ export function validateServiceForms(everythingForTenant: EverythingForAvailabil
     return null;
 }
 
-export function validateAvailability(everythingForAvailability: EverythingForAvailability, order: PricedCreateOrderRequest) {
+export function validateAvailability(everythingForAvailability: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder) {
     const projectedBookings: Booking[] = [...everythingForAvailability.bookings];
-    for (const [index, line] of order.basket.lines.entries()) {
-        const service = everythingForAvailabilityFns.findService(everythingForAvailability, line.serviceId);
-        const projectedBooking = booking(order.customer.id, service, line.date, timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, service.duration)));
+    for (const [index, line] of everythingToCreateOrder.basket.lines.entries()) {
+        const service = line.service;
+        const projectedBooking = booking(everythingToCreateOrder.customer.id, service, line.date, timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, service.duration)));
         projectedBookings.push(projectedBooking);
         try {
             applyBookingsToResourceAvailability(
@@ -123,7 +120,7 @@ export function validateAvailability(everythingForAvailability: EverythingForAva
                 projectedBookings
             );
         } catch (e: unknown) {
-            return errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.serviceId.value} in order line ${index}`);
+            return errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.service.id.value} in order line ${index}`);
         }
     }    return null;
 }
@@ -136,9 +133,9 @@ function businessIsOpen(everythingForTenant: EverythingForAvailability, date: Is
     return errorResponse(addOrderErrorCodes.businessIsNotOpenAtThatTime, `Business is not open at ${period.from.value} on ${date.value}`)
 }
 
-export function validateOpeningHours(everythingForTenant: EverythingForAvailability, order: PricedCreateOrderRequest): ErrorResponse | null {
+export function validateOpeningHours(everythingForTenant: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder): ErrorResponse | null {
 
-    const validationOutcomes = order.basket.lines.map(line => businessIsOpen(everythingForTenant, line.date, pricedBasketLineFns.bookingPeriod(line, pricedBasketLineFns.findService(everythingForTenant.businessConfiguration.services, line.serviceId).duration)))
+    const validationOutcomes = everythingToCreateOrder.basket.lines.map(line => businessIsOpen(everythingForTenant, line.date, timePeriodFns.calcPeriod(line.startTime,line.service.duration)))
     return validationOutcomes.find(o => o != null) ?? null
 }
 
@@ -149,8 +146,8 @@ function dateIsInTheFuture(date: IsoDate) {
     return null
 }
 
-export function validateServiceDates(everythingForTenant: EverythingForAvailability, order: PricedCreateOrderRequest): ErrorResponse | null {
-    const validationOutcomes = order.basket.lines.map(line => dateIsInTheFuture(line.date))
+export function validateServiceDates(_: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder): ErrorResponse | null {
+    const validationOutcomes = everythingToCreateOrder.basket.lines.map(line => dateIsInTheFuture(line.date))
     return validationOutcomes.find(o => o != null) ?? null
 }
 
@@ -169,6 +166,6 @@ export function validateCouponCode(everythingForTenant: EverythingForAvailabilit
     return null;
 }
 
-export function validateCoupon(everythingForTenant: EverythingForAvailability, order: PricedCreateOrderRequest) {
-    return validateCouponCode(everythingForTenant, order.basket.couponCode);
+export function validateCoupon(everythingForTenant: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder) {
+    return validateCouponCode(everythingForTenant, everythingToCreateOrder.basket.coupon?.code);
 }

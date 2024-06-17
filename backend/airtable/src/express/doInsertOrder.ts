@@ -7,7 +7,7 @@ import {
     PaymentIntent,
     Service,
     TenantEnvironment,
-    TenantSettings
+    TenantSettings, timePeriodFns
 } from '@breezbook/packages-core';
 import {
     orderCreatedResponse,
@@ -30,6 +30,7 @@ import {
 } from '../prisma/breezPrismaMutations.js';
 import {Mutation, Mutations, mutations as mutationsConstructor} from '../mutation/mutations.js';
 import {DbPaymentMethod} from "../prisma/dbtypes.js";
+import {EverythingToCreateOrder, HydratedBasketLine} from "./onAddOrderExpress.js";
 
 function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, customer: Customer, tenantSettings: TenantSettings): Mutation[] {
     const tenant_id = tenantEnvironment.tenantId.value;
@@ -78,17 +79,17 @@ function toDbPaymentMethod(paymentIntent: PaymentIntent): DbPaymentMethod {
     }
 }
 
-function createOrderAsPrismaMutation(tenantEnvironment: TenantEnvironment, pricedCreateOrderRequest: PricedCreateOrderRequest, orderId: string): CreateOrder {
+function createOrderAsPrismaMutation(tenantEnvironment: TenantEnvironment, everythingToCreateOrder: EverythingToCreateOrder, orderId: string): CreateOrder {
     const tenant_id = tenantEnvironment.tenantId.value;
     const environment_id = tenantEnvironment.environmentId.value;
     return createOrder({
         id: orderId,
         environment_id,
-        total_price_in_minor_units: pricedCreateOrderRequest.basket.total.amount.value,
-        total_price_currency: pricedCreateOrderRequest.basket.total.currency.value,
-        customer_id: pricedCreateOrderRequest.customer.id.value,
+        total_price_in_minor_units: everythingToCreateOrder.basket.total.amount.value,
+        total_price_currency: everythingToCreateOrder.basket.total.currency.value,
+        customer_id: everythingToCreateOrder.customer.id.value,
         tenant_id,
-        payment_method: toDbPaymentMethod(pricedCreateOrderRequest.paymentIntent),
+        payment_method: toDbPaymentMethod(everythingToCreateOrder.paymentIntent),
     });
 }
 
@@ -123,7 +124,7 @@ function processOrderLines(
     tenantEnvironment: TenantEnvironment,
     paymentIntent: PaymentIntent,
     customer: Customer,
-    lines: PricedBasketLine[],
+    lines: HydratedBasketLine[],
     orderId: string,
     services: Service[]
 ): { mutations: Mutation[]; bookingIds: string[]; reservationIds: string[]; orderLineIds: string[] } {
@@ -137,11 +138,8 @@ function processOrderLines(
     const reservationIds = [] as string[];
     const bookingIds = [] as string[];
     for (const line of lines) {
-        const service = mandatory(
-            services.find((s) => s.id.value === line.serviceId.value),
-            `Service with id ${line.serviceId.value} not found`
-        );
-        const servicePeriod = pricedBasketLineFns.bookingPeriod(line, service.duration);
+        const service = line.service;
+        const servicePeriod = timePeriodFns.calcPeriod(line.startTime, service.duration);
         const orderLineId = uuidv4();
         orderLineIds.push(orderLineId);
 
@@ -151,11 +149,11 @@ function processOrderLines(
                 tenant_id,
                 environment_id,
                 order_id: orderId,
-                service_id: line.serviceId.value,
+                service_id: service.id.value,
                 location_id: line.locationId.value,
                 start_time_24hr: servicePeriod.from.value,
                 end_time_24hr: servicePeriod.to.value,
-                add_on_ids: line.addOnIds.map((a) => a.addOnId.value),
+                add_on_ids: line.addOns.map((a) => a.addOn.id.value),
                 date: line.date.value,
                 total_price_in_minor_units: line.total.amount.value,
                 total_price_currency: line.total.currency.value
@@ -168,9 +166,9 @@ function processOrderLines(
                 id: bookingId,
                 environment_id,
                 tenant_id,
-                service_id: line.serviceId.value,
+                service_id: service.id.value,
                 location_id: line.locationId.value,
-                add_on_ids: line.addOnIds.map((a) => a.addOnId.value),
+                add_on_ids: line.addOns.map((a) => a.addOn.id.value),
                 order_id: orderId,
                 customer_id: customer.id.value,
                 date: line.date.value,
@@ -201,7 +199,7 @@ function processOrderLines(
 
 export function doInsertOrder(
     tenantEnvironment: TenantEnvironment,
-    pricedCreateOrderRequest: PricedCreateOrderRequest,
+    everythingToCreateOrder: EverythingToCreateOrder,
     services: Service[],
     tenantSettings: TenantSettings
 ): { _type: 'success'; mutations: Mutations; orderCreatedResponse: OrderCreatedResponse } {
@@ -211,16 +209,16 @@ export function doInsertOrder(
         bookingIds,
         reservationIds,
         orderLineIds
-    } = processOrderLines(tenantEnvironment, pricedCreateOrderRequest.paymentIntent, pricedCreateOrderRequest.customer, pricedCreateOrderRequest.basket.lines, theId.value, services);
+    } = processOrderLines(tenantEnvironment, everythingToCreateOrder.paymentIntent, everythingToCreateOrder.customer, everythingToCreateOrder.basket.lines, theId.value, services);
     const mutations = [
-        ...upsertCustomerAsMutations(tenantEnvironment, pricedCreateOrderRequest.customer, tenantSettings),
-        createOrderAsPrismaMutation(tenantEnvironment, pricedCreateOrderRequest, theId.value),
+        ...upsertCustomerAsMutations(tenantEnvironment, everythingToCreateOrder.customer, tenantSettings),
+        createOrderAsPrismaMutation(tenantEnvironment, everythingToCreateOrder, theId.value),
         ...orderLineMutations
     ];
     return {
         _type: 'success',
         mutations: mutationsConstructor(mutations),
-        orderCreatedResponse: orderCreatedResponse(theId.value, pricedCreateOrderRequest.customer.id.value, bookingIds, reservationIds, orderLineIds)
+        orderCreatedResponse: orderCreatedResponse(theId.value, everythingToCreateOrder.customer.id.value, bookingIds, reservationIds, orderLineIds)
     };
 }
 

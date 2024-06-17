@@ -721,7 +721,12 @@ export const priceFns = {
                 }
             }
         });
-
+    },
+    sum(prices: Price[]): Price {
+        if(prices.length === 0) {
+            throw new Error('Cannot sum an empty list of prices');
+        }
+        return prices.reduce((acc, price) => priceFns.add(acc, price), price(0, prices[0].currency));
     }
 };
 
@@ -1084,6 +1089,16 @@ export function addOn(name: string, price: Price, requiresQuantity: boolean, des
     };
 }
 
+export const addOnFns = {
+    findById(addOns: AddOn[], addOnId: AddOnId): AddOn {
+        const found = addOns.find(a => values.isEqual(a.id, addOnId));
+        if (!found) {
+            throw new Error(`No add-on found with id ${addOnId.value}`);
+        }
+        return found;
+    }
+}
+
 export function businessConfiguration(
     availability: BusinessAvailability,
     resources: Resource[],
@@ -1293,6 +1308,10 @@ export const timePeriodFns = {
     },
     sequential(period: TimePeriod, period2: TimePeriod) {
         return period.to.value === period2.from.value;
+    },
+    calcPeriod(from: TwentyFourHourClockTime, duration: Duration | Minutes): TimePeriod {
+        const durationMinutes = duration._type === 'duration' ? duration.value : duration;
+        return timePeriod(from, time24Fns.addMinutes(from, durationMinutes));
     }
 };
 

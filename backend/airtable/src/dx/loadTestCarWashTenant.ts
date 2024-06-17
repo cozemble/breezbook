@@ -186,7 +186,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
         }))
     });
     await prisma.coupons.createMany({
-        data: carwash.coupons.map((coupon, index) => ({
+        data: Object.values(carwash.coupons).map((coupon, index) => ({
             id: `coupon#${index + 1}`,
             tenant_id,
             environment_id,

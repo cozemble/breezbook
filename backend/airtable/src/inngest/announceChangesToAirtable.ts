@@ -44,7 +44,7 @@ async function getEarliestNonReplicatedMutationEvent(prisma: PrismaClient, tenan
         LIMIT 1
     `);
 
-    return result.length > 0 ? result[0] : null;
+    return result[0] ?? null
 }
 
 export const fanOutChangesInAllEnvironments = inngest.createFunction(

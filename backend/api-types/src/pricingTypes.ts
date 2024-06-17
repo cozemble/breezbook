@@ -85,6 +85,7 @@ export interface PricedBasketLine {
     date: IsoDate;
     startTime: TwentyFourHourClockTime;
     serviceFormData: unknown[];
+    resourceRequirementOverrides: ResourceRequirementOverride[];
 }
 
 export interface PricedBasket {
@@ -96,7 +97,6 @@ export interface PricedBasket {
 }
 
 export const pricedBasketLineFns = {
-
     bookingPeriod(line: PricedBasketLine, bookingDuration: Minutes): TimePeriod {
         return timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, bookingDuration));
     },
@@ -116,8 +116,7 @@ export function pricedBasket(lines: PricedBasketLine[], total: Price, couponCode
 }
 
 export function pricedBasketLine(locationId: LocationId, serviceIdValue: ServiceId, addOnIds: PricedAddOn[], servicePrice: Price, total: Price, date: IsoDate,
-                                 startTime: TwentyFourHourClockTime, serviceFormData: unknown[]
-): PricedBasketLine {
+                                 startTime: TwentyFourHourClockTime, serviceFormData: unknown[], resourceRequirementOverrides: ResourceRequirementOverride[]): PricedBasketLine {
     return {
         _type: 'priced.basket.line',
         locationId,
@@ -127,7 +126,8 @@ export function pricedBasketLine(locationId: LocationId, serviceIdValue: Service
         servicePrice,
         date,
         startTime,
-        serviceFormData
+        serviceFormData,
+        resourceRequirementOverrides
     };
 }
 

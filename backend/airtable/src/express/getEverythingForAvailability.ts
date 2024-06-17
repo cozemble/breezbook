@@ -35,7 +35,7 @@ import {
     DbBooking,
     DbBusinessHours,
     DbCoupon,
-    DbForm,
+    DbForm, DbLocation,
     DbPricingRule,
     DbResource,
     DbResourceAvailability,
@@ -76,7 +76,7 @@ export function everythingForAvailability(
     bookings: Booking[],
     coupons: Coupon[],
     tenantSettings: TenantSettings,
-    tenantEnvironment: TenantEnvironment
+    tenantEnvironment: TenantEnvironment,
 ): EverythingForAvailability {
     return {
         _type: 'everything.for.availability',
@@ -85,7 +85,7 @@ export function everythingForAvailability(
         bookings,
         coupons,
         tenantSettings,
-        tenantEnvironment
+        tenantEnvironment,
     };
 }
 
@@ -217,7 +217,7 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
         bookings,
         forms,
         tenantSettings,
-        coupons
+        coupons,
     };
 }
 
