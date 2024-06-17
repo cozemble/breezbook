@@ -1,8 +1,4 @@
-import {HttpResponse} from "@http4t/core/contract.js";
 import {PrismaClient} from "@prisma/client";
-import {asRequestContext, RequestContext, sendExpressResponse} from "./http/expressHttp4t.js";
-import {responseOf} from "@http4t/core/responses.js";
-import {query as http4tQuery} from "@http4t/core/queries.js";
 import {
     environmentId,
     EnvironmentId,
@@ -28,6 +24,10 @@ import express from "express";
 import {Mutations} from "../mutation/mutations.js";
 import {applyMutations} from "../prisma/applyMutations.js";
 import {inngest} from "../inngest/client.js";
+import {asRequestContext, RequestContext, sendExpressResponse} from "./http/expressHttp4t.js";
+import {query as httpQuery} from "@breezbook/packages-http/dist/queries.js";
+import { HttpResponse } from "@breezbook/packages-http/dist/contract.js";
+import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 
 export type EventSender = (event: { name: string, data: any }) => Promise<void>;
 
@@ -56,7 +56,7 @@ export interface RequestValueExtractor {
 }
 
 export function query(paramName: string): RequestValueExtractor {
-    const extractor = (req: RequestContext) => http4tQuery(req.request.uri.query, paramName) ?? null;
+    const extractor = (req: RequestContext) => httpQuery(req.request.uri.query, paramName) ?? null;
     return {name: paramName, extractor};
 }
 

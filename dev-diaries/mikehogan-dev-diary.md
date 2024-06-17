@@ -1339,3 +1339,11 @@ I need to get back working code tho before I try this, so I will plough along wi
 Actually writing simple setter() functions to make the required mutations to a default test object worked out clean enough
 and was not too onerous to work.  I suspect I was seduced by the fancier idea of lenses and zippers because I was getting
 tired or bored.  I think I will stick with the simple pattern for now.
+
+# Mon 17 Jun 2024
+I have an end to end test that exercises endpoints and proves to a good level of certainty that booking a personal training
+session with a chosen personal trainer is supported by the system.
+
+I'm trying to think what is the next most useful thing to do.  Mete is working on figma designs for the various booking journeys
+we think we'll have to support.  I feel the desire to make really simple svelte journeys to prove for sure that I can support
+personal training booking, and the other journeys we have in mind.

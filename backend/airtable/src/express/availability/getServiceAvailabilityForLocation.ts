@@ -12,7 +12,6 @@ import {
     serviceIdParam,
     tenantEnvironmentLocationParam
 } from "../../infra/endpoint.js";
-import {responseOf} from "@http4t/core/responses.js";
 import {byLocation} from "../../availability/byLocation.js";
 import {getAvailabilityForService2} from "../../core/getAvailabilityForService.js";
 import {
@@ -31,8 +30,9 @@ import {
     TenantEnvironmentLocation
 } from "@breezbook/packages-core";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
-import {HttpResponse} from "@http4t/core/contract.js";
 import {EverythingForAvailability} from "../getEverythingForAvailability.js";
+import {HttpResponse} from "@breezbook/packages-http/dist/contract.js";
+import { responseOf } from "@breezbook/packages-http/dist/responses.js";
 
 interface RequirementOverride {
     requirementId: ResourceRequirementId;

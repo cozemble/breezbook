@@ -1,6 +1,6 @@
+import {Header, HttpRequest, HttpResponse} from "@breezbook/packages-http/dist/contract.js";
 import express from "express";
-import {Header, HttpRequest, HttpResponse} from "@http4t/core/contract.js";
-import {requestOf} from "@http4t/core/requests.js";
+import {requestOf} from "@breezbook/packages-http/dist/requests.js";
 
 export function sendExpressResponse(response: HttpResponse, res: express.Response): void {
     res.status(response.status)

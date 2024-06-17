@@ -14,8 +14,8 @@ import {
     RequestValueExtractor,
     tenantEnvironmentLocationParam
 } from "../../infra/endpoint.js";
-import {responseOf} from "@http4t/core/responses.js";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
+import { responseOf } from "@breezbook/packages-http/dist/responses.js";
 
 export function resourceTypeParam(requestValue: RequestValueExtractor = path('type')): ParamExtractor<ResourceType> {
     return paramExtractor('type', requestValue.extractor, resourceType);

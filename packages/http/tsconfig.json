@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "declaration": true,
+    "moduleResolution": "NodeNext",
+    "allowSyntheticDefaultImports": true,
+    "lib": ["es2019","dom"]
+  },
+  "include": ["./src"]
+}

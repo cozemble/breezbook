@@ -12,7 +12,8 @@ import {
     resourceId,
     resourceRequirementId,
     resourceType,
-    serviceId, SpecificResource, tenantEnvironment,
+    serviceId,
+    tenantEnvironment,
     tenantId,
     time24
 } from "@breezbook/packages-core";
@@ -32,15 +33,14 @@ import {
 import {
     getServiceAvailabilityForLocationEndpoint
 } from "../../src/express/availability/getServiceAvailabilityForLocation.js";
-import {requestOf} from "@http4t/core/requests.js";
 import {externalApiPaths} from "../../src/express/expressApp.js";
 import {requestContext} from "../../src/infra/http/expressHttp4t.js";
 import {onGetTenantRequestEndpoint} from "../../src/express/tenants/tenantHandlers.js";
 import {listResourcesByTypeRequestEndpoint} from "../../src/express/resources/resourcesHandler.js";
 import {basketPriceRequestEndpoint} from "../../src/express/basket/basketHandler.js";
 import {addOrderEndpoint} from "../../src/express/onAddOrderExpress.js";
-import {DbBookingResourceRequirement, DbResource} from "../../src/prisma/dbtypes.js";
 import {applyMutations} from "../../src/prisma/applyMutations.js";
+import {requestOf} from "@breezbook/packages-http/dist/requests.js";
 
 const env = environmentId(multiLocationGym.environment_id);
 const tenant = tenantId(multiLocationGym.tenant_id);
@@ -98,10 +98,10 @@ describe("given the test gym tenant", () => {
             where: {id: bookingId},
             include: {booking_resource_requirements: true}
         })
-        if(!booking) {
+        if (!booking) {
             throw new Error(`Booking ${bookingId} not found`)
         }
-        const resourceRequirements = mandatory(booking.booking_resource_requirements,`No resource requirements found for booking ${bookingId}`) as DbBookingResourceRequirement[]
+        const resourceRequirements = mandatory(booking.booking_resource_requirements, `No resource requirements found for booking ${bookingId}`)
         expect(resourceRequirements).toHaveLength(1)
         const requirement = mandatory(resourceRequirements[0], `No resource requirement found for booking ${bookingId}`)
         expect(requirement.requirement_type).toBe("specific_resource")
@@ -113,10 +113,10 @@ describe("given the test gym tenant", () => {
     });
 })
 
-async function handleMutations(deps: EndpointDependencies, outcomes: EndpointOutcome[]):EndpointOutcome[] {
+async function handleMutations(deps: EndpointDependencies, outcomes: EndpointOutcome[]): EndpointOutcome[] {
     for (const outcome of outcomes) {
-        if(outcome._type === 'mutation.outcome') {
-            await applyMutations(deps.prisma, tenantEnvironment(env,tenant),outcome.mutations.mutations)
+        if (outcome._type === 'mutation.outcome') {
+            await applyMutations(deps.prisma, tenantEnvironment(env, tenant), outcome.mutations.mutations)
         }
     }
     return outcomes

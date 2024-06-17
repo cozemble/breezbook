@@ -26,8 +26,8 @@ import {
     query,
     RequestValueExtractor
 } from "../../infra/endpoint.js";
-import {responseOf} from "@http4t/core/responses.js";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
+import { responseOf } from "@breezbook/packages-http/dist/responses.js";
 
 type DbTenantAndStuff = DbTenant & {
     tenant_images: DbTenantImage[],
