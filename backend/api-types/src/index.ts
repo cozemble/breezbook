@@ -187,3 +187,5 @@ export interface Tenant {
 }
 
 export * from './waitlistRegistration.js'
+
+export * from './resourceTypes.js'

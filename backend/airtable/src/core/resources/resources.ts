@@ -1,32 +1,8 @@
 import {PrismaClient} from '@prisma/client'
 import {ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-core";
-import {errorResponse, ErrorResponse} from "@breezbook/backend-api-types";
+import {errorResponse, ErrorResponse, ResourceSummary} from "@breezbook/backend-api-types";
 import {DbResource, DbResourceAvailability, DbResourceImage, DbResourceMarkup} from "../../prisma/dbtypes.js";
 
-interface ImageSummary {
-    publicUrl: string;
-    context: string;
-    mimeType: string;
-}
-
-interface MarkupSummary {
-    markup: string;
-    markupType: 'markdown'
-}
-
-export interface ResourceBranding {
-    images: ImageSummary[];
-    markup: MarkupSummary[]
-}
-
-export interface ResourceSummary {
-    _type: 'resource.summary'
-    id: string
-    name: string
-    type: string
-    locationIds: string[]
-    branding?: ResourceBranding
-}
 
 function toResourceSummary(r: DbResource & { resource_images: DbResourceImage[] } & {
     resource_markup: DbResourceMarkup[]
