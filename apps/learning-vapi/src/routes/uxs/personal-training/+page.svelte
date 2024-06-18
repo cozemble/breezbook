@@ -22,10 +22,8 @@
         tenant = await fetchJson<Tenant>(backendUrl(`/api/dev/tenants?slug=breezbook-gym`), {method: "GET"})
         location = mandatory(tenant.serviceLocations.find(location => location.locationId.includes("harlow")), `Harlow location not found`)
         personalTrainers = await fetchJson<ResourceSummary[]>(backendUrl(`/api/dev/breezbook-gym/${location.locationId}/resources/personal.trainer/list`), {method: "GET"})
-        console.log({tenant, personalTrainers})
         personalTrainingService = mandatory(tenant.services.find(s => s.slug === 'pt1hr'), `Service pt1hr not found`)
         personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`) as AnySuitableResource;
-
     })
 
     function toggleSelection(personalTrainer: ResourceSummary) {
@@ -34,7 +32,6 @@
         } else {
             selectedPersonalTrainer = personalTrainer
         }
-        console.log({selectedPersonalTrainer})
     }
 </script>
 {#if personalTrainers}
@@ -63,9 +60,8 @@
 {#if selectedPersonalTrainer && location && personalTrainerRequirement && personalTrainingService}
     {#key selectedPersonalTrainer.id}
         <div class="mt-4">
-            <h3>Availability for {selectedPersonalTrainer.name}</h3>
             <BookPersonalTrainer trainer={selectedPersonalTrainer} locationId={location.locationId}
-                                 {personalTrainerRequirement} serviceId={personalTrainingService.id}/>
+                                 {personalTrainerRequirement} service={personalTrainingService}/>
         </div>
     {/key}
 {/if}

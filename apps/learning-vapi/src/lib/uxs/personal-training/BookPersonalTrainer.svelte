@@ -1,23 +1,27 @@
 <script lang="ts">
     import {
         type AnySuitableResource,
-        type Availability,
         type AvailabilityResponse,
-        type ResourceSummary
+        type ResourceSummary,
+        type Service
     } from "@breezbook/backend-api-types";
     import {onMount} from 'svelte';
     import {backendUrl, fetchJson} from "$lib/helpers";
-    import {type IsoDate, isoDate, isoDateFns} from "@breezbook/packages-core";
+    import {isoDate, isoDateFns} from "@breezbook/packages-core";
+    import SelectSlot from "$lib/uxs/personal-training/SelectSlot.svelte";
+    import {initialJourneyState, type JourneyState, type Slot} from "$lib/uxs/personal-training/journeyState";
+    import {journeyStateFns} from "$lib/uxs/personal-training/journeyState.js";
+    import FillForm from "$lib/uxs/personal-training/FillForm.svelte";
 
     export let trainer: ResourceSummary
     export let locationId: string
-    export let serviceId: string
+    export let service: Service
     export let personalTrainerRequirement: AnySuitableResource
     let availableSlots: AvailabilityResponse
     const today = isoDate()
     const sevenDaysFromNow = isoDateFns.addDays(today, 7)
     const dayList = isoDateFns.listDays(today, sevenDaysFromNow)
-    let selectedSlot: {day: IsoDate, slot: Availability} | null = null
+    let journeyState: JourneyState
 
     onMount(async () => {
         const dateRange = `fromDate=${today.value}&toDate=${sevenDaysFromNow.value}`
@@ -25,56 +29,30 @@
             requirementId: personalTrainerRequirement.id.value,
             resourceId: trainer.id
         }]
-        availableSlots = await fetchJson(backendUrl(`/api/dev/breezbook-gym/${locationId}/service/${serviceId}/availability?${dateRange}`), {
+        availableSlots = await fetchJson(backendUrl(`/api/dev/breezbook-gym/${locationId}/service/${service.id}/availability?${dateRange}`), {
             method: "POST",
             body: JSON.stringify({requirementOverrides})
         })
+        journeyState = initialJourneyState(availableSlots)
     })
 
-    function slotsForDay(availableSlots: AvailabilityResponse, day: { value: string }): Availability[] {
-        return availableSlots.slots[day.value] || []
+    function slotSelected(event: CustomEvent<Slot>) {
+        journeyState = {...journeyState, selectedSlot: event.detail}
     }
 
-    function toggleTimeSelection(day: IsoDate, slot: Availability) {
-        if (isSelectedSlot(selectedSlot, day, slot)) {
-            selectedSlot = null
-        } else {
-            selectedSlot = {day, slot}
-        }
-    }
-
-    function isSelectedSlot(selectedSlot:{day: IsoDate, slot: Availability} | null = null,day: IsoDate, slot: Availability) {
-        return selectedSlot && selectedSlot.day.value === day.value && selectedSlot.slot.startTime24hr === slot.startTime24hr
-    }
-
-    function confirm() {
-        console.log('Confirming', selectedSlot)
+    function onFormFilled(event: CustomEvent) {
+        journeyState = journeyStateFns.formFilled(journeyState, event.detail)
     }
 </script>
-
-<div class="flex">
-    {#if availableSlots}
-        {#each dayList as day}
-            {@const slots = slotsForDay(availableSlots, day)}
-            <div class="card p-2 ml-2 border">
-                <h3><strong>{day.value} - {isoDateFns.dayOfWeek(day)}</strong></h3>
-                {#each slots as slot}
-                    <div on:click={() => toggleTimeSelection(day, slot)} class="border-success" class:border={isSelectedSlot(selectedSlot,day,slot)}>
-                        <p>{slot.startTime24hr}</p>
-                    </div>
-                {/each}
-                {#if slots.length === 0}
-                    <p class="mt-12">No slots available</p>
-                {/if}
-            </div>
-        {/each}
+{#if journeyState}
+    {#if journeyState.selectedSlot === null}
+        <h3>Availability for {trainer.name}</h3>
+        <SelectSlot {availableSlots} {dayList} on:slotSelected={slotSelected}/>
+    {:else if journeyStateFns.requiresAddOns(journeyState) && !journeyStateFns.addOnsFilled(journeyState)}
+        <p>Add-ons {JSON.stringify(journeyState.possibleAddOns)}</p>
+    {:else if journeyStateFns.requiresForms(journeyState) && !journeyStateFns.formsFilled(journeyState)}
+        <FillForm form={journeyStateFns.currentUnfilledForm(journeyState)} on:formFilled={onFormFilled}/>
+    {:else}
+        <p>Booking summary</p>
     {/if}
-</div>
-
-{#if selectedSlot}
-    <div class="mt-4">
-        <h3>Selected slot</h3>
-        <p>{selectedSlot.day.value} {selectedSlot.slot.startTime24hr}</p>
-        <button class="btn btn-primary btn-lg" on:click={confirm}>Confirm</button>
-    </div>
 {/if}
