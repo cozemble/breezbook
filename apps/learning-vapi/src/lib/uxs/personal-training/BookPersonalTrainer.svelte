@@ -9,9 +9,15 @@
     import {backendUrl, fetchJson} from "$lib/helpers";
     import {isoDate, isoDateFns} from "@breezbook/packages-core";
     import SelectSlot from "$lib/uxs/personal-training/SelectSlot.svelte";
-    import {initialJourneyState, type JourneyState, type Slot} from "$lib/uxs/personal-training/journeyState";
+    import {
+        type CoreCustomerDetails,
+        initialJourneyState,
+        type JourneyState,
+        type Slot
+    } from "$lib/uxs/personal-training/journeyState";
     import {journeyStateFns} from "$lib/uxs/personal-training/journeyState.js";
     import FillForm from "$lib/uxs/personal-training/FillForm.svelte";
+    import FillCustomerDetails from "$lib/uxs/personal-training/FillCustomerDetails.svelte";
 
     export let trainer: ResourceSummary
     export let locationId: string
@@ -43,6 +49,10 @@
     function onFormFilled(event: CustomEvent) {
         journeyState = journeyStateFns.formFilled(journeyState, event.detail)
     }
+
+    function onCustomerDetailsFilled(event: CustomEvent<CoreCustomerDetails>) {
+        journeyState = journeyStateFns.setCustomerDetails(journeyState, event.detail)
+    }
 </script>
 {#if journeyState}
     {#if journeyState.selectedSlot === null}
@@ -52,6 +62,8 @@
         <p>Add-ons {JSON.stringify(journeyState.possibleAddOns)}</p>
     {:else if journeyStateFns.requiresForms(journeyState) && !journeyStateFns.formsFilled(journeyState)}
         <FillForm form={journeyStateFns.currentUnfilledForm(journeyState)} on:formFilled={onFormFilled}/>
+    {:else if !journeyStateFns.customerDetailsFilled(journeyState)}
+        <FillCustomerDetails on:filled={onCustomerDetailsFilled}/>
     {:else}
         <p>Booking summary</p>
     {/if}

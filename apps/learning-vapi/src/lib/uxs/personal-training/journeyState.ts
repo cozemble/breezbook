@@ -6,12 +6,20 @@ export interface Slot {
     slot: Availability
 }
 
+export interface CoreCustomerDetails {
+    firstName: string
+    lastName: string
+    email: string
+    phone: string
+}
+
 export interface JourneyState {
     selectedSlot: Slot | null
     possibleAddOns: AddOnSummary[]
     selectedAddOns: AddOnSummary[] | null
     expectedForms: Form[]
     filledForms: any[] | null
+    customerDetails: CoreCustomerDetails | null
 }
 
 export function initialJourneyState(availabilityResponse: AvailabilityResponse): JourneyState {
@@ -20,7 +28,8 @@ export function initialJourneyState(availabilityResponse: AvailabilityResponse):
         possibleAddOns: availabilityResponse.addOns,
         selectedAddOns: null,
         expectedForms: availabilityResponse.serviceSummary.forms,
-        filledForms: null
+        filledForms: null,
+        customerDetails: null
     }
 }
 
@@ -39,5 +48,14 @@ export const journeyStateFns = {
     currentUnfilledForm(state: JourneyState): Form {
         const indexOfLastFilledForm = state.filledForms ? state.filledForms.length : 0
         return mandatory(state.expectedForms[indexOfLastFilledForm], `Expected form at index ${indexOfLastFilledForm} not found`)
+    },
+    customerDetailsFilled(journeyState: JourneyState) {
+        return journeyState.customerDetails !== null
+    },
+    setCustomerDetails(journeyState: JourneyState, detail: CoreCustomerDetails | null) {
+        return {
+            ...journeyState,
+            customerDetails: detail
+        }
     }
 }

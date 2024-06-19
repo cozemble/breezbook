@@ -1347,3 +1347,21 @@ session with a chosen personal trainer is supported by the system.
 I'm trying to think what is the next most useful thing to do.  Mete is working on figma designs for the various booking journeys
 we think we'll have to support.  I feel the desire to make really simple svelte journeys to prove for sure that I can support
 personal training booking, and the other journeys we have in mind.
+
+# Wed 19 Jun 2024
+Had some thoughts about timezones this morning.  The principle thought being that I need to do them soon.  I think locations
+should have a timezone.  Availability check requests can have an optional timezone.  Availability checking logic can operate
+using the location's timezone, then convert available slots to the desired timezone.  Similarly, when pricing baskets and
+making orders, the incoming requests should have a timezone and a similar conversion can be done.
+
+I need to work hard to keep core logic unaware of timezone, just continuing to deal in `IsoDate` and `TwentyFourHourClockTime`.
+The funnelling into and out of timezones should be done outsize the core logic, so I can reduce the number of concerns in
+the core logic.
+
+Good test scenarios for this are:
+
+ - Booking from Zambia to London on on March 30th, 31st and April 1st
+ - Booking from London to Zambia on March 30th, 31st and April 1st
+ - Booking from New York to Los Angeles
+ - Booking from Auckland to Apia, crossing the date line. 
+ - Booking from Apia to Auckland, crossing the date line in the opposite direction.
