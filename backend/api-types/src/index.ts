@@ -184,6 +184,7 @@ export interface Tenant {
     services: Service[];
     serviceLocations: ServiceLocation[]
     theme: any;
+    customerForm: Form | null;
 }
 
 export * from './waitlistRegistration.js'
