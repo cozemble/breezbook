@@ -9,8 +9,16 @@
     let selectedSlot: Slot | null = null
     const dispatch = createEventDispatcher()
 
-    function slotsForDay(availableSlots: AvailabilityResponse, day: { value: string }): Availability[] {
+    function slotsForDay(availableSlots: AvailabilityResponse, day: IsoDate): Availability[] {
         return availableSlots.slots[day.value] || []
+    }
+
+    function priceForDay(availableSlots: AvailabilityResponse, day: IsoDate): string {
+        const priceInMinorUnits =  slotsForDay(availableSlots,day)?.[0]?.priceWithNoDecimalPlaces
+        if(!priceInMinorUnits) {
+            return ""
+        }
+        return `£ ${priceInMinorUnits / 100}`
     }
 
     function toggleTimeSelection(day: IsoDate, slot: Availability) {
@@ -21,10 +29,7 @@
         }
     }
 
-    function isSelectedSlot(selectedSlot: {
-        day: IsoDate,
-        slot: Availability
-    } | null = null, day: IsoDate, slot: Availability) {
+    function isSelectedSlot(selectedSlot: Slot | null, day: IsoDate, slot: Availability) {
         return selectedSlot && selectedSlot.day.value === day.value && selectedSlot.slot.startTime24hr === slot.startTime24hr
     }
 
@@ -33,8 +38,6 @@
             dispatch("slotSelected", selectedSlot)
         }
     }
-
-
 </script>
 
 <div class="flex">
@@ -52,6 +55,7 @@
                 {#if slots.length === 0}
                     <p class="mt-12">No slots available</p>
                 {/if}
+                <p class="mt-2">{priceForDay(availableSlots, day)}</p>
             </div>
         {/each}
     {/if}
