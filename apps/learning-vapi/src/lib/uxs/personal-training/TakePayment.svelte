@@ -24,13 +24,10 @@
         showStripe = true
     }
 
-    function onPaymentSuccess() {
-        console.log("Payment success")
-    }
 </script>
 
 {#if showStripe && priced && state.customerDetails}
-    <StripePaymentForm {priced} customerDetails={state.customerDetails} on:success={onPaymentSuccess}/>
+    <StripePaymentForm {priced} customerDetails={state.customerDetails} on:paymentComplete/>
 {:else if priced}
     <div>
         <h2>Payment</h2>

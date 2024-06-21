@@ -3,10 +3,10 @@
     import {createEventDispatcher} from "svelte";
 
     const details: CoreCustomerDetails = {
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
+        firstName: 'Mike',
+        lastName: 'Hogan',
+        email: 'mike@email.com',
+        phone: '+14155552671',
     }
     const dispatch = createEventDispatcher()
 

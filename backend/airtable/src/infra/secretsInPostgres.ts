@@ -18,7 +18,7 @@ export async function getTenantSecret(tenantEnvironment: TenantEnvironment, secr
     return getSecretValue(tenantSecretName(tenantEnvironment, secretShortName));
 }
 
-export async function maybeGetTenantSecret(tenantEnvironment: TenantEnvironment, secretShortName: string): Promise<string|null> {
+export async function maybeGetTenantSecret(tenantEnvironment: TenantEnvironment, secretShortName: string): Promise<string | null> {
     return maybeGetSecretValue(tenantSecretName(tenantEnvironment, secretShortName));
 }
 
@@ -27,25 +27,29 @@ interface QueryResult {
 }
 
 async function getSecretValue(uniqueSecretName: string) {
-    const prisma = prismaClient();
-    const result = await prisma.$queryRaw<QueryResult[]>`select decrypted_secret
-                                                         from vault.decrypted_secrets
-                                                         where name = ${uniqueSecretName};`;
+    const result = await maybeGetSecretValue(uniqueSecretName);
     if (result === null || result.length === 0) {
         throw new Error(`Failed to get secret ${uniqueSecretName}`);
     }
-    return result[0].decrypted_secret;
+    return result
 }
 
 async function maybeGetSecretValue(uniqueSecretName: string): Promise<string | null> {
     const prisma = prismaClient();
+    const query = `select decrypted_secret
+                   from vault.decrypted_secrets
+                   where name = ${uniqueSecretName};`;
+    console.log(`Querying for secret: ${query}`)
+
     const result = await prisma.$queryRaw<QueryResult[]>`select decrypted_secret
                                                          from vault.decrypted_secrets
                                                          where name = ${uniqueSecretName};`;
+    console.log(`Got result: ${JSON.stringify(result)}`)
     if (result === null || result.length === 0) {
         return null
     }
     return result[0].decrypted_secret;
+
 }
 
 async function storeSecret(secretValue: string, uniqueSecretName: string, secretDescription: string) {

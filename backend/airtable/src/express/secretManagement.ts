@@ -10,6 +10,7 @@ export function secretValueSpecificationBody(): ParamExtractor<SecretValueSpecif
 			res.status(400).send(`Missing required body`);
 			return null;
 		}
+		console.log({body})
 		if (body._type !== 'secret.value.specification') {
 			res.status(400).send(`Posted body is not a secret value specification`);
 			return null;

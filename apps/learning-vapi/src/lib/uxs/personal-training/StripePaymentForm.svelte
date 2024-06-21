@@ -24,7 +24,7 @@
     onMount(async () => {
         // "/api/:envId/:tenantId/orders"
         // "/api/:envId/:tenantId/orders/:orderId/paymentIntent"
-        const orderRequest = pricedCreateOrderRequest(priced, customer(customerDetails.firstName, customerDetails.lastName, customerDetails.email, customerDetails.phone),fullPaymentOnCheckout())
+        const orderRequest = pricedCreateOrderRequest(priced, customer(customerDetails.firstName, customerDetails.lastName, customerDetails.email, customerDetails.phone), fullPaymentOnCheckout())
         order = await fetchJson<OrderCreatedResponse>(backendUrl('/api/:envId/:tenantId/orders'), {
             method: "POST",
             body: JSON.stringify(orderRequest)
@@ -62,22 +62,25 @@
     }
 </script>
 
-{#if paymentIntent && stripe}
-    <form on:submit|preventDefault={submit}>
+<div class="w-2/6">
+    {#if paymentIntent && stripe}
+        <form on:submit|preventDefault={submit}>
 
-        <Elements {stripe}>
-            <Elements {stripe} clientSecret={paymentIntent.clientSecret} bind:elements>
-                <PaymentElement/>
+            <Elements {stripe}>
+                <Elements {stripe} clientSecret={paymentIntent.clientSecret} bind:elements>
+                    <PaymentElement/>
+                </Elements>
             </Elements>
-        </Elements>
 
-        <button class="btn btn-lg" disabled={processing}>
-            {#if processing}
-                Processing...
-            {:else}
-                Pay
-            {/if}
-        </button>
+            <button class="btn btn-primary btn-lg mt-4" disabled={processing}>
+                {#if processing}
+                    Processing...
+                {:else}
+                    Pay
+                {/if}
+            </button>
 
-    </form>
-{/if}
+        </form>
+    {/if}
+
+</div>

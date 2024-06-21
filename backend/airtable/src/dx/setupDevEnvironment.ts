@@ -13,5 +13,7 @@ export async function setupDevEnvironment() {
     }
     await loadMultiLocationGymTenant(prisma)
     await maybePublishRefDataToAssistLocalDev();
-    await ensureStripeKeys(prisma, tenantEnvironment(environmentId('dev'), tenantId('tenant1')));
+    await ensureStripeKeys(tenantEnvironment(environmentId('dev'), tenantId('tenant1')));
+    await ensureStripeKeys(tenantEnvironment(environmentId('dev'), tenantId('thesmartwashltd')));
+    await ensureStripeKeys(tenantEnvironment(environmentId('dev'), tenantId('breezbook-gym')));
 }

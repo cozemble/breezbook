@@ -55,7 +55,7 @@
         journeyState = journeyStateFns.setCustomerDetails(journeyState, event.detail)
     }
 
-    function onPaymentSuccess() {
+    function onPaymentComplete() {
         journeyState = journeyStateFns.setPaid(journeyState)
     }
 </script>
@@ -70,7 +70,7 @@
     {:else if !journeyStateFns.customerDetailsFilled(journeyState)}
         <FillCustomerDetails on:filled={onCustomerDetailsFilled}/>
     {:else if !journeyStateFns.isPaid(journeyState)}
-        <TakePayment state={journeyState} on:paymentSuccess={onPaymentSuccess}/>
+        <TakePayment state={journeyState} on:paymentComplete={onPaymentComplete}/>
     {:else}
         <p>Thank you</p>
     {/if}
