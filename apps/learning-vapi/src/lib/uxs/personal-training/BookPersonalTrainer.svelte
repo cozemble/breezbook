@@ -18,6 +18,7 @@
     import {journeyStateFns} from "$lib/uxs/personal-training/journeyState.js";
     import FillForm from "$lib/uxs/personal-training/FillForm.svelte";
     import FillCustomerDetails from "$lib/uxs/personal-training/FillCustomerDetails.svelte";
+    import TakePayment from "$lib/uxs/personal-training/TakePayment.svelte";
 
     export let trainer: ResourceSummary
     export let locationId: string
@@ -39,7 +40,7 @@
             method: "POST",
             body: JSON.stringify({requirementOverrides})
         })
-        journeyState = initialJourneyState(availableSlots)
+        journeyState = initialJourneyState(availableSlots, locationId, requirementOverrides)
     })
 
     function slotSelected(event: CustomEvent<Slot>) {
@@ -53,6 +54,10 @@
     function onCustomerDetailsFilled(event: CustomEvent<CoreCustomerDetails>) {
         journeyState = journeyStateFns.setCustomerDetails(journeyState, event.detail)
     }
+
+    function onPaymentSuccess() {
+        journeyState = journeyStateFns.setPaid(journeyState)
+    }
 </script>
 {#if journeyState}
     {#if journeyState.selectedSlot === null}
@@ -64,7 +69,9 @@
         <FillForm form={journeyStateFns.currentUnfilledForm(journeyState)} on:formFilled={onFormFilled}/>
     {:else if !journeyStateFns.customerDetailsFilled(journeyState)}
         <FillCustomerDetails on:filled={onCustomerDetailsFilled}/>
+    {:else if !journeyStateFns.isPaid(journeyState)}
+        <TakePayment state={journeyState} on:paymentSuccess={onPaymentSuccess}/>
     {:else}
-        <p>Booking summary</p>
+        <p>Thank you</p>
     {/if}
 {/if}

@@ -14,6 +14,7 @@ import {
     priceFns,
     Resource,
     resourceFns,
+    resourceId,
     ResourceRequirement,
     Service,
     serviceFns,
@@ -213,9 +214,9 @@ export const hydratedBasketFns = {
 }
 
 function maybeOverride(r: ResourceRequirement, resources: Resource[], resourceRequirementOverrides: ResourceRequirementOverride[]): ResourceRequirement {
-    const override = resourceRequirementOverrides.find(o => o.resourceRequirementId.value === r.id.value);
+    const override = resourceRequirementOverrides.find(o => o.requirementId === r.id.value);
     if (override) {
-        return specificResource(resourceFns.findById(resources, override.resourceId), r.id)
+        return specificResource(resourceFns.findById(resources, resourceId(override.resourceId)), r.id)
     }
 
     return r;

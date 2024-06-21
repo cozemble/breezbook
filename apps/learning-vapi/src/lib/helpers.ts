@@ -1,4 +1,8 @@
+import {env, tenantId} from "$lib/uxs/personal-training/constants";
+
 export function backendUrl(path: string): string {
+    path = path.replace(/:envId/, env)
+    path = path.replace(/:tenantId/, tenantId)
     return `http://localhost:3000${path}`;
 }
 
@@ -21,5 +25,4 @@ export async function fetchJson<T>(url: string, init: RequestInit = {}): Promise
     }
     return expectJson<T>(fetch(url, finalInit))
 }
-
 

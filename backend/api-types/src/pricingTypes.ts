@@ -16,6 +16,7 @@ import {
     timePeriod,
     TwentyFourHourClockTime
 } from '@breezbook/packages-core';
+import {ResourceRequirementOverride} from "./resourceTypes.js";
 
 export interface UnpricedBasketLine {
     _type: 'unpriced.basket.line';
@@ -39,18 +40,6 @@ export function unpricedBasket(lines: UnpricedBasketLine[], couponCode?: CouponC
         _type: 'unpriced.basket',
         lines,
         couponCode
-    };
-}
-
-export interface ResourceRequirementOverride {
-    resourceRequirementId: ResourceRequirementId;
-    resourceId: ResourceId;
-}
-
-export function resourceRequirementOverride(resourceRequirementId: ResourceRequirementId, resourceId: ResourceId): ResourceRequirementOverride {
-    return {
-        resourceRequirementId,
-        resourceId
     };
 }
 

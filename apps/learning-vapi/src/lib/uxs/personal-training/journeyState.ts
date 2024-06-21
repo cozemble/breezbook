@@ -1,5 +1,10 @@
 import {type Form, type IsoDate, mandatory} from "@breezbook/packages-core";
-import {type AddOnSummary, type Availability, type AvailabilityResponse} from "@breezbook/backend-api-types";
+import {
+    type AddOnSummary,
+    type Availability,
+    type AvailabilityResponse,
+    type ResourceRequirementOverride
+} from "@breezbook/backend-api-types";
 
 export interface Slot {
     day: IsoDate;
@@ -20,16 +25,24 @@ export interface JourneyState {
     expectedForms: Form[]
     filledForms: any[] | null
     customerDetails: CoreCustomerDetails | null
+    isPaid: boolean
+    serviceId: string
+    locationId: string
+    requirementOverrides: ResourceRequirementOverride[]
 }
 
-export function initialJourneyState(availabilityResponse: AvailabilityResponse): JourneyState {
+export function initialJourneyState(availabilityResponse: AvailabilityResponse, locationId: string, requirementOverrides: ResourceRequirementOverride[]): JourneyState {
     return {
         selectedSlot: null,
         possibleAddOns: availabilityResponse.addOns,
         selectedAddOns: null,
         expectedForms: availabilityResponse.serviceSummary.forms,
         filledForms: null,
-        customerDetails: null
+        customerDetails: null,
+        isPaid: false,
+        serviceId: availabilityResponse.serviceSummary.id,
+        locationId,
+        requirementOverrides
     }
 }
 
@@ -56,6 +69,15 @@ export const journeyStateFns = {
         return {
             ...journeyState,
             customerDetails: detail
+        }
+    },
+    isPaid(journeyState: JourneyState): boolean {
+        return journeyState.isPaid
+    },
+    setPaid(journeyState: JourneyState) {
+        return {
+            ...journeyState,
+            isPaid: true
         }
     }
 }

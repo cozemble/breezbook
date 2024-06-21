@@ -46,7 +46,7 @@ test("services retain their existing resource requirements when no overrides are
 })
 
 test("replaces resource requirements in contained services", () => {
-    const override = resourceRequirementOverride(carwash.smallCarWash.resourceRequirements[0].id, carwash.resources[0].id)
+    const override = resourceRequirementOverride(carwash.smallCarWash.resourceRequirements[0].id.value, carwash.resources[0].id.value)
     const order = createOrder([override]);
     const outcome = makeEverythingToCreateOrder(referenceData, order)
     const allServiceResourceRequirements = outcome.basket.lines.flatMap(line => line.service.resourceRequirements)

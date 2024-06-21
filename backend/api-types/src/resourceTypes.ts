@@ -22,3 +22,12 @@ export interface ResourceSummary {
     locationIds: string[]
     branding?: ResourceBranding
 }
+
+export interface ResourceRequirementOverride {
+    requirementId: string
+    resourceId: string
+}
+
+export function resourceRequirementOverride(requirementId: string, resourceId: string): ResourceRequirementOverride {
+    return {requirementId, resourceId}
+}

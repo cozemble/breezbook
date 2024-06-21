@@ -727,6 +727,13 @@ export const priceFns = {
             throw new Error('Cannot sum an empty list of prices');
         }
         return prices.reduce((acc, price) => priceFns.add(acc, price), price(0, prices[0].currency));
+    },
+    format(price: Price, roundToMajor = true): string {
+        const initial =  `${(price.amount.value / 100).toFixed(2)}`;
+        if (roundToMajor && initial.endsWith('.00')) {
+            return initial.slice(0, -3);
+        }
+        return initial;
     }
 };
 
