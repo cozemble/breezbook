@@ -13,7 +13,6 @@ import {
 } from './airtableMappingTypes.js';
 import {CompositeKey, compositeKey, compositeKeyFns, Mutation} from '../mutation/mutations.js';
 import jexl from 'jexl';
-import {mandatory} from "@breezbook/packages-core";
 
 export async function applyAirtablePlan(
     idRepo: SynchronisationIdRepository,
@@ -142,7 +141,7 @@ export const airtableRecordIdFns = {
     },
 
     fromCompositeKey(compositeKey: CompositeKey): string {
-        if("airtableRecordId" in compositeKey) {
+        if ("airtableRecordId" in compositeKey) {
             return compositeKey.airtableRecordId;
         }
         throw new Error(`Composite key ${JSON.stringify(compositeKey)} is not an airtable record id`);
