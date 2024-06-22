@@ -1371,3 +1371,17 @@ Got the playground personal trainer booking experience done.  It proves that the
 Interestingly, when I make a few bookings with the same PT, subsequent availability checks fail when applying resources
 to bookings, saying "unable to find resource for booking".  That is tomorrow's problem.  But just goes to show that
 the playground, where I can run thru scenarios in an accelerated way, is a useful way to drive the app.
+
+# Sat 22 Jun 2024
+Add location selection to the playground personal training booking journey.  It revealed a need to treat cases where
+the required service is not available at the chosen location.  Fixed that.
+
+## The desire for resource based pricing
+I pasted all my upserts for the multi-location gym into claude and asked it how it would amend the code to deal with
+resource based pricing.  It suggested adding a pricing override to resource for each service id.  I asked it if there
+was maybe a more general feature implied by this resource specific pricing, having learned, hopefully, from putting
+capacity on resource initially, then finding it belonged on service.  Claude generated some interesting code around a pricing
+ending and pricing factors.  Am going to play with that now to see how it works.
+
+It seems to work, but I'm struggling to think in the way it thinks, in terms of how it modelled the rules I mean.  It also
+isn't a model that can be serialised and deserialised easily.  But I'm going to use it as inspiration.  
