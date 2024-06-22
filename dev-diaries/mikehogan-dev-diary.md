@@ -1384,4 +1384,5 @@ capacity on resource initially, then finding it belonged on service.  Claude gen
 ending and pricing factors.  Am going to play with that now to see how it works.
 
 It seems to work, but I'm struggling to think in the way it thinks, in terms of how it modelled the rules I mean.  It also
-isn't a model that can be serialised and deserialised easily.  But I'm going to use it as inspiration.  
+isn't a model that can be serialised and deserialised easily.  But I'm going to use it as inspiration.  Here is what Claude
+produced - https://github.com/cozemble/breezbook/blob/71605a0d264aa83455d7b051a110eec1b3e09424/packages/core/test/pricing/exploringWhatClaudeCreated.spec.ts#L1
