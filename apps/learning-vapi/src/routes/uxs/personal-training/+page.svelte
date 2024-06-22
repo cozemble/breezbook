@@ -10,6 +10,7 @@
     import {backendUrl, fetchJson} from "$lib/helpers";
     import {mandatory} from "@breezbook/packages-core";
     import BookPersonalTrainer from "$lib/uxs/personal-training/BookPersonalTrainer.svelte";
+    import Markdown from "$lib/markdown/Markdown.svelte";
 
     let tenant: Tenant
     let personalTrainers: ResourceSummary[] = []
@@ -51,7 +52,7 @@
                 <img src={personalTrainer.branding?.images?.[0]?.publicUrl} alt={personalTrainer.name} width="60px"/>
             </figure>
             <div>
-                {personalTrainer.branding?.markup?.[0]?.markup}
+                <Markdown markdown={personalTrainer.branding?.markup?.[0]?.markup}/>
             </div>
         </div>
     {/each}

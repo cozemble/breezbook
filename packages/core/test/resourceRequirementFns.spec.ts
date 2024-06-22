@@ -42,13 +42,13 @@ describe('resourceRequirementFns.matchRequirements', () => {
     test("returns an error when the resource is not available", () => {
         const anyUnicorn = anySuitableResource(unicorn);
         expect(resourceRequirementFns.matchRequirements([resourceDayAvailability(football, [availabilityBlock(nineToTen)])], nineToTen, [anyUnicorn], []))
-            .toEqual(errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement`, anyUnicorn));
+            .toEqual(errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement id '${anyUnicorn.id.value}'`, anyUnicorn));
     })
 
     test("returns an error when the resource is available but not for the required time", () => {
         const anyBall = anySuitableResource(ball);
         expect(resourceRequirementFns.matchRequirements([resourceDayAvailability(football, [availabilityBlock(nineToTen)])], tenToEleven, [anyBall], []))
-            .toEqual(errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement`, anyBall));
+            .toEqual(errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement id '${anyBall.id.value}'`, anyBall));
     })
 
     test("returns the specific resource when its available for the required time", () => {
@@ -61,7 +61,7 @@ describe('resourceRequirementFns.matchRequirements', () => {
     test("returns an error when the specific resource is not available for the required time", () => {
         const thisFootball = specificResource(football);
         expect(resourceRequirementFns.matchRequirements([resourceDayAvailability(football, [availabilityBlock(nineToTen)])], tenToEleven, [thisFootball], []))
-            .toEqual(errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement`, thisFootball));
+            .toEqual(errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement id '${thisFootball.id.value}'`, thisFootball));
     })
 
     test("resource is available for more than the required time", () => {
@@ -77,7 +77,7 @@ describe('resourceRequirementFns.matchRequirements', () => {
         const footballAvailable = resourceDayAvailability(football, [availabilityBlock(nineToTen)]);
         const anyBall = anySuitableResource(ball);
         expect(resourceRequirementFns.matchRequirements([footballAvailable], nineToTen, [anyBall, anyBall], []))
-            .toEqual(errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement - it's already booked`, anyBall));
+            .toEqual(errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement id '${anyBall.id.value}' - it's already booked`, anyBall));
 
         const rugbyBallAvailable = resourceDayAvailability(rugbyBall, [availabilityBlock(nineToTen)]);
         expect(resourceRequirementFns.matchRequirements([footballAvailable, rugbyBallAvailable], nineToTen, [anyBall, anyBall], []))

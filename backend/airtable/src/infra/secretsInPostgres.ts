@@ -36,15 +36,9 @@ async function getSecretValue(uniqueSecretName: string) {
 
 async function maybeGetSecretValue(uniqueSecretName: string): Promise<string | null> {
     const prisma = prismaClient();
-    const query = `select decrypted_secret
-                   from vault.decrypted_secrets
-                   where name = ${uniqueSecretName};`;
-    console.log(`Querying for secret: ${query}`)
-
     const result = await prisma.$queryRaw<QueryResult[]>`select decrypted_secret
                                                          from vault.decrypted_secrets
                                                          where name = ${uniqueSecretName};`;
-    console.log(`Got result: ${JSON.stringify(result)}`)
     if (result === null || result.length === 0) {
         return null
     }

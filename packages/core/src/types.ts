@@ -833,10 +833,10 @@ export const resourceRequirementFns = {
                 if (availableResource) {
                     matched.push({requirement, match: availableResource});
                 } else {
-                    return errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement - it's already booked`, requirement);
+                    return errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement id '${requirement.id.value}' - it's already booked`, requirement);
                 }
             } else {
-                return errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement`, requirement);
+                return errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement id '${requirement.id.value}'`, requirement);
             }
         }
         return success(matched)

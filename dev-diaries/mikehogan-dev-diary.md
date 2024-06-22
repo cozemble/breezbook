@@ -1365,3 +1365,9 @@ Good test scenarios for this are:
  - Booking from New York to Los Angeles
  - Booking from Auckland to Apia, crossing the date line. 
  - Booking from Apia to Auckland, crossing the date line in the opposite direction.
+
+# Fri 21 Jun 2024
+Got the playground personal trainer booking experience done.  It proves that the endpoints support this journey type.
+Interestingly, when I make a few bookings with the same PT, subsequent availability checks fail when applying resources
+to bookings, saying "unable to find resource for booking".  That is tomorrow's problem.  But just goes to show that
+the playground, where I can run thru scenarios in an accelerated way, is a useful way to drive the app.
