@@ -13,7 +13,7 @@ import {
     tenantEnvironmentLocationParam
 } from "../../infra/endpoint.js";
 import {byLocation} from "../../availability/byLocation.js";
-import {getAvailabilityForService2} from "../../core/getAvailabilityForService.js";
+import {getAvailabilityForService} from "../../core/getAvailabilityForService.js";
 import {
     failure,
     Failure,
@@ -116,5 +116,5 @@ async function getServiceAvailabilityForLocation(deps: EndpointDependencies, ten
         `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
     );
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
-    return [httpResponseOutcome(responseOf(200, JSON.stringify(getAvailabilityForService2(everythingForTenant, request.serviceId, request.fromDate, request.toDate))))];
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(getAvailabilityForService(everythingForTenant, request.serviceId, request.fromDate, request.toDate))))];
 }

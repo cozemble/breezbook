@@ -275,6 +275,17 @@ describe("given a gym that offers personal training with specific trainers, and 
         const times = available.map(a => startTimeFns.toTime24(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
+
+    test("we can have a personal trainer booked back to back", () => {
+        const firstBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("10:00")), capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMike.id)])
+        const secondBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMike.id)])
+
+        const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [firstBooking, secondBooking], serviceRequest(theService, date)))
+        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        expect(times).toEqual([time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
+
+    })
 });
 
 describe("given a medical centre and an appointment type that requires two doctors", () => {
@@ -588,6 +599,12 @@ describe("given a yoga studio with two instructors and two rooms", () => {
         const times = available.map((a) => startTimeFns.toTime24(a.startTime));
         expect(times).toEqual([time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
+})
+
+describe("given the multi-location gym test tenant", () => {
+    test("we can book a personal trainer back to back", () => {
+
+    })
 })
 
 function expectSlots(outcome: Success<AvailableSlot[]> | ErrorResponse): AvailableSlot[] {

@@ -9,8 +9,6 @@ import {
     isoDateFns,
     locationId,
     mandatory,
-    resourceId,
-    resourceRequirementId,
     resourceType,
     serviceId,
     tenantEnvironment,
@@ -24,6 +22,7 @@ import {
     OrderCreatedResponse,
     PricedBasket,
     pricedCreateOrderRequest,
+    ResourceRequirement,
     resourceRequirementOverride,
     Service,
     Tenant,
@@ -50,6 +49,46 @@ const personalTraining = serviceId(multiLocationGym.pt1Hr)
 const friday = isoDateFns.next('Friday')
 const saturday = isoDateFns.next('Saturday')
 
+const params = {
+    'envId': env.value,
+    'tenantId': tenant.value,
+    'serviceId': personalTraining.value,
+    locationId: harlow.value
+}
+
+async function getReferenceData(deps: EndpointDependencies): Promise<{
+    personalTrainingService: Service,
+    personalTrainerRequirement: ResourceRequirement,
+    ptMike: ResourceSummary
+}> {
+    const theTenant = expectJson<Tenant>(await onGetTenantRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.getTenant + `?slug=${tenant.value}`), params)))
+    const personalTrainingService: Service = mandatory(theTenant.services.find(s => s.id === multiLocationGym.pt1Hr), `Service ${multiLocationGym.pt1Hr} not found in ${JSON.stringify(theTenant.services)}`)
+    expect(personalTrainingService.resourceRequirements).toHaveLength(1)
+    const personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`);
+    const listOfPersonalTrainers = expectJson<ResourceSummary[]>(await listResourcesByTypeRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.listResourcesByType), {
+        ...params,
+        type: personalTrainer.value
+    })))
+    const ptMike: ResourceSummary = mandatory(listOfPersonalTrainers.find(pt => pt.name === 'ptMike'), `ptMike not found in ${JSON.stringify(listOfPersonalTrainers)}`)
+    return {personalTrainingService, personalTrainerRequirement, ptMike};
+}
+
+async function bookLastSlotOnFriday(deps: EndpointDependencies, requirementOverrides: {
+    resourceId: string;
+    requirementId: string
+}[], personalTrainingService: Service, personalTrainerRequirement: ResourceRequirement, ptMike: ResourceSummary): Promise<OrderCreatedResponse> {
+    const onFriday = `?fromDate=${friday.value}&toDate=${friday.value}`
+    const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, {requirementOverrides}), params)))
+    const fridaySlots = mikeOnFriday.slots?.[friday.value] ?? []
+    const lastSlot = mandatory(fridaySlots[fridaySlots.length - 1], `No final slot for Mike on Friday`)
+    const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(lastSlot.startTime24hr), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, ptMike.id)])])
+    const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket), params)))
+    const orderRequest = pricedCreateOrderRequest(pricedBasket, customer("Mike", "Hogan", "mike@email.com", "+14155552671"), fullPaymentOnCheckout())
+    const orderResponse = expectJson<OrderCreatedResponse>(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest), params)).then(outcomes => handleMutations(deps, outcomes)))
+    expect(orderResponse.bookingIds).toHaveLength(1)
+    return orderResponse
+}
+
 describe("given the test gym tenant", () => {
     let deps: EndpointDependencies;
 
@@ -60,21 +99,7 @@ describe("given the test gym tenant", () => {
     })
 
     test("endpoints support an end to end booking flow", async () => {
-        const params = {
-            'envId': env.value,
-            'tenantId': tenant.value,
-            'serviceId': personalTraining.value,
-            locationId: harlow.value
-        }
-        const theTenant = expectJson<Tenant>(await onGetTenantRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.getTenant + `?slug=${tenant.value}`), params)))
-        const personalTrainingService: Service = mandatory(theTenant.services.find(s => s.id === multiLocationGym.pt1Hr), `Service ${multiLocationGym.pt1Hr} not found in ${JSON.stringify(theTenant.services)}`)
-        expect(personalTrainingService.resourceRequirements).toHaveLength(1)
-        const personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`);
-        const listOfPersonalTrainers = expectJson<ResourceSummary[]>(await listResourcesByTypeRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.listResourcesByType), {
-            ...params,
-            type: personalTrainer.value
-        })))
-        const ptMike = mandatory(listOfPersonalTrainers.find(pt => pt.name === 'ptMike'), `ptMike not found in ${JSON.stringify(listOfPersonalTrainers)}`)
+        const {personalTrainingService, personalTrainerRequirement, ptMike} = await getReferenceData(deps);
         const requirementOverrides = [{
             requirementId: personalTrainerRequirement.id.value,
             resourceId: ptMike.id
@@ -110,6 +135,17 @@ describe("given the test gym tenant", () => {
         // resource should now be consumed
         const mikeOnFridayAgain = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, {requirementOverrides}), params)))
         expect(mikeOnFridayAgain.slots[friday.value]).toHaveLength(15)
+    });
+
+    test("can book the same personal trainer back to back", async () => {
+        const {personalTrainingService, personalTrainerRequirement, ptMike} = await getReferenceData(deps);
+        const requirementOverrides = [{
+            requirementId: personalTrainerRequirement.id.value,
+            resourceId: ptMike.id
+        }]
+        const order1 = await bookLastSlotOnFriday(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike);
+        const order2 = await bookLastSlotOnFriday(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike);
+        const order3 = await bookLastSlotOnFriday(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike);
     });
 })
 

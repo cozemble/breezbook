@@ -12,7 +12,7 @@ import {
     UnpricedBasketLine
 } from '@breezbook/backend-api-types';
 import {currencies, currency, mandatory, price, priceFns, success, Success} from '@breezbook/packages-core';
-import {getAvailabilityForService2} from '../getAvailabilityForService.js';
+import {getAvailabilityForService} from '../getAvailabilityForService.js';
 import {validateCouponCode} from '../../express/addOrderValidations.js';
 
 export const pricingErrorCodes = {
@@ -21,7 +21,7 @@ export const pricingErrorCodes = {
 
 function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: EverythingForAvailability) {
     return unpricedLines.map((line) => {
-        const availability = getAvailabilityForService2(everythingForTenant, line.serviceId, line.date, line.date);
+        const availability = getAvailabilityForService(everythingForTenant, line.serviceId, line.date, line.date);
         if (Object.keys(availability.slots).length === 0) {
             throw new Error(`No availability found for service '${line.serviceId.value}' on date '${line.date.value}'`);
         }

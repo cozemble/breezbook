@@ -25,7 +25,7 @@ import {
     TimeslotSpec,
     TwentyFourHourClockTime
 } from "./types.js";
-import {errorResponse, ErrorResponse, mandatory, success, Success} from "./utils.js";
+import {errorResponse, ErrorResponse, errorResponseFns, mandatory, success, Success} from "./utils.js";
 
 export type StartTime = TimeslotSpec | ExactTimeAvailability
 
@@ -204,12 +204,11 @@ export const availability = {
         for (const possibleStartTime of possibleStartTimes) {
             const period = toPeriod(date, possibleStartTime, service)
             const resourceOutcome = resourceBookings(resourceAvailabilityForDay, bookings, period)
-            if (resourceOutcome._type === 'error.response') {
-                return resourceOutcome
-            }
-            const matchOutcome = resourceRequirementFns.matchRequirements(resourceOutcome.remainingAvailability, period, service.resourceRequirements, [])
-            if (matchOutcome._type === "success") {
-                result.push(availableSlot(service, period.day, possibleStartTime, matchOutcome.value.map(r => resourceAllocation(r.requirement, r.match.resource))))
+            if(resourceOutcome._type !== 'error.response') {
+                const matchOutcome = resourceRequirementFns.matchRequirements(resourceOutcome.remainingAvailability, period, service.resourceRequirements, [])
+                if (matchOutcome._type === "success") {
+                    result.push(availableSlot(service, period.day, possibleStartTime, matchOutcome.value.map(r => resourceAllocation(r.requirement, r.match.resource))))
+                }
             }
         }
         return success(result)

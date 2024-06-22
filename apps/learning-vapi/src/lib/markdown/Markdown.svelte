@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {onMount, afterUpdate} from 'svelte';
+    import {afterUpdate, onMount} from 'svelte';
     import {marked} from 'marked';
 
     export let markdown = '';

@@ -83,7 +83,7 @@ export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTi
     );
 }
 
-export function getAvailabilityForService2(
+export function getAvailabilityForService(
     everythingForAvailability: EverythingForAvailability,
     serviceId: ServiceId,
     fromDate: IsoDate,
