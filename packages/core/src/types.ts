@@ -932,6 +932,9 @@ export const serviceFns = {
         return found;
 
     },
+    maybeFindService(services: Service[], serviceId: ServiceId): Service | null {
+        return services.find(s => values.isEqual(s.id, serviceId)) || null;
+    },
     replaceRequirement(theService: Service, existing: ResourceRequirement, replacement: ResourceRequirement): Service {
         return {
             ...theService,

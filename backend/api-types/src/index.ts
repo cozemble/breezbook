@@ -65,13 +65,14 @@ export interface AddOnSummary {
 }
 
 export interface AvailabilityResponse {
+    _type: 'availability.response';
     slots: Slots;
     serviceSummary: ServiceSummary;
     addOns: AddOnSummary[];
 }
 
 export function emptyAvailabilityResponse(serviceSummary: ServiceSummary, addOns: AddOnSummary[]): AvailabilityResponse {
-    return {serviceSummary, slots: {}, addOns};
+    return {_type:'availability.response',serviceSummary, slots: {}, addOns};
 }
 
 export interface OrderCreatedResponse {

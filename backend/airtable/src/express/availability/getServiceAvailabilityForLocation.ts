@@ -23,7 +23,8 @@ import {
     resourceId,
     ResourceId,
     resourceRequirementId,
-    ResourceRequirementId, serviceFns,
+    ResourceRequirementId,
+    serviceFns,
     ServiceId,
     specificResource,
     success,
@@ -32,7 +33,7 @@ import {
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
 import {EverythingForAvailability} from "../getEverythingForAvailability.js";
 import {HttpResponse} from "@breezbook/packages-http/dist/contract.js";
-import { responseOf } from "@breezbook/packages-http/dist/responses.js";
+import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 
 interface RequirementOverride {
     requirementId: ResourceRequirementId;
@@ -92,7 +93,10 @@ export async function getServiceAvailabilityForLocationEndpoint(deps: EndpointDe
 }
 
 function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAvailabilityRequest): EverythingForAvailability {
-    const theService = serviceFns.findService(e.businessConfiguration.services,request.serviceId)
+    const theService = serviceFns.maybeFindService(e.businessConfiguration.services, request.serviceId)
+    if(!theService) {
+        return e;
+    }
     const mutatedService = {
         ...theService, resourceRequirements: theService.resourceRequirements.map(req => {
             const maybeOverride = request.requirementOverrides.find(o => o.requirementId.value === req.id.value)
@@ -116,5 +120,9 @@ async function getServiceAvailabilityForLocation(deps: EndpointDependencies, ten
         `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
     );
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
-    return [httpResponseOutcome(responseOf(200, JSON.stringify(getAvailabilityForService(everythingForTenant, request.serviceId, request.fromDate, request.toDate))))];
+    const availabilityOutcome = getAvailabilityForService(everythingForTenant, request.serviceId, request.fromDate, request.toDate);
+    if (availabilityOutcome._type === 'error.response') {
+        return [httpResponseOutcome(responseOf(400, JSON.stringify(availabilityOutcome.errorMessage)))];
+    }
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(availabilityOutcome)))];
 }

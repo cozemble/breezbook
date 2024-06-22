@@ -34,9 +34,16 @@ export interface ErrorResponse<V = any> {
     errorData?: V
 }
 
+export function isErrorResponse<V = any>(variableToCheck: any): variableToCheck is ErrorResponse<V> {
+    return variableToCheck._type === 'error.response';
+}
+
+
+
 export function errorResponse<V = any>(errorCode: string, errorMessage?: string, errorData?: V): ErrorResponse {
     return {_type: 'error.response', errorCode, errorMessage, errorData};
 }
+
 
 export const errorResponseFns = {
     toError: (response: ErrorResponse): Error => {
@@ -44,6 +51,13 @@ export const errorResponseFns = {
     },
     prependMessage<T>(s: string, resourceOutcome: ErrorResponse<T>):ErrorResponse<T> {
         return errorResponse<T>(resourceOutcome.errorCode, `${s}: ${resourceOutcome.errorMessage}`, resourceOutcome.errorData);
+    },
+    arrayOrError<T,E>(lines: (ErrorResponse<E> | T)[]):T[]|ErrorResponse<E> {
+        const firstError = lines.find(isErrorResponse);
+        if (firstError) {
+            return firstError;
+        }
+        return lines as T[];
     }
 }
 

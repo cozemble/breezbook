@@ -11,7 +11,8 @@ export async function expectJson<T>(responseP: Promise<Response>): Promise<T> {
     if (response.ok) {
         return response.json()
     } else {
-        throw new Error(`Failed to fetch: ${response.statusText}`)
+        const text = await response.text()
+        throw new Error(`Failed to fetch: ${response.statusText}. ${text}`)
     }
 }
 

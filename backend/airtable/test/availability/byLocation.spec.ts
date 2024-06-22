@@ -5,16 +5,21 @@ import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMul
 import {
     carwash,
     environmentId,
+    ErrorResponse,
     isoDate,
     locationId,
     mandatory,
+    serviceId,
     tenantEnvironmentLocation,
     tenantId
 } from "@breezbook/packages-core";
 import {v4 as uuid} from 'uuid';
 import {byLocation} from "../../src/availability/byLocation.js";
 import {loadTestCarWashTenant} from "../../src/dx/loadTestCarWashTenant.js";
-import {getAvailabilityForService} from "../../src/core/getAvailabilityForService.js";
+import {
+    getAvailabilityForService,
+    getAvailabilityForServiceErrorCodes
+} from "../../src/core/getAvailabilityForService.js";
 
 const tenant = tenantId(multiLocationGym.tenant_id)
 const env = environmentId(multiLocationGym.environment_id)
@@ -89,6 +94,13 @@ describe("Given a gym with services at various locations", () => {
         const ptMeteDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMete).flatMap(ra => ra.availability.map(a => a.when.day.value))
         expect(ptMeteDays).toEqual(['2024-04-20', '2024-04-23', '2024-04-27'])
     })
+
+    test("sensible response when requested service is not available at the given location", async () => {
+        const everythingStortford = await byLocation.getEverythingForAvailability(prisma, stortford, isoDate('2024-04-20'), isoDate('2024-04-20'));
+        const availability = getAvailabilityForService(everythingStortford, serviceId(multiLocationGym.pt1Hr), isoDate('2024-04-20'), isoDate('2024-04-27')) as ErrorResponse
+        expect(availability._type).toEqual('error.response')
+        expect(availability.errorCode).toEqual(getAvailabilityForServiceErrorCodes.serviceUnavailable)
+    });
 
     test("if a resource has blocked out time, they are not available", async () => {
         await prisma.resource_blocked_time.create({

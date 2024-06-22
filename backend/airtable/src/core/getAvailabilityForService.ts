@@ -2,6 +2,7 @@ import {EverythingForAvailability} from '../express/getEverythingForAvailability
 import {
     AddOn,
     AddOn as DomainAddOn,
+    addOnFns,
     availability,
     availabilityConfiguration,
     AvailabilityConfiguration,
@@ -9,6 +10,7 @@ import {
     BookableTimes,
     Booking,
     calculatePrice,
+    errorResponse,
     ErrorResponse,
     Form,
     IsoDate,
@@ -19,6 +21,7 @@ import {
     ResourcedTimeSlot,
     Service,
     Service as DomainService,
+    serviceFns,
     ServiceId,
     serviceRequest,
     startTimeFns,
@@ -83,18 +86,25 @@ export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTi
     );
 }
 
+export const getAvailabilityForServiceErrorCodes = {
+    serviceUnavailable: 'service.unavailable'
+}
+
 export function getAvailabilityForService(
     everythingForAvailability: EverythingForAvailability,
     serviceId: ServiceId,
     fromDate: IsoDate,
     toDate: IsoDate
-): AvailabilityResponse {
+): AvailabilityResponse | ErrorResponse {
     const config = availabilityConfiguration(
         everythingForAvailability.businessConfiguration.availability,
         everythingForAvailability.businessConfiguration.resourceAvailability,
         everythingForAvailability.businessConfiguration.timeslots,
         everythingForAvailability.businessConfiguration.startTimeSpec);
-    const service = mandatory(everythingForAvailability.businessConfiguration.services.find((s) => s.id.value === serviceId.value), `Service with id ${serviceId.value} not found`);
+    const service = serviceFns.maybeFindService(everythingForAvailability.businessConfiguration.services, serviceId);
+    if (!service) {
+        return errorResponse(getAvailabilityForServiceErrorCodes.serviceUnavailable, `Service with id ${serviceId.value} not found`);
+    }
     const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, fromDate, toDate)
     return applyPricingRules(
         availability,
@@ -136,12 +146,7 @@ function getServiceSummary(service: DomainService, forms: Form[]): ServiceSummar
 }
 
 function getAddOnSummaries(service: DomainService, addOns: DomainAddOn[]): AddOnSummary[] {
-    const permittedAddOns = service.permittedAddOns.map((ao) =>
-        mandatory(
-            addOns.find((a) => a.id.value === ao.value),
-            `Add on with id ${ao.value} not found`
-        )
-    );
+    const permittedAddOns = service.permittedAddOns.map((ao) => addOnFns.findById(addOns, ao))
     return permittedAddOns.map((ao) => ({
         name: ao.name,
         id: ao.id.value,
