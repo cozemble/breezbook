@@ -1,24 +1,22 @@
 import {expect, test} from 'vitest'
-import jexl from 'jexl';
+import {price, PricingAttribute, PricingEngine, pricingResult, PricingRule} from "../src/pricing.js";
 
-const jexlInstance = new jexl.Jexl();
-
-interface BookingDateAttribute {
+interface BookingDateAttribute extends PricingAttribute<string> {
     type: 'bookingDate';
     value: string;
 }
 
-interface BookingStartTimeAttribute {
+interface BookingStartTimeAttribute extends PricingAttribute<string> {
     type: 'bookingStartTime'
     value: string;
 }
 
-interface DaysUntilBookingAttribute {
+interface DaysUntilBookingAttribute extends PricingAttribute<number> {
     type: 'daysUntilBooking';
     value: number;
 }
 
-interface MonthOfBookingAttribute {
+interface MonthOfBookingAttribute extends PricingAttribute<number> {
     type: 'monthOfBooking';
     value: number;
 }
@@ -37,112 +35,6 @@ function daysUntilBookingAttribute(value: number): DaysUntilBookingAttribute {
 
 function monthOfBookingAttribute(value: number): MonthOfBookingAttribute {
     return {type: 'monthOfBooking', value}
-}
-
-type PricingAttribute =
-    BookingDateAttribute
-    | BookingStartTimeAttribute
-    | DaysUntilBookingAttribute
-    | MonthOfBookingAttribute;
-
-interface Price {
-    _type: 'price';
-    amountInMinorUnits: number;
-}
-
-function price(amountInMinorUnits: number): Price {
-    return {_type: 'price', amountInMinorUnits}
-}
-
-interface PriceAdjustment {
-    ruleId: string;
-    ruleName: string;
-    originalPrice: Price;
-    adjustedPrice: Price;
-    explanation: string;
-}
-
-interface PricingResult {
-    finalPrice: Price;
-    basePrice: Price;
-    adjustments: PriceAdjustment[];
-}
-
-function pricingResult(basePrice: Price, finalPrice: Price = basePrice, adjustments: PriceAdjustment[] = []): PricingResult {
-    return {finalPrice, basePrice, adjustments}
-}
-
-interface ConditionalMutation {
-    jexlCondition?: string;
-    jexlExpression: string;
-    description: string;
-}
-
-interface PricingRule {
-    id: string;
-    name: string;
-    description: string;
-    requiredAttributes: string[];
-    mutations: ConditionalMutation[];
-    applyAllOrFirst: 'all' | 'first';
-}
-
-class PricingEngine {
-    private rules: PricingRule[] = [];
-
-    addRule(rule: PricingRule) {
-        this.rules.push(rule);
-    }
-
-    calculatePrice(basePrice: Price, attributes: PricingAttribute[]): PricingResult {
-        const result = pricingResult(basePrice);
-
-        for (const rule of this.rules) {
-            if (rule.requiredAttributes.every(factor => attributes.some(f => f.type === factor))) {
-                const outcome = this.executeRule(rule, result.finalPrice, attributes);
-                if (outcome.finalPrice.amountInMinorUnits !== result.finalPrice.amountInMinorUnits) {
-                    result.finalPrice = outcome.finalPrice;
-                    result.adjustments.push(...outcome.adjustments);
-
-                }
-            }
-        }
-        return result;
-    }
-
-    private executeRule(rule: PricingRule, currentPrice: Price, attributes: PricingAttribute[]): PricingResult {
-        const context = this.attributesToContext(attributes, currentPrice);
-        const result = pricingResult(currentPrice);
-        for (const mutation of rule.mutations) {
-            const condition = mutation.jexlCondition || 'true';
-            const shouldApply = jexlInstance.evalSync(condition, context);
-            if (shouldApply) {
-                const newPrice = price(jexlInstance.evalSync(mutation.jexlExpression, context));
-                result.finalPrice = newPrice;
-                result.adjustments.push({
-                    ruleId: rule.id,
-                    ruleName: rule.name,
-                    originalPrice: currentPrice,
-                    adjustedPrice: newPrice,
-                    explanation: mutation.description
-                });
-                if (rule.applyAllOrFirst === 'first') {
-                    break;
-                }
-            }
-        }
-        return result;
-    }
-
-    private attributesToContext(attributes: PricingAttribute[], currentPrice: Price) {
-        const context = {
-            currentPrice: currentPrice.amountInMinorUnits
-        } as any;
-        for (const attribute of attributes) {
-            context[attribute.type] = attribute.value;
-        }
-        return context;
-    }
 }
 
 const moreExpensiveAfterSixPm: PricingRule = {
