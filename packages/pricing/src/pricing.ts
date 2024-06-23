@@ -129,6 +129,15 @@ export function multiply(factor: number): Multiply {
     return {_type: 'multiply', factor}
 }
 
+interface Add {
+    _type: 'add';
+    amount: number;
+}
+
+export function add(amount: number): Add {
+    return {_type: 'add', amount}
+}
+
 interface JexlMutation {
     _type: 'jexl.mutation';
     jexlExpression: string;
@@ -138,7 +147,7 @@ export function jexlMutation(jexlExpression: string): JexlMutation {
     return {_type: 'jexl.mutation', jexlExpression}
 }
 
-type Mutation = Multiply | JexlMutation
+type Mutation = Multiply | Add | JexlMutation
 
 interface ConditionalMutation {
     condition?: Condition;
@@ -204,9 +213,13 @@ export class PricingEngine {
     }
 
     private applyMutation(mutation: Mutation, context: any): Price {
-        if(mutation._type === 'jexl.mutation') {
+        if (mutation._type === 'jexl.mutation') {
             return price(this.jexlInstance.evalSync(mutation.jexlExpression, context));
         }
+        if (mutation._type === 'add') {
+            return price(context.currentPrice + mutation.amount);
+        }
+
         return price(context.currentPrice * mutation.factor);
     }
 

@@ -256,6 +256,9 @@ importers:
       '@breezbook/packages-http':
         specifier: workspace:*
         version: link:../../packages/http
+      '@breezbook/packages-pricing':
+        specifier: workspace:*
+        version: link:../../packages/pricing
       '@breezbook/packages-voicebot-prompting':
         specifier: workspace:*
         version: link:../../packages/voicebot-prompting

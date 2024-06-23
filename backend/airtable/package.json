@@ -56,6 +56,7 @@
     "@breezbook/packages-core": "workspace:*",
     "@breezbook/packages-http": "workspace:*",
     "@breezbook/packages-voicebot-prompting": "workspace:*",
+    "@breezbook/packages-pricing": "workspace:*",
     "@prisma/client": "5.9.1",
     "@slack/web-api": "^7.0.4",
     "ajv": "^8.12.0",

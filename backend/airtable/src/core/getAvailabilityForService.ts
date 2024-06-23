@@ -16,6 +16,7 @@ import {
     isoDateFns,
     mandatory,
     Price,
+    PricedSlot,
     PricingRule,
     Service,
     Service as DomainService,
@@ -47,8 +48,7 @@ function toTimeSlotAvailability(slot: AvailableSlot, price: Price): TimeSlotAvai
     );
 }
 
-export function applyPricingRules(availability: AvailableSlot[], pricingRules: PricingRule[], service: Service, addOns: AddOn[], forms: Form[]): AvailabilityResponse {
-    const priced = availability.map((a) => calculatePrice(a, pricingRules));
+function toAvailabilityResponse(priced: PricedSlot[], service: Service, addOns: AddOn[], forms: Form[]): AvailabilityResponse {
     return priced.reduce(
         (acc, curr) => {
             const slotsForDate = acc.slots[curr.slot.date.value] ?? [];
@@ -70,6 +70,10 @@ export const getAvailabilityForServiceErrorCodes = {
     serviceUnavailable: 'service.unavailable'
 }
 
+function applyPricing2(p: PricedSlot, pricingRules: PricingRule[]): PricedSlot {
+    return p
+}
+
 export function getAvailabilityForService(
     everythingForAvailability: EverythingForAvailability,
     serviceId: ServiceId,
@@ -86,9 +90,10 @@ export function getAvailabilityForService(
         return errorResponse(getAvailabilityForServiceErrorCodes.serviceUnavailable, `Service with id ${serviceId.value} not found`);
     }
     const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, fromDate, toDate)
-    return applyPricingRules(
-        availability,
-        everythingForAvailability.pricingRules,
+    const priced = availability.map((a) => calculatePrice(a, everythingForAvailability.pricingRules))
+        .map(p => applyPricing2(p, everythingForAvailability.pricingRules));
+    return toAvailabilityResponse(
+        priced,
         service,
         everythingForAvailability.businessConfiguration.addOns,
         everythingForAvailability.businessConfiguration.forms);
