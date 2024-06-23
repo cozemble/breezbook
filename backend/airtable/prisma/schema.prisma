@@ -430,6 +430,7 @@ model resources {
   environment_id                String
   resource_type                 String
   name                          String
+  metadata                      Json                            @default("{}")
   created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
   updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
   booking_resource_requirements booking_resource_requirements[]

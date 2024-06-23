@@ -9,11 +9,6 @@ import {
     jexlMutation, multiply
 } from "../src/pricing.js";
 
-interface BookingDateFactor extends PricingFactor<string> {
-    type: 'bookingDate';
-    value: string;
-}
-
 interface BookingStartTimeFactor extends PricingFactor<string> {
     type: 'bookingStartTime'
     value: string;

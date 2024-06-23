@@ -70,6 +70,7 @@ create table resources
     environment_id text                                not null,
     resource_type  text references resource_types (id) not null,
     name           text                                not null,
+    metadata       jsonb                               not null default '{}',
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp
 );

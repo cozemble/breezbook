@@ -69,7 +69,7 @@ async function getReferenceData(deps: EndpointDependencies): Promise<{
         ...params,
         type: personalTrainer.value
     })))
-    const ptMike: ResourceSummary = mandatory(listOfPersonalTrainers.find(pt => pt.name === 'ptMike'), `ptMike not found in ${JSON.stringify(listOfPersonalTrainers)}`)
+    const ptMike: ResourceSummary = mandatory(listOfPersonalTrainers.find(pt => pt.name === 'Mike'), `PT Mike not found in ${JSON.stringify(listOfPersonalTrainers)}`)
     return {personalTrainingService, personalTrainerRequirement, ptMike};
 }
 

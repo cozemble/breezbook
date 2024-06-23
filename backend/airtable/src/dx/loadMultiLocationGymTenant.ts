@@ -165,14 +165,25 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
     }))
     await runUpserts(prisma, resourceTypeUpserts)
 
-    const personalTrainers = ['ptMike', 'ptMete']
-    await runUpserts(prisma, personalTrainers.map(pt => upsertResource({
-        id: makeTestId(tenant_id, environment_id, `resource.${pt}`),
-        tenant_id,
-        environment_id,
-        name: pt,
-        resource_type: makeTestId(tenant_id, environment_id, `resource.personal.trainer`)
-    })))
+    await runUpserts(prisma, [
+        upsertResource({
+            id: makeTestId(tenant_id, environment_id, `resource.ptMike`),
+            tenant_id,
+            environment_id,
+            name: "Mike",
+            resource_type: makeTestId(tenant_id, environment_id, `resource.personal.trainer`)
+        }),
+        upsertResource({
+            id: makeTestId(tenant_id, environment_id, `resource.ptMete`),
+            tenant_id,
+            environment_id,
+            name: "Mete",
+            resource_type: makeTestId(tenant_id, environment_id, `resource.personal.trainer`),
+            metadata: {
+                tier: 'elite'
+            }
+        })
+    ])
     await runUpserts(prisma, [
         upsertResourceImage({
             resource_id: makeTestId(tenant_id, environment_id, `resource.ptMike`),
@@ -268,7 +279,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             day_of_week: 'Tuesday',
             start_time_24hr,
             end_time_24hr
-        }),upsertResourceAvailability({
+        }), upsertResourceAvailability({
             id: makeTestId(tenant_id, environment_id, `ptMeteAvailability.harlow#2`),
             tenant_id,
             environment_id,

@@ -1508,3 +1508,19 @@ Breezbook optimizes bookings, pricing, and customer engagement to keep your cale
 Claude went with PricingFactor initially, and I changed that to PricingAttribute, as I was trying to understand what it 
 produced.  I think I will switch back to Factor though, because some pricing factors - like weather - are not attributes
 of any booking domain objects.
+
+## Implementing increased pricing for a particular personal trainer
+I think what I would like to do is to be able to make resources with metadata, so I can place each personal trainer into a tiered
+system, and then I can implement tiered pricing.  
+
+Recall that pricing happens after availability checking.  So for this to work, the availability check needs to return much more
+data than it currently does.  Right now, it only returns time and base price.  Recall that an availability check gets a service id,
+a data range, and some optional fixed resource preferences.  It should return at least the following additional items:
+
+- how much capacity is possible at this time
+- how much capacity is already booked at this time
+- what resources are assigned to the proposed slot
+- what alternative resources are available at the proposed slot
+
+This will allow the pricing engine to make decisions based on the availability of resources.
+

@@ -28,9 +28,9 @@ describe("given a multi-location gym", () => {
     test("return resource details when found", async () => {
         const outcome = await resources.listByType(prisma, tenantEnvLoc, resourceType("personal.trainer")) as ResourceSummary[];
         expect(outcome).toHaveLength(2)
-        const mike = outcome.find(r => r.name === "ptMike") as ResourceSummary;
+        const mike = outcome.find(r => r.name === "Mike") as ResourceSummary;
         expect(mike.id).toBe(multiLocationGym.ptMike)
-        expect(mike.name).toBe("ptMike")
+        expect(mike.name).toBe("Mike")
         expect(mike.branding).toBeDefined()
         expect(mike.branding?.images).toHaveLength(1)
         expect(mike.branding?.markup).toHaveLength(1)
