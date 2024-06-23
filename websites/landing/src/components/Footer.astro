@@ -1,4 +1,6 @@
 ---
+import GitHubIcon from './GitHubIcon.astro';
+
 const links: {
 	text: string;
 	href: string;
@@ -26,6 +28,9 @@ const links: {
 					</li>
 				))
 			}
+			<li class="ml-4">
+				<GitHubIcon class="text-2xl" />
+			</li>
 		</ul>
 	</nav>
 </footer>
