@@ -723,13 +723,13 @@ export const priceFns = {
         });
     },
     sum(prices: Price[]): Price {
-        if(prices.length === 0) {
+        if (prices.length === 0) {
             throw new Error('Cannot sum an empty list of prices');
         }
         return prices.reduce((acc, price) => priceFns.add(acc, price), price(0, prices[0].currency));
     },
     format(price: Price, roundToMajor = true): string {
-        const initial =  `${(price.amount.value / 100).toFixed(2)}`;
+        const initial = `${(price.amount.value / 100).toFixed(2)}`;
         if (roundToMajor && initial.endsWith('.00')) {
             return initial.slice(0, -3);
         }
@@ -933,7 +933,7 @@ export const serviceFns = {
 
     },
     maybeFindService(services: Service[], serviceId: ServiceId): Service | null {
-        return services.find(s => values.isEqual(s.id, serviceId)) || null;
+        return services.find(s => values.isEqual(s.id, serviceId)) ?? null;
     },
     replaceRequirement(theService: Service, existing: ResourceRequirement, replacement: ResourceRequirement): Service {
         return {
@@ -996,11 +996,14 @@ export function serviceOption(
     };
 }
 
+export type Metadata = Record<string, string | number | boolean>
+
 export interface Resource {
     _type: 'resource';
     id: ResourceId;
     type: ResourceType;
     name: string;
+    metadata?: Metadata;
 }
 
 export function resourceId(value: string): ResourceId {
@@ -1132,39 +1135,6 @@ export function businessConfiguration(
         forms,
         customerFormId
     };
-}
-
-export interface BookableTimeSlot {
-    date: IsoDate;
-    slot: TimeslotSpec;
-}
-
-export function bookableTimeSlot(date: IsoDate, slot: TimeslotSpec): BookableTimeSlot {
-    return {
-        date,
-        slot
-    };
-}
-
-export interface ResourcedTimeSlot extends BookableTimeSlot {
-    _type: 'resourced.time.slot';
-    resources: Resource[];
-    service: Service;
-}
-
-export function resourcedTimeSlot(slot: BookableTimeSlot, resources: Resource[], service: Service): ResourcedTimeSlot {
-    return {
-        _type: 'resourced.time.slot',
-        ...slot,
-        resources,
-        service
-    };
-}
-
-export interface BookableTimes {
-    _type: 'bookable.times';
-    date: IsoDate;
-    bookableTimes: ExactTimeAvailability[];
 }
 
 export interface AvailabilityBlock {

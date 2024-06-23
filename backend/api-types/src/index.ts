@@ -14,6 +14,7 @@ export * from './secrets.js';
 export * from './pricingTypes.js';
 export * from './orderTypes.js';
 
+
 export interface TimeSlotAvailability {
     _type: 'time.slot.availability';
     timeslotId: string;

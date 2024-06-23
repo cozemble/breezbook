@@ -5,7 +5,7 @@ import {EndpointDependencies, EndpointOutcome, specifiedDeps} from "../../src/in
 import {
     customer,
     environmentId,
-    fullPaymentOnCheckout,
+    fullPaymentOnCheckout, IsoDate,
     isoDateFns,
     locationId,
     mandatory,
@@ -48,6 +48,7 @@ const personalTrainer = resourceType('personal.trainer')
 const personalTraining = serviceId(multiLocationGym.pt1Hr)
 const friday = isoDateFns.next('Friday')
 const saturday = isoDateFns.next('Saturday')
+const tuesday = isoDateFns.next('Tuesday')
 
 const params = {
     'envId': env.value,
@@ -59,7 +60,8 @@ const params = {
 async function getReferenceData(deps: EndpointDependencies): Promise<{
     personalTrainingService: Service,
     personalTrainerRequirement: ResourceRequirement,
-    ptMike: ResourceSummary
+    ptMike: ResourceSummary,
+    ptMete: ResourceSummary,
 }> {
     const theTenant = expectJson<Tenant>(await onGetTenantRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.getTenant + `?slug=${tenant.value}`), params)))
     const personalTrainingService: Service = mandatory(theTenant.services.find(s => s.id === multiLocationGym.pt1Hr), `Service ${multiLocationGym.pt1Hr} not found in ${JSON.stringify(theTenant.services)}`)
@@ -70,18 +72,19 @@ async function getReferenceData(deps: EndpointDependencies): Promise<{
         type: personalTrainer.value
     })))
     const ptMike: ResourceSummary = mandatory(listOfPersonalTrainers.find(pt => pt.name === 'Mike'), `PT Mike not found in ${JSON.stringify(listOfPersonalTrainers)}`)
-    return {personalTrainingService, personalTrainerRequirement, ptMike};
+    const ptMete: ResourceSummary = mandatory(listOfPersonalTrainers.find(pt => pt.name === 'Mete'), `PT Mete not found in ${JSON.stringify(listOfPersonalTrainers)}`)
+    return {personalTrainingService, personalTrainerRequirement, ptMike, ptMete};
 }
 
-async function bookLastSlotOnFriday(deps: EndpointDependencies, requirementOverrides: {
+async function bookLastSlotOnDay(deps: EndpointDependencies, requirementOverrides: {
     resourceId: string;
     requirementId: string
-}[], personalTrainingService: Service, personalTrainerRequirement: ResourceRequirement, ptMike: ResourceSummary): Promise<OrderCreatedResponse> {
-    const onFriday = `?fromDate=${friday.value}&toDate=${friday.value}`
-    const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, {requirementOverrides}), params)))
-    const fridaySlots = mikeOnFriday.slots?.[friday.value] ?? []
-    const lastSlot = mandatory(fridaySlots[fridaySlots.length - 1], `No final slot for Mike on Friday`)
-    const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(lastSlot.startTime24hr), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, ptMike.id)])])
+}[], personalTrainingService: Service, personalTrainerRequirement: ResourceRequirement, preferredPt: ResourceSummary, day:IsoDate): Promise<OrderCreatedResponse> {
+    const onDay = `?fromDate=${day.value}&toDate=${day.value}`
+    const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onDay, {requirementOverrides}), params)))
+    const availableSlots = availabilityResponse.slots?.[friday.value] ?? []
+    const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot for Mike on Friday`)
+    const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(lastSlot.startTime24hr), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, preferredPt.id)])])
     const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket), params)))
     const orderRequest = pricedCreateOrderRequest(pricedBasket, customer("Mike", "Hogan", "mike@email.com", "+14155552671"), fullPaymentOnCheckout())
     const orderResponse = expectJson<OrderCreatedResponse>(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest), params)).then(outcomes => handleMutations(deps, outcomes)))
@@ -113,6 +116,7 @@ describe("given the test gym tenant", () => {
         const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, {requirementOverrides}), params)))
         expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
         const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0], `No slots found for Mike on Friday`)
+        expect(firstSlot.priceWithNoDecimalPlaces).toBe(personalTrainingService.priceWithNoDecimalPlaces)
         const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, ptMike.id)])])
         const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket), params)))
         const orderRequest = pricedCreateOrderRequest(pricedBasket, customer("Mike", "Hogan", "mike@email.com", "+14155552671"), fullPaymentOnCheckout())
@@ -143,10 +147,24 @@ describe("given the test gym tenant", () => {
             requirementId: personalTrainerRequirement.id.value,
             resourceId: ptMike.id
         }]
-        const order1 = await bookLastSlotOnFriday(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike);
-        const order2 = await bookLastSlotOnFriday(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike);
-        const order3 = await bookLastSlotOnFriday(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike);
+        await bookLastSlotOnDay(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike, friday);
+        await bookLastSlotOnDay(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike, friday);
+        await bookLastSlotOnDay(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike, friday);
     });
+
+    // test("Mete is more expensive than Mike", async () => {
+    //     const {personalTrainingService,personalTrainerRequirement, ptMete} = await getReferenceData(deps);
+    //     const requirementOverrides = [{
+    //         requirementId: personalTrainerRequirement.id.value,
+    //         resourceId: ptMete.id
+    //     }]
+    //     const onTuesday = `?fromDate=${tuesday.value}&toDate=${tuesday.value}`
+    //     const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onTuesday, {requirementOverrides}), params)))
+    //     expect(availabilityResponse.slots?.[tuesday.value]).toHaveLength(17)
+    //     const availableSlots = availabilityResponse.slots?.[tuesday.value] ?? []
+    //     const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot available`)
+    //     expect(lastSlot.priceWithNoDecimalPlaces).toBeGreaterThan(personalTrainingService.priceWithNoDecimalPlaces)
+    // })
 })
 
 async function handleMutations(deps: EndpointDependencies, outcomes: EndpointOutcome[]): EndpointOutcome[] {

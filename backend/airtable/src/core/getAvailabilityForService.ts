@@ -7,7 +7,6 @@ import {
     availabilityConfiguration,
     AvailabilityConfiguration,
     AvailableSlot,
-    BookableTimes,
     Booking,
     calculatePrice,
     errorResponse,
@@ -18,7 +17,6 @@ import {
     mandatory,
     Price,
     PricingRule,
-    ResourcedTimeSlot,
     Service,
     Service as DomainService,
     serviceFns,
@@ -37,40 +35,22 @@ import {
     timeSlotAvailability
 } from '@breezbook/backend-api-types';
 
-function toTimeSlotAvailability(slot: ResourcedTimeSlot | AvailableSlot, price: Price): TimeSlotAvailability {
-    if (slot._type === 'available.slot') {
-        const startTime24 = startTimeFns.toTime24(slot.startTime)
-        return timeSlotAvailability(
-            startTime24.value,
-            startTime24.value,
-            slot.startTime._type === 'timeslot.spec' ? slot.startTime.slot.to.value : "---",
-            startTime24.value,
-            price.amount.value,
-            price.currency.value
-        );
-    }
+function toTimeSlotAvailability(slot: AvailableSlot, price: Price): TimeSlotAvailability {
+    const startTime24 = startTimeFns.toTime24(slot.startTime)
     return timeSlotAvailability(
-        slot.slot.id.value,
-        slot.slot.slot.from.value,
-        slot.slot.slot.to.value,
-        slot.slot.description,
+        startTime24.value,
+        startTime24.value,
+        slot.startTime._type === 'timeslot.spec' ? slot.startTime.slot.to.value : "---",
+        startTime24.value,
         price.amount.value,
         price.currency.value
     );
 }
 
-export function applyPricingRules(availability: ResourcedTimeSlot[] | BookableTimes[] | AvailableSlot[], pricingRules: PricingRule[], service: Service, addOns: AddOn[], forms: Form[]): AvailabilityResponse {
-    const priced = availability.map((a) => {
-        if (a._type === 'bookable.times') {
-            return a;
-        }
-        return calculatePrice(a, pricingRules);
-    });
+export function applyPricingRules(availability: AvailableSlot[], pricingRules: PricingRule[], service: Service, addOns: AddOn[], forms: Form[]): AvailabilityResponse {
+    const priced = availability.map((a) => calculatePrice(a, pricingRules));
     return priced.reduce(
         (acc, curr) => {
-            if (curr._type === 'bookable.times') {
-                throw new Error('Not yet implemented');
-            }
             const slotsForDate = acc.slots[curr.slot.date.value] ?? [];
             const currTimeslot = toTimeSlotAvailability(curr.slot, curr.price);
             if (!slotsForDate.some((a) => a.label === currTimeslot.label)) {

@@ -1,19 +1,18 @@
 import {expect, test} from 'vitest'
 import {
     anySuitableResource,
-    bookableTimeSlot,
     dayAndTimePeriod,
+    exactTimeAvailability,
     GBP,
     IsoDate,
     isoDate,
+    minutes,
     price,
     resource,
-    resourcedTimeSlot,
     resourceType,
     service,
     time24,
-    timePeriodFns,
-    timeslotSpec
+    timePeriodFns
 } from "../src/types.js";
 import {
     amountBasedPriceAdjustment,
@@ -21,6 +20,7 @@ import {
     percentageBasedPriceAdjustment,
     timeBasedPriceAdjustment
 } from "../src/calculatePrice.js";
+import {availableSlot, AvailableSlot, resourceAllocation} from "../src/index.js";
 
 test("base rate when there are no pricing adjustments", () => {
     const pricedSlot = calculatePrice(carWash(today), []);
@@ -50,10 +50,11 @@ test("adjustments for today and tomorrow, otherwise base rate", () => {
 
 const van = resourceType('van');
 const van1 = resource(van, "Van 1");
-const smallCarWash = service('Small Car Wash','Small Car Wash', [anySuitableResource(van)], 120, price(1000, GBP), [], []);
+const anySuitableVan = anySuitableResource(van);
+const smallCarWash = service('Small Car Wash', 'Small Car Wash', [anySuitableVan], minutes(120), price(1000, GBP), [], []);
 const today = isoDate('2021-05-24');
 const tomorrow = isoDate('2021-05-25');
 
-function carWash(today: IsoDate) {
-    return resourcedTimeSlot(bookableTimeSlot(today, timeslotSpec(time24('09:00'), time24('10:00'), "slot")), [van1], smallCarWash);
+function carWash(today: IsoDate): AvailableSlot {
+    return availableSlot(smallCarWash, today, exactTimeAvailability(time24('09:00')), [resourceAllocation(anySuitableVan, van1)])
 }
