@@ -5,10 +5,10 @@
 		text: string;
 		href: string;
 	}[] = [
-		{ text: 'Features', href: '#features' },
+		{ text: 'Features', href: '/#features' },
 		{ text: 'Pricing', href: '/coming-soon' },
 		{ text: 'Docs', href: '/coming-soon' },
-		{ text: 'Contact', href: '/coming-soon' }
+		{ text: 'Contact', href: '/#contact' }
 	];
 </script>
 
