@@ -1386,3 +1386,125 @@ ending and pricing factors.  Am going to play with that now to see how it works.
 It seems to work, but I'm struggling to think in the way it thinks, in terms of how it modelled the rules I mean.  It also
 isn't a model that can be serialised and deserialised easily.  But I'm going to use it as inspiration.  Here is what Claude
 produced - https://github.com/cozemble/breezbook/blob/71605a0d264aa83455d7b051a110eec1b3e09424/packages/core/test/pricing/exploringWhatClaudeCreated.spec.ts#L1
+
+# Sun 23 Jun 2024
+I've played with how Claude modeled pricing rules, and I like it.  The core idea is to extract what it initially called a 
+`PricingFactor`, but which I have renamed as `PricingAttribute`.  This flattens the domain model into a list of attributes
+that are germane to pricing.  It makes the pricing rules and the pricing logic more explicit coherent.  And reusable.
+
+For example, some of the attributes 
+ - numberOfDaysToBooking, which enables the pricing that Nat wants.  More expensive today, cheaper tomorrow
+ - bookingStartTime, which enables more expensive peak times
+ - groupSize, which enables group discounts
+ - totalOrder, which enables discounts for large orders
+ - customerLifeTimeValue, which enables discounts for loyal customers
+ - resourceTier, which enables different pricing for different resources
+
+etc
+
+I realised that this concept of flattening the domain model into attributes that are germain to a given concern can also be applied
+to the refund policy rules.  numberOfDaysToBooking, or numberOfHoursToBooking would probably be the core of most refund rules.
+It certainly is for Nat.
+
+I further realised that this "attribute-ification" of the pricing rules opens the door to supply of attributes outside the domain
+model.  For example, weather conditions.  This in turn opens the door to a companion service creating offers to entice more
+bookings.  For example, a customer books a mobile car wash at a certain post code next Monday at 9am to 11am.  We could
+create custom offers for customers nearby, offering a discount if they get their car washed from 11am onwards.  This external
+service would add an attribute to the targeted customers, which would be supplied to the pricing engine, and thereby the 
+discount actualised.
+
+What other kinds of offers might be possible?  If a loyal customer has not booked in a while, and business is slack, we could
+offer them a discount.
+
+It made me wonder if the mission, and the USP of Breezbook, should not be to maximise revenue for the business by keeping the
+calendar full.  This goes beyond the mission of traditional booking systems, which is just to take and manage bookings and
+calendars.  That is just an operational concern.  The problem that businesses want solved is to maximise revenue.  This is a 
+problem that Breezbook could take on.
+
+Potential Mission for Breezbook:
+"To empower businesses to maximize revenue by optimizing bookings, pricing, and customer engagement."
+
+This is what Claude had to say about it:
+
+```
+Let's explore this idea further:
+
+Expanded Mission for Breezbook:
+"To empower businesses to maximize revenue by optimizing bookings, pricing, and customer engagement."
+Key Differentiators:
+
+Intelligent Pricing: Dynamic pricing based on multiple factors (time, demand, customer attributes, external conditions).
+Proactive Offer Generation: Automatically create and target offers to fill gaps in the calendar.
+Revenue Optimization Algorithms: Use machine learning to continuously improve pricing and offer strategies.
+Business Intelligence: Provide insights and recommendations for revenue growth.
+
+
+Potential New Features:
+
+Revenue Dashboard: Show real-time and projected revenue, with comparisons to historical data.
+Occupancy Optimizer: Suggest strategies to fill low-occupancy time slots.
+Customer Lifetime Value Predictor: Help businesses identify and retain high-value customers.
+Competitive Analysis Tool: If possible, provide insights on local market pricing and demand.
+Scenario Planner: Allow businesses to model different pricing and offer strategies.
+
+
+Integration Possibilities:
+
+Marketing Automation: Trigger email campaigns or SMS offers based on calendar gaps.
+Customer Relationship Management (CRM): Deep integration to leverage customer data for personalized pricing and offers.
+Payment Processing: Offer flexible payment options to increase bookings (e.g., deposits, installments).
+
+
+Challenges to Consider:
+
+Data Privacy: Ensure compliance with data protection regulations when using customer data for pricing.
+User Education: Some businesses might need guidance on dynamic pricing strategies.
+Balancing Automation and Control: Allow businesses to set boundaries for automated pricing and offers.
+
+
+Communication Strategy:
+
+Emphasize ROI: Show potential customers how Breezbook can increase their bottom line.
+Case Studies: Develop detailed case studies showing revenue improvements for different business types.
+Interactive Demo: Create a demo that allows potential customers to see how the system could work with their own data.
+
+
+Potential Taglines:
+
+"Breezbook: Turning Empty Slots into Revenue"
+"Maximize Every Minute with Breezbook"
+"Breezbook: Your AI-Powered Revenue Optimization Partner"
+
+
+Future Expansion Possibilities:
+
+Industry-Specific Modules: Develop specialized features for different sectors (e.g., healthcare, beauty, professional services).
+Predictive Analytics: Use historical data and external factors to forecast demand and suggest proactive strategies.
+Supply Chain Integration: For businesses that require supplies, integrate with inventory systems to optimize pricing based on cost fluctuations.
+
+
+
+This evolution positions Breezbook as much more than a booking system – it becomes a comprehensive revenue optimization platform. 
+It addresses a critical business need (maximizing revenue) rather than just solving an operational problem (managing bookings).
+
+To implement this vision:
+
+Start with a Minimum Viable Product (MVP) that includes basic dynamic pricing and offer generation.
+Gather data and feedback from early adopters to refine the algorithms.
+Gradually introduce more sophisticated features, always focusing on the core mission of revenue maximization.
+Develop strong analytics and reporting features to clearly demonstrate the value Breezbook provides.
+Consider a tiered pricing model, where advanced revenue optimization features are available in higher-tier plans.
+
+This approach could significantly differentiate Breezbook in the market and provide substantial value to your customers. 
+It aligns the success of your platform directly with the financial success of your clients, creating a strong value 
+proposition and potentially fostering long-term customer loyalty.
+```
+
+The revenue maximiser for your bookings business.  
+Most booking systems solve the operational need of managing bookings.
+Breezbook optimizes bookings, pricing, and customer engagement to keep your calendar full, and your revenue maxed.
+
+## Factor versus Attribute
+Claude went with PricingFactor initially, and I changed that to PricingAttribute, as I was trying to understand what it 
+produced.  I think I will switch back to Factor though, because some pricing factors - like weather - are not attributes
+of any booking domain objects.

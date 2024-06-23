@@ -1,39 +1,43 @@
 import {expect, test} from 'vitest'
-import {price, PricingAttribute, PricingEngine, pricingResult, PricingRule} from "../src/pricing.js";
+import {
+    price,
+    PricingFactor,
+    PricingEngine,
+    pricingResult,
+    PricingRule,
+    jexlCondition,
+    jexlMutation, multiply
+} from "../src/pricing.js";
 
-interface BookingDateAttribute extends PricingAttribute<string> {
+interface BookingDateFactor extends PricingFactor<string> {
     type: 'bookingDate';
     value: string;
 }
 
-interface BookingStartTimeAttribute extends PricingAttribute<string> {
+interface BookingStartTimeFactor extends PricingFactor<string> {
     type: 'bookingStartTime'
     value: string;
 }
 
-interface DaysUntilBookingAttribute extends PricingAttribute<number> {
+interface DaysUntilBookingFactor extends PricingFactor<number> {
     type: 'daysUntilBooking';
     value: number;
 }
 
-interface MonthOfBookingAttribute extends PricingAttribute<number> {
+interface MonthOfBookingFactor extends PricingFactor<number> {
     type: 'monthOfBooking';
     value: number;
 }
 
-function bookingDateAttribute(value: string): BookingDateAttribute {
-    return {type: 'bookingDate', value}
-}
-
-function bookingStartTimeAttribute(value: string): BookingStartTimeAttribute {
+function bookingStartTimeFactor(value: string): BookingStartTimeFactor {
     return {type: 'bookingStartTime', value}
 }
 
-function daysUntilBookingAttribute(value: number): DaysUntilBookingAttribute {
+function daysUntilBookingFactor(value: number): DaysUntilBookingFactor {
     return {type: 'daysUntilBooking', value}
 }
 
-function monthOfBookingAttribute(value: number): MonthOfBookingAttribute {
+function monthOfBookingFactor(value: number): MonthOfBookingFactor {
     return {type: 'monthOfBooking', value}
 }
 
@@ -41,11 +45,11 @@ const moreExpensiveAfterSixPm: PricingRule = {
     id: 'more-expensive-after-six-pm',
     name: 'More Expensive After 6pm',
     description: 'Increase price by 10% after 6pm',
-    requiredAttributes: ['bookingStartTime'],
+    requiredFactors: ['bookingStartTime'],
     mutations: [
         {
-            jexlCondition: 'bookingStartTime >= "18:00"',
-            jexlExpression: 'currentPrice * 1.1',
+            condition: jexlCondition('bookingStartTime >= "18:00"'),
+            mutation: jexlMutation('currentPrice * 1.1'),
             description: '10% increase applied for evening service',
         }
     ],
@@ -56,21 +60,21 @@ const lastMinuteBookingsAreMoreExpensive: PricingRule = {
     id: 'last-minute-booking',
     name: 'Last Minute Booking',
     description: 'Increase price for bookings that are happening soon',
-    requiredAttributes: ['daysUntilBooking'],
+    requiredFactors: ['daysUntilBooking'],
     mutations: [
         {
-            jexlCondition: 'daysUntilBooking == 0',
-            jexlExpression: 'currentPrice * 1.4',
+            condition: jexlCondition('daysUntilBooking == 0'),
+            mutation: multiply(1.4),
             description: '40% increase applied for booking today',
         },
         {
-            jexlCondition: 'daysUntilBooking == 1',
-            jexlExpression: 'currentPrice * 1.2',
+            condition: jexlCondition('daysUntilBooking == 1'),
+            mutation: multiply(1.2),
             description: '20% increase applied for booking tomorrow',
         },
         {
-            jexlCondition: 'daysUntilBooking == 2',
-            jexlExpression: 'currentPrice * 1.1',
+            condition: jexlCondition('daysUntilBooking == 2'),
+            mutation: multiply(1.1),
             description: '10% increase applied for booking two days from now',
         }
     ],
@@ -81,11 +85,11 @@ const summerDiscount: PricingRule = {
     id: 'summer-discount',
     name: 'Summer Discount',
     description: 'Apply a 10% discount during summer months',
-    requiredAttributes: ['monthOfBooking'],
+    requiredFactors: ['monthOfBooking'],
     mutations: [
         {
-            jexlCondition: 'monthOfBooking >= 5 && monthOfBooking <= 7',
-            jexlExpression: 'currentPrice * 0.9',
+            condition: jexlCondition('monthOfBooking >= 5 && monthOfBooking <= 7'),
+            mutation: jexlMutation('currentPrice * 0.9'),
             description: '10% summer discount applied',
         }
     ],
@@ -105,8 +109,8 @@ test("price is untouched when there are no rules to apply", () => {
 })
 
 test("price is adjusted for time-based rule", () => {
-    const pricingFactors: PricingAttribute[] = [
-        bookingStartTimeAttribute('19:00:00'),
+    const pricingFactors: PricingFactor[] = [
+        bookingStartTimeFactor('19:00:00'),
     ];
 
     const priced = pricingEngine.calculatePrice(basePrice, pricingFactors);
@@ -123,8 +127,8 @@ test("price is adjusted for time-based rule", () => {
 })
 
 test("price is adjusted for last minute booking", () => {
-    const bookingToday: PricingAttribute[] = [
-        daysUntilBookingAttribute(0),
+    const bookingToday: PricingFactor[] = [
+        daysUntilBookingFactor(0),
     ];
 
     const pricedForToday = pricingEngine.calculatePrice(basePrice, bookingToday);
@@ -139,8 +143,8 @@ test("price is adjusted for last minute booking", () => {
         }
     ])
 
-    const bookingTomorrow: PricingAttribute[] = [
-        daysUntilBookingAttribute(1),
+    const bookingTomorrow: PricingFactor[] = [
+        daysUntilBookingFactor(1),
     ];
     const pricedForTomorrow = pricingEngine.calculatePrice(basePrice, bookingTomorrow);
     expect(pricedForTomorrow.finalPrice).toEqual(price(12000))
@@ -154,8 +158,8 @@ test("price is adjusted for last minute booking", () => {
         }
     ])
 
-    const bookingTwoDays: PricingAttribute[] = [
-        daysUntilBookingAttribute(2),
+    const bookingTwoDays: PricingFactor[] = [
+        daysUntilBookingFactor(2),
     ];
     const pricedForTwoDays = pricingEngine.calculatePrice(basePrice, bookingTwoDays);
     expect(pricedForTwoDays.finalPrice).toEqual(price(11000))
@@ -169,16 +173,16 @@ test("price is adjusted for last minute booking", () => {
         }
     ])
 
-    const bookingThreeDays: PricingAttribute[] = [
-        daysUntilBookingAttribute(3),
+    const bookingThreeDays: PricingFactor[] = [
+        daysUntilBookingFactor(3),
     ];
     const pricedForThreeDays = pricingEngine.calculatePrice(basePrice, bookingThreeDays);
     expect(pricedForThreeDays.finalPrice).toEqual(basePrice)
 });
 
 test("price is adjusted for summer discount", () => {
-    const bookingInSummer: PricingAttribute[] = [
-        monthOfBookingAttribute(6),
+    const bookingInSummer: PricingFactor[] = [
+        monthOfBookingFactor(6),
     ];
 
     const pricedForSummer = pricingEngine.calculatePrice(basePrice, bookingInSummer);
@@ -193,8 +197,8 @@ test("price is adjusted for summer discount", () => {
         }
     ])
 
-    const bookingInWinter: PricingAttribute[] = [
-        monthOfBookingAttribute(12),
+    const bookingInWinter: PricingFactor[] = [
+        monthOfBookingFactor(12),
     ];
 
     const pricedForWinter = pricingEngine.calculatePrice(basePrice, bookingInWinter);
