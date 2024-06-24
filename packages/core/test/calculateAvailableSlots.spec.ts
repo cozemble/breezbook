@@ -607,6 +607,37 @@ describe("given the multi-location gym test tenant", () => {
     })
 })
 
+describe("given a chatbot service that has capacity", () => {
+    const theService = service("Chatbot Therapy", "Chatbot Therapy", [], minutes(60), price(3500, currencies.GBP), [], [], capacity(5))
+    const config = availabilityConfiguration(
+        makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
+        [],
+        [],
+        periodicStartTime(duration(minutes(60))))
+
+    test("if the service takes one hour, we can do 8 services a day with correct capacity", () => {
+        const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)))
+        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
+        available.forEach(slot => {
+            expect(slot.possibleCapacity.value).toBe(5)
+            expect(slot.consumedCapacity.value).toBe(0)
+        })
+    })
+
+    test("consumed capacity is calculated correctly when there are bookings", () => {
+        const booking1 = booking(customerId(), theService, date, timePeriod(time24("09:00"), time24("10:00")), capacity(2))
+        const booking2 = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), capacity(3))
+        const available = expectSlots(availability.calculateAvailableSlots(config, [booking1, booking2], serviceRequest(theService, date)))
+
+        expect(available.find(a => startTimeFns.toTime24(a.startTime).value === "09:00")?.consumedCapacity.value).toBe(2)
+        expect(available.find(a => startTimeFns.toTime24(a.startTime).value === "10:00")?.consumedCapacity.value).toBe(3)
+        available.filter(a => startTimeFns.toTime24(a.startTime).value !== "09:00" && startTimeFns.toTime24(a.startTime).value !== "10:00").forEach(slot => {
+            expect(slot.consumedCapacity.value).toBe(0)
+        })
+    })
+})
+
 function expectSlots(outcome: Success<AvailableSlot[]> | ErrorResponse): AvailableSlot[] {
     expect(outcome._type).toBe("success")
     if (outcome._type === "error.response") {

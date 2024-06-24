@@ -1,7 +1,8 @@
 import {
     Booking,
     bookingFns,
-    BusinessAvailability,
+    BusinessAvailability, capacity,
+    Capacity,
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
@@ -58,9 +59,12 @@ export interface AvailableSlot {
     date: IsoDate
     startTime: StartTime
     resourceAllocation: ResourceAllocation[]
+    possibleCapacity: Capacity
+    consumedCapacity: Capacity
 }
 
-export function availableSlot(service: Service, date: IsoDate, startTime: StartTime, resourceAllocation: ResourceAllocation[]): AvailableSlot {
+export function availableSlot(service: Service, date: IsoDate, startTime: StartTime, resourceAllocation: ResourceAllocation[], possibleCapacity: Capacity,
+                              consumedCapacity: Capacity): AvailableSlot {
     if (resourceAllocation.length !== service.resourceRequirements.length) {
         throw new Error(`Resource allocation count mismatch for service '${service.id.value}' - expected ${service.resourceRequirements.length} got ${resourceAllocation.length}`)
     }
@@ -69,7 +73,9 @@ export function availableSlot(service: Service, date: IsoDate, startTime: StartT
         service,
         date,
         startTime,
-        resourceAllocation
+        resourceAllocation,
+        possibleCapacity,
+        consumedCapacity
     }
 }
 
@@ -207,7 +213,16 @@ export const availability = {
             if (resourceOutcome._type !== 'error.response') {
                 const matchOutcome = resourceRequirementFns.matchRequirements(resourceOutcome.remainingAvailability, period, service.resourceRequirements, [])
                 if (matchOutcome._type === "success") {
-                    result.push(availableSlot(service, period.day, possibleStartTime, matchOutcome.value.map(r => resourceAllocation(r.requirement, r.match.resource))))
+                    const possibleCapacity = service.capacity
+                    const consumedCapacity = calculateConsumedCapacity(resourceOutcome.bookings, period)
+                    result.push(availableSlot(
+                        service,
+                        period.day,
+                        possibleStartTime,
+                        matchOutcome.value.map(r => resourceAllocation(r.requirement, r.match.resource)),
+                        possibleCapacity,
+                        consumedCapacity
+                    ))
                 }
             }
         }
@@ -215,6 +230,14 @@ export const availability = {
     },
 }
 
+function calculateConsumedCapacity(bookings: FullyResourcedBooking[], period: DayAndTimePeriod): Capacity {
+    return capacity(bookings.reduce((total, booking) => {
+        if (dayAndTimePeriodFns.intersects(bookingFns.calcPeriod(booking.booking), period)) {
+            return total + booking.booking.bookedCapacity.value;
+        }
+        return total;
+    }, 0));
+}
 export interface ResourceBookingOutcome {
     _type: 'resource.booking.outcome'
     when: DayAndTimePeriod
