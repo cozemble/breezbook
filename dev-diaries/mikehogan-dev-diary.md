@@ -1524,3 +1524,10 @@ a data range, and some optional fixed resource preferences.  It should return at
 
 This will allow the pricing engine to make decisions based on the availability of resources.
 
+# Tue 25 Jun 2024
+It crossed my mind this morning that a pricing factor could be the query params that come in with the availability
+check request, and these could be campaign identifers from google ads or what have you.  This would allow the pricing
+engine to make decisions based on the campaign that brought the customer to the site.
+
+So for sure `PricingFactor` is a better name than `PricingAttribute`.
+
