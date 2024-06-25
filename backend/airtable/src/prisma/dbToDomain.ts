@@ -31,8 +31,6 @@ import {
     mandatory,
     minutes,
     price,
-    PricingRule,
-    PricingRuleSpec,
     resource,
     Resource,
     resourceFns,
@@ -57,8 +55,8 @@ import {
     TimeSpec,
     timezone,
 } from '@breezbook/packages-core';
-import {timeBasedPriceAdjustment} from '@breezbook/packages-core/dist/calculatePrice.js';
 import {DbBookingAndResourceRequirements} from "../express/getEverythingForAvailability.js";
+import {PricingRule} from "@breezbook/packages-pricing";
 
 function toDomainResourceRequirement(rr: DbServiceResourceRequirement, resourceTypes: ResourceType[], mappedResources: Resource[]): ResourceRequirement {
     if (rr.requirement_type === 'specific_resource') {
@@ -133,11 +131,7 @@ function toDayAndTimePeriod(timeSpec: TimeSpec): DayAndTimePeriod {
 }
 
 export function toDomainPricingRule(rule: DbPricingRule): PricingRule {
-    const pricingRuleSpec = rule.definition as unknown as PricingRuleSpec;
-    if (pricingRuleSpec._type === 'time.based.price.adjustment.spec') {
-        return timeBasedPriceAdjustment(toDayAndTimePeriod(pricingRuleSpec.timeSpec), pricingRuleSpec.adjustment);
-    }
-    throw new Error(`Unknown pricing rule spec ${pricingRuleSpec._type}`);
+    return rule.definition as unknown as PricingRule;
 }
 
 export function toDomainResource(r: DbResource, resourceTypes: ResourceType[]): Resource {

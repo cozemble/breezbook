@@ -13,7 +13,7 @@ interface PriceAdjustment {
     explanation: string;
 }
 
-interface PricingResult {
+export interface PricingResult {
     finalPrice: number;
     basePrice: number;
     adjustments: PriceAdjustment[];

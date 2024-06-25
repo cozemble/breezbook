@@ -409,6 +409,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@breezbook/packages-pricing':
+        specifier: workspace:*
+        version: link:../pricing
       dayjs:
         specifier: ^1.11.10
         version: 1.11.10
@@ -516,6 +519,9 @@ importers:
       '@breezbook/packages-core':
         specifier: workspace:*
         version: link:../core
+      '@breezbook/packages-pricing':
+        specifier: workspace:*
+        version: link:../pricing
     devDependencies:
       eslint:
         specifier: ^8.28.0

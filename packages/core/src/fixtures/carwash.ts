@@ -6,7 +6,6 @@ import {
     coupon,
     couponCode,
     couponId,
-    daysFromToday,
     GBP,
     id,
     isoDate,
@@ -22,13 +21,12 @@ import {
     serviceId,
     tenantId,
     time24,
-    timeBasedPriceAdjustmentSpec,
     timePeriod,
     timeslotSpec,
     unlimited
 } from '../types.js';
-import {percentageBasedPriceAdjustment} from '../calculatePrice.js';
 import {carwashForm} from './carWashForms.js';
+import {jexlCondition, multiply, PricingRule} from "@breezbook/packages-pricing";
 
 const tenantIdCarwash = tenantId('carwash');
 const nineAm = time24('09:00');
@@ -73,9 +71,32 @@ const largeCarWash = serviceFns.setStartTimes(service(
     serviceId('largeCarWash.id')
 ), timeslots);
 
-const fortyPercentMoreToday = timeBasedPriceAdjustmentSpec(daysFromToday(0), percentageBasedPriceAdjustment(0.4), id('40% more today'));
-const twentyFivePercentMoreTomorrow = timeBasedPriceAdjustmentSpec(daysFromToday(1), percentageBasedPriceAdjustment(0.25), id('25% more tomorrow'));
-const tenPercentMoreDayAfterTomorrow = timeBasedPriceAdjustmentSpec(daysFromToday(2), percentageBasedPriceAdjustment(0.1), id('10% more day after tomorrow'));
+const chargeMoreForSoonBookings: PricingRule = {
+    id: 'charge-more-for-soon-bookings',
+    name: 'Charge More for Soon Bookings',
+    description: 'Increase price for bookings that are happening soon',
+    requiredFactors: ['daysUntilBooking'],
+    mutations: [
+        {
+            condition: jexlCondition('daysUntilBooking == 0'),
+            mutation: multiply(1.4),
+            description: '40% increase applied for booking today',
+        },
+        {
+            condition: jexlCondition('daysUntilBooking == 1'),
+            mutation: multiply(1.2),
+            description: '20% increase applied for booking tomorrow',
+        },
+        {
+            condition: jexlCondition('daysUntilBooking == 2'),
+            mutation: multiply(1.1),
+            description: '10% increase applied for booking two days from now',
+        }
+    ],
+    applyAllOrFirst: 'first'
+}
+
+
 const expired20PercentOffCoupon = coupon(couponCode("expired-20-percent-off"), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2020-01-01'), isoDate('2020-12-31'), couponId('expired-20-percent-off'));
 const twentyPercentOffCoupon = coupon(couponCode("20-percent-off"), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-01-01'), undefined, couponId('20-OFF'));
 
@@ -94,10 +115,7 @@ export const carwash = {
     fourToSix,
     van1,
     van2,
-    fortyPercentMoreToday,
-    twentyFivePercentMoreTomorrow,
-    tenPercentMoreDayAfterTomorrow,
-    pricingRules: [fortyPercentMoreToday, twentyFivePercentMoreTomorrow, tenPercentMoreDayAfterTomorrow],
+    pricingRules: [chargeMoreForSoonBookings],
     timeslots,
     wax,
     polish,

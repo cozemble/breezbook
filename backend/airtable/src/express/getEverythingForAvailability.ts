@@ -15,7 +15,6 @@ import {
     mandatory,
     minutes,
     periodicStartTime,
-    PricingRule,
     Resource,
     resourceDayAvailability,
     ResourceDayAvailability,
@@ -60,6 +59,7 @@ import {
     toDomainTimeslotSpec
 } from '../prisma/dbToDomain.js';
 import {PrismaClient} from "@prisma/client";
+import {PricingRule} from "@breezbook/packages-pricing";
 
 export interface EverythingForAvailability {
     _type: 'everything.for.availability';

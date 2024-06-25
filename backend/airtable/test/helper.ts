@@ -37,6 +37,7 @@ import {
     timeBasedPriceAdjustment
 } from '@breezbook/packages-core/dist/calculatePrice.js';
 import {EndpointOutcome} from "../src/infra/endpoint.js";
+import {jexlCondition, multiply, PricingRule} from "@breezbook/packages-pricing";
 
 export const today = isoDate();
 export const tomorrow = isoDateFns.addDays(isoDate(), 1);
@@ -69,18 +70,31 @@ export const goodServiceFormData = {
     postcode: 'SW1'
 };
 
-const fortyPercentMoreToday = timeBasedPriceAdjustment(
-    dayAndTimePeriod(isoDate(), timePeriod(time24('00:00'), time24('23:59'))),
-    percentageBasedPriceAdjustment(0.4)
-);
-const twentyFivePercentMoreTomorrow = timeBasedPriceAdjustment(
-    dayAndTimePeriod(tomorrow, timePeriod(time24('00:00'), time24('23:59'))),
-    percentageBasedPriceAdjustment(0.25)
-);
-const tenPercentMoreTwoDaysFromNow = timeBasedPriceAdjustment(
-    dayAndTimePeriod(twoDaysFromNow, timePeriod(time24('00:00'), time24('23:59'))),
-    percentageBasedPriceAdjustment(0.1)
-);
+const chargeMoreForSoonBookings: PricingRule = {
+    id: 'charge-more-for-soon-bookings',
+    name: 'Charge More for Soon Bookings',
+    description: 'Increase price for bookings that are happening soon',
+    requiredFactors: ['daysUntilBooking'],
+    mutations: [
+        {
+            condition: jexlCondition('daysUntilBooking == 0'),
+            mutation: multiply(1.4),
+            description: '40% increase applied for booking today',
+        },
+        {
+            condition: jexlCondition('daysUntilBooking == 1'),
+            mutation: multiply(1.2),
+            description: '20% increase applied for booking tomorrow',
+        },
+        {
+            condition: jexlCondition('daysUntilBooking == 2'),
+            mutation: multiply(1.1),
+            description: '10% increase applied for booking two days from now',
+        }
+    ],
+    applyAllOrFirst: 'first'
+}
+
 
 export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[] = [], today = isoDate(), otherDays: IsoDate[] = []) {
     const allDays = [today, ...otherDays];
@@ -100,7 +114,7 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
             periodicStartTime(duration(minutes(90))),
             null
         ),
-        [fortyPercentMoreToday, twentyFivePercentMoreTomorrow, tenPercentMoreTwoDaysFromNow],
+        [chargeMoreForSoonBookings],
         bookings,
         [
             coupon(couponCode('expired-20-percent-off'), unlimited(), percentageCoupon(percentageAsRatio(0.2)), isoDate('2021-05-23'), isoDate('2021-05-26')),

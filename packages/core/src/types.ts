@@ -1,5 +1,4 @@
 import {v4 as uuidv4, v4 as uuid} from 'uuid';
-import {PriceAdjustment} from './calculatePrice.js';
 import dayjs from 'dayjs';
 import {ToWords} from "to-words";
 import {StartTime} from "./availability.js";
@@ -200,6 +199,11 @@ export const isoDateFns = {
         const dayIndex = twoWeeks.indexOf(dayOfWeek, todayIndex);
         const daysToAdd = dayIndex - todayIndex;
         return this.addDays(isoDate(), daysToAdd);
+    },
+    daysUntil(other: IsoDate): number {
+        const today = dayjs(isoDate().value);
+        const otherDate = dayjs(other.value);
+        return otherDate.diff(today, 'days');
     }
 };
 
@@ -1566,23 +1570,6 @@ export function daysFromToday(days: number): DaysFromTimeSpec {
 
 export type TimeSpec = DaysFromTimeSpec;
 
-export interface TimeBasedPriceAdjustmentSpec {
-    _type: 'time.based.price.adjustment.spec';
-    id: Id;
-    timeSpec: TimeSpec;
-    adjustment: PriceAdjustment;
-}
-
-export function timeBasedPriceAdjustmentSpec(timeSpec: TimeSpec, adjustment: PriceAdjustment, idValue = id(uuidv4())): TimeBasedPriceAdjustmentSpec {
-    return {
-        _type: 'time.based.price.adjustment.spec',
-        id: idValue,
-        timeSpec,
-        adjustment
-    };
-}
-
-export type PricingRuleSpec = TimeBasedPriceAdjustmentSpec;
 
 export interface AddOnWithTotal {
     _type: 'add.on.with.total';

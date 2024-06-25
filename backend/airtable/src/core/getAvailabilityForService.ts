@@ -17,7 +17,6 @@ import {
     mandatory,
     Price,
     PricedSlot,
-    PricingRule,
     Service,
     Service as DomainService,
     serviceFns,
@@ -70,10 +69,6 @@ export const getAvailabilityForServiceErrorCodes = {
     serviceUnavailable: 'service.unavailable'
 }
 
-function applyPricing2(p: PricedSlot, pricingRules: PricingRule[]): PricedSlot {
-    return p
-}
-
 export function getAvailabilityForService(
     everythingForAvailability: EverythingForAvailability,
     serviceId: ServiceId,
@@ -91,7 +86,6 @@ export function getAvailabilityForService(
     }
     const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, fromDate, toDate)
     const priced = availability.map((a) => calculatePrice(a, everythingForAvailability.pricingRules))
-        .map(p => applyPricing2(p, everythingForAvailability.pricingRules));
     return toAvailabilityResponse(
         priced,
         service,
