@@ -168,6 +168,26 @@ export class PricingEngine {
     private rules: PricingRule[] = [];
     private jexlInstance = new jexl.Jexl();
 
+    constructor() {
+        this.jexlInstance.addFunction('length', (item) => {
+            if (item === undefined || item === null || item.length === undefined) {
+                throw new Error('Item is not an array or does not have a length property');
+            }
+            return item.length;
+        })
+        this.jexlInstance.addTransform('filter', function (arr: any[], path: string, value: string) {
+            return arr.filter(item => {
+                const props = path.split('.');
+                let result = item;
+                for (let prop of props) {
+                    result = result[prop];
+                    if (result === undefined) return false;
+                }
+                return result === value;
+            });
+        });
+
+    }
 
     addRule(rule: PricingRule) {
         this.rules.push(rule);
@@ -193,7 +213,7 @@ export class PricingEngine {
         const result = pricingResult(currentPrice);
         for (const mutation of rule.mutations) {
             const condition = mutation.condition?.condition || 'true';
-            const shouldApply = this.jexlInstance.evalSync(condition, context);
+            const shouldApply = this.safeJexl(condition, context);
             if (shouldApply) {
                 const newPrice = this.applyMutation(mutation.mutation, context);
                 result.finalPrice = newPrice;
@@ -210,6 +230,17 @@ export class PricingEngine {
             }
         }
         return result;
+    }
+
+    private safeJexl(expression: string, context: any) {
+        try {
+            return this.jexlInstance.evalSync(expression, context);
+        } catch (e: any) {
+            if (e instanceof Error) {
+                e.message = `Error evaluating expression "${expression}": ${e.message}`;
+            }
+            throw e;
+        }
     }
 
     private applyMutation(mutation: Mutation, context: any): Price {

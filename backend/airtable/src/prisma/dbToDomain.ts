@@ -20,14 +20,11 @@ import {
     capacity,
     currency,
     customerId,
-    dayAndTimePeriod,
-    DayAndTimePeriod,
     fixedResourceAllocation,
     Form,
     formId,
     id,
     isoDate,
-    isoDateFns,
     mandatory,
     minutes,
     price,
@@ -49,10 +46,8 @@ import {
     TenantSettings,
     time24,
     timePeriod,
-    timePeriodFns,
     timeslotSpec,
     TimeslotSpec,
-    TimeSpec,
     timezone,
 } from '@breezbook/packages-core';
 import {DbBookingAndResourceRequirements} from "../express/getEverythingForAvailability.js";
@@ -120,20 +115,10 @@ export function toDomainTenantSettings(settings: DbTenantSettings): TenantSettin
     return tenantSettings(timezone(settings.iana_timezone), settings.customer_form_id ? formId(settings.customer_form_id) : null);
 }
 
-function toDayAndTimePeriod(timeSpec: TimeSpec): DayAndTimePeriod {
-    if (timeSpec._type === 'days.from.time.spec') {
-        if (timeSpec.relativeTo === 'today') {
-            const date = isoDateFns.addDays(isoDate(), timeSpec.days);
-            return dayAndTimePeriod(date, timePeriodFns.allDay);
-        }
-    }
-    throw new Error(`Unknown time spec ${timeSpec._type}`);
-}
-
 export function toDomainPricingRule(rule: DbPricingRule): PricingRule {
     return rule.definition as unknown as PricingRule;
 }
 
 export function toDomainResource(r: DbResource, resourceTypes: ResourceType[]): Resource {
-    return resource(resourceTypeFns.findByValue(resourceTypes, r.resource_type), r.name, resourceId(r.id))
+    return resource(resourceTypeFns.findByValue(resourceTypes, r.resource_type), r.name, {}, resourceId(r.id))
 }

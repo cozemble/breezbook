@@ -1017,12 +1017,13 @@ export function resourceId(value: string): ResourceId {
     };
 }
 
-export function resource(type: ResourceType, name: string, id = resourceId(uuidv4())): Resource {
+export function resource(type: ResourceType, name: string, metadata: Metadata = {}, id = resourceId(uuidv4())): Resource {
     return {
         _type: 'resource',
         id,
         type,
         name,
+        metadata
     };
 }
 

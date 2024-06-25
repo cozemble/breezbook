@@ -1,12 +1,13 @@
 import {expect, test} from 'vitest'
 import {
-    price,
-    PricingFactor,
-    PricingEngine,
-    pricingResult,
-    PricingRule,
     jexlCondition,
-    jexlMutation, multiply
+    jexlMutation,
+    multiply,
+    price,
+    PricingEngine,
+    PricingFactor,
+    pricingResult,
+    PricingRule
 } from "../src/pricing.js";
 
 interface BookingStartTimeFactor extends PricingFactor<string> {
@@ -91,10 +92,42 @@ const summerDiscount: PricingRule = {
     applyAllOrFirst: 'all'
 }
 
+const moreExpensiveIfOneInstructorIsCalledMike: PricingRule = {
+    id: 'more-expensive-if-one-instructor-is-called-mike',
+    name: 'More Expensive If One Instructor Is Called Mike',
+    description: 'Increase price by 10% if one of the instructors is called Mike',
+    requiredFactors: ['instructorNames'],
+    mutations: [
+        {
+            condition: jexlCondition("length(instructorNames[.name == 'Mike']) > 0"),
+            mutation: jexlMutation('currentPrice * 1.1'),
+            description: '10% increase applied for service with Mike',
+        }
+    ],
+    applyAllOrFirst: 'all'
+}
+
+const moreExpensiveWhenMetadataTierIsOne: PricingRule = {
+    id: 'more-expensive-when-metadata-tier-is-one',
+    name: 'More Expensive When Metadata Tier Is One',
+    description: 'Increase price by £20 when the resource has a tier of 1',
+    requiredFactors: ['resourceMetadata'],
+    mutations: [
+        {
+            condition: jexlCondition("length(resourceMetadata|filter('metadata.tier', 1)) > 0"),
+            mutation: jexlMutation('currentPrice + 2000'),
+            description: '£20 increase applied for tier 1 resource',
+        }
+    ],
+    applyAllOrFirst: 'all'
+}
+
 const pricingEngine = new PricingEngine();
 pricingEngine.addRule(moreExpensiveAfterSixPm);
 pricingEngine.addRule(lastMinuteBookingsAreMoreExpensive);
 pricingEngine.addRule(summerDiscount);
+pricingEngine.addRule(moreExpensiveIfOneInstructorIsCalledMike);
+pricingEngine.addRule(moreExpensiveWhenMetadataTierIsOne);
 
 const basePrice = price(10000); // £100.00
 
@@ -199,3 +232,32 @@ test("price is adjusted for summer discount", () => {
     const pricedForWinter = pricingEngine.calculatePrice(basePrice, bookingInWinter);
     expect(pricedForWinter.finalPrice).toEqual(basePrice)
 });
+
+test("extended jexl has a some operator", () => {
+    const pricedForMike = pricingEngine.calculatePrice(basePrice, [{
+        type: 'instructorNames',
+        value: [{name: 'Mike'}]
+    }]);
+    expect(pricedForMike.finalPrice).toEqual(price(11000))
+
+    const pricedForNotMike = pricingEngine.calculatePrice(basePrice, [{
+        type: 'instructorNames',
+        value: [{name: 'John'}]
+    }]);
+    expect(pricedForNotMike.finalPrice).toEqual(basePrice)
+})
+
+test("extended jexl can filter on deeply nested properties", () => {
+    const pricedForTier1 = pricingEngine.calculatePrice(basePrice, [{
+        type: 'resourceMetadata',
+        value: [{metadata: {tier: 1}}]
+    }]);
+    expect(pricedForTier1.finalPrice).toEqual(price(12000))
+
+    const pricedForTier2 = pricingEngine.calculatePrice(basePrice, [{
+        type: 'resourceMetadata',
+        value: [{metadata: {tier: 2}}]
+    }]);
+    expect(pricedForTier2.finalPrice).toEqual(basePrice)
+
+})

@@ -33,8 +33,8 @@
  *
  * 7. Channel-Based Pricing: Different prices for different booking channels, such as online versus in-person.
  */
-import {isoDate, isoDateFns, price, Price} from './types.js';
-import {AvailableSlot, startTimeFns} from "./availability.js";
+import {isoDateFns, price, Price} from './types.js';
+import {AvailableSlot} from "./availability.js";
 import {
     price as pricingPrice,
     PriceAdjustment,
@@ -59,19 +59,19 @@ export function pricedSlot(slot: AvailableSlot, initialPrice: Price, adjustments
     };
 }
 
-function applyPricingRule(givenPricedSlot: PricedSlot, pricingRule: PricingRule): PricedSlot {
-    // if (pricingRule._type === 'time.based.price.adjustment') {
-    //     return applyTimeBasedPriceAdjustment(givenPricedSlot, pricingRule);
-    // }
-    return givenPricedSlot;
-}
-
 function factorsForSlot(requiredFactors: string[], slot: AvailableSlot): PricingFactor[] {
     return requiredFactors.map(f => {
         switch (f) {
             case 'daysUntilBooking':
-                const daysUntilBooking = isoDateFns.daysUntil(slot.date);
-                return {type: 'daysUntilBooking', value: daysUntilBooking};
+                return {type: 'daysUntilBooking', value: isoDateFns.daysUntil(slot.date)};
+            case 'resourceMetadata':
+                return {
+                    type: 'resourceMetadata',
+                    value: slot.resourceAllocation.map(ra => ({
+                        requirementId: ra.requirement.id.value,
+                        metadata: ra.resource.metadata ?? {}
+                    }))
+                };
             default:
                 throw new Error(`Unknown required factor ${f}`);
         }

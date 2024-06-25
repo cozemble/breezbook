@@ -1,29 +1,19 @@
 import {expect, test} from 'vitest'
-import {
-    anySuitableResource,
-    capacity,
-    exactTimeAvailability,
-    GBP,
-    IsoDate,
-    isoDate,
-    isoDateFns,
-    minutes,
-    price,
-    resource,
-    resourceType,
-    service,
-    time24
-} from "../src/types.js";
-import {availableSlot, AvailableSlot, calculatePrice, resourceAllocation,} from "../src/index.js";
+import {capacity, exactTimeAvailability, GBP, isoDate, IsoDate, isoDateFns, price, time24} from "../src/types.js";
+import {availableSlot, AvailableSlot, calculatePrice, carwash, resourceAllocation,} from "../src/index.js";
 import {add, jexlCondition, multiply, PricingRule} from "@breezbook/packages-pricing";
+
+const today = isoDate();
+const tomorrow = isoDateFns.addDays(today, 1);
+const twoDaysFromNow = isoDateFns.addDays(today, 2);
 
 test("base rate when there are no pricing adjustments", () => {
     const pricedSlot = calculatePrice(carWash(today), []);
-    expect(pricedSlot.price).toEqual(smallCarWash.price);
+    expect(pricedSlot.price).toEqual(carwash.smallCarWash.price);
     expect(pricedSlot.adjustments).toHaveLength(0);
 })
 
-test("adjustments for today and tomorrow, otherwise base rate", () => {
+test("can make price amendments based on days until the booking", () => {
     const addMoreIfBookingIsNear: PricingRule = {
         id: 'add-more-if-booking-is-near',
         name: 'Add More If Booking Is Near',
@@ -59,14 +49,31 @@ test("adjustments for today and tomorrow, otherwise base rate", () => {
     expect(pricedCarWashInTwoDaysTime.adjustments).toEqual([]);
 })
 
-const van = resourceType('van');
-const van1 = resource(van, "Van 1");
-const anySuitableVan = anySuitableResource(van);
-const smallCarWash = service('Small Car Wash', 'Small Car Wash', [anySuitableVan], minutes(120), price(1000, GBP), [], []);
-const today = isoDate();
-const tomorrow = isoDateFns.addDays(today, 1);
-const twoDaysFromNow = isoDateFns.addDays(today, 2);
+test("can make price amendments on the usage of a particular resource", () => {
+    // van2 is £20 more expensive than van1 because van2 is tier 1 and van1 is tier 2
+    const payMoreForTier1Van: PricingRule = {
+        id: 'pay-more-for-tier-1-van',
+        name: 'Pay More For Tier 1 Van',
+        description: 'Pay more for tier 1 van',
+        requiredFactors: ['resourceMetadata'],
+        mutations: [
+            {
+                condition: jexlCondition("length(resourceMetadata|filter('metadata.tier', 1)) > 0"),
+                mutation: add(2000),
+                description: 'Add £20 for tier 1 van',
+            },
+        ],
+        applyAllOrFirst: 'all'
+    }
+    const pricedForVan1 = calculatePrice(carWash(today, carwash.van1), [payMoreForTier1Van]);
+    expect(pricedForVan1.price).toEqual(carwash.smallCarWash.price);
+    expect(pricedForVan1.adjustments).toHaveLength(0);
 
-function carWash(today: IsoDate): AvailableSlot {
-    return availableSlot(smallCarWash, today, exactTimeAvailability(time24('09:00')), [resourceAllocation(anySuitableVan, van1)], capacity(1), capacity(0))
+    const pricedForVan2 = calculatePrice(carWash(today, carwash.van2), [payMoreForTier1Van]);
+    expect(pricedForVan2.price).toEqual(price(3000, GBP));
+    expect(pricedForVan2.adjustments).toHaveLength(1);
+});
+
+function carWash(today: IsoDate, van = carwash.van1): AvailableSlot {
+    return availableSlot(carwash.smallCarWash, today, exactTimeAvailability(time24('09:00')), [resourceAllocation(carwash.resourceRequirements.anySuitableVan, van)], capacity(1), capacity(0))
 }
