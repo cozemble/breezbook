@@ -99,7 +99,7 @@ const moreExpensiveIfOneInstructorIsCalledMike: PricingRule = {
     requiredFactors: ['instructorNames'],
     mutations: [
         {
-            condition: jexlCondition("length(instructorNames[.name == 'Mike']) > 0"),
+            condition: jexlCondition("instructorNames[.name == 'Mike'] | length > 0"),
             mutation: jexlMutation('currentPrice * 1.1'),
             description: '10% increase applied for service with Mike',
         }
@@ -114,7 +114,7 @@ const moreExpensiveWhenMetadataTierIsOne: PricingRule = {
     requiredFactors: ['resourceMetadata'],
     mutations: [
         {
-            condition: jexlCondition("length(resourceMetadata|filter('metadata.tier', 1)) > 0"),
+            condition: jexlCondition("resourceMetadata | filter('metadata.tier', 1) | length > 0"),
             mutation: jexlMutation('currentPrice + 2000'),
             description: '£20 increase applied for tier 1 resource',
         }

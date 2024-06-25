@@ -169,12 +169,6 @@ export class PricingEngine {
     private jexlInstance = new jexl.Jexl();
 
     constructor() {
-        this.jexlInstance.addFunction('length', (item) => {
-            if (item === undefined || item === null || item.length === undefined) {
-                throw new Error('Item is not an array or does not have a length property');
-            }
-            return item.length;
-        })
         this.jexlInstance.addTransform('filter', function (arr: any[], path: string, value: string) {
             return arr.filter(item => {
                 const props = path.split('.');
@@ -186,7 +180,10 @@ export class PricingEngine {
                 return result === value;
             });
         });
-
+        // add length as a transform
+        this.jexlInstance.addTransform('length', function (arr: any[]) {
+            return arr.length;
+        });
     }
 
     addRule(rule: PricingRule) {
