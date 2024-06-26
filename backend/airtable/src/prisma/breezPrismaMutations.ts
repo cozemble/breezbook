@@ -360,3 +360,10 @@ export function upsertServiceResourceRequirement(create: Prisma.service_resource
     return makeUpsert('service_resource_requirements', entityId, create)
 }
 
+export type UpsertPricingRule = Upsert<Prisma.pricing_rulesCreateArgs['data'], Prisma.pricing_rulesUpdateArgs['data'], Prisma.pricing_rulesUpdateArgs['where']>
+
+export function upsertPricingRule(create: Prisma.pricing_rulesCreateArgs['data']): UpsertPricingRule {
+    const entityId = compositeKey("id", mandatory(create.id, "Service Resource Requirement ID"))
+    return makeUpsert('pricing_rules', entityId, create)
+}
+

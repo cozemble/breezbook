@@ -25,17 +25,11 @@ import {
     tenantEnvironment,
     tenantId,
     tenantSettings,
-    time24,
-    timePeriod,
     timezone,
     unlimited
 } from '@breezbook/packages-core';
 import {PricedBasket, pricedCreateOrderRequest} from '@breezbook/backend-api-types';
 import {everythingForAvailability} from '../src/express/getEverythingForAvailability.js';
-import {
-    percentageBasedPriceAdjustment,
-    timeBasedPriceAdjustment
-} from '@breezbook/packages-core/dist/calculatePrice.js';
 import {EndpointOutcome} from "../src/infra/endpoint.js";
 import {jexlCondition, multiply, PricingRule} from "@breezbook/packages-pricing";
 
@@ -127,14 +121,14 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
 
 export function expectJson<T = any>(outcome: EndpointOutcome[]): T {
     const httpOutcome = outcome.find(o => o._type === 'http.response.outcome');
-    if(!httpOutcome) {
+    if (!httpOutcome) {
         throw new Error(`Expected http response but got ${JSON.stringify(outcome)}`);
     }
-    if(httpOutcome._type !== "http.response.outcome") {
+    if (httpOutcome._type !== "http.response.outcome") {
         throw new Error(`Expected http response but got ${httpOutcome._type}`);
     }
     const response = httpOutcome.response;
-    if(response.status !== 200) {
+    if (response.status !== 200) {
         throw new Error(`Expected 200 response but got ${response.status} : ${response.body}`);
     }
     return JSON.parse(response.body) as T;

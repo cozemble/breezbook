@@ -120,5 +120,5 @@ export function toDomainPricingRule(rule: DbPricingRule): PricingRule {
 }
 
 export function toDomainResource(r: DbResource, resourceTypes: ResourceType[]): Resource {
-    return resource(resourceTypeFns.findByValue(resourceTypes, r.resource_type), r.name, {}, resourceId(r.id))
+    return resource(resourceTypeFns.findByValue(resourceTypes, r.resource_type), r.name, r.metadata as any ?? {}, resourceId(r.id))
 }

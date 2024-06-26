@@ -5,6 +5,7 @@ import {
     upsertBusinessHours,
     upsertForm,
     upsertLocation,
+    upsertPricingRule,
     upsertResource,
     upsertResourceAvailability,
     upsertResourceImage,
@@ -21,6 +22,7 @@ import {
 import {prismaMutationToPromise} from "../infra/prismaMutations.js";
 import {Upsert} from "../mutation/mutations.js";
 import {JsonSchemaForm} from "@breezbook/packages-core";
+import {add, jexlCondition, PricingRule} from "@breezbook/packages-pricing";
 
 const tenant_id = 'breezbook-gym';
 const environment_id = 'dev';
@@ -182,6 +184,16 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             metadata: {
                 tier: 'elite'
             }
+        })
+    ])
+    await runUpserts(prisma, [
+        upsertPricingRule({
+            id: makeTestId(tenant_id, environment_id, `pricingRule.eliteIsMoreExpensive`),
+            tenant_id,
+            environment_id,
+            rank: 0,
+            active: true,
+            definition: eliteIsMoreExpensive as any
         })
     ])
     await runUpserts(prisma, [
@@ -485,4 +497,19 @@ const goalsForm: JsonSchemaForm = {
         "additionalProperties": false
     }
 };
+
+const eliteIsMoreExpensive: PricingRule = {
+    id: makeTestId(tenant_id, environment_id, `pricingRule.eliteIsMoreExpensive`),
+    name: 'Elite trainers are more expensive',
+    description: 'Elite trainers are more expensive',
+    requiredFactors: ['resourceMetadata'],
+    mutations: [
+        {
+            condition: jexlCondition("resourceMetadata | filter('metadata.tier', '== \\'elite\\' ') | length > 0"),
+            mutation: add(2000),
+            description: 'Elite trainers are £20 more expensive'
+        }
+    ],
+    applyAllOrFirst: 'all'
+}
 

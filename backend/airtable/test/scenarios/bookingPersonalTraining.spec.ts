@@ -5,7 +5,8 @@ import {EndpointDependencies, EndpointOutcome, specifiedDeps} from "../../src/in
 import {
     customer,
     environmentId,
-    fullPaymentOnCheckout, IsoDate,
+    fullPaymentOnCheckout,
+    IsoDate,
     isoDateFns,
     locationId,
     mandatory,
@@ -15,7 +16,6 @@ import {
     tenantId,
     time24
 } from "@breezbook/packages-core";
-import {ResourceSummary} from "../../src/core/resources/resources.js";
 import {expectJson} from "../helper.js";
 import {
     AvailabilityResponse,
@@ -24,6 +24,7 @@ import {
     pricedCreateOrderRequest,
     ResourceRequirement,
     resourceRequirementOverride,
+    ResourceSummary,
     Service,
     Tenant,
     unpricedBasket,
@@ -79,7 +80,7 @@ async function getReferenceData(deps: EndpointDependencies): Promise<{
 async function bookLastSlotOnDay(deps: EndpointDependencies, requirementOverrides: {
     resourceId: string;
     requirementId: string
-}[], personalTrainingService: Service, personalTrainerRequirement: ResourceRequirement, preferredPt: ResourceSummary, day:IsoDate): Promise<OrderCreatedResponse> {
+}[], personalTrainingService: Service, personalTrainerRequirement: ResourceRequirement, preferredPt: ResourceSummary, day: IsoDate): Promise<OrderCreatedResponse> {
     const onDay = `?fromDate=${day.value}&toDate=${day.value}`
     const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onDay, {requirementOverrides}), params)))
     const availableSlots = availabilityResponse.slots?.[friday.value] ?? []
@@ -152,22 +153,22 @@ describe("given the test gym tenant", () => {
         await bookLastSlotOnDay(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike, friday);
     });
 
-    // test("Mete is more expensive than Mike", async () => {
-    //     const {personalTrainingService,personalTrainerRequirement, ptMete} = await getReferenceData(deps);
-    //     const requirementOverrides = [{
-    //         requirementId: personalTrainerRequirement.id.value,
-    //         resourceId: ptMete.id
-    //     }]
-    //     const onTuesday = `?fromDate=${tuesday.value}&toDate=${tuesday.value}`
-    //     const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onTuesday, {requirementOverrides}), params)))
-    //     expect(availabilityResponse.slots?.[tuesday.value]).toHaveLength(17)
-    //     const availableSlots = availabilityResponse.slots?.[tuesday.value] ?? []
-    //     const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot available`)
-    //     expect(lastSlot.priceWithNoDecimalPlaces).toBeGreaterThan(personalTrainingService.priceWithNoDecimalPlaces)
-    // })
+    test("Mete is more expensive than Mike because Mete is tagged as elite", async () => {
+        const {personalTrainingService, personalTrainerRequirement, ptMete} = await getReferenceData(deps);
+        const requirementOverrides = [{
+            requirementId: personalTrainerRequirement.id.value,
+            resourceId: ptMete.id
+        }]
+        const onTuesday = `?fromDate=${tuesday.value}&toDate=${tuesday.value}`
+        const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onTuesday, {requirementOverrides}), params)))
+        expect(availabilityResponse.slots?.[tuesday.value]).toHaveLength(17)
+        const availableSlots = availabilityResponse.slots?.[tuesday.value] ?? []
+        const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot available`)
+        expect(lastSlot.priceWithNoDecimalPlaces).toBeGreaterThan(personalTrainingService.priceWithNoDecimalPlaces)
+    })
 })
 
-async function handleMutations(deps: EndpointDependencies, outcomes: EndpointOutcome[]): EndpointOutcome[] {
+async function handleMutations(deps: EndpointDependencies, outcomes: EndpointOutcome[]): Promise<EndpointOutcome[]> {
     for (const outcome of outcomes) {
         if (outcome._type === 'mutation.outcome') {
             await applyMutations(deps.prisma, tenantEnvironment(env, tenant), outcome.mutations.mutations)
