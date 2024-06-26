@@ -114,7 +114,7 @@ const moreExpensiveWhenMetadataTierIsOne: PricingRule = {
     requiredFactors: ['resourceMetadata'],
     mutations: [
         {
-            condition: jexlCondition("resourceMetadata | filter('metadata.tier', 1) | length > 0"),
+            condition: jexlCondition("resourceMetadata | filter('metadata.tier', '== 1') | length > 0"),
             mutation: jexlMutation('currentPrice + 2000'),
             description: '£20 increase applied for tier 1 resource',
         }

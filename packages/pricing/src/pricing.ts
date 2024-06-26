@@ -169,7 +169,8 @@ export class PricingEngine {
     private jexlInstance = new jexl.Jexl();
 
     constructor() {
-        this.jexlInstance.addTransform('filter', function (arr: any[], path: string, value: string) {
+        const self = this;
+        this.jexlInstance.addTransform('filter', function (arr: any[], path: string, expression: string) {
             return arr.filter(item => {
                 const props = path.split('.');
                 let result = item;
@@ -177,7 +178,9 @@ export class PricingEngine {
                     result = result[prop];
                     if (result === undefined) return false;
                 }
-                return result === value;
+                const context = {value: result};
+                const amendedExpression = "value " + expression;
+                return self.jexlInstance.evalSync(amendedExpression, context);
             });
         });
         // add length as a transform

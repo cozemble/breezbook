@@ -58,7 +58,7 @@ test("can make price amendments on the usage of a particular resource", () => {
         requiredFactors: ['resourceMetadata'],
         mutations: [
             {
-                condition: jexlCondition("resourceMetadata | filter('metadata.tier', 1) | length > 0"),
+                condition: jexlCondition("resourceMetadata | filter('metadata.tier', '== 1') | length > 0"),
                 mutation: add(2000),
                 description: 'Add £20 for tier 1 van',
             },
