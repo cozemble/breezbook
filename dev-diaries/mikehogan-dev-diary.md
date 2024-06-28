@@ -1057,87 +1057,119 @@ and the customer might be intending to book 2. But I think I will leave that ref
 The final step is to remove all concepts of `capacity` that are still on `Resource` and `ResourceType`.
 
 # Mon 10 Jun 2024
-I removed the tests that "showed" how we could check availability of personal training against a single personal trainer.
+
+I removed the tests that "showed" how we could check availability of personal training against a single personal
+trainer.
 The implementation reduced the available resources to just the required personal trainer, and then ran the usual algo.
-This approach makes it impossible to book a personal trainer AND some other resource.  In which case my mind thought
-of just replacing all personal trainers in the available resources list with the personal trainer requested.  This makes
-it impossible to ever request a booking with two named personal trainers.  While an example of such a case does not readily
-present itself, it it still a limit I would like to avoid coding into the solution.  Maybe a particular medical appointment
-requires two named doctors, who knows.  So booking against a single resource is not well implemented by reducing the list
+This approach makes it impossible to book a personal trainer AND some other resource. In which case my mind thought
+of just replacing all personal trainers in the available resources list with the personal trainer requested. This makes
+it impossible to ever request a booking with two named personal trainers. While an example of such a case does not
+readily
+present itself, it it still a limit I would like to avoid coding into the solution. Maybe a particular medical
+appointment
+requires two named doctors, who knows. So booking against a single resource is not well implemented by reducing the list
 of available resources.
 
-So it might be better, I thought this morning, to take advantage of the fact that we have a business logic model, and separate
-database and configuration models.  In the latter two, it can make sense for resource requirements to be expressed at the
-service level.  In fact it definitely makes sense that a service can state that it requires a personal trainer and a training
-room.  If we expressed resource requirements differently in the business logic model, by putting the resource requirements
-on the `ServiceRequest` rather than the `Service`, this positions us to make service requests with different kinds of 
-resource requirements.  
+So it might be better, I thought this morning, to take advantage of the fact that we have a business logic model, and
+separate
+database and configuration models. In the latter two, it can make sense for resource requirements to be expressed at the
+service level. In fact it definitely makes sense that a service can state that it requires a personal trainer and a
+training
+room. If we expressed resource requirements differently in the business logic model, by putting the resource
+requirements
+on the `ServiceRequest` rather than the `Service`, this positions us to make service requests with different kinds of
+resource requirements.
 
 The `Service` in the database model can be configured to require any personal trainer and any training
-room, and that is entirely appropriate.  To retain current behaviour, the resource requirements on the service that comes
-from the database will be copied into the `ServiceRequest`.  This is logically equivalent to resource requirements being
-on the business logic `Service`.  But then it opens the door to later cases of the service request overriding the request
+room, and that is entirely appropriate. To retain current behaviour, the resource requirements on the service that comes
+from the database will be copied into the `ServiceRequest`. This is logically equivalent to resource requirements being
+on the business logic `Service`. But then it opens the door to later cases of the service request overriding the request
 of any personal trainer to a particular personal trainer.
 
-Now, to deal with the hypothetical case of requesting two specific personal trainers or doctors, the resource requirement
-should have an id, or maybe a `role` attribute, so we can be precise about which requirement we are specifying a specific
-resource for.  
+Now, to deal with the hypothetical case of requesting two specific personal trainers or doctors, the resource
+requirement
+should have an id, or maybe a `role` attribute, so we can be precise about which requirement we are specifying a
+specific
+resource for.
 
-This will be a fairly large refactoring.  Oh wow - is it even required?  If I add an id or role to a resource requirement,
+This will be a fairly large refactoring. Oh wow - is it even required? If I add an id or role to a resource requirement,
 then the existing resource requirements on the business logic `Service` model can be configured in any way, and I don't
-need to mess with the `ServiceRequest` object.  I think my mind didn't go here initially this morning, because I am still
-viewing business logic `Service` as a database or configuration object, and in some way immutable.  I can of course configure
+need to mess with the `ServiceRequest` object. I think my mind didn't go here initially this morning, because I am still
+viewing business logic `Service` as a database or configuration object, and in some way immutable. I can of course
+configure
 this with the exact requirements the use case needs.
 
-I think I can drive this out by making a series of test cases around the resourcing of two doctors for an appointment. 
+I think I can drive this out by making a series of test cases around the resourcing of two doctors for an appointment.
 The possible resource requirement expressions would be:
 
 1. Any doctor for both slots - has to be a different doctor, so test what happens when there is only one doctor
-2. One specific doctor, and one random doctor.  Again, has to be different.
+2. One specific doctor, and one random doctor. Again, has to be different.
 3. Specific doctors for both slots
 
 ## Rediscovering the need for resource allocation on booking
-Just now I changed a design interpretation around resources on service.  That being, that resource requirements on Service
-are particular to the request for availability.  But previously I said, and designed around, the idea that resource requirements
-on the service were fixed, containing requests for any suitable resource in some cases, and specific resources in others.
-I built on this design decision that idea that bookings did not need to keep their resource allocation, because it existed
-on the bookings service.  I have now broken that design rule.  So I need to return resourceAllocations to Booking.  I think
-though, that I only need to stick `SpecificResource` on the booking, because requirements for any suitable resource can still
+
+Just now I changed a design interpretation around resources on service. That being, that resource requirements on
+Service
+are particular to the request for availability. But previously I said, and designed around, the idea that resource
+requirements
+on the service were fixed, containing requests for any suitable resource in some cases, and specific resources in
+others.
+I built on this design decision that idea that bookings did not need to keep their resource allocation, because it
+existed
+on the bookings service. I have now broken that design rule. So I need to return resourceAllocations to Booking. I think
+though, that I only need to stick `SpecificResource` on the booking, because requirements for any suitable resource can
+still
 be satisfied dynamically during availability checking.
 
 # Tue 11 Jun 2024
-I think I have quite good coverage of availability scenarios at this stage.  What I learned here will affect how pricing and booking
-is done.  For example, a booking can have service options now.  It can also have fixed resources, for cases where I am booking a
+
+I think I have quite good coverage of availability scenarios at this stage. What I learned here will affect how pricing
+and booking
+is done. For example, a booking can have service options now. It can also have fixed resources, for cases where I am
+booking a
 personal training session with an individual trainer.
 
-I went deep on availability and resourcing and scheduling.  Now I need to balance that a bit by going wide in terms of end to end
-scenarios.  I want to test drive out that understanding at the endpoint level.  To make the endpoints more testable tho, I'm
-of the mind that I need to shift away from `express` request and response objects, to `http4t`.  It makes much more sense
-to just treat http requests and responses as objects.  And I want to follow the spirit of _server as function_, so dependencies 
+I went deep on availability and resourcing and scheduling. Now I need to balance that a bit by going wide in terms of
+end to end
+scenarios. I want to test drive out that understanding at the endpoint level. To make the endpoints more testable tho,
+I'm
+of the mind that I need to shift away from `express` request and response objects, to `http4t`. It makes much more sense
+to just treat http requests and responses as objects. And I want to follow the spirit of _server as function_, so
+dependencies
 will be provided as a function param.
 
 ## The importance of great developer experience
-Maybe a bit of a nothing statement, but if you plan to work on a codebase for a long time, as I do with this one, its essential
-to keep the developer experience high.  The codebase should, over time, become increasingly fun to work with, and increasingly
-intuitive.  Refactoring the endpoints so they are based on `http4t` is a case in point.  No benefit to the end user, but a big
+
+Maybe a bit of a nothing statement, but if you plan to work on a codebase for a long time, as I do with this one, its
+essential
+to keep the developer experience high. The codebase should, over time, become increasingly fun to work with, and
+increasingly
+intuitive. Refactoring the endpoints so they are based on `http4t` is a case in point. No benefit to the end user, but a
+big
 benefit to the developer.
 
 ## Attracting people to breezbook
-I potentially fun way to attract people to breezbook is to provide a zero-auth playground for people to quickly configure the
-essence of their business and see how it would look on breezbook.  Some options might be:
+
+I potentially fun way to attract people to breezbook is to provide a zero-auth playground for people to quickly
+configure the
+essence of their business and see how it would look on breezbook. Some options might be:
 
 Ask "do you have an existing website"
 If Yes: Get colours, company name, tag line, logo, services and prices.
 
-If No: Ask for company name and tag line. Infer business and correct. Purposes services and correct. Propose resources and correct. 
-Propose add-ons and correct. Propose availability type and correct. Leave locations out, but make obvious it's possible. Same 
+If No: Ask for company name and tag line. Infer business and correct. Purposes services and correct. Propose resources
+and correct.
+Propose add-ons and correct. Propose availability type and correct. Leave locations out, but make obvious it's possible.
+Same
 for other sidelined features.
 
 Visitors see:
+
 - booking journey
 - website
 
 Visitors can configure:
+
 - colours
 - font
 - logo assistant
@@ -1145,48 +1177,70 @@ Visitors can configure:
 Configuration endures thru sign up and accelerates start.
 
 # Wed 12 Jun 2024
-Am test driving the end to end flow of booking a personal training session with a chosen personal trainer.  I have listed
-the personal trainers, so I can imagine the user choosing one.  The next thing they will do is check availability of personal
-training sessions with that trainer.  I already have an availability checking endpoint.  Is this kind of availability check - 
-one in which one of the resources is fixed - a new kind of availability check, or the existing availability check with some
+
+Am test driving the end to end flow of booking a personal training session with a chosen personal trainer. I have listed
+the personal trainers, so I can imagine the user choosing one. The next thing they will do is check availability of
+personal
+training sessions with that trainer. I already have an availability checking endpoint. Is this kind of availability
+check -
+one in which one of the resources is fixed - a new kind of availability check, or the existing availability check with
+some
 query params.
 
-The general case, is to have a service that requires N resources, some of which might be fixed by the service, some of which 
-might be "any suitable resource".  The general case is that in the availability check, I can specify one or more resources
+The general case, is to have a service that requires N resources, some of which might be fixed by the service, some of
+which
+might be "any suitable resource". The general case is that in the availability check, I can specify one or more
+resources
 to be overridden.
 
-But how to do that unambiguously?  My imaginary example of two doctors being required for a medical appointment - how can I say
-that I want to be specific about one of them, but not the other?  When I went through this in the availability check, I added
+But how to do that unambiguously? My imaginary example of two doctors being required for a medical appointment - how can
+I say
+that I want to be specific about one of them, but not the other? When I went through this in the availability check, I
+added
 an id to each resource requirement, so I could be precise about overrides:
 
 ```typescript
 serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorMike, lead))
 ```
 
-Am I going to expect the frontend to know the id of the resource requirement, and state the necessary replacement?  Maybe that is
-ok actually.  In an availability check request, the frontend can provide overrides for any resource requirement.  Let's see how that
+Am I going to expect the frontend to know the id of the resource requirement, and state the necessary replacement? Maybe
+that is
+ok actually. In an availability check request, the frontend can provide overrides for any resource requirement. Let's
+see how that
 feels.
 
 ## Some hours later
-It's going kind of ok. I am test driving out the endpoint calls the frontend will make.  But I can't help but think about how it will
-know that this service (personal training) can have this resource requirement (personal trainer) overridden.  What I mean by that
-is when the frontend loads the tenant's services, how can it tell that it is legitimate to present a resource-first booking journey
-for this service?  When booking a mobile car wash, which is resourced by vans, the user does not expect to pick the van first.
-But when personal training, the user will want to be able to pick the trainer first.  They might _also_ want a route thru the app
-to pick a date first and from there any old trainer.  But in the case or personal training (or a hair styling, or massage of tutoring
+
+It's going kind of ok. I am test driving out the endpoint calls the frontend will make. But I can't help but think about
+how it will
+know that this service (personal training) can have this resource requirement (personal trainer) overridden. What I mean
+by that
+is when the frontend loads the tenant's services, how can it tell that it is legitimate to present a resource-first
+booking journey
+for this service? When booking a mobile car wash, which is resourced by vans, the user does not expect to pick the van
+first.
+But when personal training, the user will want to be able to pick the trainer first. They might _also_ want a route thru
+the app
+to pick a date first and from there any old trainer. But in the case or personal training (or a hair styling, or massage
+of tutoring
 or yoga) the user will want the person-first option somewhere in the app.
 
-Maybe this is the important distinction - this resource type is a human, and when humans are one of the resources behind a service,
+Maybe this is the important distinction - this resource type is a human, and when humans are one of the resources behind
+a service,
 the frontend can generically present both booking journeys.
 
-This is making me consider adding an `isHuman` flag to `ResourceType`.  Is this mental?  Maybe not. Going back to my hypothetical
-case of two doctors for a medical appointment, the frontend will need to know that it can present a person-first booking journey,
-even for both doctors.  So a service that requires N human resources, can have a person-first booking journey, picking each person
+This is making me consider adding an `isHuman` flag to `ResourceType`. Is this mental? Maybe not. Going back to my
+hypothetical
+case of two doctors for a medical appointment, the frontend will need to know that it can present a person-first booking
+journey,
+even for both doctors. So a service that requires N human resources, can have a person-first booking journey, picking
+each person
 in turn.
 
-I think more generically tho, that modelling a booking journey as a series of resource selections is a better idea.  If a service requires
+I think more generically tho, that modelling a booking journey as a series of resource selections is a better idea. If a
+service requires
 N resources, then we might be better off configuring the booking journey as a series of 0 to N resource selections.  
-i.e. Pick doctor 1, Pick doctor 2, Pick venue.  Some other examples:
+i.e. Pick doctor 1, Pick doctor 2, Pick venue. Some other examples:
 
 - Equiment rental: Pick equipment, pick delivery time, pick delivery address
 - Venue booking: Pick venue, pick date, pick time
@@ -1195,21 +1249,34 @@ i.e. Pick doctor 1, Pick doctor 2, Pick venue.  Some other examples:
 Maybe this booking journey configuration can be specified just using a list of the involved resource requirements?
 
 # Thu 13 Jun 2024
-Couple of thoughts this morning.  I was up in friend's last night with Da, and a lady was talking about booking dogs into a dog
-kennel.  They had a minimum of 3 days booking.  It made me realise that bookings are modeled using a single date.  So I think
-I need to loosen that to be a booking has a start date and an end date.  This will allow for bookings that span multiple days.
 
-It also made me realise that some booking journeys can begin with capture of a capacity amount.  How many dogs or cats are you
-booking in? Maybe there is a group booking for yoga.  So I will add this journey type to Figma for Mete to think about.  So this
-means the availability checking function should return how much capacity is available at each slot.  Right now, I am throwing
-away that information, and just returning a list of times.  I think I need to return a list of times, each with a capacity.
+Couple of thoughts this morning. I was up in friend's last night with Da, and a lady was talking about booking dogs into
+a dog
+kennel. They had a minimum of 3 days booking. It made me realise that bookings are modeled using a single date. So I
+think
+I need to loosen that to be a booking has a start date and an end date. This will allow for bookings that span multiple
+days.
 
-This opened up the general topic of implicit cardinalities of '1' that can or should, in the general case, be 'N'.  For example,
-the number of days in a booking.  I began to muse on whether a booking should indeed have one more 'bookings'.  Why just one?
-Sometimes such thinking can go too far, but its still no harm in musing.  I began to wander into thinking about group bookings
-and repeat bookings.  I think I will leave this for now, tho, because the thinking was muddled.  But at least it has started.
+It also made me realise that some booking journeys can begin with capture of a capacity amount. How many dogs or cats
+are you
+booking in? Maybe there is a group booking for yoga. So I will add this journey type to Figma for Mete to think about.
+So this
+means the availability checking function should return how much capacity is available at each slot. Right now, I am
+throwing
+away that information, and just returning a list of times. I think I need to return a list of times, each with a
+capacity.
+
+This opened up the general topic of implicit cardinalities of '1' that can or should, in the general case, be 'N'. For
+example,
+the number of days in a booking. I began to muse on whether a booking should indeed have one more 'bookings'. Why just
+one?
+Sometimes such thinking can go too far, but its still no harm in musing. I began to wander into thinking about group
+bookings
+and repeat bookings. I think I will leave this for now, tho, because the thinking was muddled. But at least it has
+started.
 
 # Sun 16 Jun 2024
+
 Consider this helper function in a test case:
 
 ```typescript
@@ -1220,7 +1287,7 @@ function orderForService(customer: Customer, service: Service, location: Locatio
     return everythingToCreateOrder(basket, customer, fullPaymentOnCheckout());
 }
 
-export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, discount?: Price, total?:Price): HydratedBasket {
+export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, discount?: Price, total?: Price): HydratedBasket {
     const actualTotal = total ?? priceFns.sum(lines.map((l) => l.total));
     return {
         _type: 'hydrated.basket',
@@ -1233,15 +1300,17 @@ export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, dis
 ```
 
 In the test suite, I want to exercise configurations of basket with many of these values having different values.
-There is quite a big combination space in these functions.  Right now I am trying to create a basket line where the date
-is not today, but four days from now.  But you can see also that sometimes I want the total to be wrong, so I can test that
-we validate that.  I want a line with a coupon and discount, and sometimes the discount should be wrong, and sometimes the
+There is quite a big combination space in these functions. Right now I am trying to create a basket line where the date
+is not today, but four days from now. But you can see also that sometimes I want the total to be wrong, so I can test
+that
+we validate that. I want a line with a coupon and discount, and sometimes the discount should be wrong, and sometimes
+the
 coupon should be expired.
 
-What is a nice generic programming pattern for this? 
+What is a nice generic programming pattern for this?
 
-Both Claude and ChatGPT suggest that I should be using a builder pattern.  Which would work, but it involves a lot of 
-boilerplate.  
+Both Claude and ChatGPT suggest that I should be using a builder pattern. Which would work, but it involves a lot of
+boilerplate.
 
 Am interested in considering this approach:
 
@@ -1285,10 +1354,11 @@ test('tenant has a customer form, and the customer does not have a form response
 
 ```
 
-That actually proved hard to read, and a bit annoying.  I asked Claude about zippers and lenses, and we ended up with this to try:
+That actually proved hard to read, and a bit annoying. I asked Claude about zippers and lenses, and we ended up with
+this to try:
 
 ```typescript
-import { Lens } from 'monocle-ts';
+import {Lens} from 'monocle-ts';
 
 type Mutation<T> = (value: T) => T;
 
@@ -1336,89 +1406,118 @@ test('update multiple parts of EverythingToCreateOrder using a generic function'
 I need to get back working code tho before I try this, so I will plough along with the sub-optional pattern I have now.
 
 ## The result of the above
-Actually writing simple setter() functions to make the required mutations to a default test object worked out clean enough
-and was not too onerous to work.  I suspect I was seduced by the fancier idea of lenses and zippers because I was getting
-tired or bored.  I think I will stick with the simple pattern for now.
+
+Actually writing simple setter() functions to make the required mutations to a default test object worked out clean
+enough
+and was not too onerous to work. I suspect I was seduced by the fancier idea of lenses and zippers because I was getting
+tired or bored. I think I will stick with the simple pattern for now.
 
 # Mon 17 Jun 2024
-I have an end to end test that exercises endpoints and proves to a good level of certainty that booking a personal training
+
+I have an end to end test that exercises endpoints and proves to a good level of certainty that booking a personal
+training
 session with a chosen personal trainer is supported by the system.
 
-I'm trying to think what is the next most useful thing to do.  Mete is working on figma designs for the various booking journeys
-we think we'll have to support.  I feel the desire to make really simple svelte journeys to prove for sure that I can support
+I'm trying to think what is the next most useful thing to do. Mete is working on figma designs for the various booking
+journeys
+we think we'll have to support. I feel the desire to make really simple svelte journeys to prove for sure that I can
+support
 personal training booking, and the other journeys we have in mind.
 
 # Wed 19 Jun 2024
-Had some thoughts about timezones this morning.  The principle thought being that I need to do them soon.  I think locations
-should have a timezone.  Availability check requests can have an optional timezone.  Availability checking logic can operate
-using the location's timezone, then convert available slots to the desired timezone.  Similarly, when pricing baskets and
+
+Had some thoughts about timezones this morning. The principle thought being that I need to do them soon. I think
+locations
+should have a timezone. Availability check requests can have an optional timezone. Availability checking logic can
+operate
+using the location's timezone, then convert available slots to the desired timezone. Similarly, when pricing baskets and
 making orders, the incoming requests should have a timezone and a similar conversion can be done.
 
-I need to work hard to keep core logic unaware of timezone, just continuing to deal in `IsoDate` and `TwentyFourHourClockTime`.
-The funnelling into and out of timezones should be done outsize the core logic, so I can reduce the number of concerns in
+I need to work hard to keep core logic unaware of timezone, just continuing to deal in `IsoDate`
+and `TwentyFourHourClockTime`.
+The funnelling into and out of timezones should be done outsize the core logic, so I can reduce the number of concerns
+in
 the core logic.
 
 Good test scenarios for this are:
 
- - Booking from Zambia to London on on March 30th, 31st and April 1st
- - Booking from London to Zambia on March 30th, 31st and April 1st
- - Booking from New York to Los Angeles
- - Booking from Auckland to Apia, crossing the date line. 
- - Booking from Apia to Auckland, crossing the date line in the opposite direction.
+- Booking from Zambia to London on on March 30th, 31st and April 1st
+- Booking from London to Zambia on March 30th, 31st and April 1st
+- Booking from New York to Los Angeles
+- Booking from Auckland to Apia, crossing the date line.
+- Booking from Apia to Auckland, crossing the date line in the opposite direction.
 
 # Fri 21 Jun 2024
-Got the playground personal trainer booking experience done.  It proves that the endpoints support this journey type.
+
+Got the playground personal trainer booking experience done. It proves that the endpoints support this journey type.
 Interestingly, when I make a few bookings with the same PT, subsequent availability checks fail when applying resources
-to bookings, saying "unable to find resource for booking".  That is tomorrow's problem.  But just goes to show that
+to bookings, saying "unable to find resource for booking". That is tomorrow's problem. But just goes to show that
 the playground, where I can run thru scenarios in an accelerated way, is a useful way to drive the app.
 
 # Sat 22 Jun 2024
-Add location selection to the playground personal training booking journey.  It revealed a need to treat cases where
-the required service is not available at the chosen location.  Fixed that.
+
+Add location selection to the playground personal training booking journey. It revealed a need to treat cases where
+the required service is not available at the chosen location. Fixed that.
 
 ## The desire for resource based pricing
-I pasted all my upserts for the multi-location gym into claude and asked it how it would amend the code to deal with
-resource based pricing.  It suggested adding a pricing override to resource for each service id.  I asked it if there
-was maybe a more general feature implied by this resource specific pricing, having learned, hopefully, from putting
-capacity on resource initially, then finding it belonged on service.  Claude generated some interesting code around a pricing
-ending and pricing factors.  Am going to play with that now to see how it works.
 
-It seems to work, but I'm struggling to think in the way it thinks, in terms of how it modelled the rules I mean.  It also
-isn't a model that can be serialised and deserialised easily.  But I'm going to use it as inspiration.  Here is what Claude
+I pasted all my upserts for the multi-location gym into claude and asked it how it would amend the code to deal with
+resource based pricing. It suggested adding a pricing override to resource for each service id. I asked it if there
+was maybe a more general feature implied by this resource specific pricing, having learned, hopefully, from putting
+capacity on resource initially, then finding it belonged on service. Claude generated some interesting code around a
+pricing
+ending and pricing factors. Am going to play with that now to see how it works.
+
+It seems to work, but I'm struggling to think in the way it thinks, in terms of how it modelled the rules I mean. It
+also
+isn't a model that can be serialised and deserialised easily. But I'm going to use it as inspiration. Here is what
+Claude
 produced - https://github.com/cozemble/breezbook/blob/71605a0d264aa83455d7b051a110eec1b3e09424/packages/core/test/pricing/exploringWhatClaudeCreated.spec.ts#L1
 
 # Sun 23 Jun 2024
-I've played with how Claude modeled pricing rules, and I like it.  The core idea is to extract what it initially called a 
-`PricingFactor`, but which I have renamed as `PricingAttribute`.  This flattens the domain model into a list of attributes
-that are germane to pricing.  It makes the pricing rules and the pricing logic more explicit coherent.  And reusable.
 
-For example, some of the attributes 
- - numberOfDaysToBooking, which enables the pricing that Nat wants.  More expensive today, cheaper tomorrow
- - bookingStartTime, which enables more expensive peak times
- - groupSize, which enables group discounts
- - totalOrder, which enables discounts for large orders
- - customerLifeTimeValue, which enables discounts for loyal customers
- - resourceTier, which enables different pricing for different resources
+I've played with how Claude modeled pricing rules, and I like it. The core idea is to extract what it initially called a
+`PricingFactor`, but which I have renamed as `PricingAttribute`. This flattens the domain model into a list of
+attributes
+that are germane to pricing. It makes the pricing rules and the pricing logic more explicit coherent. And reusable.
+
+For example, some of the attributes
+
+- numberOfDaysToBooking, which enables the pricing that Nat wants. More expensive today, cheaper tomorrow
+- bookingStartTime, which enables more expensive peak times
+- groupSize, which enables group discounts
+- totalOrder, which enables discounts for large orders
+- customerLifeTimeValue, which enables discounts for loyal customers
+- resourceTier, which enables different pricing for different resources
 
 etc
 
-I realised that this concept of flattening the domain model into attributes that are germain to a given concern can also be applied
-to the refund policy rules.  numberOfDaysToBooking, or numberOfHoursToBooking would probably be the core of most refund rules.
+I realised that this concept of flattening the domain model into attributes that are germain to a given concern can also
+be applied
+to the refund policy rules. numberOfDaysToBooking, or numberOfHoursToBooking would probably be the core of most refund
+rules.
 It certainly is for Nat.
 
-I further realised that this "attribute-ification" of the pricing rules opens the door to supply of attributes outside the domain
-model.  For example, weather conditions.  This in turn opens the door to a companion service creating offers to entice more
-bookings.  For example, a customer books a mobile car wash at a certain post code next Monday at 9am to 11am.  We could
-create custom offers for customers nearby, offering a discount if they get their car washed from 11am onwards.  This external
-service would add an attribute to the targeted customers, which would be supplied to the pricing engine, and thereby the 
+I further realised that this "attribute-ification" of the pricing rules opens the door to supply of attributes outside
+the domain
+model. For example, weather conditions. This in turn opens the door to a companion service creating offers to entice
+more
+bookings. For example, a customer books a mobile car wash at a certain post code next Monday at 9am to 11am. We could
+create custom offers for customers nearby, offering a discount if they get their car washed from 11am onwards. This
+external
+service would add an attribute to the targeted customers, which would be supplied to the pricing engine, and thereby the
 discount actualised.
 
-What other kinds of offers might be possible?  If a loyal customer has not booked in a while, and business is slack, we could
+What other kinds of offers might be possible? If a loyal customer has not booked in a while, and business is slack, we
+could
 offer them a discount.
 
-It made me wonder if the mission, and the USP of Breezbook, should not be to maximise revenue for the business by keeping the
-calendar full.  This goes beyond the mission of traditional booking systems, which is just to take and manage bookings and
-calendars.  That is just an operational concern.  The problem that businesses want solved is to maximise revenue.  This is a 
+It made me wonder if the mission, and the USP of Breezbook, should not be to maximise revenue for the business by
+keeping the
+calendar full. This goes beyond the mission of traditional booking systems, which is just to take and manage bookings
+and
+calendars. That is just an operational concern. The problem that businesses want solved is to maximise revenue. This is
+a
 problem that Breezbook could take on.
 
 Potential Mission for Breezbook:
@@ -1505,17 +1604,22 @@ Most booking systems solve the operational need of managing bookings.
 Breezbook optimizes bookings, pricing, and customer engagement to keep your calendar full, and your revenue maxed.
 
 ## Factor versus Attribute
-Claude went with PricingFactor initially, and I changed that to PricingAttribute, as I was trying to understand what it 
-produced.  I think I will switch back to Factor though, because some pricing factors - like weather - are not attributes
+
+Claude went with PricingFactor initially, and I changed that to PricingAttribute, as I was trying to understand what it
+produced. I think I will switch back to Factor though, because some pricing factors - like weather - are not attributes
 of any booking domain objects.
 
 ## Implementing increased pricing for a particular personal trainer
-I think what I would like to do is to be able to make resources with metadata, so I can place each personal trainer into a tiered
-system, and then I can implement tiered pricing.  
 
-Recall that pricing happens after availability checking.  So for this to work, the availability check needs to return much more
-data than it currently does.  Right now, it only returns time and base price.  Recall that an availability check gets a service id,
-a data range, and some optional fixed resource preferences.  It should return at least the following additional items:
+I think what I would like to do is to be able to make resources with metadata, so I can place each personal trainer into
+a tiered
+system, and then I can implement tiered pricing.
+
+Recall that pricing happens after availability checking. So for this to work, the availability check needs to return
+much more
+data than it currently does. Right now, it only returns time and base price. Recall that an availability check gets a
+service id,
+a data range, and some optional fixed resource preferences. It should return at least the following additional items:
 
 - how much capacity is possible at this time
 - how much capacity is already booked at this time
@@ -1525,9 +1629,204 @@ a data range, and some optional fixed resource preferences.  It should return at
 This will allow the pricing engine to make decisions based on the availability of resources.
 
 # Tue 25 Jun 2024
+
 It crossed my mind this morning that a pricing factor could be the query params that come in with the availability
-check request, and these could be campaign identifers from google ads or what have you.  This would allow the pricing
+check request, and these could be campaign identifers from google ads or what have you. This would allow the pricing
 engine to make decisions based on the campaign that brought the customer to the site.
 
 So for sure `PricingFactor` is a better name than `PricingAttribute`.
 
+# Wed 26 Jun 2024
+
+I proved resource dependent pricing this morning, by adding metadata support to `Resource` and then adding a tier to the
+personal trainer in my gym test tenant. Following that, I added support for `resource metadata` as a pricing factor. And
+the final piece was to create a `PricingRule` that added to the cost for an `elite` tier trainer. Seems to be a nice
+assembly
+of parts.
+
+## Supporting multiple languages
+
+I have now turned my attention to adding support for multiple languages. Mete said he thinks he can line up sales people
+in Turkey to sell into businesses. So I set myself the goal of supporting Turkish and English in my gym demo tenant.
+
+The first logical-seeming step was to factor our text that can be presented to users to tables that are keyed by
+language.
+Some examples of the kind of attributes I'm talking about:
+
+- Service name and description
+- Add-on name and description
+- Resource name
+- Forms (they contain json schema which has property names)
+- Resource branding and markup
+- Tenant branding
+
+Take `service` as an example. It now has a companion table called `service_translations` that contains a language code
+and the name and description of the service in that language.
+The `service` table no longer has a name or a description. To preserve the current domain object `Service`, I have been
+extending
+my prisma queries to take a language code, and then join the `service_translations` table to get the name and
+description.
+The construct the domain `Service` using both rows.
+
+This has exposed a force in the code that is now pushing back on me. I find that I am in the availability check code,
+and
+in need of adding a language code to the request. Language has nothing to do with availability checking tho. It is a
+concern of the presentation layer. I do think I should add service name and description in the availability check
+response,
+but language has nothing to do with the core availability checking logic.
+
+I found that dealing with pricing in the abstract in its own package and its own domain yielded a coherent solution. I
+wonder if the same might not be true for availability checking? I'm going to see what Claude thinks a generic
+availability
+checking solution is like.
+
+## The result of the above
+
+Claude came up with a solution that is based around the following types. But note that I did not dialogue this into all
+availability check cases that we currently support:
+
+```typescript
+interface Resource {
+    id: string;
+    type: string; // e.g., 'provider', 'room', 'equipment'
+}
+
+interface ResourceRequest {
+    type: string;
+    specificId?: string;
+    anyOfIds?: string[];
+}
+
+interface TimeSlot {
+    startTime: Date;
+    endTime: Date;
+}
+
+interface ResourceAvailability {
+    resourceId: string;
+    availableSlots: TimeSlot[];
+}
+
+interface Appointment {
+    id: string;
+    startTime: Date;
+    endTime: Date;
+    resources: Resource[];
+    capacity: number;
+    currentBookings: number;
+}
+
+interface AvailabilityRequest {
+    requestedDateTime: Date;
+    durationMinutes: number;
+    resourceRequests: ResourceRequest[];
+    existingAppointments: Appointment[];
+    resourceAvailability: ResourceAvailability[];
+    partySize: number;
+    specificRequirements?: {
+        [key: string]: any;
+    };
+}
+
+interface AvailabilityResult {
+    isAvailable: boolean;
+    conflicts: {
+        resourceRequest: ResourceRequest;
+        conflictingAppointments: Appointment[];
+    }[];
+    unavailableResources: {
+        resourceRequest: ResourceRequest;
+        unavailableIds: string[];
+    }[];
+    capacityIssues: {
+        appointment: Appointment;
+        availableSpots: number;
+    }[];
+    selectedResources: Resource[];
+    alternativeSlots?: Date[];
+}
+
+function checkAvailability(request: AvailabilityRequest): AvailabilityResult {
+    // Implementation here
+}
+```
+
+Comparing this to the domain objects that my current availability check function takes, Claude's function has no concern
+with:
+
+- service.price
+- service.descriptors (text, descriptions, etc)
+- service.add-ons
+- service.forms
+- booking.customer
+- most of the AvailabilityConfig. I need this to convert from the config model (business opening hours, resource hours,
+  blocked time ttems) to the domain model (availability check request). Which is a modeling mistake
+
+This is the claude chat - https://claude.ai/chat/9ac33a78-a1b6-46e0-8e3c-8ae6e5908218
+
+So it does indeed seem to me that I would have a win by modeling availability checking in its own package and domain.
+But, I need
+to stay close to working code right now, so I will not do this refactor now. I will put a name and description into
+Service and
+continue to use the availability check function as it is.
+
+# Thu 27 Jun 2024
+
+The above discovery, and the previous one about pricing, has me thinking that one of the most impactful discoveries in a
+given software build is getting to the right bounded contexts. From there, you can focus on excellently implementing
+that each concern, with a model fully germain to the concern.
+
+Trying to find one model is a mistake.
+
+For example, in my current domain of booking and appointments, I have discovered the following bounded contexts:
+
+- Availability Checking
+- Pricing
+- Payment
+
+Initially I was trying to service all of these concerns with a single model consisting of:
+
+- Service (name, description, price, duration, resource requirements)
+- Resource (name, description, type, capacity, available hours)
+- Booking (service, location, start time, end time, customer, payment)
+- Business configuration (opening hours, coupons, discounts, refund policy, locations)
+
+Availability checking has no interest in price, or customer, or payment. Payment has no interest in resource
+requirements.
+As more bounded contexts emerged, and as each bounded context became more complex, increasing data demands were placed
+on `Service` and `Resource` and `Booking` and they started to get fatter.
+
+Test cases for the availability check had to setup a dummy price and name and description for the service.
+
+So when I started to explore modeling availability checking as its own domain, I found it was only concerned with:
+
+- Resource (type, available hours)
+- Existing appointments (start time, end time, assigned resources, capacity)
+- Availability request (start time, end time, resource requests, party size)
+
+This is dramatically different to `Service` and `Resource` and `Booking` and frees me up tremendously.
+
+Similarly, I initially tried to model pricing as a set of rules that could be applied to a `Service`. When I pulled
+pricing out to a domain of its own, I found that it was only concerned with:
+
+- Pricing factors
+- Pricing rules
+- Pricing engine
+
+Totally different language.  The resulting pricing package is clean, coherent, well tested and quite generic.
+
+Finding these bounded contexts has been slow and painful.  The principle indicators of potential boundary crossing have
+been:
+
+- setting up dummy data for "pointless" domain model attributes in tests
+- domain model entities getting fatter
+- having to reach hard to get "random" data at the edge of my app (e.g. endpoints)
+
+I know I could have done big picture event storming, or other discovery techniques to maybe accelerate the discovery of
+these boundaries.  It just feels to me like feeling my way across the stones in the river is more my style.  What can I
+learn from this?
+
+# Fri 28 Jun 2024
+I reverted the last two days of work on language support. Trying to force in the concern of language into the availability
+check was going badly.  I'm going to do the extraction of the availability check to its own package now and see how the
+language support goes after that.
