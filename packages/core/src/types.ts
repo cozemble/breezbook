@@ -336,7 +336,7 @@ export interface ResourceId extends ValueType<string> {
     _type: 'resource.id';
 }
 
-export function serviceId(value: string): ServiceId {
+export function serviceId(value = uuidv4()): ServiceId {
     return {
         _type: 'service.id',
         value

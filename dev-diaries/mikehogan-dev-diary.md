@@ -1830,3 +1830,23 @@ learn from this?
 I reverted the last two days of work on language support. Trying to force in the concern of language into the availability
 check was going badly.  I'm going to do the extraction of the availability check to its own package now and see how the
 language support goes after that.
+
+## Availability as its own domain
+Having a fascinating chat with Claude about the domain of availability checking. I keep asking it to do more of what I have
+discovered as necessary to meet the anticipated needs of SME customers.  When we got to the chat about resource allocation,
+I asked it to think about round-robin, least used, greedy allocation, and it duly obliged.  
+
+Then I asked if there was an existing library that did the kind of resource allocation we were talking about.  It mentioned
+OptaPlanner, which is a constraint satisfaction solver.  It seems really mature and capable.  One of the articles on their
+site is vehicle routing, which is exactly Nat's requirement.  Round-robin and least used would have 5 vans on the road
+for five bookings, which is likely inefficient.  Greedy allocation might make it impossible for one van to get to all
+give bookings.
+
+So just before I started to think about modeling different resource allocation algos into my availability check function,
+I realised that if resource allocation of fungible resources is don't based on capacity, they a separate process can run
+periodically to balance resource allocation.  In other words, when doing availability checking, I can just have to check
+that at least one suitable resource is available.  On each booking, a process, maybe using OptaPlanner, can balance the
+allocation of resources.
+
+If a booking is found to be undeliverable during this process, some remedial action can be taken, in the worse case
+scenario, the booking can be cancelled or rearranged.
