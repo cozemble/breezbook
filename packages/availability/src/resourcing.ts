@@ -18,7 +18,7 @@ import {
     TwentyFourHourClockTime
 } from "@breezbook/packages-core";
 
-export namespace availability {
+export namespace resourcing {
     type ResourceRequirements = ResourceRequirementsWithCapacity | ResourceRequirementsWithoutCapacity
 
     interface ResourceRequirementsWithCapacity {
@@ -129,23 +129,23 @@ export namespace availability {
         id: BookingId
         service: Service
         timeslot: Timeslot
-        fixedResourceAllocations: FixedResourceAllocation[]
+        fixedResourceCommitments: ResourceCommitment[]
         bookedCapacity: Capacity
     }
 
-    export interface FixedResourceAllocation {
-        _type: 'fixed.resource.allocation';
-        requirement: ResourceRequirement;
-        resource: Resource;
-    }
-
-    export function fixedResourceAllocation(requirement: ResourceRequirement, resource: Resource): FixedResourceAllocation {
-        return {
-            _type: 'fixed.resource.allocation',
-            requirement,
-            resource
-        }
-    }
+    // export interface FixedResourceAllocation {
+    //     _type: 'fixed.resource.allocation';
+    //     requirement: ResourceRequirement;
+    //     resource: Resource;
+    // }
+    //
+    // export function fixedResourceAllocation(requirement: ResourceRequirement, resource: Resource): FixedResourceAllocation {
+    //     return {
+    //         _type: 'fixed.resource.allocation',
+    //         requirement,
+    //         resource
+    //     }
+    // }
 
     interface ResourceCommitment {
         _type: "resource.commitment"
@@ -189,12 +189,12 @@ export namespace availability {
         }
     }
 
-    export function booking(timeslot: Timeslot, service: Service, fixedResourceAllocations: FixedResourceAllocation[] = [], bookedCapacity = capacity(1), id = bookingId()): Booking {
+    export function booking(timeslot: Timeslot, service: Service, fixedResourceAllocations: ResourceCommitment[] = [], bookedCapacity = capacity(1), id = bookingId()): Booking {
         return {
             id,
             timeslot,
             service,
-            fixedResourceAllocations,
+            fixedResourceCommitments: fixedResourceAllocations,
             bookedCapacity
         }
     }
@@ -302,7 +302,7 @@ export namespace availability {
         return resource.availability.some(a => timeslotFns.overlaps(a, timeslot))
     }
 
-    function replaceIfFixed(requirement: ResourceRequirement, fixedResourceAllocations: FixedResourceAllocation[]): ResourceRequirement {
+    function replaceIfFixed(requirement: ResourceRequirement, fixedResourceAllocations: ResourceCommitment[]): ResourceRequirement {
         const fixed = fixedResourceAllocations.find(f => f.requirement.id.value === requirement.id.value)
         return fixed ? specificResource(fixed.resource, fixed.requirement.id) : requirement
     }
@@ -331,7 +331,7 @@ export namespace availability {
 
     function resourceBooking(resources: ResourceUsage[], booking: Booking): ResourceBookingResult {
         const allocationOutcome = booking.service.resourceRequirements.resourceRequirements.map(requirement => {
-            const activeRequirement = replaceIfFixed(requirement, booking.fixedResourceAllocations)
+            const activeRequirement = replaceIfFixed(requirement, booking.fixedResourceCommitments)
             const availableResources = getAvailableResources(resources, activeRequirement, booking);
             if (availableResources.length === 0) {
                 return unsatisfiableResourceRequirement(requirement)

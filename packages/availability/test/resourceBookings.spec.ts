@@ -1,16 +1,15 @@
 import {describe, expect, test} from "vitest";
-import {availability} from "../src/availability.js";
+import {resourcing} from "../src/resourcing.js";
 import {anySuitableResource, capacity, mandatory, resourceId, resourceType} from "@breezbook/packages-core";
-import resourceBookings = availability.resourceBookings;
-import timeslotFns = availability.timeslotFns;
-import booking = availability.booking;
-import resource = availability.resource;
-import service = availability.service;
-import resourceRequirements = availability.resourceRequirements;
-import resourcedBooking = availability.resourcedBooking;
-import resourceCommitment = availability.resourceCommitment;
-import unresourceableBooking = availability.unresourceableBooking;
-import fixedResourceAllocation = availability.fixedResourceAllocation;
+import resourceBookings = resourcing.resourceBookings;
+import timeslotFns = resourcing.timeslotFns;
+import booking = resourcing.booking;
+import resource = resourcing.resource;
+import service = resourcing.service;
+import resourceRequirements = resourcing.resourceRequirements;
+import resourcedBooking = resourcing.resourcedBooking;
+import resourceCommitment = resourcing.resourceCommitment;
+import unresourceableBooking = resourcing.unresourceableBooking;
 
 describe("given a service requiring fungible resources without capacity, resourceBookings", () => {
     const room = resourceType("room")
@@ -59,7 +58,7 @@ describe("given a service requiring fungible resources without capacity, resourc
     })
 
     test("should allocate a specific resource when available", () => {
-        const fixedRoom = fixedResourceAllocation(anyRoom, room1)
+        const fixedRoom = resourceCommitment(anyRoom, room1)
         const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), theService, [fixedRoom])
         const booking2 = booking(timeslotFns.sameDay("2021-01-01", "09:30", "10:30"), theService, [fixedRoom])
         const booking3 = booking(timeslotFns.sameDay("2021-01-01", "10:30", "11:30"), theService, [fixedRoom])
@@ -73,7 +72,7 @@ describe("given a service requiring fungible resources without capacity, resourc
     })
 
     test("should not allocate a specific resource when unavailable", () => {
-        const fixedRoom = fixedResourceAllocation(anyRoom, room1)
+        const fixedRoom = resourceCommitment(anyRoom, room1)
         const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), theService, [fixedRoom])
         const booking2 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), theService, [fixedRoom])
         const resourced = resourceBookings(resources, [booking1, booking2])
