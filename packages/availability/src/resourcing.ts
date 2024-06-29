@@ -230,7 +230,14 @@ export namespace resourcing {
     export const timeslotFns = {
         sameDay: (date: string, start: string, end: string) => timeslot(dateAndTime(date, start), dateAndTime(date, end)),
         overlaps(larger: Timeslot, smaller: Timeslot) {
-            return larger.from.date.value === smaller.from.date.value && timePeriodFns.overlaps(timePeriod(larger.from.time, larger.to.time), timePeriod(smaller.from.time, smaller.to.time))
+            return larger.from.date.value === smaller.from.date.value
+                && larger.to.date.value === smaller.to.date.value
+                && timePeriodFns.overlaps(timePeriod(larger.from.time, larger.to.time), timePeriod(smaller.from.time, smaller.to.time))
+        },
+        intersects(timeslot: Timeslot, timeslot2: Timeslot) {
+            return timeslot.from.date.value === timeslot2.from.date.value
+                && timeslot.to.date.value === timeslot2.to.date.value
+                && timePeriodFns.intersects(timePeriod(timeslot.from.time, timeslot.to.time), timePeriod(timeslot2.from.time, timeslot2.to.time))
         }
     }
 
@@ -326,7 +333,7 @@ export namespace resourcing {
     }
 
     function resourceIsUsed(resource: ResourceUsage, timeslot: Timeslot): boolean {
-        return resource.bookings.some(b => timeslotFns.overlaps(b.timeslot, timeslot))
+        return resource.bookings.some(b => timeslotFns.intersects(b.timeslot, timeslot))
     }
 
     function resourceBooking(resources: ResourceUsage[], booking: Booking): ResourceBookingResult {

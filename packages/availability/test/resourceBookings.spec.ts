@@ -121,3 +121,45 @@ describe("given services with a fungible resource with capacity, resourceBooking
         expect(resourced[10]).toEqual(unresourceableBooking(bookings[10], [teamOneRoomRequirement]));
     });
 })
+
+describe("given a service that requires two resources without capacity", () => {
+    const room = resourceType("room")
+    const equipment = resourceType("equipment")
+    const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("room1"))
+    const projector = resource(equipment, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("projector1"))
+    const resources = [room1, projector]
+    const anySuitableRoom = anySuitableResource(room)
+    const anySuitableEquipment = anySuitableResource(equipment)
+    const roomAndEquipmentService = service(resourceRequirements([anySuitableRoom, anySuitableEquipment]))
+    const justRoomService = service(resourceRequirements([anySuitableRoom]))
+    const justEquipmentService = service(resourceRequirements([anySuitableEquipment]))
+
+    test("should allocate multiple resource types for a single booking", () => {
+        const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "10:00"), roomAndEquipmentService)
+        const resourced = resourceBookings(resources, [booking1])
+
+        expect(resourced[0]).toEqual(resourcedBooking(booking1, [
+            resourceCommitment(anySuitableRoom, room1),
+            resourceCommitment(anySuitableEquipment, projector)
+        ]))
+    })
+
+    test("partial resource allocation should result in unresourceable booking", () => {
+        const bookingWithJustRoom = booking(timeslotFns.sameDay("2021-01-01", "09:00", "10:00"), justRoomService)
+        const bookingWithRoomAndEquipment = booking(timeslotFns.sameDay("2021-01-01", "09:00", "10:00"), roomAndEquipmentService)
+        const resourced = resourceBookings(resources, [bookingWithJustRoom, bookingWithRoomAndEquipment])
+        expect(resourced[0]).toEqual(resourcedBooking(bookingWithJustRoom, [resourceCommitment(anySuitableRoom, room1)]))
+        expect(resourced[1]).toEqual(unresourceableBooking(bookingWithRoomAndEquipment, [anySuitableRoom]))
+    })
+
+    test("should handle overlapping bookings with different resource requirements", () => {
+        const bookingWithRoomAndEquipment = booking(timeslotFns.sameDay("2021-01-01", "09:00", "10:00"), roomAndEquipmentService)
+        const bookingWithJustRoom = booking(timeslotFns.sameDay("2021-01-01", "09:30", "10:30"), justRoomService)
+        const resourced = resourceBookings(resources, [bookingWithRoomAndEquipment, bookingWithJustRoom])
+        expect(resourced[0]).toEqual(resourcedBooking(bookingWithRoomAndEquipment, [
+            resourceCommitment(anySuitableRoom, room1),
+            resourceCommitment(anySuitableEquipment, projector)
+        ]))
+        expect(resourced[1]).toEqual(unresourceableBooking(bookingWithJustRoom, [anySuitableRoom]))
+    })
+});
