@@ -370,8 +370,42 @@ export namespace resourcing {
         return accumulateResourcedBookings(bookings, resourcingAccumulator(toResourceUsages(resources)));
     }
 
-    export function checkAvailability(existingUsage: ResourcingAccumulator, booking: Booking): ResourceBookingResult {
+    type AvailabilityResult = Available | Unavailable
+
+    interface Available {
+        _type: "available"
+        booking: ResourcedBooking
+        potentialCapacity: Capacity
+        consumedCapacity: Capacity
+    }
+
+    interface Unavailable {
+        _type: "unavailable"
+        booking: UnresourceableBooking
+    }
+
+    export function available(booking: ResourcedBooking, potentialCapacity: Capacity, consumedCapacity: Capacity): Available {
+        return {
+            _type: "available",
+            booking,
+            potentialCapacity,
+            consumedCapacity
+        }
+    }
+
+    export function unavailable(booking: UnresourceableBooking): Unavailable {
+        return {
+            _type: "unavailable",
+            booking
+        }
+    }
+
+    export function checkAvailability(existingUsage: ResourcingAccumulator, booking: Booking): AvailabilityResult {
         const outcome = accumulateResourcedBookings([booking], existingUsage)
-        return mandatory(outcome.resourced.find(r => r.booking.id.value === booking.id.value), `No outcome found for booking ${booking.id.value}`)
+        const resourcingOutcome = mandatory(outcome.resourced.find(r => r.booking.id.value === booking.id.value), `No outcome found for booking ${booking.id.value}`)
+        if (resourcingOutcome._type === "unresourceable.booking") {
+            return unavailable(resourcingOutcome)
+        }
+        return available(resourcingOutcome, capacity(-1), capacity(-1)) // capacity todo
     }
 }
