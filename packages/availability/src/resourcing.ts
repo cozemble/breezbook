@@ -270,13 +270,13 @@ export namespace resourcing {
         resourced: ResourceBookingResult[]
     }
 
-    export function resourceBookings(resources: Resource[], bookings: Booking[]): ResourceBookingResult[] {
+    export function resourceBookings(resources: Resource[], bookings: Booking[]): ResourcingAccumulator {
         const resourceUsages = resources.map(r => resourceUsage(r, []))
         const initialAccumulator: ResourcingAccumulator = {
             resources: resourceUsages,
             resourced: []
         }
-        return bookings.reduce((accumulator, booking) => allocateResources(accumulator, booking), initialAccumulator).resourced
+        return bookings.reduce((accumulator, booking) => allocateResources(accumulator, booking), initialAccumulator)
     }
 
     function allocateResources(accumulator: ResourcingAccumulator, booking: Booking): ResourcingAccumulator {
