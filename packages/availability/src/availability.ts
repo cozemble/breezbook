@@ -6,13 +6,13 @@ import {
     Capacity,
     duration,
     Duration,
-    FixedResourceAllocation,
     isoDate,
     IsoDate,
     minutes,
     resourceId,
     ResourceId,
-    ResourceRequirement,
+    resourceRequirementId,
+    ResourceRequirementId,
     ResourceType,
     serviceId,
     ServiceId,
@@ -36,7 +36,7 @@ export namespace availability {
         resourceRequirements: ResourceRequirement[]
     }
 
-    export function resourceRequirementsWithCapacity(resourceRequirements: ResourceRequirement[], capacity: Capacity): ResourceRequirementsWithCapacity {
+    function resourceRequirementsWithCapacity(resourceRequirements: ResourceRequirement[], capacity: Capacity): ResourceRequirementsWithCapacity {
         return {
             _type: "resource.requirements.with.capacity",
             resourceRequirements,
@@ -44,12 +44,46 @@ export namespace availability {
         }
     }
 
-    export function resourceRequirementsWithoutCapacity(resourceRequirements: ResourceRequirement[]): ResourceRequirementsWithoutCapacity {
+    function resourceRequirementsWithoutCapacity(resourceRequirements: ResourceRequirement[]): ResourceRequirementsWithoutCapacity {
         return {
             _type: "resource.requirements.without.capacity",
             resourceRequirements
         }
     }
+
+    export function resourceRequirements(resourceRequirements: ResourceRequirement[], capacity: Capacity | undefined = undefined): ResourceRequirements {
+        return capacity ? resourceRequirementsWithCapacity(resourceRequirements, capacity) : resourceRequirementsWithoutCapacity(resourceRequirements)
+    }
+
+    export interface AnySuitableResource {
+        _type: 'any.suitable.resource'
+        id: ResourceRequirementId
+        requirement: ResourceType
+    }
+
+    export interface SpecificResource {
+        _type: 'specific.resource'
+        id: ResourceRequirementId
+        resource: Resource
+    }
+
+    export function anySuitableResource(requirement: ResourceType, id = resourceRequirementId()): AnySuitableResource {
+        return {
+            _type: 'any.suitable.resource',
+            requirement,
+            id
+        }
+    }
+
+    export function specificResource(resource: Resource, id = resourceRequirementId()): SpecificResource {
+        return {
+            _type: 'specific.resource',
+            resource,
+            id
+        }
+    }
+
+    export type ResourceRequirement = AnySuitableResource | SpecificResource
 
 
     interface Service {
@@ -70,15 +104,6 @@ export namespace availability {
             _type: "service",
             id,
             resourceRequirements,
-        }
-    }
-
-    export function serviceRequest(service: Service): ServiceRequest {
-        return {
-            _type: "service.request",
-            service,
-            duration: duration(minutes(-1)),
-            requestedCapacity: capacity(1)
         }
     }
 
@@ -114,17 +139,73 @@ export namespace availability {
 
     interface Booking {
         id: BookingId
-        serviceId: ServiceId
+        service: Service
         timeslot: Timeslot
         fixedResourceAllocations: FixedResourceAllocation[]
         bookedCapacity: Capacity
     }
 
-    export function booking(timeslot: Timeslot, serviceId: ServiceId, fixedResourceAllocations: FixedResourceAllocation[] = [], bookedCapacity = capacity(1), id = bookingId()): Booking {
+    export interface FixedResourceAllocation {
+        _type: 'fixed.resource.allocation';
+        requirement: ResourceRequirement;
+        resource: Resource;
+    }
+
+    export function fixedResourceAllocation(requirement: ResourceRequirement, resource: Resource): FixedResourceAllocation {
+        return {
+            _type: 'fixed.resource.allocation',
+            requirement,
+            resource
+        }
+    }
+
+    interface ResourceCommitment {
+        _type: "resource.commitment"
+        requirement: ResourceRequirement
+        resource: Resource
+    }
+
+    export function resourceCommitment(requirement: ResourceRequirement, resource: Resource): ResourceCommitment {
+        return {
+            _type: "resource.commitment",
+            requirement,
+            resource
+        }
+    }
+
+    interface ResourcedBooking {
+        _type: "resourced.booking"
+        booking: Booking
+        resourceCommitments: ResourceCommitment[]
+    }
+
+    export function resourcedBooking(booking: Booking, resourceCommitments: ResourceCommitment[]): ResourcedBooking {
+        return {
+            _type: "resourced.booking",
+            booking,
+            resourceCommitments
+        }
+    }
+
+    interface UnresourceableBooking {
+        _type: "unresourceable.booking"
+        booking: Booking
+        unreasourceableRequirements: ResourceRequirement[]
+    }
+
+    export function unresourceableBooking(booking: Booking, unreasourceableRequirements: ResourceRequirement[]): UnresourceableBooking {
+        return {
+            _type: "unresourceable.booking",
+            booking,
+            unreasourceableRequirements
+        }
+    }
+
+    export function booking(timeslot: Timeslot, service: Service, fixedResourceAllocations: FixedResourceAllocation[] = [], bookedCapacity = capacity(1), id = bookingId()): Booking {
         return {
             id,
             timeslot,
-            serviceId,
+            service,
             fixedResourceAllocations,
             bookedCapacity
         }
@@ -332,4 +413,101 @@ export namespace availability {
         // return available(slot, request.service.resourceRequirements, capacityConstraint)
     }
 
+    type ResourceBookingResult = ResourcedBooking | UnresourceableBooking
+
+    interface ResourceUsage {
+        _type: "resource.usage"
+        resource: Resource
+        bookings: Timeslot[]
+    }
+
+    function resourceUsage(resource: Resource, bookings: Timeslot[]): ResourceUsage {
+        return {
+            _type: "resource.usage",
+            resource,
+            bookings
+        }
+    }
+
+    interface ResourcingAccumulator {
+        resources: ResourceUsage[]
+        resourced: ResourceBookingResult[]
+    }
+
+    export function resourceBookings(resources: Resource[], bookings: Booking[]): ResourceBookingResult[] {
+        const resourceUsages = resources.map(r => resourceUsage(r, []))
+        const initialAccumulator: ResourcingAccumulator = {
+            resources: resourceUsages,
+            resourced: []
+        }
+        return bookings.reduce((accumulator, booking) => allocateResources(accumulator, booking), initialAccumulator).resourced
+    }
+
+    function allocateResources(accumulator: ResourcingAccumulator, booking: Booking): ResourcingAccumulator {
+        const resourcedOutcome = resourceBooking(accumulator.resources, booking)
+        if (resourcedOutcome._type === "unresourceable.booking") {
+            return {
+                resources: accumulator.resources,
+                resourced: [...accumulator.resourced, resourcedOutcome]
+            }
+        }
+        const updatedResources = resourcedOutcome.resourceCommitments.reduce((resources, commitment) => {
+            const resourceIndex = resources.findIndex(r => r.resource.id.value === commitment.resource.id.value)
+            const resource = resources[resourceIndex]
+            return [
+                ...resources.slice(0, resourceIndex),
+                {
+                    ...resource,
+                    bookings: [...resource.bookings, booking.timeslot]
+                },
+                ...resources.slice(resourceIndex + 1)
+            ]
+        }, accumulator.resources)
+        return {
+            resources: updatedResources,
+            resourced: [...accumulator.resourced, resourcedOutcome]
+        }
+    }
+
+    function resourceIsAvailable(resource: Resource, timeslot: Timeslot): boolean {
+        return resource.availability.some(a => timeslotFns.overlaps(a, timeslot))
+    }
+
+    function resourceHasCapacity(resource: ResourceUsage, timeslot: Timeslot): boolean {
+        return resource.bookings.some(b => timeslotFns.overlaps(b, timeslot))
+    }
+
+    function replaceIfFixed(requirement: ResourceRequirement, fixedResourceAllocations: FixedResourceAllocation[]): ResourceRequirement {
+        const fixed = fixedResourceAllocations.find(f => f.requirement.id.value === requirement.id.value)
+        return fixed ? specificResource(fixed.resource, fixed.requirement.id) : requirement
+    }
+
+    function resourceBooking(resources: ResourceUsage[], booking: Booking): ResourceBookingResult {
+        const allocationOutcome = booking.service.resourceRequirements.resourceRequirements.map(requirement => {
+            const activeRequirement = replaceIfFixed(requirement, booking.fixedResourceAllocations)
+            const availableResources = resources.filter(resource => resourceMatchesRequirement(resource.resource, activeRequirement) && resourceIsAvailable(resource.resource, booking.timeslot) && !resourceHasCapacity(resource, booking.timeslot))
+            if (availableResources.length === 0) {
+                return unsatisfiableResourceRequirement(requirement)
+            }
+            if (activeRequirement._type === "specific.resource") {
+                const resource = activeRequirement.resource
+                const found = availableResources.find(r => r.resource.id.value === resource.id.value)
+                if (!found) {
+                    return unsatisfiableResourceRequirement(requirement)
+                }
+                return resourceCommitment(requirement, found.resource)
+            }
+            const countedUsage = availableResources.map(r => ({
+                resource: r,
+                count: r.bookings.length
+            }))
+            const sortedByUsage = countedUsage.sort((a, b) => a.count - b.count)
+            return resourceCommitment(requirement, sortedByUsage[0].resource.resource)
+        })
+        const unsatisfiable = allocationOutcome.filter(a => a._type === "unsatisfiable.resource.requirement")
+        if (unsatisfiable.length > 0) {
+            return unresourceableBooking(booking, unsatisfiable.map(u => (u as UnsatisfiableResourceRequirement).resourceRequirement))
+        }
+        return resourcedBooking(booking, allocationOutcome as ResourceCommitment[])
+    }
 }
