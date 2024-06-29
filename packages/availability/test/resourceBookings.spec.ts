@@ -83,7 +83,7 @@ describe("given a service requiring fungible resources without capacity, resourc
     })
 })
 
-describe("given services a fungible resource with capacity, resourceBookings", () => {
+describe("given services with a fungible resource with capacity, resourceBookings", () => {
     const meetingRoom = resourceType("meeting room")
     const meetingRoom1 = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("meetingRoom1"))
     const meetingRoom2 = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("meetingRoom2"))

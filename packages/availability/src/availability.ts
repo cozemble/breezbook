@@ -1,10 +1,8 @@
 import {
-    arrays,
     bookingId,
     BookingId,
     capacity,
     Capacity,
-    Duration,
     isoDate,
     IsoDate,
     resourceId,
@@ -83,18 +81,10 @@ export namespace availability {
 
     export type ResourceRequirement = AnySuitableResource | SpecificResource
 
-
     interface Service {
         _type: "service"
         id: ServiceId
         resourceRequirements: ResourceRequirements
-    }
-
-    interface ServiceRequest {
-        _type: "service.request";
-        service: Service
-        duration: Duration
-        requestedCapacity: Capacity
     }
 
     export function service(resourceRequirements: ResourceRequirements, id = serviceId()): Service {
@@ -225,52 +215,6 @@ export namespace availability {
         }
     }
 
-    type AvailabilityResult = Available | Unavailable
-
-    type CapacityConstraint = UnconstrainedCapacity | ConstrainedCapacity
-
-    interface UnconstrainedCapacity {
-        _type: "unconstrained.capacity"
-    }
-
-    interface ConstrainedCapacity {
-        _type: "constrained.capacity"
-        possibleCapacity: Capacity
-        remainingCapacity: Capacity
-    }
-
-    export function unconstrainedCapacity(): UnconstrainedCapacity {
-        return {
-            _type: "unconstrained.capacity"
-        }
-    }
-
-    export function constrainedCapacity(possibleCapacity: Capacity, remainingCapacity: Capacity): ConstrainedCapacity {
-        return {
-            _type: "constrained.capacity",
-            possibleCapacity,
-            remainingCapacity
-        }
-    }
-
-
-    interface Available {
-        _type: "available"
-        timeSlot: Timeslot
-        assignedResources: ResourceRequirement[]
-        capacityConstraint: CapacityConstraint
-    }
-
-    export function available(timeSlot: Timeslot, assignedResources: ResourceRequirement[], capacityConstraint: CapacityConstraint): Available {
-        return {
-            _type: "available",
-            timeSlot,
-            assignedResources,
-            capacityConstraint
-        }
-    }
-
-
     interface UnsatisfiableResourceRequirement {
         _type: "unsatisfiable.resource.requirement"
         resourceRequirement: ResourceRequirement
@@ -283,69 +227,11 @@ export namespace availability {
         }
     }
 
-    type UnavailableReason = UnsatisfiableResourceRequirement
-
-    interface Unavailable {
-        _type: "unavailable"
-        timeSlot: Timeslot
-        reason: UnavailableReason
-    }
-
-    export function unavailable(timeSlot: Timeslot, reason: UnavailableReason): Unavailable {
-        return {
-            _type: "unavailable",
-            timeSlot,
-            reason
-        }
-    }
-
     export const timeslotFns = {
         sameDay: (date: string, start: string, end: string) => timeslot(dateAndTime(date, start), dateAndTime(date, end)),
         overlaps(larger: Timeslot, smaller: Timeslot) {
             return larger.from.date.value === smaller.from.date.value && timePeriodFns.overlaps(timePeriod(larger.from.time, larger.to.time), timePeriod(smaller.from.time, smaller.to.time))
         }
-    }
-
-    export function checkAvailability(request: ServiceRequest, resources: Resource[], bookings: Booking[], slots: Timeslot[]): AvailabilityResult[] {
-        return slots.map(s => checkSlot(request, resources, bookings, s))
-    }
-
-    type ResourceAvailabilityResult = ResourcesAvailable | NoResourcesAvailable
-
-    interface ResourcesAvailable {
-        _type: "resources.available"
-        resourceRequirement: ResourceRequirement
-        capacity: Capacity
-        possibleResources: Resource[]
-        slot: Timeslot
-    }
-
-    function resourcesAvailable(resourceRequirement: ResourceRequirement, capacity: Capacity, possibleResources: Resource[], slot: Timeslot): ResourcesAvailable {
-        return {
-            _type: "resources.available",
-            resourceRequirement,
-            possibleResources,
-            capacity,
-            slot
-        }
-    }
-
-    interface NoResourcesAvailable {
-        _type: "no.resources.available"
-        resourceRequirement: ResourceRequirement
-        slot: Timeslot
-    }
-
-    function noResourcesAvailable(resourceRequirement: ResourceRequirement, slot: Timeslot): NoResourcesAvailable {
-        return {
-            _type: "no.resources.available",
-            resourceRequirement,
-            slot
-        }
-    }
-
-    function resourceOverlapsSlot(resource: Resource, slot: Timeslot) {
-        return resource.availability.some(a => timeslotFns.overlaps(a, slot));
     }
 
     function resourceMatchesRequirement(resource: Resource, requirement: ResourceRequirement) {
@@ -354,61 +240,6 @@ export namespace availability {
 
         }
         return resource.id.value === requirement.resource.id.value
-    }
-
-    function checkResourceAvailability(resourceRequirement: ResourceRequirement, capacity: Capacity, resources: Resource[], slot: Timeslot): ResourceAvailabilityResult {
-        const possibleResources = resources.filter(r => resourceMatchesRequirement(r, resourceRequirement) && resourceOverlapsSlot(r, slot));
-        if (possibleResources.length === 0) {
-            return noResourcesAvailable(resourceRequirement, slot)
-        }
-        return resourcesAvailable(resourceRequirement, capacity, possibleResources, slot)
-
-    }
-
-    function capacityImpliedByResourceRequirements(availability: ResourcesAvailable[]): number {
-        return Math.min(...availability.map(a => a.possibleResources.length))
-    }
-
-    function applyResourceCommitment(available: ResourcesAvailable[], commited: ResourceRequirement) {
-        const index = commited._type === "any.suitable.resource" ? available.findIndex(a => a.possibleResources.some(r => r.type.value === commited.requirement.value)) : available.findIndex(a => a.possibleResources.some(r => r.id.value === commited.resource.id.value))
-        if (index === -1) {
-            return available
-        }
-        const remainingResources = arrays.tail(available[index].possibleResources)
-        return [
-            ...available.slice(0, index),
-            {
-                ...available[index],
-                possibleResources: remainingResources
-            },
-            ...available.slice(index + 1)
-        ]
-    }
-
-    export function applyResourceCommitments(available: ResourcesAvailable[], commited: ResourceRequirement[]): ResourcesAvailable[] {
-        return commited.reduce((remaining, c) => applyResourceCommitment(remaining, c), available)
-    }
-
-
-    function checkSlot(request: ServiceRequest, resources: Resource[], bookings: Booking[], slot: Timeslot): AvailabilityResult {
-        throw new Error("Not implemented")
-        // const resourceAvailabilityCheck = request.service.resourceRequirements.resourceRequirements.map(r => checkResourceAvailability(r, capacity(1),resources, slot))
-        // const firstNoResources = resourceAvailabilityCheck.find(r => r._type === "no.resources.available")
-        // if (firstNoResources) {
-        //     return unavailable(slot, unsatisfiableResourceRequirement(firstNoResources.resourceRequirement))
-        // }
-        // const resourcesAvailable = resourceAvailabilityCheck as ResourcesAvailable[]
-        // const overlappingBookings = bookings.filter(b => timeslotFns.overlaps(b.timeslot, slot))
-        // // const possibleSlotCapacity = request.service.capacitySupport._type === "does.not.support.capacity" ? capacity(capacityImpliedByResourceRequirements(resourcesAvailable)) : request.service.capacitySupport.capacity
-        // const resourcesRemaining = overlappingBookings.reduce((remaining, b) => applyResourceCommitments(remaining, b.resourceCommitments), resourcesAvailable)
-        // const firstExhaustedResource = resourcesRemaining.find(r => r.possibleResources.length === 0)
-        // if (firstExhaustedResource) {
-        //     return unavailable(slot, unsatisfiableResourceRequirement(firstExhaustedResource.resourceRequirement))
-        // }
-        // const remainingCapacity = capacity(capacityImpliedByResourceRequirements(resourcesRemaining))
-        // // // const availableResources = resourcesAvailableForSlot(resources, slot);
-        // const capacityConstraint = request.service.resourceRequirements.length === 0 ? unconstrainedCapacity() : constrainedCapacity(possibleSlotCapacity, remainingCapacity)
-        // return available(slot, request.service.resourceRequirements, capacityConstraint)
     }
 
     type ResourceBookingResult = ResourcedBooking | UnresourceableBooking
@@ -471,22 +302,6 @@ export namespace availability {
         return resource.availability.some(a => timeslotFns.overlaps(a, timeslot))
     }
 
-    function resourceHasCapacity(resource: ResourceUsage, timeslot: Timeslot, serviceId: ServiceId, requiredCapacity: Capacity): boolean {
-        const overlappingBookings = resource.bookings.filter(b => timeslotFns.overlaps(b.timeslot, timeslot))
-        if (overlappingBookings.length > 0) {
-            const overlappingServiceIds = overlappingBookings.map(b => b.service.id.value)
-            const allSameServiceId = overlappingServiceIds.every(id => id === serviceId.value)
-            if (!allSameServiceId) {
-                return false
-            }
-            const service = overlappingBookings[0].service
-            const totalBookedCapacity = overlappingBookings.reduce((total, b) => total + b.bookedCapacity.value, 0)
-            const serviceCapacity = service.resourceRequirements._type === "resource.requirements.with.capacity" ? service.resourceRequirements.capacity : capacity(1)
-            return totalBookedCapacity + requiredCapacity.value <= serviceCapacity.value
-        }
-        return true
-    }
-
     function replaceIfFixed(requirement: ResourceRequirement, fixedResourceAllocations: FixedResourceAllocation[]): ResourceRequirement {
         const fixed = fixedResourceAllocations.find(f => f.requirement.id.value === requirement.id.value)
         return fixed ? specificResource(fixed.resource, fixed.requirement.id) : requirement
@@ -496,7 +311,7 @@ export namespace availability {
         if (booking.service.resourceRequirements._type === "resource.requirements.with.capacity") {
             const maybeExistingResource = resources.find(r => r.bookings.some(b => timeslotFns.overlaps(b.timeslot, booking.timeslot) && b.service.id.value === booking.service.id.value))
             if (maybeExistingResource) {
-                const totalBookedCapacity = maybeExistingResource.bookings.filter(b => timeslotFns.overlaps(b.timeslot,booking.timeslot)).reduce((total, b) => total + b.bookedCapacity.value, 0)
+                const totalBookedCapacity = maybeExistingResource.bookings.filter(b => timeslotFns.overlaps(b.timeslot, booking.timeslot)).reduce((total, b) => total + b.bookedCapacity.value, 0)
                 const serviceCapacity = booking.service.resourceRequirements.capacity.value
                 if (totalBookedCapacity + booking.bookedCapacity.value <= serviceCapacity) {
                     return [maybeExistingResource]
