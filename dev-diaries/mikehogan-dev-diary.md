@@ -1813,9 +1813,9 @@ pricing out to a domain of its own, I found that it was only concerned with:
 - Pricing rules
 - Pricing engine
 
-Totally different language.  The resulting pricing package is clean, coherent, well tested and quite generic.
+Totally different language. The resulting pricing package is clean, coherent, well tested and quite generic.
 
-Finding these bounded contexts has been slow and painful.  The principle indicators of potential boundary crossing have
+Finding these bounded contexts has been slow and painful. The principle indicators of potential boundary crossing have
 been:
 
 - setting up dummy data for "pointless" domain model attributes in tests
@@ -1823,38 +1823,52 @@ been:
 - having to reach hard to get "random" data at the edge of my app (e.g. endpoints)
 
 I know I could have done big picture event storming, or other discovery techniques to maybe accelerate the discovery of
-these boundaries.  It just feels to me like feeling my way across the stones in the river is more my style.  What can I
+these boundaries. It just feels to me like feeling my way across the stones in the river is more my style. What can I
 learn from this?
 
 # Fri 28 Jun 2024
-I reverted the last two days of work on language support. Trying to force in the concern of language into the availability
-check was going badly.  I'm going to do the extraction of the availability check to its own package now and see how the
+
+I reverted the last two days of work on language support. Trying to force in the concern of language into the
+availability
+check was going badly. I'm going to do the extraction of the availability check to its own package now and see how the
 language support goes after that.
 
 ## Availability as its own domain
-Having a fascinating chat with Claude about the domain of availability checking. I keep asking it to do more of what I have
-discovered as necessary to meet the anticipated needs of SME customers.  When we got to the chat about resource allocation,
-I asked it to think about round-robin, least used, greedy allocation, and it duly obliged.  
 
-Then I asked if there was an existing library that did the kind of resource allocation we were talking about.  It mentioned
-OptaPlanner, which is a constraint satisfaction solver.  It seems really mature and capable.  One of the articles on their
-site is vehicle routing, which is exactly Nat's requirement.  Round-robin and least used would have 5 vans on the road
-for five bookings, which is likely inefficient.  Greedy allocation might make it impossible for one van to get to all
+Having a fascinating chat with Claude about the domain of availability checking. I keep asking it to do more of what I
+have
+discovered as necessary to meet the anticipated needs of SME customers. When we got to the chat about resource
+allocation,
+I asked it to think about round-robin, least used, greedy allocation, and it duly obliged.
+
+Then I asked if there was an existing library that did the kind of resource allocation we were talking about. It
+mentioned
+OptaPlanner, which is a constraint satisfaction solver. It seems really mature and capable. One of the articles on their
+site is vehicle routing, which is exactly Nat's requirement. Round-robin and least used would have 5 vans on the road
+for five bookings, which is likely inefficient. Greedy allocation might make it impossible for one van to get to all
 give bookings.
 
-So just before I started to think about modeling different resource allocation algos into my availability check function,
+So just before I started to think about modeling different resource allocation algos into my availability check
+function,
 I realised that if resource allocation of fungible resources is don't based on capacity, they a separate process can run
-periodically to balance resource allocation.  In other words, when doing availability checking, I can just have to check
-that at least one suitable resource is available.  On each booking, a process, maybe using OptaPlanner, can balance the
+periodically to balance resource allocation. In other words, when doing availability checking, I can just have to check
+that at least one suitable resource is available. On each booking, a process, maybe using OptaPlanner, can balance the
 allocation of resources.
 
 If a booking is found to be undeliverable during this process, some remedial action can be taken, in the worse case
 scenario, the booking can be cancelled or rearranged.
 
 ## Update on the above
-Availability checking in complex enough.  It gets confusing quickly.  I think creating a function that resources all
-bookings will help.  This will be useful in any case, to show the business admins how their calendar looks, and who is
+
+Availability checking in complex enough. It gets confusing quickly. I think creating a function that resources all
+bookings will help. This will be useful in any case, to show the business admins how their calendar looks, and who is
 doing what.
 
 If I can get an array of resourced bookings, then I can pass that to the availability checker and take out a chunk of
-complexity.  Tomorrow.
+complexity. Tomorrow.
+
+# Sat 29 Jun 2024
+
+Decent progress with the resourcing of bookings. I can do fungible and specific, with and without capacity. I realised
+that the this function can be used for the availability check too. I can just create a booking and test whether it is
+resourceable.
