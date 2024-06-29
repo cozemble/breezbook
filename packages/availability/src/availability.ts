@@ -4,11 +4,9 @@ import {
     BookingId,
     capacity,
     Capacity,
-    duration,
     Duration,
     isoDate,
     IsoDate,
-    minutes,
     resourceId,
     ResourceId,
     resourceRequirementId,
@@ -418,10 +416,10 @@ export namespace availability {
     interface ResourceUsage {
         _type: "resource.usage"
         resource: Resource
-        bookings: Timeslot[]
+        bookings: Booking[]
     }
 
-    function resourceUsage(resource: Resource, bookings: Timeslot[]): ResourceUsage {
+    function resourceUsage(resource: Resource, bookings: Booking[]): ResourceUsage {
         return {
             _type: "resource.usage",
             resource,
@@ -458,11 +456,11 @@ export namespace availability {
                 ...resources.slice(0, resourceIndex),
                 {
                     ...resource,
-                    bookings: [...resource.bookings, booking.timeslot]
+                    bookings: [...resource.bookings, booking]
                 },
                 ...resources.slice(resourceIndex + 1)
             ]
-        }, accumulator.resources)
+        }, accumulator.resources);
         return {
             resources: updatedResources,
             resourced: [...accumulator.resourced, resourcedOutcome]
@@ -473,8 +471,20 @@ export namespace availability {
         return resource.availability.some(a => timeslotFns.overlaps(a, timeslot))
     }
 
-    function resourceHasCapacity(resource: ResourceUsage, timeslot: Timeslot): boolean {
-        return resource.bookings.some(b => timeslotFns.overlaps(b, timeslot))
+    function resourceHasCapacity(resource: ResourceUsage, timeslot: Timeslot, serviceId: ServiceId, requiredCapacity: Capacity): boolean {
+        const overlappingBookings = resource.bookings.filter(b => timeslotFns.overlaps(b.timeslot, timeslot))
+        if (overlappingBookings.length > 0) {
+            const overlappingServiceIds = overlappingBookings.map(b => b.service.id.value)
+            const allSameServiceId = overlappingServiceIds.every(id => id === serviceId.value)
+            if (!allSameServiceId) {
+                return false
+            }
+            const service = overlappingBookings[0].service
+            const totalBookedCapacity = overlappingBookings.reduce((total, b) => total + b.bookedCapacity.value, 0)
+            const serviceCapacity = service.resourceRequirements._type === "resource.requirements.with.capacity" ? service.resourceRequirements.capacity : capacity(1)
+            return totalBookedCapacity + requiredCapacity.value <= serviceCapacity.value
+        }
+        return true
     }
 
     function replaceIfFixed(requirement: ResourceRequirement, fixedResourceAllocations: FixedResourceAllocation[]): ResourceRequirement {
@@ -482,10 +492,32 @@ export namespace availability {
         return fixed ? specificResource(fixed.resource, fixed.requirement.id) : requirement
     }
 
+    function getAvailableResources(resources: ResourceUsage[], requirement: ResourceRequirement, booking: Booking) {
+        if (booking.service.resourceRequirements._type === "resource.requirements.with.capacity") {
+            const maybeExistingResource = resources.find(r => r.bookings.some(b => timeslotFns.overlaps(b.timeslot, booking.timeslot) && b.service.id.value === booking.service.id.value))
+            if (maybeExistingResource) {
+                const totalBookedCapacity = maybeExistingResource.bookings.filter(b => timeslotFns.overlaps(b.timeslot,booking.timeslot)).reduce((total, b) => total + b.bookedCapacity.value, 0)
+                const serviceCapacity = booking.service.resourceRequirements.capacity.value
+                if (totalBookedCapacity + booking.bookedCapacity.value <= serviceCapacity) {
+                    return [maybeExistingResource]
+                }
+                return []
+            }
+        }
+        return resources.filter(resource =>
+            resourceMatchesRequirement(resource.resource, requirement)
+            && resourceIsAvailable(resource.resource, booking.timeslot)
+            && !resourceIsUsed(resource, booking.timeslot));
+    }
+
+    function resourceIsUsed(resource: ResourceUsage, timeslot: Timeslot): boolean {
+        return resource.bookings.some(b => timeslotFns.overlaps(b.timeslot, timeslot))
+    }
+
     function resourceBooking(resources: ResourceUsage[], booking: Booking): ResourceBookingResult {
         const allocationOutcome = booking.service.resourceRequirements.resourceRequirements.map(requirement => {
             const activeRequirement = replaceIfFixed(requirement, booking.fixedResourceAllocations)
-            const availableResources = resources.filter(resource => resourceMatchesRequirement(resource.resource, activeRequirement) && resourceIsAvailable(resource.resource, booking.timeslot) && !resourceHasCapacity(resource, booking.timeslot))
+            const availableResources = getAvailableResources(resources, activeRequirement, booking);
             if (availableResources.length === 0) {
                 return unsatisfiableResourceRequirement(requirement)
             }

@@ -11,7 +11,6 @@ import resourcedBooking = availability.resourcedBooking;
 import resourceCommitment = availability.resourceCommitment;
 import unresourceableBooking = availability.unresourceableBooking;
 import fixedResourceAllocation = availability.fixedResourceAllocation;
-import specificResource = availability.specificResource;
 
 describe("given a service requiring fungible resources without capacity, resourceBookings", () => {
     const room = resourceType("room")
@@ -84,27 +83,42 @@ describe("given a service requiring fungible resources without capacity, resourc
     })
 })
 
-describe("given services requiring a specific resource with capacity, resourceBookings", () => {
+describe("given services a fungible resource with capacity, resourceBookings", () => {
     const meetingRoom = resourceType("meeting room")
-    const smallMeetingRoom = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("smallMeetingRoom"))
-    const largeMeetingRoom = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("largeMeetingRoom"))
-    const resources = [smallMeetingRoom, largeMeetingRoom]
-    const smallMeeting = service(resourceRequirements([specificResource(smallMeetingRoom)], capacity(10)))
-    const largeMeeting = service(resourceRequirements([specificResource(largeMeetingRoom)], capacity(20)))
-    const competingSmallMeeting = service(resourceRequirements([specificResource(smallMeetingRoom)], capacity(10)))
+    const meetingRoom1 = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("meetingRoom1"))
+    const meetingRoom2 = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("meetingRoom2"))
+    const resources = [meetingRoom1, meetingRoom2]
+    const teamOnePlanning = service(resourceRequirements([anySuitableResource(meetingRoom)], capacity(10)))
+    const teamTwoPlanning = service(resourceRequirements([anySuitableResource(meetingRoom)], capacity(10)))
 
     test("should handle an empty bookings list", () => {
         expect(resourceBookings(resources, [])).toEqual([])
     })
 
     test("can allocate a number of bookings at the same time to the same resource", () => {
-        const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), smallMeeting)
-        const booking2 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), smallMeeting)
-        const booking3 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), smallMeeting)
-        const resourced = resourceBookings(resources, [booking1, booking2, booking3])
-        const smallMeetingRequirement = mandatory(smallMeeting.resourceRequirements.resourceRequirements[0], `smallMeetingRoom`)
-        // expect(resourced[0]).toEqual(resourcedBooking(booking1, [resourceCommitment(smallMeetingRequirement, smallMeetingRoom)]))
-        // expect(resourced[1]).toEqual(resourcedBooking(booking2, [resourceCommitment(smallMeetingRequirement, smallMeetingRoom)]))
-        // expect(resourced[2]).toEqual(resourcedBooking(booking3, [resourceCommitment(smallMeetingRequirement, smallMeetingRoom)]))
+        const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), teamOnePlanning)
+        const booking2 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), teamOnePlanning)
+        const booking3 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), teamTwoPlanning)
+        const booking4 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), teamTwoPlanning)
+        const resourced = resourceBookings(resources, [booking1, booking2, booking3, booking4])
+        const teamOneRoomRequirement = mandatory(teamOnePlanning.resourceRequirements.resourceRequirements[0], `teamOnePlanning`)
+        const teamTwoRoomRequirement = mandatory(teamTwoPlanning.resourceRequirements.resourceRequirements[0], `teamTwoPlanning`)
+        expect(resourced[0]).toEqual(resourcedBooking(booking1, [resourceCommitment(teamOneRoomRequirement, meetingRoom1)]))
+        expect(resourced[1]).toEqual(resourcedBooking(booking2, [resourceCommitment(teamOneRoomRequirement, meetingRoom1)]))
+        expect(resourced[2]).toEqual(resourcedBooking(booking3, [resourceCommitment(teamTwoRoomRequirement, meetingRoom2)]))
+        expect(resourced[3]).toEqual(resourcedBooking(booking4, [resourceCommitment(teamTwoRoomRequirement, meetingRoom2)]))
+    });
+
+    test("booking unresourceable when capacity is exceeded", () => {
+        const bookings = [];
+        for (let i = 0; i < 11; i++) {
+            bookings.push(booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), teamOnePlanning));
+        }
+        const resourced = resourceBookings(resources, bookings);
+        const teamOneRoomRequirement = mandatory(teamOnePlanning.resourceRequirements.resourceRequirements[0], `teamOnePlanning`)
+        for (let i = 0; i < 10; i++) {
+            expect(resourced[i]).toEqual(resourcedBooking(bookings[i], [resourceCommitment(teamOneRoomRequirement, meetingRoom1)]));
+        }
+        expect(resourced[10]).toEqual(unresourceableBooking(bookings[10], [teamOneRoomRequirement]));
     });
 })
