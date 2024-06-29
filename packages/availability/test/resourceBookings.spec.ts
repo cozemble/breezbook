@@ -1,5 +1,5 @@
 import {describe, expect, test} from "vitest";
-import {resourcing} from "../src/resourcing.js";
+import {resourcing} from "../src/index.js";
 import {anySuitableResource, capacity, mandatory, resourceId, resourceType} from "@breezbook/packages-core";
 import resourceBookings = resourcing.resourceBookings;
 import timeslotFns = resourcing.timeslotFns;
