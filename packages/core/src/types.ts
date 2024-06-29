@@ -325,7 +325,7 @@ export interface BookingId extends ValueType<string> {
     _type: 'booking.id';
 }
 
-export function bookingId(value: string): BookingId {
+export function bookingId(value = uuidv4()): BookingId {
     return {
         _type: 'booking.id',
         value
@@ -1010,7 +1010,7 @@ export interface Resource {
     metadata?: Metadata;
 }
 
-export function resourceId(value: string): ResourceId {
+export function resourceId(value= uuidv4()): ResourceId {
     return {
         _type: 'resource.id',
         value

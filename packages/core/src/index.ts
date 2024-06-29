@@ -7,3 +7,4 @@ export {carwash} from './fixtures/carwash.js';
 export {carwashForm, customerForm} from './fixtures/carWashForms.js';
 export {calculateOrderTotal} from './calculateOrderTotal.js';
 export * from './availability.js';
+export * from './lang/arrays.js';

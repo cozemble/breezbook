@@ -1850,3 +1850,11 @@ allocation of resources.
 
 If a booking is found to be undeliverable during this process, some remedial action can be taken, in the worse case
 scenario, the booking can be cancelled or rearranged.
+
+## Update on the above
+Availability checking in complex enough.  It gets confusing quickly.  I think creating a function that resources all
+bookings will help.  This will be useful in any case, to show the business admins how their calendar looks, and who is
+doing what.
+
+If I can get an array of resourced bookings, then I can pass that to the availability checker and take out a chunk of
+complexity.  Tomorrow.
