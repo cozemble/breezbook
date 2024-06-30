@@ -126,12 +126,24 @@ export namespace resourcing {
         }
     }
 
-    interface Booking {
+    interface BookingSpec {
         id: BookingId
         service: Service
-        timeslot: Timeslot
         fixedResourceCommitments: ResourceCommitment[]
         bookedCapacity: Capacity
+    }
+
+    export function bookingSpec(service: Service, fixedResourceCommitments: ResourceCommitment[] = [], bookedCapacity: Capacity = capacity(1), id: BookingId = bookingId()): BookingSpec {
+        return {
+            id,
+            service,
+            fixedResourceCommitments,
+            bookedCapacity
+        }
+    }
+
+    interface Booking extends BookingSpec {
+        timeslot: Timeslot
     }
 
     interface ResourceCommitment {
@@ -330,7 +342,7 @@ export namespace resourcing {
         }
         return resourceCommitment(requestedRequirement, found.resource)
     }
-    
+
     function assignLeastUsedResource(availableResources: ResourceUsage[], requirement: ResourceRequirement, resourcePreferences: ResourcePreferences, forTimeslot: Timeslot) {
         const countedUsage = availableResources.map(r => ({
             resource: r,
@@ -393,14 +405,14 @@ export namespace resourcing {
 
     type AvailabilityResult = Available | Unavailable
 
-    interface Available {
+    export interface Available {
         _type: "available"
         booking: ResourcedBooking
         potentialCapacity: Capacity
         consumedCapacity: Capacity
     }
 
-    interface Unavailable {
+    export interface Unavailable {
         _type: "unavailable"
         booking: UnresourceableBooking
     }
@@ -444,5 +456,13 @@ export namespace resourcing {
         }
         const potentialCapacity = calcPotentialCapacity(existingUsage.resources.map(r => r.resource), booking.service, booking.timeslot)
         return available(resourcingOutcome, potentialCapacity, capacity(-1)) // capacity todo
+    }
+
+    export function listAvailability(resources: Resource[], existingBookings: Booking[], proposedBooking: BookingSpec, requestedTimeSlots: Timeslot[]): AvailabilityResult[] {
+        const resourceOutcome = resourceBookings(resources, existingBookings, {disfavoredResources: proposedBooking.fixedResourceCommitments.map(f => resourceAndSlots(f.resource, requestedTimeSlots))})
+        return requestedTimeSlots.map(requestedTimeSlot => {
+            const proposedBookingWithTimeslot = booking(requestedTimeSlot, proposedBooking.service, proposedBooking.fixedResourceCommitments, proposedBooking.bookedCapacity, proposedBooking.id)
+            return checkAvailability(resourceOutcome, proposedBookingWithTimeslot)
+        })
     }
 }
