@@ -27,7 +27,7 @@ describe("given a service requiring fungible resources without capacity, checkAv
     test("states whether a booking is possible", () => {
         const theBooking = booking(timeslotFns.sameDay("2021-01-01", "09:00", "12:00"), theService)
         const outcome = checkAvailability(resourcingAccumulator(toResourceUsages(resources)), theBooking);
-        expect(outcome).toEqual(available(resourcedBooking(theBooking, [resourceCommitment(anyRoom, room1)]), capacity(1), capacity(-1)));
+        expect(outcome).toEqual(available(resourcedBooking(theBooking, [resourceCommitment(anyRoom, room1)]), capacity(1), capacity(0)));
     })
 
     test("states whether a booking is not possible", () => {

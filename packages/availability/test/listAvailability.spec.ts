@@ -48,4 +48,23 @@ describe("given a service requiring fungible resources without capacity, listAva
         expect(thirdSlot?.booking?.resourceCommitments?.[0]?.resource).toEqual(room1)
     })
 
+    test("reports the capacity of the resources", () => {
+        const room3 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("room3"))
+        const bookingsForEachSlot = requestedTimeSlots.map(t => booking(t, theService))
+        const existingBookings = [...bookingsForEachSlot, ...bookingsForEachSlot]
+
+        const proposedBooking = bookingSpec(theService)
+        const outcome = listAvailability([...resources, room3], existingBookings, proposedBooking, requestedTimeSlots);
+        const firstSlot = outcome[0] as Available
+        const secondSlot = outcome[1] as Available
+        const thirdSlot = outcome[2] as Available
+        expect(firstSlot?.potentialCapacity?.value).toEqual(3)
+        expect(secondSlot?.potentialCapacity?.value).toEqual(3)
+        expect(thirdSlot?.potentialCapacity?.value).toEqual(3)
+
+        expect(firstSlot?.consumedCapacity?.value).toEqual(2)
+        expect(secondSlot?.consumedCapacity?.value).toEqual(2)
+        expect(thirdSlot?.consumedCapacity?.value).toEqual(2)
+    })
+
 });

@@ -441,11 +441,29 @@ export namespace resourcing {
         return capacity(Math.min(...countForEachRequirement))
     }
 
-    export function calcPotentialCapacity(resources: Resource[], service: Service, timeslot: Timeslot): Capacity {
+    function calcPotentialCapacity(resources: Resource[], service: Service, timeslot: Timeslot): Capacity {
         if (service.resourceRequirements._type === "resource.requirements.with.capacity") {
             return service.resourceRequirements.capacity
         }
         return capacityImpliedByResources(resources, service.resourceRequirements.resourceRequirements, timeslot)
+    }
+
+    function calcConsumedCapacity(resourced: ResourceBookingResult[], service: Service, timeslot: Timeslot): Capacity {
+        const resourcedBookings = resourced.filter(r => r._type === "resourced.booking" && timeslotFns.overlaps(r.booking.timeslot, timeslot)) as ResourcedBooking[]
+        if (service.resourceRequirements._type === "resource.requirements.with.capacity") {
+            return sumBookedCapacityForService(resourcedBookings, service, timeslot)
+        }
+        const countOfRequirementMatches = service.resourceRequirements.resourceRequirements.map(requirement => {
+            return new Set(resourcedBookings.filter(r => r.resourceCommitments.some(c => resourceMatchesRequirement(c.resource, requirement)))).size
+        })
+        return capacity(Math.max(...countOfRequirementMatches))
+    }
+
+    function sumBookedCapacityForService(resourced: ResourcedBooking[], service: Service, timeslot: Timeslot): Capacity {
+        const bookingsInPeriod = resourced
+            .flatMap(r => r.booking)
+            .filter(b => timeslotFns.overlaps(b.timeslot, timeslot) && b.service.id.value === service.id.value)
+        return capacity(bookingsInPeriod.reduce((total, b) => total + b.bookedCapacity.value, 0))
     }
 
     export function checkAvailability(existingUsage: ResourcingAccumulator, booking: Booking): AvailabilityResult {
@@ -455,7 +473,8 @@ export namespace resourcing {
             return unavailable(resourcingOutcome)
         }
         const potentialCapacity = calcPotentialCapacity(existingUsage.resources.map(r => r.resource), booking.service, booking.timeslot)
-        return available(resourcingOutcome, potentialCapacity, capacity(-1)) // capacity todo
+        const consumedCapacity = calcConsumedCapacity(existingUsage.resourced, booking.service, booking.timeslot)
+        return available(resourcingOutcome, potentialCapacity, consumedCapacity)
     }
 
     export function listAvailability(resources: Resource[], existingBookings: Booking[], proposedBooking: BookingSpec, requestedTimeSlots: Timeslot[]): AvailabilityResult[] {
