@@ -20,7 +20,6 @@ import unavailable = resourcing.unavailable;
 describe("given a service requiring fungible resources without capacity, checkAvailability", () => {
     const room = resourceType("room")
     const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("room1"))
-    const room2 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("room2"))
     const resources = [room1]
     const anyRoom = anySuitableResource(room)
     const theService = service(resourceRequirements([anyRoom]))
