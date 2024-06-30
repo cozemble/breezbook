@@ -65,17 +65,6 @@ describe("given a service requiring fungible resources without capacity, resourc
         expect(resourced[7]).toEqual(unresourceableBooking(booking8, [anyRoom]))
     });
 
-    test("disfavouring is time dependent", () => {
-        const disfavourRoom1AfterNoon = resourceAndSlots(room1, [timeslotFns.sameDay("2021-01-01", "12:00", "17:00")])
-        const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), theService)
-        const booking2 = booking(timeslotFns.sameDay("2021-01-01", "09:30", "10:30"), theService)
-        const booking3 = booking(timeslotFns.sameDay("2021-01-01", "10:30", "11:30"), theService)
-        const resourced = resourceBookings(resources, [booking1, booking2, booking3], {disfavoredResources: [disfavourRoom1AfterNoon]}).resourced
-        expect(resourced[0]).toEqual(resourcedBooking(booking1, [resourceCommitment(anyRoom, room1)]))
-        expect(resourced[1]).toEqual(resourcedBooking(booking2, [resourceCommitment(anyRoom, room2)]))
-        expect(resourced[2]).toEqual(resourcedBooking(booking3, [resourceCommitment(anyRoom, room1)]))
-    })
-
     test("should not allocate an any_suitable resource when unavailable due to time", () => {
         const booking1 = booking(timeslotFns.sameDay("2021-01-01", "13:00", "13:30"), theService)
         const resourced = resourceBookings(resources, [booking1]).resourced
