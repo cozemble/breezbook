@@ -1872,3 +1872,78 @@ complexity. Tomorrow.
 Decent progress with the resourcing of bookings. I can do fungible and specific, with and without capacity. I realised
 that the this function can be used for the availability check too. I can just create a booking and test whether it is
 resourceable.
+
+# Sun 30 Jun 2024
+
+I realised this morning that an important feature of the `resourceBookings` function must be "disfavouring" certain
+resources,
+because I intend to use that function for my availability check function. If the availability check involves a potential
+booking with specific resources, I want to do what I can to improve the changes of those resources being available.
+
+So I wrote a test case intended to demonstrate that certain resources can be "disfavoured" in the allocation process.
+In other words, considered last. I shared that with claude and it made code where an "options" object was passed to the
+`resourceBookings` function. Surprise - quite a general idea. So I asked it what other options it envisioned. Super nice
+answer, worth recording here:
+
+```typescript
+interface ResourceBookingsOptions
+{
+    disfavoredResources ? : Resource[];
+    preferredResources ? : Resource[];
+    allocationStrategy ? : 'balanced' | 'concentrated' | 'random';
+    capacityThreshold ? : number; // Percentage (0-100)
+    timeBufferMinutes ? : number;
+    overbookingAllowancePercent ? : number;
+    resourceGroups ? : {[groupId: string]: Resource[] };
+    preferSameGroup ? : boolean;
+    maintenanceWindows ? : {resource: Resource, windows: Timeslot[]}[];
+    userPreferences ? : {userId: string, preferredResources: Resource[]};
+    bookingPriorities ? : {[bookingId: string]: number }; // Higher number = higher priority
+}
+
+function resourceBookings(
+    resources: Resource[],
+    bookings: Booking[],
+    options: ResourceBookingsOptions = {}
+): {
+    resourced: ResourcedBooking[];
+    unresourceable: UnresourceableBooking[];
+} {
+    // Implementation would need to be updated to handle these new options
+    // ...
+}
+```
+
+With the following commentary:
+
+- Preferred Resources: The opposite of disfavored resources, these would be prioritized in allocation.
+- Allocation Strategy: We could allow different strategies like "balanced" (spread across resources), "concentrated" (
+  use as few resources as possible), or "random".
+- Capacity Threshold: A percentage of capacity to leave free, even if it means using more resources.
+- Time Buffer: A buffer time between bookings for the same resource, useful for cleanup or setup.
+- Overbooking Allowance: A small overbooking percentage for resources that can occasionally handle more than their
+  stated capacity.
+- Resource Grouping: Prefer to allocate resources from the same group (e.g., rooms on the same floor).
+- Cost Optimization: If resources have associated costs, we could prioritize based on cost-effectiveness.
+- Maintenance Windows: Times when certain resources should be avoided for scheduled maintenance.
+- User Preferences: If there are user-specific preferences for certain resources.
+
+## The disfavouring implementation
+It worked out quite well:
+
+```typescript
+function assignLeastUsedResource(availableResources: ResourceUsage[], requirement: ResourceRequirement, resourcePreferences: ResourcePreferences, forTimeslot: Timeslot) {
+    const countedUsage = availableResources.map(r => ({
+        resource: r,
+        count: r.bookings.length
+    }))
+    const sortedByUsage = countedUsage.sort((a, b) => a.count - b.count)
+    const bestResource = sortedByUsage.find(r => !isDisfavored(r.resource.resource, resourcePreferences, forTimeslot))
+    return bestResource ? resourceCommitment(requirement, bestResource.resource.resource) : resourceCommitment(requirement, sortedByUsage[0].resource.resource);
+}
+
+function isDisfavored(resource: Resource, resourcePreferences: ResourcePreferences, forTimeslot: Timeslot) {
+    return resourcePreferences.disfavoredResources.some(r => r.resource.id.value === resource.id.value && r.slots.some(s => timeslotFns.overlaps(s, forTimeslot)))
+}
+
+```

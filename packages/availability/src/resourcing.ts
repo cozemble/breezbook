@@ -176,12 +176,12 @@ export namespace resourcing {
         }
     }
 
-    export function booking(timeslot: Timeslot, service: Service, fixedResourceAllocations: ResourceCommitment[] = [], bookedCapacity = capacity(1), id = bookingId()): Booking {
+    export function booking(timeslot: Timeslot, service: Service, fixedResourceCommitments: ResourceCommitment[] = [], bookedCapacity = capacity(1), id = bookingId()): Booking {
         return {
             id,
             timeslot,
             service,
-            fixedResourceCommitments: fixedResourceAllocations,
+            fixedResourceCommitments,
             bookedCapacity
         }
     }
@@ -264,8 +264,9 @@ export namespace resourcing {
         }
     }
 
-    function allocateResources(accumulator: ResourcingAccumulator, booking: Booking): ResourcingAccumulator {
-        const resourcedOutcome = resourceBooking(accumulator.resources, booking)
+    function allocateResources(accumulator: ResourcingAccumulator, booking: Booking, options: ResourceBookingsOptions): ResourcingAccumulator {
+        const resourcePreferences: ResourcePreferences = {disfavoredResources: options.disfavoredResources || []}
+        const resourcedOutcome = resourceBooking(accumulator.resources, booking, resourcePreferences)
         if (resourcedOutcome._type === "unresourceable.booking") {
             return {
                 resources: accumulator.resources,
@@ -329,17 +330,22 @@ export namespace resourcing {
         }
         return resourceCommitment(requestedRequirement, found.resource)
     }
-
-    function assignLeastUsedResource(availableResources: ResourceUsage[], requirement: ResourceRequirement) {
+    
+    function assignLeastUsedResource(availableResources: ResourceUsage[], requirement: ResourceRequirement, resourcePreferences: ResourcePreferences, forTimeslot: Timeslot) {
         const countedUsage = availableResources.map(r => ({
             resource: r,
             count: r.bookings.length
         }))
         const sortedByUsage = countedUsage.sort((a, b) => a.count - b.count)
-        return resourceCommitment(requirement, sortedByUsage[0].resource.resource)
+        const bestResource = sortedByUsage.find(r => !isDisfavored(r.resource.resource, resourcePreferences, forTimeslot))
+        return bestResource ? resourceCommitment(requirement, bestResource.resource.resource) : resourceCommitment(requirement, sortedByUsage[0].resource.resource);
     }
 
-    function resourceBooking(resources: ResourceUsage[], booking: Booking): ResourceBookingResult {
+    function isDisfavored(resource: Resource, resourcePreferences: ResourcePreferences, forTimeslot: Timeslot) {
+        return resourcePreferences.disfavoredResources.some(r => r.resource.id.value === resource.id.value && r.slots.some(s => timeslotFns.overlaps(s, forTimeslot)))
+    }
+
+    function resourceBooking(resources: ResourceUsage[], booking: Booking, resourcePreferences: ResourcePreferences): ResourceBookingResult {
         const allocationOutcome = booking.service.resourceRequirements.resourceRequirements.map(requirement => {
             const activeRequirement = replaceIfFixed(requirement, booking.fixedResourceCommitments)
             const availableResources = getAvailableResources(resources, activeRequirement, booking);
@@ -349,7 +355,7 @@ export namespace resourcing {
             if (activeRequirement._type === "specific.resource") {
                 return assignSpecificResource(activeRequirement, availableResources, requirement);
             }
-            return assignLeastUsedResource(availableResources, requirement);
+            return assignLeastUsedResource(availableResources, requirement, resourcePreferences, booking.timeslot);
         })
         const unsatisfiable = allocationOutcome.filter(a => a._type === "unsatisfiable.resource.requirement")
         if (unsatisfiable.length > 0) {
@@ -358,16 +364,31 @@ export namespace resourcing {
         return resourcedBooking(booking, allocationOutcome as ResourceCommitment[])
     }
 
-    function accumulateResourcedBookings(bookings: Booking[], initialAccumulator: ResourcingAccumulator): ResourcingAccumulator {
-        return bookings.reduce((accumulator, booking) => allocateResources(accumulator, booking), initialAccumulator)
+    function accumulateResourcedBookings(bookings: Booking[], initialAccumulator: ResourcingAccumulator, options: ResourceBookingsOptions = {}): ResourcingAccumulator {
+        return bookings.reduce((accumulator, booking) => allocateResources(accumulator, booking, options), initialAccumulator)
     }
 
     export function toResourceUsages(resources: Resource[]) {
         return resources.map(r => resourceUsage(r));
     }
 
-    export function resourceBookings(resources: Resource[], bookings: Booking[]): ResourcingAccumulator {
-        return accumulateResourcedBookings(bookings, resourcingAccumulator(toResourceUsages(resources)));
+    type ResourceAndSlots = { resource: Resource, slots: Timeslot[] }
+
+    export function resourceAndSlots(resource: Resource, slots: Timeslot[]): ResourceAndSlots {
+        return {resource, slots}
+    }
+
+    interface ResourcePreferences {
+        disfavoredResources: ResourceAndSlots[];
+    }
+
+    interface ResourceBookingsOptions extends Partial<ResourcePreferences> {
+
+    }
+
+
+    export function resourceBookings(resources: Resource[], bookings: Booking[], options: ResourceBookingsOptions = {}): ResourcingAccumulator {
+        return accumulateResourcedBookings(bookings, resourcingAccumulator(toResourceUsages(resources)), options);
     }
 
     type AvailabilityResult = Available | Unavailable
@@ -400,12 +421,28 @@ export namespace resourcing {
         }
     }
 
+    function capacityImpliedByResources(resources: Resource[], requirements: ResourceRequirement[], timeslot: Timeslot): Capacity {
+        const countForEachRequirement = requirements.map(requirement => {
+            const availableResources = resources.filter(r => resourceMatchesRequirement(r, requirement) && resourceIsAvailable(r, timeslot))
+            return availableResources.length
+        })
+        return capacity(Math.min(...countForEachRequirement))
+    }
+
+    export function calcPotentialCapacity(resources: Resource[], service: Service, timeslot: Timeslot): Capacity {
+        if (service.resourceRequirements._type === "resource.requirements.with.capacity") {
+            return service.resourceRequirements.capacity
+        }
+        return capacityImpliedByResources(resources, service.resourceRequirements.resourceRequirements, timeslot)
+    }
+
     export function checkAvailability(existingUsage: ResourcingAccumulator, booking: Booking): AvailabilityResult {
         const outcome = accumulateResourcedBookings([booking], existingUsage)
         const resourcingOutcome = mandatory(outcome.resourced.find(r => r.booking.id.value === booking.id.value), `No outcome found for booking ${booking.id.value}`)
         if (resourcingOutcome._type === "unresourceable.booking") {
             return unavailable(resourcingOutcome)
         }
-        return available(resourcingOutcome, capacity(-1), capacity(-1)) // capacity todo
+        const potentialCapacity = calcPotentialCapacity(existingUsage.resources.map(r => r.resource), booking.service, booking.timeslot)
+        return available(resourcingOutcome, potentialCapacity, capacity(-1)) // capacity todo
     }
 }

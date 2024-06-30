@@ -10,6 +10,7 @@ import resourceRequirements = resourcing.resourceRequirements;
 import resourcedBooking = resourcing.resourcedBooking;
 import resourceCommitment = resourcing.resourceCommitment;
 import unresourceableBooking = resourcing.unresourceableBooking;
+import resourceAndSlots = resourcing.resourceAndSlots;
 
 describe("given a service requiring fungible resources without capacity, resourceBookings", () => {
     const room = resourceType("room")
@@ -36,6 +37,40 @@ describe("given a service requiring fungible resources without capacity, resourc
         const booking2 = booking(timeslotFns.sameDay("2021-01-01", "09:30", "10:30"), theService)
         const booking3 = booking(timeslotFns.sameDay("2021-01-01", "10:30", "11:30"), theService)
         const resourced = resourceBookings(resources, [booking1, booking2, booking3]).resourced
+        expect(resourced[0]).toEqual(resourcedBooking(booking1, [resourceCommitment(anyRoom, room1)]))
+        expect(resourced[1]).toEqual(resourcedBooking(booking2, [resourceCommitment(anyRoom, room2)]))
+        expect(resourced[2]).toEqual(resourcedBooking(booking3, [resourceCommitment(anyRoom, room1)]))
+    })
+
+    test("should permit disfavouring of certain resources", () => {
+        const disfavourRoom1UntilNineThirty = resourceAndSlots(room1, [timeslotFns.sameDay("2021-01-01", "09:00", "09:30")])
+        const disfavourRoom2AfterNineThirty = resourceAndSlots(room2, [timeslotFns.sameDay("2021-01-01", "09:30", "10:00")])
+
+        const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:10"), theService) // should be room2
+        const booking2 = booking(timeslotFns.sameDay("2021-01-01", "09:10", "09:20"), theService) // should be room2
+        const booking3 = booking(timeslotFns.sameDay("2021-01-01", "09:20", "09:30"), theService) // should be room2
+        const booking4 = booking(timeslotFns.sameDay("2021-01-01", "09:20", "09:30"), theService) // has to be room1
+        const booking5 = booking(timeslotFns.sameDay("2021-01-01", "09:30", "09:40"), theService) // should be room1
+        const booking6 = booking(timeslotFns.sameDay("2021-01-01", "09:40", "09:50"), theService) // should be room1
+        const booking7 = booking(timeslotFns.sameDay("2021-01-01", "09:40", "09:50"), theService) // has to be room2
+        const booking8 = booking(timeslotFns.sameDay("2021-01-01", "09:40", "09:50"), theService) // unresourceable
+        const resourced = resourceBookings(resources, [booking1, booking2, booking3, booking4, booking5, booking6, booking7, booking8], {disfavoredResources: [disfavourRoom1UntilNineThirty, disfavourRoom2AfterNineThirty]}).resourced
+        expect(resourced[0]).toEqual(resourcedBooking(booking1, [resourceCommitment(anyRoom, room2)]))
+        expect(resourced[1]).toEqual(resourcedBooking(booking2, [resourceCommitment(anyRoom, room2)]))
+        expect(resourced[2]).toEqual(resourcedBooking(booking3, [resourceCommitment(anyRoom, room2)]))
+        expect(resourced[3]).toEqual(resourcedBooking(booking4, [resourceCommitment(anyRoom, room1)]))
+        expect(resourced[4]).toEqual(resourcedBooking(booking5, [resourceCommitment(anyRoom, room1)]))
+        expect(resourced[5]).toEqual(resourcedBooking(booking6, [resourceCommitment(anyRoom, room1)]))
+        expect(resourced[6]).toEqual(resourcedBooking(booking7, [resourceCommitment(anyRoom, room2)]))
+        expect(resourced[7]).toEqual(unresourceableBooking(booking8, [anyRoom]))
+    });
+
+    test("disfavouring is time dependent", () => {
+        const disfavourRoom1AfterNoon = resourceAndSlots(room1, [timeslotFns.sameDay("2021-01-01", "12:00", "17:00")])
+        const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), theService)
+        const booking2 = booking(timeslotFns.sameDay("2021-01-01", "09:30", "10:30"), theService)
+        const booking3 = booking(timeslotFns.sameDay("2021-01-01", "10:30", "11:30"), theService)
+        const resourced = resourceBookings(resources, [booking1, booking2, booking3], {disfavoredResources: [disfavourRoom1AfterNoon]}).resourced
         expect(resourced[0]).toEqual(resourcedBooking(booking1, [resourceCommitment(anyRoom, room1)]))
         expect(resourced[1]).toEqual(resourcedBooking(booking2, [resourceCommitment(anyRoom, room2)]))
         expect(resourced[2]).toEqual(resourcedBooking(booking3, [resourceCommitment(anyRoom, room1)]))
