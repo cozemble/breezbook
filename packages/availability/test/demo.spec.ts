@@ -10,12 +10,14 @@ import bookingSpec = resourcing.bookingSpec;
 import Available = resourcing.Available;
 import resourceCommitment = resourcing.resourceCommitment;
 import complexResourceRequirement = resourcing.complexResourceRequirement;
+import booking = resourcing.booking;
+import AvailabilityResult = resourcing.AvailabilityResult;
 
-function startTime(slot: Available) {
+function startTime(slot: AvailabilityResult) {
     return slot.booking.booking.timeslot.from.time.value;
 }
 
-function endTime(slot: Available) {
+function endTime(slot: AvailabilityResult) {
     return slot.booking.booking.timeslot.to.time.value;
 }
 
@@ -47,15 +49,55 @@ test("demo anySuitableResource", () => {
         requestedTimeSlots
     )
 
-    availability.forEach((slot, i) => {
+    availability.forEach((slot) => {
+        const time = `${startTime(slot)} to ${endTime(slot)}`
         if (slot._type === "available") {
-            console.log(`Slot ${i} is available`);
-            console.log(`\tSlot ${i} happens at ${startTime(slot)} to ${endTime(slot)}`);
-            console.log(`\tSlot uses resource : ${(bookedResources(slot))}`);
+            console.log(`Slot ${time} is available`);
+            console.log(`\tIt uses resource : ${(bookedResources(slot))}`);
             console.log(`\tThe potential capacity at this slot is ${slot.potentialCapacity.value}`)
             console.log(`\tThe consumed capacity at this slot is ${slot.consumedCapacity.value}`)
         } else {
-            console.log(`Slot ${i} is unavailable`);
+            console.log(`Slot ${time} is unavailable`);
+        }
+    });
+
+})
+
+test("demo anySuitableResource with bookings", () => {
+
+    const room = resourceType("room");
+    const room1 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room1"));
+    const room2 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room2"));
+
+    const meetingService = service(resourceRequirements([anySuitableResource(room)]));
+
+    const requestedBooking = bookingSpec(meetingService);
+
+    const requestedTimeSlots = [
+        timeslotFns.sameDay("2023-07-01", "10:00", "11:00"),
+        timeslotFns.sameDay("2023-07-01", "11:00", "12:00"),
+        timeslotFns.sameDay("2023-07-01", "13:00", "14:00"),
+    ];
+
+    const booking1 = booking(timeslotFns.sameDay("2023-07-01", "10:00", "11:00"), meetingService);
+    const booking2 = booking(timeslotFns.sameDay("2023-07-01", "10:00", "11:00"), meetingService);
+
+    const availability = resourcing.listAvailability(
+        [room1, room2],
+        [booking1,booking2],
+        requestedBooking,
+        requestedTimeSlots
+    )
+
+    availability.forEach((slot) => {
+        const time = `${startTime(slot)} to ${endTime(slot)}`
+        if (slot._type === "available") {
+            console.log(`Slot ${time} is available`);
+            console.log(`\tIt uses resource : ${(bookedResources(slot))}`);
+            console.log(`\tThe potential capacity at this slot is ${slot.potentialCapacity.value}`)
+            console.log(`\tThe consumed capacity at this slot is ${slot.consumedCapacity.value}`)
+        } else {
+            console.log(`Slot ${time} is unavailable`);
         }
     });
 
@@ -69,7 +111,6 @@ test("demo specificResource", () => {
     const anySuitableRoom = anySuitableResource(room);
     const meetingService = service(resourceRequirements([anySuitableRoom]));
 
-    // Request a specific room
     const requestedBooking = bookingSpec(meetingService, [resourceCommitment(anySuitableRoom, room2)]);
 
     const requestedTimeSlots = [
@@ -85,15 +126,15 @@ test("demo specificResource", () => {
         requestedTimeSlots
     )
 
-    availability.forEach((slot, i) => {
+    availability.forEach((slot) => {
+        const time = `${startTime(slot)} to ${endTime(slot)}`
         if (slot._type === "available") {
-            console.log(`Slot ${i} is available`);
-            console.log(`\tSlot ${i} happens at ${startTime(slot)} to ${endTime(slot)}`);
-            console.log(`\tSlot uses resource : ${bookedResources(slot)}`);
+            console.log(`Slot ${time} is available`);
+            console.log(`\tIt uses resource : ${(bookedResources(slot))}`);
             console.log(`\tThe potential capacity at this slot is ${slot.potentialCapacity.value}`)
             console.log(`\tThe consumed capacity at this slot is ${slot.consumedCapacity.value}`)
         } else {
-            console.log(`Slot ${i} is unavailable`);
+            console.log(`Slot ${time} is unavailable`);
         }
     });
 
@@ -132,15 +173,15 @@ test("demo complexResourceRequirement", () => {
         requestedTimeSlots
     );
 
-    availability.forEach((slot, i) => {
+    availability.forEach((slot) => {
+        const time = `${startTime(slot)} to ${endTime(slot)}`
         if (slot._type === "available") {
-            console.log(`Slot ${i} is available`);
-            console.log(`\tSlot ${i} happens at ${startTime(slot)} to ${endTime(slot)}`);
-            console.log(`\tSlot uses resource : ${bookedResources(slot)}`);
+            console.log(`Slot ${time} is available`);
+            console.log(`\tIt uses resource : ${(bookedResources(slot))}`);
             console.log(`\tThe potential capacity at this slot is ${slot.potentialCapacity.value}`)
             console.log(`\tThe consumed capacity at this slot is ${slot.consumedCapacity.value}`)
         } else {
-            console.log(`Slot ${i} is unavailable`);
+            console.log(`Slot ${time} is unavailable`);
         }
     });
 

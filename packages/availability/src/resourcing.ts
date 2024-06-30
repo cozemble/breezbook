@@ -461,7 +461,7 @@ export namespace resourcing {
         return accumulateResourcedBookings(bookings, resourcingAccumulator(toResourceUsages(resources)), options);
     }
 
-    type AvailabilityResult = Available | Unavailable
+    export type AvailabilityResult = Available | Unavailable
 
     export interface Available {
         _type: "available"
