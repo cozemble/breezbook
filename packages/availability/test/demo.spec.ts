@@ -1,17 +1,16 @@
-import {resourceId, resourceType} from "@breezbook/packages-core";
+import {anySuitableResource, resourceId, resourceType} from "@breezbook/packages-core";
 import {resourcing} from "../src/index.js";
 import {test} from 'vitest';
 import resource = resourcing.resource;
 import timeslotFns = resourcing.timeslotFns;
-import anySuitableResource = resourcing.anySuitableResource;
 import service = resourcing.service;
 import resourceRequirements = resourcing.resourceRequirements;
 import bookingSpec = resourcing.bookingSpec;
-import Available = resourcing.Available;
-import resourceCommitment = resourcing.resourceCommitment;
-import complexResourceRequirement = resourcing.complexResourceRequirement;
-import booking = resourcing.booking;
 import AvailabilityResult = resourcing.AvailabilityResult;
+import listAvailability = resourcing.listAvailability;
+import complexResourceRequirement = resourcing.complexResourceRequirement;
+import resourceCommitment = resourcing.resourceCommitment;
+import booking = resourcing.booking;
 
 function startTime(slot: AvailabilityResult) {
     return slot.booking.booking.timeslot.from.time.value;
@@ -29,10 +28,14 @@ function bookedResources(slot: resourcing.Available) {
 test("demo anySuitableResource", () => {
 
     const room = resourceType("room");
-    const room1 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room1"));
-    const room2 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room2"));
+    const room1 = resource(room,
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room1"));
+    const room2 = resource(room,
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room2"));
 
-    const meetingService = service(resourceRequirements([anySuitableResource(room)]));
+    const meetingService = service(
+        resourceRequirements(
+            [anySuitableResource(room)]));
 
     const requestedBooking = bookingSpec(meetingService);
 
@@ -66,10 +69,16 @@ test("demo anySuitableResource", () => {
 test("demo anySuitableResource with bookings", () => {
 
     const room = resourceType("room");
-    const room1 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room1"));
-    const room2 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room2"));
+    const room1 = resource(room,
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [],
+        resourceId("room1"));
+    const room2 = resource(room,
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [],
+        resourceId("room2"));
 
-    const meetingService = service(resourceRequirements([anySuitableResource(room)]));
+    const meetingService = service(
+        resourceRequirements(
+            [anySuitableResource(room)]));
 
     const requestedBooking = bookingSpec(meetingService);
 
@@ -79,12 +88,16 @@ test("demo anySuitableResource with bookings", () => {
         timeslotFns.sameDay("2023-07-01", "13:00", "14:00"),
     ];
 
-    const booking1 = booking(timeslotFns.sameDay("2023-07-01", "10:00", "11:00"), meetingService);
-    const booking2 = booking(timeslotFns.sameDay("2023-07-01", "10:00", "11:00"), meetingService);
+    const booking1 = booking(
+        timeslotFns.sameDay("2023-07-01", "10:00", "11:00"),
+        meetingService);
+    const booking2 = booking(
+        timeslotFns.sameDay("2023-07-01", "10:00", "11:00"),
+        meetingService);
 
     const availability = resourcing.listAvailability(
         [room1, room2],
-        [booking1,booking2],
+        [booking1, booking2],
         requestedBooking,
         requestedTimeSlots
     )
@@ -106,12 +119,18 @@ test("demo anySuitableResource with bookings", () => {
 test("demo specificResource", () => {
 
     const room = resourceType("room");
-    const room1 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room1"));
-    const room2 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [], resourceId("room2"));
+    const room1 = resource(room,
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [],
+        resourceId("room1"));
+    const room2 = resource(room,
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [],
+        resourceId("room2"));
     const anySuitableRoom = anySuitableResource(room);
-    const meetingService = service(resourceRequirements([anySuitableRoom]));
+    const meetingService = service(
+        resourceRequirements([anySuitableRoom]));
 
-    const requestedBooking = bookingSpec(meetingService, [resourceCommitment(anySuitableRoom, room2)]);
+    const requestedBooking = bookingSpec(meetingService,
+        [resourceCommitment(anySuitableRoom, room2)]);
 
     const requestedTimeSlots = [
         timeslotFns.sameDay("2023-07-01", "10:00", "11:00"),
@@ -119,7 +138,7 @@ test("demo specificResource", () => {
         timeslotFns.sameDay("2023-07-01", "13:00", "14:00"),
     ];
 
-    const availability = resourcing.listAvailability(
+    const availability = listAvailability(
         [room1, room2],
         [],
         requestedBooking,
@@ -143,21 +162,25 @@ test("demo specificResource", () => {
 test("demo complexResourceRequirement", () => {
 
     const room = resourceType("room");
-    const room1 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [
-        { name: "capacity", value: 10 },
-        { name: "hasProjector", value: true }
-    ], resourceId("room1"));
-    const room2 = resource(room, [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [
-        { name: "capacity", value: 20 },
-        { name: "hasProjector", value: true }
-    ], resourceId("room2"));
+    const room1 = resource(room,
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [
+            {name: "capacity", value: 10},
+            {name: "hasProjector", value: true}
+        ], resourceId("room1"));
+    const room2 = resource(room,
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [
+            {name: "capacity", value: 20},
+            {name: "hasProjector", value: true}
+        ], resourceId("room2"));
 
-    const meetingRoomRequirement = complexResourceRequirement(room, [
-        { name: "capacity", value: 15, operator: "greaterThan" },
-        { name: "hasProjector", value: true, operator: "equals" }
-    ]);
+    const meetingRoomRequirement = complexResourceRequirement(room,
+        [
+            {name: "capacity", value: 15, operator: "greaterThan"},
+            {name: "hasProjector", value: true, operator: "equals"}
+        ]);
 
-    const meetingService = service(resourceRequirements([meetingRoomRequirement]));
+    const meetingService = service(
+        resourceRequirements([meetingRoomRequirement]));
     const proposedBooking = bookingSpec(meetingService);
 
     const requestedTimeSlots = [
@@ -166,7 +189,7 @@ test("demo complexResourceRequirement", () => {
         timeslotFns.sameDay("2023-07-01", "13:00", "14:00"),
     ];
 
-    const availability = resourcing.listAvailability(
+    const availability = listAvailability(
         [room1, room2],
         [],
         proposedBooking,
