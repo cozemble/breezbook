@@ -80,7 +80,29 @@ export namespace resourcing {
         }
     }
 
-    export type ResourceRequirement = AnySuitableResource | SpecificResource
+    interface AttributeRequirement {
+        name: string;
+        value: string | number | boolean;
+        operator: 'equals' | 'greaterThan' | 'lessThan' | 'contains';
+    }
+
+    interface ComplexResourceRequirement {
+        _type: 'complex.resource.requirement';
+        id: ResourceRequirementId;
+        resourceType: ResourceType;
+        attributeRequirements: AttributeRequirement[];
+    }
+
+    export function complexResourceRequirement(resourceType: ResourceType, attributeRequirements: AttributeRequirement[], id = resourceRequirementId()): ComplexResourceRequirement {
+        return {
+            _type: 'complex.resource.requirement',
+            id,
+            resourceType,
+            attributeRequirements
+        }
+    }
+
+    export type ResourceRequirement = AnySuitableResource | SpecificResource | ComplexResourceRequirement;
 
     interface Service {
         _type: "service"
@@ -198,19 +220,26 @@ export namespace resourcing {
         }
     }
 
+    interface ResourceAttribute {
+        name: string;
+        value: string | number | boolean;
+    }
+
     interface Resource {
         _type: "resource"
         id: ResourceId
         type: ResourceType
         availability: Timeslot[]
+        attributes: ResourceAttribute[];
     }
 
-    export function resource(type: ResourceType, availability: Timeslot[], id = resourceId()): Resource {
+    export function resource(type: ResourceType, availability: Timeslot[], attributes: ResourceAttribute[] = [], id = resourceId()): Resource {
         return {
             _type: "resource",
             id,
             type,
-            availability
+            availability,
+            attributes
         }
     }
 
@@ -240,12 +269,41 @@ export namespace resourcing {
         }
     }
 
-    function resourceMatchesRequirement(resource: Resource, requirement: ResourceRequirement) {
-        if (requirement._type === "any.suitable.resource") {
-            return resource.type.value === requirement.requirement.value
-
+    function resourceMatchesComplexRequirement(resource: Resource, requirement: ComplexResourceRequirement): boolean {
+        if (resource.type.value !== requirement.resourceType.value) {
+            return false;
         }
-        return resource.id.value === requirement.resource.id.value
+
+        return requirement.attributeRequirements.every(attrReq => {
+            const resourceAttr = resource.attributes.find(attr => attr.name === attrReq.name);
+            if (!resourceAttr) return false;
+
+            switch (attrReq.operator) {
+                case 'equals':
+                    return resourceAttr.value === attrReq.value;
+                case 'greaterThan':
+                    return typeof resourceAttr.value === 'number' && typeof attrReq.value === 'number' && resourceAttr.value > attrReq.value;
+                case 'lessThan':
+                    return typeof resourceAttr.value === 'number' && typeof attrReq.value === 'number' && resourceAttr.value < attrReq.value;
+                case 'contains':
+                    return typeof resourceAttr.value === 'string' && resourceAttr.value.includes(attrReq.value as string);
+                default:
+                    return false;
+            }
+        });
+    }
+
+    function resourceMatchesRequirement(resource: Resource, requirement: ResourceRequirement): boolean {
+        if (requirement._type === "any.suitable.resource") {
+            return resource.type.value === requirement.requirement.value;
+        }
+        if (requirement._type === "specific.resource") {
+            return resource.id.value === requirement.resource.id.value;
+        }
+        if (requirement._type === "complex.resource.requirement") {
+            return resourceMatchesComplexRequirement(resource, requirement);
+        }
+        return false;
     }
 
     type ResourceBookingResult = ResourcedBooking | UnresourceableBooking
