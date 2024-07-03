@@ -32,7 +32,7 @@ import {
 import {Form, IsoDate, isoDateFns, ServiceId, values} from "@breezbook/packages-types";
 
 function toTimeSlotAvailability(slot: AvailableSlot, price: Price): TimeSlotAvailability {
-    const startTime24 = startTimeFns.toTime24(slot.startTime)
+    const startTime24 = startTimeFns.getStartTime(slot.startTime)
     return timeSlotAvailability(
         startTime24.value,
         startTime24.value,

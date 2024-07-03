@@ -280,6 +280,9 @@ export const time24Fns = {
             return `12 ${adjustedMinutes} ${amPm}`;
         }
         return `${adjustedHours} ${adjustedMinutes} ${amPm}`;
+    },
+    equals(a: TwentyFourHourClockTime, b: TwentyFourHourClockTime) {
+        return a.value === b.value;
     }
 };
 

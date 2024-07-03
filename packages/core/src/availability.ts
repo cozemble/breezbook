@@ -27,6 +27,7 @@ import dateAndTime = resourcing.dateAndTime;
 import resourceRequirements = resourcing.resourceRequirements;
 import resourceBookings = resourcing.resourceBookings;
 import ResourceBookingResult = resourcing.ResourceBookingResult;
+import Available = resourcing.Available;
 
 export type StartTime = TimeslotSpec | ExactTimeAvailability
 
@@ -45,11 +46,17 @@ export function resourceAllocation(requirement: ResourceRequirement, resource: R
 }
 
 export const startTimeFns = {
-    toTime24(startTime: StartTime): TwentyFourHourClockTime {
+    getStartTime(startTime: StartTime): TwentyFourHourClockTime {
         if (startTime._type === 'exact.time.availability') {
             return startTime.time
         }
         return startTime.slot.from
+    },
+    getEndTime(startTime: StartTime, duration: Minutes): TwentyFourHourClockTime {
+        if (startTime._type === 'exact.time.availability') {
+            return time24Fns.addMinutes(startTime.time, duration)
+        }
+        return startTime.slot.to
     }
 }
 
@@ -158,6 +165,17 @@ function toResourceableBooking(booking: Booking, resources: Resource[]): resourc
         service, fixedResourceCommitments, booking.bookedCapacity, booking.id)
 }
 
+function startTimeForResponse(availabilityOutcome: Available, startTimes: StartTime[] | null) {
+    if (startTimes && startTimes.length > 0 && startTimes[0]._type === 'timeslot.spec') {
+        const timeSlots = startTimes as TimeslotSpec[];
+        return mandatory(
+            timeSlots.find(ts => time24Fns.equals(ts.slot.from, availabilityOutcome.booking.booking.timeslot.from.time)),
+            `No start time found for timeslot ${availabilityOutcome.booking.booking.timeslot.from.time.value} in ${timeSlots.map(ts => ts.slot.from.value)}`);
+
+    }
+    return exactTimeAvailability(availabilityOutcome.booking.booking.timeslot.from.time);
+}
+
 export const availability = {
     errorCodes: {
         noAvailabilityForDay: 'no.availability.for.day',
@@ -186,7 +204,7 @@ export const availability = {
                 result.push(availableSlot(
                     serviceRequest.service,
                     date,
-                    exactTimeAvailability(availabilityOutcome.booking.booking.timeslot.from.time),
+                    startTimeForResponse(availabilityOutcome, serviceRequest.service.startTimes),
                     availabilityOutcome.booking.resourceCommitments.map(r => resourceAllocation(r.requirement, r.resource)),
                     availabilityOutcome.potentialCapacity,
                     availabilityOutcome.consumedCapacity

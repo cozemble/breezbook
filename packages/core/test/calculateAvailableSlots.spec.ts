@@ -7,7 +7,8 @@ import {
     blockedTime,
     Booking,
     booking,
-    businessAvailability, configuration,
+    businessAvailability,
+    configuration,
     currencies,
     customerId,
     discreteStartTimes,
@@ -32,7 +33,8 @@ import {
     duration,
     isoDate,
     minutes,
-    mondayToFriday, resourceRequirementId,
+    mondayToFriday,
+    resourceRequirementId,
     resourceType,
     time24,
     time24Fns,
@@ -62,7 +64,7 @@ describe("given a chatbot service that requires no resources, and is available m
 
     test("if the service takes one hour, we can do 8 services a day", () => {
         const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
@@ -70,7 +72,7 @@ describe("given a chatbot service that requires no resources, and is available m
         const expectedTimes = [time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]
         const bookings = expectedTimes.map(time => booking(customerId(), theService, date, timePeriod(time, time24Fns.addMinutes(time, minutes(60)))))
         const available = expectSlots(availability.calculateAvailableSlots(config, bookings, serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual(expectedTimes)
     })
 
@@ -80,7 +82,7 @@ describe("given a chatbot service that requires no resources, and is available m
             availability: makeBusinessAvailability(makeBusinessHours(mondayToFriday, time24("09:00"), time24("17:00")), [blockedTime(date, time24("10:00"), time24("11:00"))], [date])
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
@@ -90,7 +92,7 @@ describe("given a chatbot service that requires no resources, and is available m
             availability: makeBusinessAvailability(makeBusinessHours(mondayToFriday, time24("09:00"), time24("17:00")), [blockedTime(date, time24("09:30"), time24("11:00"))], [date])
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
@@ -100,14 +102,14 @@ describe("given a chatbot service that requires no resources, and is available m
             startTimeSpec: periodicStartTime(duration(minutes(30)))
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("09:30"), time24("10:00"), time24("10:30"), time24("11:00"), time24("11:30"), time24("12:00"), time24("12:30"), time24("13:00"), time24("13:30"), time24("14:00"), time24("14:30"), time24("15:00"), time24("15:30"), time24("16:00")])
     })
 
     test("if the service takes two hours, we can do 7 services a day", () => {
         const longerService = {...theService, duration: minutes(120)}
         const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(longerService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00")])
     })
 
@@ -117,7 +119,7 @@ describe("given a chatbot service that requires no resources, and is available m
             startTimeSpec: discreteStartTimes([time24("09:00"), time24("10:00"), time24("13:00"), time24("14:00")])
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("13:00"), time24("14:00")])
 
     })
@@ -153,7 +155,7 @@ describe("given a carwash service that requires one of several interchangeable w
             resourceAvailability: [resourceDayAvailability(resource(carwasher, []), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
@@ -164,7 +166,7 @@ describe("given a carwash service that requires one of several interchangeable w
             resourceAvailability: [resourceDayAvailability(resource(carwasher, []), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
@@ -177,7 +179,7 @@ describe("given a carwash service that requires one of several interchangeable w
                 resourceDayAvailability(resource(carwasher, []), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 });
@@ -204,8 +206,10 @@ describe("given a mobile carwash service that requires one of several interchang
             resourceAvailability: [resourceDayAvailability(resource(van, []), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
-        expect(times).toEqual([time24("09:00"), time24("13:00")])
+        const startTimes = available.map(a => startTimeFns.getStartTime(a.startTime))
+        expect(startTimes).toEqual([time24("09:00"), time24("13:00")])
+        const endTimes = available.map(a => startTimeFns.getEndTime(a.startTime, theService.duration))
+        expect(endTimes).toEqual([time24("12:00"), time24("16:00")])
     })
 
     test("we lose availability when a booking takes all the resources", () => {
@@ -216,7 +220,7 @@ describe("given a mobile carwash service that requires one of several interchang
             resourceAvailability: [resourceDayAvailability(resource(van, []), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("13:00")])
     })
 
@@ -230,7 +234,7 @@ describe("given a mobile carwash service that requires one of several interchang
                 resourceDayAvailability(resource(van, []), [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
         }
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("13:00")])
     })
 })
@@ -256,7 +260,7 @@ describe("given a gym that offers personal training with specific trainers, and 
     test("we have availability when the pt available", () => {
         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
@@ -265,7 +269,7 @@ describe("given a gym that offers personal training with specific trainers, and 
 
         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
@@ -274,7 +278,7 @@ describe("given a gym that offers personal training with specific trainers, and 
         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
 
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
     })
 
@@ -284,7 +288,7 @@ describe("given a gym that offers personal training with specific trainers, and 
 
         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [firstBooking, secondBooking], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
 
     })
@@ -304,8 +308,8 @@ describe("given a medical centre and an appointment type that requires two docto
     const roomBAvailability = resourceDayAvailability(roomB, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])
     const lead = resourceRequirementId('lead');
     const assistant = resourceRequirementId('assistant');
-    const anyDoctorAsLead = anySuitableResource(doctor, resourceAllocationRules.any,lead)
-    const theService = service("Consultation", "Consultation", [anyDoctorAsLead, anySuitableResource(doctor, resourceAllocationRules.unique,assistant), anySuitableResource(examinationRoom)], minutes(60), price(3500, currencies.GBP), [], [])
+    const anyDoctorAsLead = anySuitableResource(doctor, resourceAllocationRules.any, lead)
+    const theService = service("Consultation", "Consultation", [anyDoctorAsLead, anySuitableResource(doctor, resourceAllocationRules.unique, assistant), anySuitableResource(examinationRoom)], minutes(60), price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -327,7 +331,7 @@ describe("given a medical centre and an appointment type that requires two docto
         const mutatedConfig = setAvailability(config, [doctorMikeAvailability, doctorMeteAvailability, roomAAvailability, roomBAvailability])
         const mutatedService = serviceFns.replaceRequirement(theService, anyDoctorAsLead, specificResource(doctorMike, lead))
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(mutatedService, date)))
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         const leadDoctorIds = Array.from(new Set(available.map((a) => a.resourceAllocation.find((r) => r.requirement.id === lead)?.resource.id.value)))
         expect(leadDoctorIds).toEqual([doctorMike.id.value])
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
@@ -337,7 +341,7 @@ describe("given a medical centre and an appointment type that requires two docto
         const mutatedConfig = setAvailability(config, [doctorMikeAvailability, doctorMeteAvailability, roomAAvailability, roomBAvailability])
         const mutatedService = serviceFns.replaceRequirement(serviceFns.replaceRequirement(theService, anySuitableResource(doctor, lead), specificResource(doctorMike, lead)), anySuitableResource(doctor, assistant), specificResource(doctorMete, assistant))
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(mutatedService, date)))
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         const leadDoctorIds = Array.from(new Set(available.map((a) => a.resourceAllocation.find((r) => r.requirement.id === lead)?.resource.id.value)))
         expect(leadDoctorIds).toEqual([doctorMike.id.value])
         const assistantDoctorIds = Array.from(new Set(available.map((a) => a.resourceAllocation.find((r) => r.requirement.id === assistant)?.resource.id.value)))
@@ -393,7 +397,7 @@ describe("given a gym that offers personal training requiring a specific trainer
             resourceAvailability: requiredResources,
         };
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 
@@ -407,7 +411,7 @@ describe("given a gym that offers personal training requiring a specific trainer
         };
 
         const trainerBookingAvailable = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [trainerBooking, roomBooking], serviceRequest(theService, date)));
-        const trainerBookingTimes = trainerBookingAvailable.map((a) => startTimeFns.toTime24(a.startTime));
+        const trainerBookingTimes = trainerBookingAvailable.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(trainerBookingTimes).toEqual([time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 });
@@ -437,7 +441,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
             resourceAvailability: requiredResources,
         };
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00")]);
     });
 
@@ -448,7 +452,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
             resourceAvailability: requiredResources,
         };
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00")]);
     });
 
@@ -459,7 +463,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
             resourceAvailability: requiredResources,
         };
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([]);
     });
 
@@ -473,10 +477,10 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
         };
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [fourDogs, oneDog], serviceRequest(theService, date)));
 
-        expect(available.map((a) => startTimeFns.toTime24(a.startTime))).toEqual([time24("09:00")]);
+        expect(available.map((a) => startTimeFns.getStartTime(a.startTime))).toEqual([time24("09:00")]);
 
         const outcome2 = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [fourDogs, oneDog, oneMoreDog], serviceRequest(theService, date)));
-        expect(outcome2.map((a) => startTimeFns.toTime24(a.startTime))).toEqual([]);
+        expect(outcome2.map((a) => startTimeFns.getStartTime(a.startTime))).toEqual([]);
     });
 });
 
@@ -506,7 +510,7 @@ describe("given a hair salon that offers configurable services, and is available
     test("there is availability when we have the resources", () => {
         const mutatedConfig = setAvailability(config, stylistsAvailable);
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date)));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 
@@ -521,7 +525,7 @@ describe("given a hair salon that offers configurable services, and is available
         const sharedResourceAvailable = resourceDayAvailability(sharedResource1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]);
         const mutatedConfig = setAvailability(config, [...stylistsAvailable, sharedResourceAvailable]);
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date, [curling])));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00")]);
     });
 
@@ -529,7 +533,7 @@ describe("given a hair salon that offers configurable services, and is available
         const colouringMachineAvailableNineToEleven = resourceDayAvailability(colouringMachine1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, time24("11:00"))))]);
         const mutatedConfig = setAvailability(config, [...stylistsAvailable, colouringMachineAvailableNineToEleven]);
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date, [colouring])));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00")]);
     });
 
@@ -537,8 +541,8 @@ describe("given a hair salon that offers configurable services, and is available
         const sharedResourceAvailableNineToTwelve = resourceDayAvailability(sharedResource1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, time24("12:00"))))]);
         const mutatedConfig = setAvailability(config, [...stylistsAvailable, sharedResourceAvailableNineToTwelve]);
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date, [curling, cutting])));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
-        expect(times).toEqual([time24("09:00"), time24("10:00")]);
+        const startTimes = available.map((a) => startTimeFns.getStartTime(a.startTime));
+        expect(startTimes).toEqual([time24("09:00"), time24("10:00")]);
     })
 });
 
@@ -574,7 +578,7 @@ describe("given a yoga studio with two instructors and two rooms", () => {
             resourceAvailability: requiredResources,
         };
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(theService, date)));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 
@@ -590,7 +594,7 @@ describe("given a yoga studio with two instructors and two rooms", () => {
         }
 
         const available = outcome.value;
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 
@@ -601,7 +605,7 @@ describe("given a yoga studio with two instructors and two rooms", () => {
             resourceAvailability: requiredResources,
         };
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)));
-        const times = available.map((a) => startTimeFns.toTime24(a.startTime));
+        const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")]);
     });
 })
@@ -616,7 +620,7 @@ describe("given a chatbot service that has capacity", () => {
 
     test("if the service takes one hour, we can do 8 services a day with correct capacity", () => {
         const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(theService, date)))
-        const times = available.map(a => startTimeFns.toTime24(a.startTime))
+        const times = available.map(a => startTimeFns.getStartTime(a.startTime))
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00"), time24("16:00")])
         available.forEach(slot => {
             expect(slot.possibleCapacity.value).toBe(5)
@@ -629,9 +633,9 @@ describe("given a chatbot service that has capacity", () => {
         const booking2 = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), capacity(3))
         const available = expectSlots(availability.calculateAvailableSlots(config, [booking1, booking2], serviceRequest(theService, date)))
 
-        expect(available.find(a => startTimeFns.toTime24(a.startTime).value === "09:00")?.consumedCapacity.value).toBe(2)
-        expect(available.find(a => startTimeFns.toTime24(a.startTime).value === "10:00")?.consumedCapacity.value).toBe(3)
-        available.filter(a => startTimeFns.toTime24(a.startTime).value !== "09:00" && startTimeFns.toTime24(a.startTime).value !== "10:00").forEach(slot => {
+        expect(available.find(a => startTimeFns.getStartTime(a.startTime).value === "09:00")?.consumedCapacity.value).toBe(2)
+        expect(available.find(a => startTimeFns.getStartTime(a.startTime).value === "10:00")?.consumedCapacity.value).toBe(3)
+        available.filter(a => startTimeFns.getStartTime(a.startTime).value !== "09:00" && startTimeFns.getStartTime(a.startTime).value !== "10:00").forEach(slot => {
             expect(slot.consumedCapacity.value).toBe(0)
         })
     })
