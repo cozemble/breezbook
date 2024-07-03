@@ -88,7 +88,7 @@ export interface Price {
 }
 
 export function price(amountInMinorUnits: number): Price {
-    return {_type: 'price', amountInMinorUnits}
+    return {_type: 'price', amountInMinorUnits: Math.round(amountInMinorUnits)}
 }
 
 export interface PriceAdjustment {

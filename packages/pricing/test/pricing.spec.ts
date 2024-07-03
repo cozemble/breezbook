@@ -208,6 +208,15 @@ test("price is adjusted for last minute booking", () => {
     expect(pricedForThreeDays.finalPrice).toEqual(basePrice)
 });
 
+test("deals with rounding errors", () => {
+    const bookingInTwoDays: PricingFactor[] = [
+        daysUntilBookingFactor(2),
+    ];
+
+    const pricedForToday = pricingEngine.calculatePrice(price(6500), bookingInTwoDays);
+    expect(pricedForToday.finalPrice).toEqual(price(7150))
+})
+
 test("price is adjusted for summer discount", () => {
     const bookingInSummer: PricingFactor[] = [
         monthOfBookingFactor(6),
@@ -259,5 +268,4 @@ test("extended jexl can filter on deeply nested properties", () => {
         value: [{metadata: {tier: 2}}]
     }]);
     expect(pricedForTier2.finalPrice).toEqual(basePrice)
-
 })
