@@ -166,7 +166,7 @@ export function booking(
     fixedResourceAllocation: FixedResourceAllocation[] = [],
     id = bookingId(uuidv4())
 ): Booking {
-    if(!allFixedAllocationsAreKnown(service.resourceRequirements, fixedResourceAllocation)) {
+    if (!allFixedAllocationsAreKnown(service.resourceRequirements, fixedResourceAllocation)) {
         throw new Error(`All fixed resource allocations must be known for service ${service.id.value}`)
     }
     return {
@@ -436,66 +436,8 @@ export function price(amountInMinorUnits: number, currency: Currency): Price {
 }
 
 
-// export const resourceRequirementFns = {
-//     errorCodes: {
-//         noSuitableResource: 'no.suitable.resource',
-//         repeatedResourceAndRole: 'repeated.resource.and.role',
-//     },
-//     matchRequirements: (available: ResourceDayAvailability[], period: DayAndTimePeriod, requirements: ResourceRequirement[], fixedResourceAllocation: FixedResourceAllocation[]): Success<RequirementMatch[]> | ErrorResponse<ResourceRequirement> => {
-//         const matched: RequirementMatch[] = [];
-//         for (const requirement of requirements) {
-//             const availableResources = getAvailableResources(fixedResourceAllocation, requirement, available);
-//             const possibleResources = availableResources.filter(ra => ra.availability.some(da => dayAndTimePeriodFns.overlaps(da.when, period)));
-//             if (possibleResources.length > 0) {
-//                 const availableResource = possibleResources.find(r => !matched.some(m => m.match.resource.id === r.resource.id))
-//                 if (availableResource) {
-//                     matched.push({requirement, match: availableResource});
-//                 } else {
-//                     return errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement id '${requirement.id.value}' - it's already booked`, requirement);
-//                 }
-//             } else {
-//                 return errorResponse(resourceRequirementFns.errorCodes.noSuitableResource, `No suitable resource found for requirement id '${requirement.id.value}'`, requirement);
-//             }
-//         }
-//         return success(matched)
-//     },
-//     equals(a: ResourceRequirement, b: ResourceRequirement): boolean {
-//         if (a._type === 'any.suitable.resource' && b._type === 'any.suitable.resource') {
-//             return a.requirement.value === b.requirement.value && a.id?.value === b.id?.value;
-//         }
-//         if (a._type === 'specific.resource' && b._type === 'specific.resource') {
-//             return values.isEqual(a.resource.id, b.resource.id) && a.id?.value === b.id?.value;
-//         }
-//         return false;
-//     },
-//     sameRequirement(a: ResourceRequirement, b: ResourceRequirement): boolean {
-//         if (a._type === 'any.suitable.resource' && b._type === 'any.suitable.resource') {
-//             return a.requirement.value === b.requirement.value;
-//         }
-//         if (a._type === 'specific.resource' && b._type === 'specific.resource') {
-//             return values.isEqual(a.resource.id, b.resource.id);
-//         }
-//         return false;
-//     },
-//     validateRequirements(resourceRequirements: ResourceRequirement[]): ErrorResponse | null {
-//         const resourcesAndRoles = resourceRequirements.map(r => {
-//             if (r._type === 'any.suitable.resource') {
-//                 return {key: r.requirement, role: r.id}
-//             }
-//             return {key: r.resource.id, role: r.id}
-//         })
-//         const firstDuplicate = resourcesAndRoles.find((r, i) => resourcesAndRoles.slice(i + 1).find(rr => values.isEqual(r.key, rr.key) && r.role?.value === rr.role?.value))
-//         if (firstDuplicate) {
-//             return errorResponse(resourceRequirementFns.errorCodes.repeatedResourceAndRole, `Duplicate resource requirement found for ${JSON.stringify(firstDuplicate)}`)
-//         }
-//         return null
-//     }
-// }
-
 export interface Service {
     id: ServiceId;
-    name: string;
-    description: string;
     duration: Minutes;
     resourceRequirements: ResourceRequirement[]
     price: Price;
@@ -504,6 +446,12 @@ export interface Service {
     options: ServiceOption[];
     startTimes: StartTime[] | null;
     capacity: Capacity;
+}
+
+export interface ServiceLabels {
+    name: string;
+    description: string;
+    serviceId: ServiceId
 }
 
 export interface ServiceOptionId extends ValueType<string> {
@@ -558,12 +506,18 @@ export const serviceFns = {
             ...theService,
             resourceRequirements: theService.resourceRequirements.map(r => r.id.value === existing.id.value ? replacement : r)
         }
+    },
+    findLabels(serviceLabels: ServiceLabels[], serviceId: ServiceId): ServiceLabels {
+        const found = serviceLabels.find(sl => sl.serviceId.value === serviceId.value);
+        if (!found) {
+            throw new Error(`No service labels found for service ${serviceId.value}`);
+        }
+        return found;
+
     }
 }
 
 export function service(
-    name: string,
-    description: string,
     resourceRequirements: ResourceRequirement[],
     duration: Minutes,
     price: Price,
@@ -574,8 +528,6 @@ export function service(
 ): Service {
     return {
         id,
-        name,
-        description,
         duration,
         resourceRequirements,
         price,
@@ -585,6 +537,14 @@ export function service(
         options: [],
         startTimes: null
     };
+}
+
+export function serviceLabels(name: string, description: string, serviceId: ServiceId): ServiceLabels {
+    return {
+        name,
+        description,
+        serviceId
+    }
 }
 
 export function serviceOption(

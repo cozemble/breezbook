@@ -22,6 +22,7 @@ import {
     price,
     service,
     serviceFns,
+    serviceLabels,
     timeslotSpec,
     unlimited
 } from '../types.js';
@@ -51,8 +52,6 @@ const fourToSix = timeslotSpec(fourPm, sixPm, '16:00 - 18:00', id('timeSlot#3'))
 const timeslots = [nineToOne, oneToFour, fourToSix]
 const anySuitableVan = anySuitableResource(van);
 const smallCarWash = serviceFns.setStartTimes(service(
-    'Small Car Wash',
-    'Small Car Wash',
     [anySuitableVan],
     minutes(120),
     price(1000, GBP),
@@ -61,11 +60,9 @@ const smallCarWash = serviceFns.setStartTimes(service(
     capacity(1),
     serviceId('smallCarWash.id')
 ), timeslots);
-const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableVan], minutes(120),
+const mediumCarWash = serviceFns.setStartTimes(service([anySuitableVan], minutes(120),
     price(1500, GBP), [wax.id, polish.id], [], capacity(1), serviceId('mediumCarWash.id')), timeslots);
 const largeCarWash = serviceFns.setStartTimes(service(
-    'Large Car Wash',
-    'Large Car Wash',
     [anySuitableVan],
     minutes(120),
     price(2000, GBP),
@@ -74,6 +71,10 @@ const largeCarWash = serviceFns.setStartTimes(service(
     capacity(1),
     serviceId('largeCarWash.id')
 ), timeslots);
+
+const smallCarWashLabels = serviceLabels('Small Car Wash', 'Small Car Wash', smallCarWash.id);
+const mediumCarWashLabels = serviceLabels('Medium Car Wash', 'Medium Car Wash', mediumCarWash.id);
+const largeCarWashLabels = serviceLabels('Large Car Wash', 'Large Car Wash', largeCarWash.id);
 
 const chargeMoreForSoonBookings: PricingRule = {
     id: 'charge-more-for-soon-bookings',
@@ -132,6 +133,7 @@ export const carwash = {
     mediumCarWash: mediumCarWash,
     largeCarWash: largeCarWash,
     services: [smallCarWash, mediumCarWash, largeCarWash],
+    serviceLabels: [smallCarWashLabels, mediumCarWashLabels, largeCarWashLabels],
     coupons: {
         expired20PercentOffCoupon,
         twentyPercentOffCoupon

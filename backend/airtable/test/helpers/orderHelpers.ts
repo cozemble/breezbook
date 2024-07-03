@@ -1,12 +1,4 @@
-import {
-    Coupon,
-    Customer,
-    fullPaymentOnCheckout, IsoDate,
-    LocationId,
-    Price, priceFns,
-    Service,
-    TwentyFourHourClockTime
-} from "@breezbook/packages-core";
+import {Coupon, Customer, fullPaymentOnCheckout, Price, priceFns, Service,} from "@breezbook/packages-core";
 import {
     everythingToCreateOrder,
     EverythingToCreateOrder,
@@ -14,6 +6,7 @@ import {
     hydratedBasketLine
 } from "../../src/express/onAddOrderExpress.js";
 import {goodCustomer, goodServiceFormData, today} from "../helper.js";
+import {IsoDate, LocationId, TwentyFourHourClockTime} from "@breezbook/packages-types";
 
 export function orderForService(service: Service, location: LocationId, startTime: TwentyFourHourClockTime): EverythingToCreateOrder {
     const basket = hydratedBasket([

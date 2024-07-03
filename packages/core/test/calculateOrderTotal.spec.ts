@@ -14,7 +14,7 @@ import {
 	priceFns,
 	unlimited
 } from '../src/index.js';
-import { calculateOrderTotal } from '../src/calculateOrderTotal.js';
+import { calculateOrderTotal } from '../src/index.js';
 import {couponCode, isoDate} from "@breezbook/packages-types";
 
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
@@ -34,7 +34,7 @@ test('total of empty order should be zero', () => {
 });
 
 test('total of order with one line should be the price of the service', () => {
-	const theOrder = order(mike, [orderLine(carwash.smallCarWash.id, carwash.locations.london,carwash.smallCarWash.price, [], isoDate(), carwash.nineToOne, [])]);
+		const theOrder = order(mike, [orderLine(carwash.smallCarWash.id, carwash.locations.london,carwash.smallCarWash.price, [], isoDate(), carwash.nineToOne, [])]);
 	const total = calculateOrderTotal(theOrder, carwash.addOns, coupons);
 	expect(total.orderTotal).toEqual(carwash.smallCarWash.price);
 });

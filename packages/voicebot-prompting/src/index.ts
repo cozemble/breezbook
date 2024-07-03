@@ -1,12 +1,14 @@
 import {
     AddOn,
     BusinessConfiguration,
+    mandatory,
     priceFns,
     Service,
+    ServiceLabels,
     TimeslotSpec
 } from "@breezbook/packages-core";
 import {PricingRule} from "@breezbook/packages-pricing";
-import {isoDate, time24Fns} from "@breezbook/packages-types";
+import {byId, isoDate, time24Fns} from "@breezbook/packages-types";
 
 export interface BusinessDescription {
     _type: "business.description";
@@ -85,16 +87,19 @@ function webQueryTask(business: BusinessConfiguration): string {
 `;
 }
 
-function serviceWordList(services: Service[], pricingRules: PricingRule[]): string {
+function serviceWordList(services: Service[], serviceLabels: ServiceLabels[], pricingRules: PricingRule[]): string {
     const hasDynamicPricing = pricingRules.length > 0;
-    return [`[Services]`, services.map((service) => serviceWords(service, hasDynamicPricing)).join("\n")].join("\n");
+    return [`[Services]`, services.map((service) => {
+        const labels = mandatory(serviceLabels.find(sl => sl.serviceId.value === service.id.value), `No labels for service ${service.id}`);
+        return serviceWords(service, labels,hasDynamicPricing);
+    }).join("\n")].join("\n");
 }
 
-function serviceWords(service: Service, hasDynamicPricing: boolean): string {
-    const maybeDescription = service.description.trim().length > 0 ? service.description.trim() : ""
+function serviceWords(service: Service, serviceLabels: ServiceLabels, hasDynamicPricing: boolean): string {
+    const maybeDescription = serviceLabels.description.trim().length > 0 ? serviceLabels.description.trim() : ""
     const priceJoinWord = hasDynamicPricing ? "starts at" : "is";
     const priceWords = `The price of the service ${priceJoinWord} ${priceFns.toWords(service.price)}`
-    return [`- '${service.name}'`, maybeDescription, priceWords, "."].filter(s => s.trim().length > 0).join(". ")
+    return [`- '${serviceLabels.name}'`, maybeDescription, priceWords, "."].filter(s => s.trim().length > 0).join(". ")
 }
 
 function addOnWordList(a: AddOn): string {
@@ -115,6 +120,6 @@ function patches(): string {
 `
 }
 
-export function webQueryPrompt(description: BusinessDescription, business: BusinessConfiguration, pricingRules: PricingRule[]): string {
-    return [toVapiHeader(description), webQueryTask(business), serviceWordList(business.services, pricingRules), addOnsWordList(business.addOns), patches()].join("\n")
+export function webQueryPrompt(description: BusinessDescription, business: BusinessConfiguration, pricingRules: PricingRule[], namedServices: ServiceLabels[]): string {
+    return [toVapiHeader(description), webQueryTask(business), serviceWordList(business.services, namedServices, pricingRules), addOnsWordList(business.addOns), patches()].join("\n")
 }

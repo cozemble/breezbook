@@ -1956,3 +1956,47 @@ requirements, which are in package-resourcing.  resource requirements express a 
 package-core also has a representation of `resource` tho, and the only difference is that is is named.
 
 What happens if I try to drop the name on the resource and just use the definition from package-resourcing?
+
+# Web 3 Jul 2024
+I've been on a multi-day push to get the new resourcing/availability library integrated into the main app.  Finally done.
+The reason for going on this bender was to make it easier, hopefully, to support multiple languages.  Certainly, `Resource`
+no longer have a name.  And the `Service` in the resourcing package also doesn't have a name.
+
+Having been burned by taking on all of the multi-language refactor in one go the last time, this time I am going to do it
+in stages.  I think a general approach might be best thought about by working on `Service` first:
+
+ - Split `Service` into `Service` and `NamedService`
+ - Use `Service` in all endpoints and core logic
+ - Use `NamedService` only when returning responses to the frontend
+
+Actually I wonder if this is thorough enough.  There are things on service that have nothing to do with availability checking,
+for example.  Like permitted add-ons.  If I went through the entire call stack of the availability check endpoint, what
+exact parts of service would be needed.  Let me try that first.
+
+## Update on the above
+Ok, this seems to have worked out ok:
+
+```typescript
+export interface Service {
+    id: ServiceId;
+    duration: Minutes;
+    resourceRequirements: ResourceRequirement[]
+    price: Price;
+    permittedAddOns: AddOnId[];
+    serviceFormIds: FormId[];
+    options: ServiceOption[];
+    startTimes: StartTime[] | null;
+    capacity: Capacity;
+}
+
+export interface ServiceLabels {
+    name: string;
+    description: string;
+    serviceId: ServiceId
+}
+```
+
+Using an extension of the `Service` type as `NamedService` meant that concerns were again coupled - if I wanted to deal 
+with just the name and description of a service, I had to deal with the price and resource requirements too.  So I split
+the `Service` type into `Service` and `ServiceLabels`, and there is no hard referential connection - they have to be
+joined via the service id.  I think this will work out ok.

@@ -22,7 +22,7 @@ export async function onVapiVoiceBotPromptRequest(req: express.Request, res: exp
             }
         });
         const description = businessDescription(tenantBranding.tenants.name, tenantBranding.description, tenantBranding.description)
-        const prompt = webQueryPrompt(description, everything.businessConfiguration, everything.pricingRules)
+        const prompt = webQueryPrompt(description, everything.businessConfiguration, everything.pricingRules, [])
         res.status(200).setHeader("Content-type","text/plain").send(prompt)
     });
 }

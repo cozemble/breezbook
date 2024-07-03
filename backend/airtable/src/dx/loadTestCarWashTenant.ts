@@ -1,5 +1,5 @@
 import {PrismaClient} from '@prisma/client';
-import {carwash} from "@breezbook/packages-core";
+import {carwash, serviceFns} from "@breezbook/packages-core";
 import {JsonSchemaForm, TenantEnvironment} from "@breezbook/packages-types";
 import {maybeGetTenantSecret, storeTenantSecret} from "../infra/secretsInPostgres.js";
 import {STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME} from "../express/stripeEndpoint.js";
@@ -133,19 +133,22 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
         }
     });
     await prisma.services.createMany({
-        data: carwash.services.map((service) => ({
-            id: service.id.value,
-            tenant_id,
-            environment_id,
-            slug: service.id.value.replace('/.id/', ''),
-            name: service.name,
-            description: service.description,
-            duration_minutes: service.duration.value,
-            price: service.price.amount.value,
-            price_currency: service.price.currency.value,
-            permitted_add_on_ids: addOnIds,
-            requires_time_slot: true
-        }))
+        data: carwash.services.map((service) => {
+            const labels = serviceFns.findLabels( carwash.serviceLabels, service.id);
+            return ({
+                id: service.id.value,
+                tenant_id,
+                environment_id,
+                slug: service.id.value.replace('/.id/', ''),
+                name: labels.name,
+                description: labels.description,
+                duration_minutes: service.duration.value,
+                price: service.price.amount.value,
+                price_currency: service.price.currency.value,
+                permitted_add_on_ids: addOnIds,
+                requires_time_slot: true
+            });
+        })
     });
     await prisma.service_resource_requirements.createMany({
         data: carwash.services.map(s => ({

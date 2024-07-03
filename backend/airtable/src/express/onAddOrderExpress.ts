@@ -26,8 +26,8 @@ import {doInsertOrder} from './doInsertOrder.js';
 import {
     ErrorResponse,
     OrderCreatedResponse,
-    PricedCreateOrderRequest, ResourceRequirementSpec,
-    ResourceRequirementOverride, specificResourceSpec,
+    PricedCreateOrderRequest,
+    ResourceRequirementOverride,
     unpricedBasket,
     UnpricedBasket,
     UnpricedBasketLine,
@@ -49,10 +49,11 @@ import {
     tenantEnvironmentParam
 } from "../infra/endpoint.js";
 import {RequestContext} from "../infra/http/expressHttp4t.js";
-import { responseOf } from '@breezbook/packages-http/dist/responses.js';
+import {responseOf} from '@breezbook/packages-http/dist/responses.js';
 import {
     byId,
-    IsoDate, isoDateFns,
+    IsoDate,
+    isoDateFns,
     LocationId,
     resourceId,
     TenantEnvironment,
@@ -157,7 +158,7 @@ export interface HydratedBasket {
     total: Price;
 }
 
-export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, discount?: Price, total?:Price): HydratedBasket {
+export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, discount?: Price, total?: Price): HydratedBasket {
     const actualTotal = total ?? priceFns.sum(lines.map((l) => l.total));
     return {
         _type: 'hydrated.basket',
@@ -272,7 +273,7 @@ export function makeEverythingToCreateOrder(everything: EverythingToCreateOrderR
     };
 }
 
-function toReferenceData(everythingForAvailability: EverythingForAvailability):EverythingToCreateOrderReferenceData {
+function toReferenceData(everythingForAvailability: EverythingForAvailability): EverythingToCreateOrderReferenceData {
     return {
         services: everythingForAvailability.businessConfiguration.services,
         resources: everythingForAvailability.businessConfiguration.resources,

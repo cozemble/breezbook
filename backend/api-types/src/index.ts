@@ -50,9 +50,7 @@ export type Slots = Record<string, Availability[]>;
 
 export interface ServiceSummary {
     id: string;
-    name: string;
     durationMinutes: number;
-    description: string;
     forms: Form[];
 }
 

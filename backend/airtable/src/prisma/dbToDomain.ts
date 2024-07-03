@@ -71,8 +71,6 @@ export function toDomainService(dbService: DbService, resourceTypes: ResourceTyp
     const forms = dbServiceForms.filter((sf) => sf.service_id === dbService.id).map((sf) => formId(sf.form_id));
     const priceAmount = (typeof dbService.price === "object" && "toNumber" in dbService.price) ? dbService.price.toNumber() : dbService.price;
     let theService = service(
-        dbService.name,
-        dbService.description,
         mappedResourceRequirements,
         minutes(dbService.duration_minutes),
         price(priceAmount, currency(dbService.price_currency)),

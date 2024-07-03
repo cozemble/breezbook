@@ -97,7 +97,7 @@ export function validateServiceForms(everythingForTenant: EverythingForAvailabil
             }
             const formValidationError = validateForm(everythingForTenant.businessConfiguration.forms, serviceFormId, formData);
             if (formValidationError) {
-                return errorResponse(addOrderErrorCodes.serviceFormInvalid, formValidationError + ` for service ${service.name} in order line ${i}`);
+                return errorResponse(addOrderErrorCodes.serviceFormInvalid, formValidationError + ` for service ${service.id.value} in order line ${i}`);
             }
         }
     }

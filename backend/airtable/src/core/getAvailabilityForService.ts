@@ -107,10 +107,8 @@ function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[
 
 function getServiceSummary(service: DomainService, forms: Form[]): ServiceSummary {
     return {
-        name: service.name,
         id: service.id.value,
         durationMinutes: service.duration.value,
-        description: service.description,
         forms: service.serviceFormIds.map((id) =>
             mandatory(
                 forms.find((f) => values.isEqual(f.id, id)),
