@@ -6,21 +6,11 @@ import {
     Coupon,
     Customer,
     customerId,
-    IsoDate,
-    isoDateFns,
-    LocationId,
     PaymentIntent,
     Price,
     priceFns,
-    Resource,
-    resourceFns,
-    resourceId,
-    ResourceRequirement,
     Service,
     serviceFns,
-    specificResource,
-    TenantEnvironment,
-    TwentyFourHourClockTime
 } from '@breezbook/packages-core';
 import {EverythingForAvailability, getEverythingForAvailability} from './getEverythingForAvailability.js';
 import {
@@ -36,8 +26,8 @@ import {doInsertOrder} from './doInsertOrder.js';
 import {
     ErrorResponse,
     OrderCreatedResponse,
-    PricedCreateOrderRequest,
-    ResourceRequirementOverride,
+    PricedCreateOrderRequest, ResourceRequirementSpec,
+    ResourceRequirementOverride, specificResourceSpec,
     unpricedBasket,
     UnpricedBasket,
     UnpricedBasketLine,
@@ -60,6 +50,18 @@ import {
 } from "../infra/endpoint.js";
 import {RequestContext} from "../infra/http/expressHttp4t.js";
 import { responseOf } from '@breezbook/packages-http/dist/responses.js';
+import {
+    byId,
+    IsoDate, isoDateFns,
+    LocationId,
+    resourceId,
+    TenantEnvironment,
+    TwentyFourHourClockTime
+} from "@breezbook/packages-types";
+import {resourcing} from "@breezbook/packages-resourcing";
+import Resource = resourcing.Resource;
+import ResourceRequirement = resourcing.ResourceRequirement;
+import specificResource = resourcing.specificResource;
 
 export const addOrderErrorCodes = {
     customerFormMissing: 'addOrder.customer.form.missing',
@@ -216,7 +218,7 @@ export const hydratedBasketFns = {
 function maybeOverride(r: ResourceRequirement, resources: Resource[], resourceRequirementOverrides: ResourceRequirementOverride[]): ResourceRequirement {
     const override = resourceRequirementOverrides.find(o => o.requirementId === r.id.value);
     if (override) {
-        return specificResource(resourceFns.findById(resources, resourceId(override.resourceId)), r.id)
+        return specificResource(byId.find(resources, resourceId(override.resourceId)), r.id)
     }
 
     return r;

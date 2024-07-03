@@ -2,7 +2,7 @@ import express from "express";
 import {tenantEnvironmentParam, withOneRequestParam} from "../../infra/functionalExpress.js";
 import {prismaClient} from "../../prisma/client.js";
 import {DbService, DbServiceImage, DbServiceResourceRequirement} from "../../prisma/dbtypes.js";
-import {anySuitableResource, Service, specificResource} from "@breezbook/backend-api-types";
+import {anySuitableResourceSpec, Service, specificResourceSpec} from "@breezbook/backend-api-types";
 import {mandatory} from "@breezbook/packages-core";
 
 export function toApiService(service: DbService, serviceResourceRequirements: DbServiceResourceRequirement[], hasPricingRules: boolean): Service {
@@ -11,9 +11,9 @@ export function toApiService(service: DbService, serviceResourceRequirements: Db
     const priceAmount = (typeof service.price === "object" && "toNumber" in service.price) ? service.price.toNumber() : service.price;
     const resourceRequirements = serviceResourceRequirements.filter(r => r.service_id === service.id).map(srr => {
         if(srr.requirement_type === 'specific_resource') {
-            return specificResource(srr.id, mandatory(srr.resource_id,`Service ${service.id} has a specific resource requirement with no resource id`))
+            return specificResourceSpec(srr.id, mandatory(srr.resource_id,`Service ${service.id} has a specific resource requirement with no resource id`))
         }
-        return anySuitableResource(srr.id, mandatory(srr.resource_type,`Service ${service.id} has an any suitable resource requirement with no resource type`))
+        return anySuitableResourceSpec(srr.id, mandatory(srr.resource_type,`Service ${service.id} has an any suitable resource requirement with no resource type`))
     });
 
     return {

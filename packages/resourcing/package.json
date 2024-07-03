@@ -1,5 +1,5 @@
 {
-  "name": "@breezbook/backend-api-types",
+  "name": "@breezbook/packages-resourcing",
   "version": "1.0.0",
   "module": "./dist/index.js",
   "main": "./dist/index.js",
@@ -14,15 +14,13 @@
     "test:watch": "vitest watch"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.7",
     "eslint": "^8.28.0",
     "typescript": "5.3.3",
     "vite": "5.0.7",
     "vitest": "0.33.0"
   },
   "dependencies": {
-    "@breezbook/packages-types": "workspace:*",
-    "@breezbook/packages-core": "workspace:*",
-    "uuid": "^9.0.1"
+    "dayjs": "^1.11.10",
+    "@breezbook/packages-types": "workspace:*"
   }
 }

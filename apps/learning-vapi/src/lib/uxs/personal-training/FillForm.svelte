@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {Form} from "@breezbook/packages-core";
+    import type {Form} from "@breezbook/packages-types";
     import type {JsonSchema} from "@vapi-ai/web/dist/api";
     import {createEventDispatcher} from "svelte";
 

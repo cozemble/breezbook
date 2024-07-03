@@ -1,11 +1,12 @@
 import {expect, test} from 'vitest'
-import {capacity, exactTimeAvailability, GBP, isoDate, IsoDate, isoDateFns, price, time24} from "../src/types.js";
-import {availableSlot, AvailableSlot, calculatePrice, carwash, resourceAllocation,} from "../src/index.js";
+import {availableSlot, AvailableSlot, calculatePrice, carwash,currencies, price, resourceAllocation} from "../src/index.js";
 import {add, jexlCondition, multiply, PricingRule} from "@breezbook/packages-pricing";
+import {capacity, exactTimeAvailability, IsoDate, isoDate, isoDateFns, time24} from '@breezbook/packages-types';
 
 const today = isoDate();
 const tomorrow = isoDateFns.addDays(today, 1);
 const twoDaysFromNow = isoDateFns.addDays(today, 2);
+const GBP = currencies.GBP
 
 test("base rate when there are no pricing adjustments", () => {
     const pricedSlot = calculatePrice(carWash(today), []);

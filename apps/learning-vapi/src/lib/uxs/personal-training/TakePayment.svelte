@@ -2,9 +2,10 @@
     import {onMount} from "svelte";
     import type {JourneyState} from "$lib/uxs/personal-training/journeyState";
     import {type PricedBasket, unpricedBasket, unpricedBasketLine} from "@breezbook/backend-api-types";
-    import {mandatory, priceFns, time24} from "@breezbook/packages-core";
+    import {mandatory, priceFns} from "@breezbook/packages-core";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import StripePaymentForm from "$lib/uxs/personal-training/StripePaymentForm.svelte";
+    import {time24} from "@breezbook/packages-types";
 
     export let state: JourneyState
     let priced:PricedBasket

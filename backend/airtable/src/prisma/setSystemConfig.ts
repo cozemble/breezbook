@@ -1,4 +1,4 @@
-import { TenantEnvironment } from '@breezbook/packages-core';
+import { TenantEnvironment } from '@breezbook/packages-types';
 import { prismaClient } from './client.js';
 
 export async function setSystemConfig(tenantEnv: TenantEnvironment, configKey: string, configValue: string): Promise<void> {

@@ -4,18 +4,15 @@ import {
     currencies,
     customerId,
     fixedClock,
-    isoDate,
     percentageAsRatio,
     price,
     service,
-    serviceId,
-    time24,
-    timePeriod
 } from '../src/index.js';
 import {findRefundRule, hours, refundPolicy, timebasedRefundRule} from '../src/cancellation.js';
+import {isoDate, minutes, serviceId, time24, timePeriod} from "@breezbook/packages-types";
 
 describe('given a booking from 09:00 to 13:00 in two days time and a four level time based refund policy', () => {
-    const theService = service("Test Service", "Test Description", [], 60, price(3500, currencies.GBP), [], [], serviceId('444'));
+    const theService = service("Test Service", "Test Description", [], minutes(60), price(3500, currencies.GBP), [], [], serviceId('444'));
     const theBooking = booking(customerId('123'), theService, isoDate('2024-01-28'), timePeriod(time24('09:00'), time24('13:00')));
     const fullRefundIfMoreThan24hrs = timebasedRefundRule(hours(24), percentageAsRatio(1));
     const halfRefundIfBetween24hrsAnd6hrs = timebasedRefundRule(hours(6), percentageAsRatio(0.5));

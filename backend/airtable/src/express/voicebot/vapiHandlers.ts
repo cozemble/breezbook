@@ -2,7 +2,7 @@ import express from "express";
 import {locationIdParam, tenantEnvironmentParam, withTwoRequestParams} from "../../infra/functionalExpress.js";
 import {prismaClient} from "../../prisma/client.js";
 import {byLocation} from "../../availability/byLocation.js";
-import {isoDate, tenantEnvironmentLocation} from "@breezbook/packages-core";
+import {isoDate, tenantEnvironmentLocation} from "@breezbook/packages-types";
 import {businessDescription, webQueryPrompt} from "@breezbook/packages-voicebot-prompting";
 
 export async function onVapiVoiceBotPromptRequest(req: express.Request, res: express.Response): Promise<void> {

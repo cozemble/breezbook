@@ -1,4 +1,4 @@
-import { TenantEnvironment } from '@breezbook/packages-core';
+import { TenantEnvironment } from '@breezbook/packages-types';
 import { prismaClient } from '../prisma/client.js';
 import { ParamExtractor, tenantEnvironmentParam } from './functionalExpress.js';
 import { PrismaClient } from '@prisma/client';

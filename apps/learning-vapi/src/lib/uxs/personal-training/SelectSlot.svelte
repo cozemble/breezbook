@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {Availability, AvailabilityResponse} from "@breezbook/backend-api-types";
-    import {type IsoDate, isoDateFns} from "@breezbook/packages-core";
+    import {type IsoDate, isoDateFns} from "@breezbook/packages-types";
     import {createEventDispatcher} from "svelte";
     import type {Slot} from "$lib/uxs/personal-training/journeyState";
 

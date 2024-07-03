@@ -36,6 +36,9 @@ importers:
       '@breezbook/packages-core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@breezbook/packages-types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@iconify/svelte':
         specifier: ^3.1.6
         version: 3.1.6(svelte@4.2.8)
@@ -135,6 +138,9 @@ importers:
       '@breezbook/packages-core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@breezbook/packages-types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@vapi-ai/web':
         specifier: ^1.1.5
         version: 1.1.5
@@ -259,6 +265,12 @@ importers:
       '@breezbook/packages-pricing':
         specifier: workspace:*
         version: link:../../packages/pricing
+      '@breezbook/packages-resourcing':
+        specifier: workspace:*
+        version: link:../../packages/resourcing
+      '@breezbook/packages-types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@breezbook/packages-voicebot-prompting':
         specifier: workspace:*
         version: link:../../packages/voicebot-prompting
@@ -374,6 +386,9 @@ importers:
       '@breezbook/packages-core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@breezbook/packages-types':
+        specifier: workspace:*
+        version: link:../../packages/types
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -407,33 +422,17 @@ importers:
         specifier: ^5.4.4
         version: 5.4.5
 
-  packages/availability:
-    dependencies:
-      '@breezbook/packages-core':
-        specifier: workspace:*
-        version: link:../core
-      dayjs:
-        specifier: ^1.11.10
-        version: 1.11.10
-    devDependencies:
-      eslint:
-        specifier: ^8.28.0
-        version: 8.54.0
-      typescript:
-        specifier: 5.3.3
-        version: 5.3.3
-      vite:
-        specifier: 5.0.7
-        version: 5.0.7
-      vitest:
-        specifier: 0.33.0
-        version: 0.33.0
-
   packages/core:
     dependencies:
       '@breezbook/packages-pricing':
         specifier: workspace:*
         version: link:../pricing
+      '@breezbook/packages-resourcing':
+        specifier: workspace:*
+        version: link:../resourcing
+      '@breezbook/packages-types':
+        specifier: workspace:*
+        version: link:../types
       dayjs:
         specifier: ^1.11.10
         version: 1.11.10
@@ -534,6 +533,53 @@ importers:
         specifier: 0.33.0
         version: 0.33.0
 
+  packages/resourcing:
+    dependencies:
+      '@breezbook/packages-types':
+        specifier: workspace:*
+        version: link:../types
+      dayjs:
+        specifier: ^1.11.10
+        version: 1.11.10
+    devDependencies:
+      eslint:
+        specifier: ^8.28.0
+        version: 8.54.0
+      typescript:
+        specifier: 5.3.3
+        version: 5.3.3
+      vite:
+        specifier: 5.0.7
+        version: 5.0.7
+      vitest:
+        specifier: 0.33.0
+        version: 0.33.0
+
+  packages/types:
+    dependencies:
+      dayjs:
+        specifier: ^1.11.10
+        version: 1.11.10
+      uuid:
+        specifier: ^9.0.1
+        version: 9.0.1
+    devDependencies:
+      '@types/uuid':
+        specifier: ^9.0.7
+        version: 9.0.7
+      eslint:
+        specifier: ^8.28.0
+        version: 8.54.0
+      typescript:
+        specifier: 5.3.3
+        version: 5.3.3
+      vite:
+        specifier: 5.0.7
+        version: 5.0.7
+      vitest:
+        specifier: 0.33.0
+        version: 0.33.0
+
   packages/typescript-config: {}
 
   packages/voicebot-prompting:
@@ -544,6 +590,9 @@ importers:
       '@breezbook/packages-pricing':
         specifier: workspace:*
         version: link:../pricing
+      '@breezbook/packages-types':
+        specifier: workspace:*
+        version: link:../types
     devDependencies:
       eslint:
         specifier: ^8.28.0
@@ -2145,7 +2194,7 @@ packages:
       cheerio: 1.0.0-rc.12
       extract-zip: 2.0.1
       local-pkg: 0.4.3
-      pathe: 1.1.1
+      pathe: 1.1.2
       svgo: 3.0.3
       tar: 6.2.1
     transitivePeerDependencies:
@@ -8495,8 +8544,8 @@ packages:
     dependencies:
       acorn: 8.11.3
       pathe: 1.1.2
-      pkg-types: 1.0.3
-      ufo: 1.3.2
+      pkg-types: 1.1.1
+      ufo: 1.5.3
     dev: true
 
   /mlly@1.7.0:
@@ -10561,7 +10610,7 @@ packages:
   /strip-literal@1.3.0:
     resolution: {integrity: sha512-PugKzOsyXpArk0yWmUwqOZecSO0GH0bPoctLcqNDH9J04pVW3lflYE0ujElBGTloevcxF5MofAOZ7C5l2b+wLg==}
     dependencies:
-      acorn: 8.10.0
+      acorn: 8.11.3
     dev: true
 
   /stripe@14.11.0:
@@ -11464,6 +11513,7 @@ packages:
 
   /ufo@1.3.2:
     resolution: {integrity: sha512-o+ORpgGwaYQXgqGDwd+hkS4PuZ3QnmqMMxRuajK/a38L6fTpcE5GPIfrf+L/KemFzfUpeUQc1rRS1iDBozvnFA==}
+    dev: false
 
   /ufo@1.5.3:
     resolution: {integrity: sha512-Y7HYmWaFwPUmkoQCUIAYpKqkOf+SbVj/2fJJZ4RJMCfZp0rTGwRbzQD+HghfnhKOjL9E01okqz+ncJskGYfBNw==}

@@ -1,4 +1,5 @@
-import {BookableSlot, Minutes, time24Fns, timePeriod, TimePeriod} from './types.js';
+import {BookableSlot, } from './types.js';
+import {Minutes, time24Fns, timePeriod, TimePeriod} from "@breezbook/packages-types";
 
 
 export function calcSlotPeriod(slot: BookableSlot, serviceDuration: Minutes): TimePeriod {

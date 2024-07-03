@@ -1947,3 +1947,12 @@ function isDisfavored(resource: Resource, resourcePreferences: ResourcePreferenc
 }
 
 ```
+
+# Mon 1 Jul 2024
+Pushing through the new availability check code into package-core now.  Issue is that package-resourcing depends on package-core
+and package-core now needs the availability function.  I have started pulling out the shared types from package-core into 
+package-types, and stitching it back together.  An issue has come up.  The `service` in package-core depends on resource
+requirements, which are in package-resourcing.  resource requirements express a need on a `resource` type.
+package-core also has a representation of `resource` tho, and the only difference is that is is named.
+
+What happens if I try to drop the name on the resource and just use the definition from package-resourcing?

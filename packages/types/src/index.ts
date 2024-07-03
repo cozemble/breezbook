@@ -1,0 +1,599 @@
+import {v4 as uuidv4, v4 as uuid} from 'uuid';
+import dayjs from "dayjs";
+
+export interface ValueType<T> {
+    _type: unknown;
+    value: T;
+}
+
+type IdLike = { value: string };
+
+export interface Identified {
+    id: IdLike;
+}
+
+export const byId = {
+    find<I extends IdLike, T extends Identified>(items: T[], id: I): T {
+        const found = items.find(i => i.id.value === id.value);
+        if (!found) {
+            throw new Error(`No item with id ${id.value}`);
+        }
+        return found;
+    },
+    maybeFind(items: Identified[], id: string): Identified | null {
+        return items.find(i => i.id.value === id) || null;
+    }
+}
+
+export const values = {
+    isEqual: (value1: ValueType<unknown>, value2: ValueType<unknown>): boolean => {
+        return value1.value === value2.value && value1._type === value2._type;
+    }
+};
+
+export interface EnvironmentId extends ValueType<string> {
+    _type: 'environment.id';
+}
+
+export function environmentId(value: string): EnvironmentId {
+    return {
+        _type: 'environment.id',
+        value
+    };
+}
+
+export interface TenantId extends ValueType<string> {
+    _type: 'tenant.id';
+}
+
+export interface Minutes extends ValueType<number> {
+    _type: 'minutes';
+}
+
+export function tenantId(value: string): TenantId {
+    return {
+        _type: 'tenant.id',
+        value
+    };
+}
+
+export function minutes(value: number): Minutes {
+    return {
+        _type: 'minutes',
+        value
+    };
+}
+
+export const minuteFns = {
+    sum(acc: Minutes, d: Minutes) {
+        return minutes(acc.value + d.value);
+    }
+}
+
+export interface LocationId extends ValueType<string> {
+    _type: 'location.id';
+}
+
+export function locationId(value: string): LocationId {
+    return {
+        _type: 'location.id',
+        value
+    };
+}
+
+export interface TenantEnvironment {
+    _type: 'tenant.environment';
+    environmentId: EnvironmentId;
+    tenantId: TenantId;
+}
+
+export function tenantEnvironment(environmentId: EnvironmentId, tenantId: TenantId): TenantEnvironment {
+    return {
+        _type: 'tenant.environment',
+        environmentId,
+        tenantId
+    };
+}
+
+export interface TenantEnvironmentLocation {
+    _type: 'tenant.environment.location';
+    environmentId: EnvironmentId;
+    tenantId: TenantId;
+    locationId: LocationId;
+}
+
+export function tenantEnvironmentLocation(environmentId: EnvironmentId, tenantId: TenantId, locationId: LocationId): TenantEnvironmentLocation {
+    return {
+        _type: 'tenant.environment.location',
+        environmentId,
+        tenantId,
+        locationId
+    };
+}
+
+export interface IsoDate extends ValueType<string> {
+    _type: 'iso.date';
+}
+
+export function isoDate(value: string = dayjs().format('YYYY-MM-DD')): IsoDate {
+    if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        throw new Error(`Invalid date format ${value}. Expected YYYY-MM-DD`);
+    }
+    return {
+        _type: 'iso.date',
+        value
+    };
+}
+
+export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+export const daysOfWeek: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+export const mondayToFriday: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+export const isoDateFns = {
+    isEqual(date1: IsoDate, date2: IsoDate): boolean {
+        return date1.value === date2.value;
+    },
+    today(): IsoDate {
+        return isoDate();
+    },
+    sameDay(date1: IsoDate, date2: IsoDate) {
+        return this.isEqual(date1, date2);
+    },
+    listDays(fromDate: IsoDate, toDate: IsoDate) {
+        const from = new Date(fromDate.value);
+        const to = new Date(toDate.value);
+        const dates: IsoDate[] = [];
+        let currentDate = from;
+        while (currentDate <= to) {
+            dates.push(isoDate(dayjs(currentDate).format('YYYY-MM-DD')));
+            currentDate = dayjs(currentDate).add(1, 'day').toDate();
+        }
+        return dates;
+    },
+    addDays(date: IsoDate, days: number) {
+        return isoDate(dayjs(date.value).add(days, 'day').format('YYYY-MM-DD'));
+    },
+    dayOfWeek(date: IsoDate) {
+        return new Date(date.value).toLocaleDateString('en-GB', {weekday: 'long'}) as DayOfWeek;
+    },
+    gte(date1: IsoDate, date2: IsoDate) {
+        return date1.value >= date2.value;
+    },
+    lte(date1: IsoDate, date2: IsoDate) {
+        return date1.value <= date2.value;
+    },
+    gt(date1: IsoDate, date2: IsoDate) {
+        return date1.value > date2.value;
+    },
+    lt(date1: IsoDate, date2: IsoDate) {
+        return date1.value < date2.value;
+    },
+    max(...dates: IsoDate[]) {
+        if (dates.length === 0) {
+            throw new Error('No dates to compare');
+        }
+        return dates.reduce((max, date) => (this.gte(date, max) ? date : max), mandatory(dates[0], `No dates to compare`))
+    },
+    min(...dates: IsoDate[]) {
+        if (dates.length === 0) {
+            throw new Error('No dates to compare');
+        }
+        return dates.reduce((min, date) => (this.lte(date, min) ? date : min), mandatory(dates[0], `No dates to compare`));
+    },
+    toJavascriptDate(date: IsoDate, time: TwentyFourHourClockTime) {
+        const [year, month, day] = date.value.split('-').map((s) => parseInt(s, 10));
+        if (!year || !month || !day) {
+            throw new Error(`Invalid date format ${date.value}. Expected YYYY-MM-DD`);
+        }
+        const [hours, minutes] = time.value.split(':').map((s) => parseInt(s, 10));
+        return new Date(year, month - 1, day, hours, minutes);
+    },
+    getDateRange(dates: IsoDate[]): { fromDate: IsoDate; toDate: IsoDate } {
+        return {
+            fromDate: this.min(...dates),
+            toDate: this.max(...dates)
+        };
+    },
+    next(dayOfWeek: DayOfWeek): IsoDate {
+        const twoWeeks = [...daysOfWeek, ...daysOfWeek];
+        const todayIndex = twoWeeks.indexOf(this.dayOfWeek(isoDate()));
+        const dayIndex = twoWeeks.indexOf(dayOfWeek, todayIndex);
+        const daysToAdd = dayIndex - todayIndex;
+        return this.addDays(isoDate(), daysToAdd);
+    },
+    daysUntil(other: IsoDate): number {
+        const today = dayjs(isoDate().value);
+        const otherDate = dayjs(other.value);
+        return otherDate.diff(today, 'days');
+    }
+};
+
+export interface ServiceId extends ValueType<string> {
+    _type: 'service.id';
+}
+
+export interface Timezone extends ValueType<string> {
+    _type: 'timezone';
+}
+
+export interface TwentyFourHourClockTime extends ValueType<string> {
+    _type: 'twenty.four.hour.clock.time';
+    timezone?: Timezone;
+}
+
+export function time24(value: string, timezone?: Timezone): TwentyFourHourClockTime {
+    if (!value.match(/^\d{2}:\d{2}$/)) {
+        throw new Error(`Invalid time format ${value}. Expected HH:MM`);
+    }
+    return {
+        _type: 'twenty.four.hour.clock.time',
+        value,
+        timezone
+    };
+}
+
+export interface Duration extends ValueType<Minutes> {
+    _type: 'duration';
+}
+
+export function duration(value: Minutes): Duration {
+    return {
+        _type: 'duration',
+        value
+    };
+}
+
+export const time24Fns = {
+    addMinutes: (time: TwentyFourHourClockTime, addition: Minutes): TwentyFourHourClockTime => {
+        const minutes = addition.value;
+        const [hours, mins] = time.value.split(':').map((s) => parseInt(s, 10));
+        if (hours === undefined || mins === undefined || isNaN(hours) || isNaN(minutes)) {
+            throw new Error(`Invalid time format ${time.value}. Expected HH:MM`);
+        }
+        const newMins = mins + minutes;
+        const newHours = hours + Math.floor(newMins / 60);
+        const newMinsMod60 = newMins % 60;
+
+        const paddedHours = newHours.toString().padStart(2, '0');
+        const paddedMins = (newMinsMod60 < 10 ? '0' : '') + newMinsMod60;
+
+        return time24(`${paddedHours}:${paddedMins}`, time.timezone);
+    },
+    toWords(time: TwentyFourHourClockTime): string {
+        const [hours, minutes] = time.value.split(':').map((s) => parseInt(s, 10));
+        if (hours === undefined || minutes === undefined || isNaN(hours) || isNaN(minutes)) {
+            throw new Error(`Invalid time format ${time.value}. Expected HH:MM`);
+        }
+        const amPm = hours < 12 ? 'am' : 'pm';
+        const adjustedHours = amPm === 'pm' ? hours - 12 : hours;
+        const adjustedMinutes = minutes < 10 ? `zero ${minutes}` : minutes;
+        if (minutes === 0) {
+            if (adjustedHours === 0 && amPm === 'am') {
+                return `midnight`;
+            }
+            if (adjustedHours === 0 && amPm === 'pm') {
+                return `midday`;
+            }
+            return `${adjustedHours} ${amPm}`;
+        }
+        if (adjustedHours === 0) {
+            return `12 ${adjustedMinutes} ${amPm}`;
+        }
+        return `${adjustedHours} ${adjustedMinutes} ${amPm}`;
+    }
+};
+
+export function resourceType(value: string): ResourceType {
+    return {
+        _type: 'resource.type',
+        value,
+    };
+}
+
+export const resourceTypeFns = {
+    findByValue(resourceTypes: ResourceType[], value: string): ResourceType {
+        const found = resourceTypes.find(rt => rt.value === value);
+        if (!found) {
+            throw new Error(`No resource type with value ${value}`);
+        }
+        return found;
+    }
+}
+
+export function timezone(value: string): Timezone {
+    return {
+        _type: 'timezone',
+        value
+    };
+}
+
+export interface ResourceType extends ValueType<string> {
+    _type: 'resource.type';
+}
+
+export interface BookingId extends ValueType<string> {
+    _type: 'booking.id';
+}
+
+export function bookingId(value = uuidv4()): BookingId {
+    return {
+        _type: 'booking.id',
+        value
+    };
+}
+
+export interface ResourceId extends ValueType<string> {
+    _type: 'resource.id';
+}
+
+export function serviceId(value = uuidv4()): ServiceId {
+    return {
+        _type: 'service.id',
+        value
+    };
+}
+
+export interface ExactTimeAvailability {
+    _type: 'exact.time.availability';
+    time: TwentyFourHourClockTime;
+}
+
+export function exactTimeAvailability(time: TwentyFourHourClockTime): ExactTimeAvailability {
+    return {
+        _type: 'exact.time.availability',
+        time
+    };
+}
+
+export interface Id extends ValueType<string> {
+    _type: 'id';
+}
+
+export function id(value = uuid()): Id {
+    if (value === null || value === undefined) {
+        throw new Error('id value cannot be null or undefined');
+    }
+    return {
+        _type: 'id',
+        value
+    };
+}
+
+export const makeId = id
+
+export interface Email extends ValueType<string> {
+    _type: 'email';
+}
+
+export function email(value: string): Email {
+    return {
+        _type: 'email',
+        value
+    };
+}
+
+export interface PhoneNumber extends ValueType<string> {
+    _type: 'phone.number';
+}
+
+export function phoneNumber(e164: string): PhoneNumber {
+    const regEx = /^\+[1-9]\d{1,14}$/;
+    if (!e164.match(regEx)) {
+        throw new Error(`Invalid phone number format ${e164}. Expected E.164 format`);
+    }
+    return {
+        _type: 'phone.number',
+        value: e164
+    };
+}
+
+export interface Capacity extends ValueType<number> {
+    _type: 'capacity';
+}
+
+export function capacity(value: number): Capacity {
+    return {
+        _type: 'capacity',
+        value
+    };
+}
+
+export function resourceId(value = uuidv4()): ResourceId {
+    return {
+        _type: 'resource.id',
+        value
+    };
+}
+
+export interface AddOnId extends ValueType<string> {
+    _type: 'add.on.id';
+}
+
+export function addOnId(value: string): AddOnId {
+    return {
+        _type: 'add.on.id',
+        value
+    };
+}
+
+export interface TimePeriod {
+    _type: 'time.period';
+    from: TwentyFourHourClockTime;
+    to: TwentyFourHourClockTime;
+}
+
+export interface DayAndTimePeriod {
+    _type: 'day.and.time.period';
+    day: IsoDate;
+    period: TimePeriod;
+}
+
+export function dayAndTimePeriod(day: IsoDate, period: TimePeriod): DayAndTimePeriod {
+    return {
+        _type: 'day.and.time.period',
+        day,
+        period
+    };
+}
+
+export const dayAndTimePeriodFns = {
+    overlaps: (dayAndTimePeriod1: DayAndTimePeriod, dayAndTimePeriod2: DayAndTimePeriod): boolean => {
+        return isoDateFns.isEqual(dayAndTimePeriod1.day, dayAndTimePeriod2.day) && timePeriodFns.overlaps(dayAndTimePeriod1.period, dayAndTimePeriod2.period);
+    },
+    splitPeriod(da: DayAndTimePeriod, bookingPeriod: DayAndTimePeriod, includeGivenPeriod = false): DayAndTimePeriod[] {
+        if (!dayAndTimePeriodFns.intersects(da, bookingPeriod)) {
+            return [da];
+        }
+        const remainingTimePeriods = [] as TimePeriod[];
+        if (timePeriodFns.startsEarlier(da.period, bookingPeriod.period)) {
+            remainingTimePeriods.push(timePeriod(da.period.from, bookingPeriod.period.from));
+        }
+        if (includeGivenPeriod) {
+            remainingTimePeriods.push(bookingPeriod.period)
+        }
+        if (timePeriodFns.endsLater(da.period, bookingPeriod.period)) {
+            remainingTimePeriods.push(timePeriod(bookingPeriod.period.to, da.period.to));
+        }
+        return remainingTimePeriods.map((tp) => dayAndTimePeriod(da.day, tp));
+    },
+    intersection(period1: DayAndTimePeriod, period2: DayAndTimePeriod) {
+        return dayAndTimePeriod(
+            period1.day,
+            timePeriod(
+                timePeriodFns.startsEarlier(period1.period, period2.period) ? period2.period.from : period1.period.from,
+                timePeriodFns.endsLater(period1.period, period2.period) ? period2.period.to : period1.period.to
+            )
+        );
+    },
+    intersects(period1: DayAndTimePeriod, period2: DayAndTimePeriod) {
+        return isoDateFns.sameDay(period1.day, period2.day) && timePeriodFns.intersects(period1.period, period2.period);
+    },
+    equals(when: DayAndTimePeriod, when2: DayAndTimePeriod) {
+        return isoDateFns.isEqual(when.day, when2.day) && timePeriodFns.equals(when.period, when2.period);
+    }
+};
+
+export function timePeriod(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime): TimePeriod {
+    return {
+        _type: 'time.period',
+        from,
+        to
+    };
+}
+
+export const timePeriodFns = {
+    allDay: timePeriod(time24('00:00'), time24('23:59')),
+    overlaps: (period1: TimePeriod, period2: TimePeriod): boolean => {
+        return period1.from.value <= period2.from.value && period1.to.value >= period2.to.value;
+    },
+    startsEarlier(period: TimePeriod, period2: TimePeriod) {
+        return period.from.value < period2.from.value;
+    },
+    endsLater(period: TimePeriod, period2: TimePeriod) {
+        return period.to.value > period2.to.value;
+    },
+    intersects(period: TimePeriod, period2: TimePeriod) {
+        if (timePeriodFns.sequential(period, period2) || timePeriodFns.sequential(period2, period)) {
+            return false;
+        }
+        return (
+            (period2.from.value >= period.from.value && period2.from.value <= period.to.value) ||
+            (period2.to.value >= period.from.value && period2.to.value <= period.to.value) ||
+            (period2.from.value <= period.from.value && period2.to.value >= period.to.value)
+        );
+    },
+    listPossibleStartTimes(period: TimePeriod, duration: Duration): TwentyFourHourClockTime[] {
+        let currentTime = period.from;
+        const result: TwentyFourHourClockTime[] = []
+        while (currentTime.value < period.to.value) {
+            result.push(currentTime);
+            currentTime = time24Fns.addMinutes(currentTime, duration.value)
+        }
+        return result
+    },
+    equals(period: TimePeriod, period2: TimePeriod) {
+        return period.from.value === period2.from.value && period.to.value === period2.to.value;
+    },
+    sequential(period: TimePeriod, period2: TimePeriod) {
+        return period.to.value === period2.from.value;
+    },
+    calcPeriod(from: TwentyFourHourClockTime, duration: Duration | Minutes): TimePeriod {
+        const durationMinutes = duration._type === 'duration' ? duration.value : duration;
+        return timePeriod(from, time24Fns.addMinutes(from, durationMinutes));
+    }
+};
+
+export interface FormId extends ValueType<string> {
+    _type: 'form.id';
+}
+
+export function formId(value: string): FormId {
+    return {
+        _type: 'form.id',
+        value
+    };
+}
+
+export interface JsonSchemaForm {
+    _type: 'json.schema.form';
+    id: FormId;
+    name: string;
+    description?: string;
+    schema: unknown;
+}
+
+export type Form = JsonSchemaForm;
+
+export interface CouponCode extends ValueType<string> {
+    _type: 'coupon.code';
+}
+
+export function couponCode(value: string): CouponCode {
+    return {
+        _type: 'coupon.code',
+        value
+    };
+}
+
+export interface CouponId extends ValueType<string> {
+    _type: 'coupon.id';
+}
+
+export function couponId(value: string): CouponId {
+    return {
+        _type: 'coupon.id',
+        value
+    };
+}
+
+
+export interface OrderId extends ValueType<string> {
+    _type: 'order.id';
+}
+
+export function orderId(value = uuid()): OrderId {
+    return {
+        _type: 'order.id',
+        value
+    };
+}
+
+export interface ResourceRequirementId extends ValueType<string> {
+    _type: 'resource.requirement.id';
+}
+
+export function resourceRequirementId(value = uuidv4()): ResourceRequirementId {
+    return {
+        _type: 'resource.requirement.id',
+        value
+    };
+}
+
+export function mandatory<T>(value: T | undefined | null, errorMessage: string): T {
+    if (value === null || value === undefined) {
+        throw new Error(errorMessage);
+    }
+    return value as T;
+}
+
+export type Metadata = Record<string, string | number | boolean>

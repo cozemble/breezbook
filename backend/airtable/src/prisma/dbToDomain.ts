@@ -12,52 +12,56 @@ import {
 import {
     addOn,
     AddOn as DomainAddOn,
-    addOnId,
-    anySuitableResource,
     booking,
     Booking,
     bookingFns,
-    capacity,
     currency,
     customerId,
     fixedResourceAllocation,
-    Form,
-    formId,
-    id,
-    isoDate,
     mandatory,
-    minutes,
     price,
-    resource,
-    Resource,
-    resourceFns,
-    resourceId,
-    ResourceRequirement,
-    resourceRequirementId,
-    ResourceType,
-    resourceTypeFns,
     service,
     Service as DomainService,
     Service,
     serviceFns,
-    serviceId,
-    specificResource,
     tenantSettings,
     TenantSettings,
-    time24,
-    timePeriod,
     timeslotSpec,
-    TimeslotSpec,
-    timezone,
+    TimeslotSpec
 } from '@breezbook/packages-core';
 import {DbBookingAndResourceRequirements} from "../express/getEverythingForAvailability.js";
 import {PricingRule} from "@breezbook/packages-pricing";
+import {
+    addOnId,
+    byId,
+    capacity,
+    Form,
+    formId,
+    id,
+    isoDate,
+    minutes,
+    resourceId,
+    resourceRequirementId,
+    ResourceType,
+    resourceTypeFns,
+    serviceId,
+    time24,
+    timePeriod,
+    timezone
+} from "@breezbook/packages-types";
+import {resourcing} from "@breezbook/packages-resourcing";
+import ResourceRequirement = resourcing.ResourceRequirement;
+import specificResource = resourcing.specificResource;
+import anySuitableResource = resourcing.anySuitableResource;
+import resource = resourcing.resource;
+import Resource = resourcing.Resource;
+import resourceAllocationRules = resourcing.resourceAllocationRules;
 
 function toDomainResourceRequirement(rr: DbServiceResourceRequirement, resourceTypes: ResourceType[], mappedResources: Resource[]): ResourceRequirement {
     if (rr.requirement_type === 'specific_resource') {
-        return specificResource(resourceFns.findById(mappedResources, resourceId(rr.id)), resourceRequirementId(rr.id))
+        return specificResource(byId.find(mappedResources, resourceId(rr.id)), resourceRequirementId(rr.id))
     } else {
-        return anySuitableResource(resourceTypeFns.findByValue(resourceTypes, mandatory(rr.resource_type, `No resource type`)), resourceRequirementId(rr.id))
+        return anySuitableResource(resourceTypeFns.findByValue(resourceTypes, mandatory(rr.resource_type, `No resource type`)), resourceAllocationRules.any,resourceRequirementId(rr.id))
     }
 }
 
@@ -91,7 +95,7 @@ export function toDomainBooking(b: DbBookingAndResourceRequirements, services: S
     const service = serviceFns.findService(services, serviceId(b.service_id));
     const fixedResourceAllocations = b.booking_resource_requirements.flatMap(r => {
         if (r.requirement_type === 'specific_resource') {
-            return [fixedResourceAllocation(resourceRequirementId(r.id), resourceId(mandatory(r.resource_id, `resource_id`)))];
+            return [fixedResourceAllocation(resourceRequirementId(r.requirement_id), resourceId(mandatory(r.resource_id, `resource_id`)))];
         }
         return []
     });
@@ -120,5 +124,5 @@ export function toDomainPricingRule(rule: DbPricingRule): PricingRule {
 }
 
 export function toDomainResource(r: DbResource, resourceTypes: ResourceType[]): Resource {
-    return resource(resourceTypeFns.findByValue(resourceTypes, r.resource_type), r.name, r.metadata as any ?? {}, resourceId(r.id))
+    return resource(resourceTypeFns.findByValue(resourceTypes, r.resource_type), [], r.metadata as any ?? {}, resourceId(r.id))
 }

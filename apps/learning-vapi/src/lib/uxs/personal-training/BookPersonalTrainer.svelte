@@ -1,13 +1,13 @@
 <script lang="ts">
     import {
-        type AnySuitableResource,
+        type AnySuitableResourceSpec,
         type AvailabilityResponse,
         type ResourceSummary,
         type Service
     } from "@breezbook/backend-api-types";
     import {onMount} from 'svelte';
     import {backendUrl, fetchJson} from "$lib/helpers";
-    import {isoDate, isoDateFns} from "@breezbook/packages-core";
+    import {isoDate, isoDateFns} from "@breezbook/packages-types";
     import SelectSlot from "$lib/uxs/personal-training/SelectSlot.svelte";
     import {
         type CoreCustomerDetails,
@@ -23,7 +23,7 @@
     export let trainer: ResourceSummary
     export let locationId: string
     export let service: Service
-    export let personalTrainerRequirement: AnySuitableResource
+    export let personalTrainerRequirement: AnySuitableResourceSpec
     let availableSlots: AvailabilityResponse
     const today = isoDate()
     const sevenDaysFromNow = isoDateFns.addDays(today, 7)

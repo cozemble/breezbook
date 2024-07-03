@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest';
 import {resourcing} from "../src/index.js";
-import {resourceId, resourceType} from '@breezbook/packages-core';
+import {resourceId, resourceType} from '@breezbook/packages-types';
 import resource = resourcing.resource;
 import timeslotFns = resourcing.timeslotFns;
 import anySuitableResource = resourcing.anySuitableResource;
@@ -14,8 +14,8 @@ import Available = resourcing.Available;
 
 describe("given a service requiring fungible resources without capacity, listAvailability", () => {
     const room = resourceType("room")
-    const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("room1"))
-    const room2 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("room2"))
+    const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [],resourceId("room1"))
+    const room2 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [],resourceId("room2"))
     const resources = [room1, room2]
     const anyRoom = anySuitableResource(room)
     const theService = service(resourceRequirements([anyRoom]))
@@ -49,7 +49,7 @@ describe("given a service requiring fungible resources without capacity, listAva
     })
 
     test("reports the capacity of the resources", () => {
-        const room3 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("room3"))
+        const room3 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [],resourceId("room3"))
         const bookingsForEachSlot = requestedTimeSlots.map(t => booking(t, theService))
         const existingBookings = [...bookingsForEachSlot, ...bookingsForEachSlot]
 

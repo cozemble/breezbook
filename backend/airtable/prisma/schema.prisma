@@ -698,6 +698,7 @@ model booking_resource_requirements {
   tenant_id        String
   environment_id   String
   booking_id       String
+  requirement_id   String
   requirement_type resource_requirement_type
   resource_id      String?
   resource_type    String?

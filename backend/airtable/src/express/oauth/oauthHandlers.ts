@@ -8,8 +8,9 @@ import {
     withTwoRequestParams
 } from '../../infra/functionalExpress.js';
 import {prismaClient} from '../../prisma/client.js';
-import {mandatory, SystemClock, TenantEnvironment} from '@breezbook/packages-core';
+import {mandatory, SystemClock} from '@breezbook/packages-core';
 import {v4 as uuid} from 'uuid';
+import {TenantEnvironment} from "@breezbook/packages-types";
 
 export function systemIdParam(requestValue: RequestValueExtractor = path('systemId')): ParamExtractor<string | null> {
     return paramExtractor('systemId', requestValue.extractor, (s) => s);

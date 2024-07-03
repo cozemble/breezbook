@@ -1,4 +1,4 @@
-import {ValueType} from '@breezbook/packages-core';
+import {ValueType} from "@breezbook/packages-types";
 
 export interface RecordId extends ValueType<string> {
     _type: 'recordId';

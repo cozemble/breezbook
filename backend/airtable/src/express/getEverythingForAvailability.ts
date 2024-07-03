@@ -1,9 +1,13 @@
 import {
-    availabilityBlock,
     Booking,
     businessConfiguration,
-    BusinessConfiguration,
+    BusinessConfiguration, configuration,
     Coupon,
+    periodicStartTime,
+    Service,
+    TenantSettings,
+} from '@breezbook/packages-core';
+import {
     DayAndTimePeriod,
     dayAndTimePeriod,
     dayAndTimePeriodFns,
@@ -13,20 +17,13 @@ import {
     IsoDate,
     isoDateFns,
     mandatory,
-    minutes,
-    periodicStartTime,
-    Resource,
-    resourceDayAvailability,
-    ResourceDayAvailability,
-    resourceType,
-    Service,
+    minutes, resourceType,
     ServiceId,
     TenantEnvironment,
-    TenantSettings,
     time24,
     timePeriod,
     values
-} from '@breezbook/packages-core';
+} from '@breezbook/packages-types';
 import {makeBusinessAvailability} from './makeBusinessAvailability.js';
 import {
     DbAddOn,
@@ -60,6 +57,11 @@ import {
 } from '../prisma/dbToDomain.js';
 import {PrismaClient} from "@prisma/client";
 import {PricingRule} from "@breezbook/packages-pricing";
+import {resourcing} from "@breezbook/packages-resourcing";
+import Resource = resourcing.Resource;
+import ResourceDayAvailability = configuration.ResourceDayAvailability;
+import availabilityBlock = configuration.availabilityBlock;
+import resourceDayAvailability = configuration.resourceDayAvailability;
 
 export interface EverythingForAvailability {
     _type: 'everything.for.availability';

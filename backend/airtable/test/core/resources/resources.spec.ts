@@ -1,7 +1,7 @@
 import {beforeEach, describe, expect, test} from "vitest";
 import {resources, ResourceSummary} from "../../../src/core/resources/resources.js";
 import {PrismockClient} from "prismock";
-import {environmentId, locationId, resourceType, tenantEnvironmentLocation, tenantId} from "@breezbook/packages-core";
+import {environmentId, locationId, resourceType, tenantEnvironmentLocation, tenantId} from "@breezbook/packages-types";
 import {loadMultiLocationGymTenant, multiLocationGym} from "../../../src/dx/loadMultiLocationGymTenant.js";
 import {ErrorResponse} from "@breezbook/backend-api-types";
 import {PrismaClient} from "@prisma/client";

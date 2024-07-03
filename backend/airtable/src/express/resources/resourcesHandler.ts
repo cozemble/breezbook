@@ -1,5 +1,5 @@
 import express from "express";
-import {resourceType, ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-core";
+import {resourceType, ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-types";
 import {resources} from "../../core/resources/resources.js";
 import {
     asHandler,

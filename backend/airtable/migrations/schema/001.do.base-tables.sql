@@ -312,6 +312,7 @@ create table booking_resource_requirements
     tenant_id        text references tenants (tenant_id) not null,
     environment_id   text                                not null,
     booking_id       text references bookings (id)       not null,
+    requirement_id   text                                not null,
     requirement_type resource_requirement_type           not null,
     resource_id      text references resources (id)      null     default null,
     resource_type    text references resource_types (id) null     default null,

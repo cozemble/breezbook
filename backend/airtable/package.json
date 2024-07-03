@@ -53,9 +53,11 @@
   },
   "dependencies": {
     "@breezbook/backend-api-types": "workspace:*",
+    "@breezbook/packages-types": "workspace:*",
     "@breezbook/packages-core": "workspace:*",
     "@breezbook/packages-http": "workspace:*",
     "@breezbook/packages-voicebot-prompting": "workspace:*",
+    "@breezbook/packages-resourcing": "workspace:*",
     "@breezbook/packages-pricing": "workspace:*",
     "@prisma/client": "5.9.1",
     "@slack/web-api": "^7.0.4",

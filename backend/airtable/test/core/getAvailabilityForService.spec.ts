@@ -1,7 +1,8 @@
 import {expect, test} from 'vitest';
-import {Booking, booking, carwash, customerId, isoDate} from '@breezbook/packages-core';
+import {Booking, booking, carwash, customerId} from '@breezbook/packages-core';
 import {everythingForCarWashTenantWithDynamicPricing} from '../helper.js';
 import {getAvailabilityForService} from "../../src/core/getAvailabilityForService.js";
+import {isoDate} from "@breezbook/packages-types";
 
 const today = isoDate();
 const theOnlyTimeslotWeHave = carwash.nineToOne;

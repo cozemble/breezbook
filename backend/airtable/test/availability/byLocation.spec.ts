@@ -4,14 +4,7 @@ import {PrismaClient} from "@prisma/client";
 import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMultiLocationGymTenant.js";
 import {
     carwash,
-    environmentId,
     ErrorResponse,
-    isoDate,
-    locationId,
-    mandatory,
-    serviceId,
-    tenantEnvironmentLocation,
-    tenantId
 } from "@breezbook/packages-core";
 import {v4 as uuid} from 'uuid';
 import {byLocation} from "../../src/availability/byLocation.js";
@@ -20,6 +13,14 @@ import {
     getAvailabilityForService,
     getAvailabilityForServiceErrorCodes
 } from "../../src/core/getAvailabilityForService.js";
+import {
+    environmentId,
+    isoDate,
+    locationId,
+    mandatory, serviceId,
+    tenantEnvironmentLocation,
+    tenantId
+} from "@breezbook/packages-types";
 
 const tenant = tenantId(multiLocationGym.tenant_id)
 const env = environmentId(multiLocationGym.environment_id)

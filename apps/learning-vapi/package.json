@@ -31,6 +31,7 @@
 	"type": "module",
 	"dependencies": {
 		"@breezbook/backend-api-types": "workspace:*",
+		"@breezbook/packages-types": "workspace:*",
 		"@breezbook/packages-core": "workspace:*",
 		"@vapi-ai/web": "^1.1.5"
 	}

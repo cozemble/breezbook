@@ -1,32 +1,35 @@
 import {
-    addOn,
     addOnId,
-    anySuitableResource,
     capacity,
-    coupon,
     couponCode,
     couponId,
-    GBP,
     id,
     isoDate,
     locationId,
     minutes,
-    percentageAsRatio,
-    percentageCoupon,
-    price,
-    resource,
     resourceType,
-    service,
-    serviceFns,
     serviceId,
     tenantId,
     time24,
-    timePeriod,
+    timePeriod
+} from '@breezbook/packages-types';
+import {
+    addOn,
+    coupon,
+    GBP,
+    percentageAsRatio,
+    percentageCoupon,
+    price,
+    service,
+    serviceFns,
     timeslotSpec,
     unlimited
 } from '../types.js';
 import {carwashForm} from './carWashForms.js';
 import {jexlCondition, multiply, PricingRule} from "@breezbook/packages-pricing";
+import {resourcing} from "@breezbook/packages-resourcing";
+import anySuitableResource = resourcing.anySuitableResource;
+import resource = resourcing.resource;
 
 const tenantIdCarwash = tenantId('carwash');
 const nineAm = time24('09:00');
@@ -39,8 +42,8 @@ const polish = addOn('Polish', price(500, GBP), false, 'We will polish your car'
 const cleanSeats = addOn('Clean seats', price(2000, GBP), true, null, addOnId('addOn-clean-seats'));
 const cleanCarpets = addOn('Clean carpets', price(2000, GBP), false, 'We will clean the foot well carpets', addOnId('addOn-clean-carpets'));
 const van = resourceType('vanResourceType');
-const van1 = resource(van, 'Van 1', {'tier': 2});
-const van2 = resource(van, 'Van 2', {'tier': 1});
+const van1 = resource(van, [], {'tier': 2});
+const van2 = resource(van, [], {'tier': 1});
 const resources = [van1, van2];
 const nineToOne = timeslotSpec(nineAm, onePm, '09:00 - 13:00', id('timeSlot#1'));
 const oneToFour = timeslotSpec(onePm, fourPm, '13:00 - 16:00', id('timeSlot#2'));
@@ -58,7 +61,8 @@ const smallCarWash = serviceFns.setStartTimes(service(
     capacity(1),
     serviceId('smallCarWash.id')
 ), timeslots);
-const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableVan], minutes(120), price(1500, GBP), [wax.id, polish.id], [], capacity(1), serviceId('mediumCarWash.id')), timeslots);
+const mediumCarWash = serviceFns.setStartTimes(service('Medium Car Wash', 'Medium Car Wash', [anySuitableVan], minutes(120),
+    price(1500, GBP), [wax.id, polish.id], [], capacity(1), serviceId('mediumCarWash.id')), timeslots);
 const largeCarWash = serviceFns.setStartTimes(service(
     'Large Car Wash',
     'Large Car Wash',

@@ -1,4 +1,4 @@
-import {anySuitableResource, resourceId, resourceType} from "@breezbook/packages-core";
+import {resourceId, resourceType} from "@breezbook/packages-types";
 import {resourcing} from "../src/index.js";
 import {test} from 'vitest';
 import resource = resourcing.resource;
@@ -11,6 +11,7 @@ import listAvailability = resourcing.listAvailability;
 import complexResourceRequirement = resourcing.complexResourceRequirement;
 import resourceCommitment = resourcing.resourceCommitment;
 import booking = resourcing.booking;
+import anySuitableResource = resourcing.anySuitableResource;
 
 function startTime(slot: AvailabilityResult) {
     return slot.booking.booking.timeslot.from.time.value;
@@ -163,15 +164,11 @@ test("demo complexResourceRequirement", () => {
 
     const room = resourceType("room");
     const room1 = resource(room,
-        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [
-            {name: "capacity", value: 10},
-            {name: "hasProjector", value: true}
-        ], resourceId("room1"));
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")],
+        {capacity: 10, hasProjector: true}, resourceId("room1"));
     const room2 = resource(room,
-        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")], [
-            {name: "capacity", value: 20},
-            {name: "hasProjector", value: true}
-        ], resourceId("room2"));
+        [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")],
+        {capacity: 20, hasProjector: true}, resourceId("room2"));
 
     const meetingRoomRequirement = complexResourceRequirement(room,
         [

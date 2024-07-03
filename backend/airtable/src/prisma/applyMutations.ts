@@ -1,5 +1,5 @@
 import {PrismaClient} from "@prisma/client";
-import {TenantEnvironment} from "@breezbook/packages-core";
+import {TenantEnvironment} from "@breezbook/packages-types";
 import {Mutation, mutationFns} from "../mutation/mutations.js";
 import {prismaMutationToPromise} from "../infra/prismaMutations.js";
 

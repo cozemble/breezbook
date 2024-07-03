@@ -1,19 +1,10 @@
 import {expect, test} from "vitest";
-import {
-    BlockedTime,
-    businessAvailability,
-    dayAndTimePeriod,
-    daysOfWeek,
-    isoDate,
-    isoDateFns,
-    time24,
-    timePeriod,
-    id as makeId, tenantId, BusinessHours
-} from "../src/types.js";
+import {BlockedTime, businessAvailability, BusinessHours} from "../src/types.js";
 import {makeBusinessAvailability} from "../src/makeBusinessAvailability.js";
+import {dayAndTimePeriod, daysOfWeek, isoDate, isoDateFns, makeId, tenantId, time24, timePeriod} from "@breezbook/packages-types";
 
 
-const allWeek:BusinessHours[] = daysOfWeek.map(day => {
+const allWeek: BusinessHours[] = daysOfWeek.map(day => {
     return {
         _type: "business.hours",
         id: makeId("1"),
@@ -24,7 +15,7 @@ const allWeek:BusinessHours[] = daysOfWeek.map(day => {
     }
 })
 
-test("a few days with no blocked time",  () => {
+test("a few days with no blocked time", () => {
     const availability = makeBusinessAvailability(allWeek, [], isoDateFns.listDays(isoDate("2024-01-01"), isoDate("2024-01-04")))
     expect(availability).toEqual(businessAvailability([
         dayAndTimePeriod(isoDate("2024-01-01"), timePeriod(time24("09:00"), time24("17:00"))),
@@ -34,7 +25,7 @@ test("a few days with no blocked time",  () => {
     ]))
 });
 
-test("finishing early one day",  () => {
+test("finishing early one day", () => {
     const earlyFinishOnTheSecond: BlockedTime = {
         _type: "blocked.time",
         id: makeId("1"),
@@ -52,7 +43,7 @@ test("finishing early one day",  () => {
     ]))
 })
 
-test("gone for the middle of the day",  () => {
+test("gone for the middle of the day", () => {
     const goneForLunch: BlockedTime = {
         _type: "blocked.time",
         id: makeId("1"),

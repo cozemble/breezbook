@@ -1,7 +1,7 @@
 import {prismaClient} from "../prisma/client.js";
 import {ensureStripeKeys, loadTestCarWashTenant} from "./loadTestCarWashTenant.js";
 import {maybePublishRefDataToAssistLocalDev} from "./maybePublishRefDataToAssistLocalDev.js";
-import {environmentId, tenantEnvironment, tenantId} from "@breezbook/packages-core";
+import {environmentId, tenantEnvironment, tenantId} from "@breezbook/packages-types";
 import {loadMultiLocationGymTenant} from "./loadMultiLocationGymTenant.js";
 
 export async function setupDevEnvironment() {

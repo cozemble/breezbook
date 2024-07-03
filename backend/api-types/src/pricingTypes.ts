@@ -1,22 +1,23 @@
 import {
-    AddOnId,
     AddOnOrder,
+    Price,
+    Service,
+} from '@breezbook/packages-core';
+import {ResourceRequirementOverride} from "./resourceTypes.js";
+import {
+    AddOnId,
     CouponCode,
-    IsoDate,
-    locationId,
+    IsoDate, locationId,
     LocationId,
     mandatory,
     Minutes,
-    Price, ResourceId, ResourceRequirementId,
-    Service,
     serviceId,
     ServiceId,
     time24Fns,
-    TimePeriod,
     timePeriod,
+    TimePeriod,
     TwentyFourHourClockTime
-} from '@breezbook/packages-core';
-import {ResourceRequirementOverride} from "./resourceTypes.js";
+} from "@breezbook/packages-types";
 
 export interface UnpricedBasketLine {
     _type: 'unpriced.basket.line';
@@ -43,7 +44,7 @@ export function unpricedBasket(lines: UnpricedBasketLine[], couponCode?: CouponC
     };
 }
 
-export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[], resourceRequirementOverrides:ResourceRequirementOverride[] = []): UnpricedBasketLine {
+export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[], resourceRequirementOverrides: ResourceRequirementOverride[] = []): UnpricedBasketLine {
     const theServiceId = typeof serviceIdValue === 'string' ? serviceId(serviceIdValue) : serviceIdValue;
     const theLocationId = typeof locationIdValue === 'string' ? locationId(locationIdValue) : locationIdValue;
     return {

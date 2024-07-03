@@ -1,37 +1,28 @@
 import {
-    availabilityBlock,
     Booking,
     businessAvailability,
     businessConfiguration,
     carwash,
-    carwashForm,
+    carwashForm, configuration,
     coupon,
-    couponCode,
     Customer,
     customer,
     customerForm,
-    dayAndTimePeriod,
-    duration,
-    environmentId,
-    IsoDate,
-    isoDate,
-    isoDateFns,
-    minutes,
     PaymentIntent,
     percentageAsRatio,
     percentageCoupon,
     periodicStartTime,
-    resourceDayAvailability,
-    tenantEnvironment,
-    tenantId,
     tenantSettings,
-    timezone,
     unlimited
 } from '@breezbook/packages-core';
 import {PricedBasket, pricedCreateOrderRequest} from '@breezbook/backend-api-types';
 import {everythingForAvailability} from '../src/express/getEverythingForAvailability.js';
 import {EndpointOutcome} from "../src/infra/endpoint.js";
 import {jexlCondition, multiply, PricingRule} from "@breezbook/packages-pricing";
+import {couponCode, dayAndTimePeriod, duration,
+    environmentId, IsoDate, isoDate, isoDateFns, minutes, tenantEnvironment, tenantId, timezone} from '@breezbook/packages-types';
+import resourceDayAvailability = configuration.resourceDayAvailability;
+import availabilityBlock = configuration.availabilityBlock;
 
 export const today = isoDate();
 export const tomorrow = isoDateFns.addDays(isoDate(), 1);

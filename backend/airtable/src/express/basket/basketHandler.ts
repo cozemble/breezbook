@@ -1,7 +1,7 @@
 import express from 'express';
 import {UnpricedBasket, unpricedBasketFns} from '@breezbook/backend-api-types';
 import {byLocation} from "../../availability/byLocation.js";
-import {TenantEnvironment, mandatory, tenantEnvironmentLocation} from "@breezbook/packages-core";
+import {TenantEnvironment, mandatory, tenantEnvironmentLocation} from "@breezbook/packages-types";
 import {
     asHandler,
     bodyAsJsonParam,

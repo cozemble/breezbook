@@ -13,7 +13,7 @@ import {
 } from "../../prisma/dbtypes.js";
 import {Tenant} from "@breezbook/backend-api-types";
 import {PrismaClient} from "@prisma/client";
-import {EnvironmentId, mandatory} from "@breezbook/packages-core";
+import {EnvironmentId, mandatory} from "@breezbook/packages-types";
 import {toApiService} from "../services/serviceHandlers.js";
 import {
     asHandler,

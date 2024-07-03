@@ -33,7 +33,7 @@
  *
  * 7. Channel-Based Pricing: Different prices for different booking channels, such as online versus in-person.
  */
-import {isoDateFns, price, Price} from './types.js';
+import {price, Price} from './types.js';
 import {AvailableSlot} from "./availability.js";
 import {
     price as pricingPrice,
@@ -42,6 +42,7 @@ import {
     PricingFactor,
     PricingRule
 } from "@breezbook/packages-pricing";
+import {isoDateFns} from "@breezbook/packages-types";
 
 export interface PricedSlot {
     _type: 'priced.slot';
@@ -69,7 +70,7 @@ function factorsForSlot(requiredFactors: string[], slot: AvailableSlot): Pricing
                     type: 'resourceMetadata',
                     value: slot.resourceAllocation.map(ra => ({
                         requirementId: ra.requirement.id.value,
-                        metadata: ra.resource.metadata ?? {}
+                        metadata: ra.resource.metadata
                     }))
                 };
             default:

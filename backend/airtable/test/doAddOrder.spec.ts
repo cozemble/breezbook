@@ -2,13 +2,10 @@ import {expect, test} from 'vitest';
 import {
     booking,
     carwash,
-    couponCode,
     currency,
     customer,
     customerId,
     fullPaymentOnCheckout,
-    isoDate,
-    isoDateFns,
     price,
     priceFns
 } from '@breezbook/packages-core';
@@ -37,6 +34,7 @@ import {
     setDate,
     setServiceForm
 } from "./helpers/orderHelpers.js";
+import {couponCode, isoDate, isoDateFns} from "@breezbook/packages-types";
 
 const london = carwash.locations.london;
 const smallCarWash = carwash.smallCarWash;

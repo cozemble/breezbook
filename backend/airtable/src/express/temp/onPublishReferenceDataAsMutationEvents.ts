@@ -4,7 +4,7 @@ import {prismaClient} from '../../prisma/client.js';
 import {upsertAddOn, upsertService, upsertServiceResourceRequirement} from '../../prisma/breezPrismaMutations.js';
 import {compositeKeyFns} from "../../mutation/mutations.js";
 import {PrismaClient} from "@prisma/client";
-import {TenantEnvironment} from '@breezbook/packages-core';
+import {TenantEnvironment} from '@breezbook/packages-types';
 
 export async function publishReferenceData(prisma: PrismaClient, tenantEnvironment: TenantEnvironment) {
     const addOns = await prisma.add_on.findMany({

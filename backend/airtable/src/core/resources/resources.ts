@@ -1,5 +1,5 @@
 import {PrismaClient} from '@prisma/client'
-import {ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-core";
+import {ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-types";
 import {errorResponse, ErrorResponse, ResourceSummary} from "@breezbook/backend-api-types";
 import {DbResource, DbResourceAvailability, DbResourceImage, DbResourceMarkup} from "../../prisma/dbtypes.js";
 

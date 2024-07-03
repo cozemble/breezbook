@@ -1,5 +1,6 @@
 import {PrismaClient} from '@prisma/client';
-import {carwash, JsonSchemaForm, TenantEnvironment} from "@breezbook/packages-core";
+import {carwash} from "@breezbook/packages-core";
+import {JsonSchemaForm, TenantEnvironment} from "@breezbook/packages-types";
 import {maybeGetTenantSecret, storeTenantSecret} from "../infra/secretsInPostgres.js";
 import {STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME} from "../express/stripeEndpoint.js";
 

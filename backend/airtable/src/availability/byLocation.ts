@@ -9,7 +9,7 @@ import {
     findManyForTenant
 } from "../prisma/dbtypes.js";
 import {PrismaClient} from "@prisma/client";
-import {IsoDate, tenantEnvironment, TenantEnvironmentLocation} from "@breezbook/packages-core";
+import {IsoDate, tenantEnvironment, TenantEnvironmentLocation} from "@breezbook/packages-types";
 import {
     AvailabilityData,
     convertAvailabilityDataIntoEverythingForAvailability,

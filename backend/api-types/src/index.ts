@@ -6,7 +6,7 @@ import {
     ResourceRequirementId,
     resourceType,
     ResourceType
-} from '@breezbook/packages-core';
+} from '@breezbook/packages-types';
 import {BookingIsInThePast} from '@breezbook/packages-core/dist/cancellation.js';
 import {v4 as uuidv4} from 'uuid';
 
@@ -129,26 +129,26 @@ export function cancellationGranted(
 
 export type CancellationGrantResponse = CancellationGranted | BookingIsInThePast;
 
-export type ResourceRequirement = AnySuitableResource | SpecificResource;
+export type ResourceRequirementSpec = AnySuitableResourceSpec | SpecificResourceSpec;
 
-export interface AnySuitableResource {
-    _type: 'any.suitable.resource';
+export interface AnySuitableResourceSpec {
+    _type: 'any.suitable.resource.spec';
     id: ResourceRequirementId
     resourceType: ResourceType
 }
 
-export interface SpecificResource {
-    _type: 'specific.resource';
+export interface SpecificResourceSpec {
+    _type: 'specific.resource.spec';
     id: ResourceRequirementId
     resourceId: ResourceId
 }
 
-export function anySuitableResource(id: string, rt: string): AnySuitableResource {
-    return {_type: 'any.suitable.resource', id: resourceRequirementId(id), resourceType: resourceType(rt)};
+export function anySuitableResourceSpec(id: string, rt: string): AnySuitableResourceSpec {
+    return {_type: 'any.suitable.resource.spec', id: resourceRequirementId(id), resourceType: resourceType(rt)};
 }
 
-export function specificResource(id: string, rid: string): SpecificResource {
-    return {_type: 'specific.resource', id: resourceRequirementId(id), resourceId: resourceId(rid)};
+export function specificResourceSpec(id: string, rid: string): SpecificResourceSpec {
+    return {_type: 'specific.resource.spec', id: resourceRequirementId(id), resourceId: resourceId(rid)};
 }
 
 export interface Service {
@@ -161,7 +161,7 @@ export interface Service {
     hasDynamicPricing: boolean;
     durationMinutes: number;
     image: string;
-    resourceRequirements: ResourceRequirement[]
+    resourceRequirements: ResourceRequirementSpec[]
 }
 
 export interface Location {

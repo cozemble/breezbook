@@ -1,4 +1,4 @@
-import {type Form, type IsoDate, mandatory} from "@breezbook/packages-core";
+import {type Form, type IsoDate, mandatory} from "@breezbook/packages-types";
 import {
     type AddOnSummary,
     type Availability,

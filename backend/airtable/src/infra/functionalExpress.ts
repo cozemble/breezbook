@@ -13,11 +13,13 @@ import {
     serviceId,
     ServiceId,
     tenantEnvironment,
-    TenantEnvironment, TenantEnvironmentLocation, tenantEnvironmentLocation,
+    TenantEnvironment,
+    TenantEnvironmentLocation,
+    tenantEnvironmentLocation,
     tenantId,
     TenantId
-} from '@breezbook/packages-core';
-import {ErrorResponse, PricedCreateOrderRequest} from '@breezbook/backend-api-types';
+} from '@breezbook/packages-types';
+import {ErrorResponse} from '@breezbook/backend-api-types';
 import {PrismaClient} from '@prisma/client';
 import {Mutations} from '../mutation/mutations.js';
 import {applyMutations} from "../prisma/applyMutations.js";

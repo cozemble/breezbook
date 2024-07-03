@@ -1,6 +1,6 @@
 import {afterAll, beforeAll, describe, test, expect} from 'vitest';
 import {publishReferenceData} from "../../../src/express/temp/onPublishReferenceDataAsMutationEvents.js";
-import {environmentId, tenantEnvironment, tenantId} from "@breezbook/packages-core";
+import {environmentId, tenantEnvironment, tenantId} from "@breezbook/packages-types";
 import {StartedDockerComposeEnvironment} from "testcontainers";
 import {startTestEnvironment, stopTestEnvironment} from "../../setup.js";
 import {prismaClient} from "../../../src/prisma/client.js";

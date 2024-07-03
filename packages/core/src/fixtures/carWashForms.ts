@@ -1,4 +1,4 @@
-import { JsonSchemaForm } from '../types.js';
+import {JsonSchemaForm} from "@breezbook/packages-types";
 
 export const carwashForm: JsonSchemaForm = {
 	_type: 'json.schema.form',

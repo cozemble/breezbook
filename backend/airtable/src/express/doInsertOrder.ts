@@ -1,13 +1,8 @@
 import {
     Customer,
-    FormId,
-    orderId,
     PaymentIntent,
-    ResourceRequirement,
     Service,
-    TenantEnvironment,
     TenantSettings,
-    timePeriodFns
 } from '@breezbook/packages-core';
 import {orderCreatedResponse, OrderCreatedResponse} from '@breezbook/backend-api-types';
 import {v4 as uuidv4} from 'uuid';
@@ -28,6 +23,9 @@ import {
 import {Mutation, Mutations, mutations as mutationsConstructor} from '../mutation/mutations.js';
 import {DbPaymentMethod} from "../prisma/dbtypes.js";
 import {EverythingToCreateOrder, HydratedBasketLine} from "./onAddOrderExpress.js";
+import {FormId, orderId, TenantEnvironment, timePeriodFns} from "@breezbook/packages-types";
+import {resourcing} from "@breezbook/packages-resourcing";
+import ResourceRequirement = resourcing.ResourceRequirement;
 
 function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, customer: Customer, tenantSettings: TenantSettings): Mutation[] {
     const tenant_id = tenantEnvironment.tenantId.value;
@@ -118,12 +116,16 @@ function upsertServiceFormValues(
 }
 
 function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment, requirement: ResourceRequirement, bookingId: string): CreateBookingResourceRequirement {
+    if(requirement._type === "complex.resource.requirement") {
+        throw new Error("Cannot handle complex resource requirements");
+    }
     if (requirement._type === "specific.resource") {
         return createBookingResourceRequirement({
             id: uuidv4(),
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value,
             booking_id: bookingId,
+            requirement_id: requirement.id.value,
             resource_id: requirement.resource.id.value,
             requirement_type: 'specific_resource'
         })
@@ -133,8 +135,9 @@ function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value,
             booking_id: bookingId,
+            requirement_id: requirement.id.value,
             requirement_type: 'any_suitable',
-            resource_type: requirement.requirement.value
+            resource_type: requirement.resourceType.value
         })
     }
 }

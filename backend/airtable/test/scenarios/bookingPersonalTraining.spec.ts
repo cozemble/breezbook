@@ -2,27 +2,14 @@ import {beforeEach, describe, expect, test} from "vitest";
 import {PrismockClient} from "prismock";
 import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMultiLocationGymTenant.js";
 import {EndpointDependencies, EndpointOutcome, specifiedDeps} from "../../src/infra/endpoint.js";
-import {
-    customer,
-    environmentId,
-    fullPaymentOnCheckout,
-    IsoDate,
-    isoDateFns,
-    locationId,
-    mandatory,
-    resourceType,
-    serviceId,
-    tenantEnvironment,
-    tenantId,
-    time24
-} from "@breezbook/packages-core";
+import {customer, fullPaymentOnCheckout,} from "@breezbook/packages-core";
 import {expectJson} from "../helper.js";
 import {
     AvailabilityResponse,
     OrderCreatedResponse,
     PricedBasket,
     pricedCreateOrderRequest,
-    ResourceRequirement,
+    ResourceRequirementSpec,
     resourceRequirementOverride,
     ResourceSummary,
     Service,
@@ -41,6 +28,15 @@ import {basketPriceRequestEndpoint} from "../../src/express/basket/basketHandler
 import {addOrderEndpoint} from "../../src/express/onAddOrderExpress.js";
 import {applyMutations} from "../../src/prisma/applyMutations.js";
 import {requestOf} from "@breezbook/packages-http/dist/requests.js";
+import {
+    environmentId, IsoDate,
+    isoDateFns,
+    locationId,
+    mandatory,
+    resourceType,
+    serviceId, tenantEnvironment,
+    tenantId, time24
+} from "@breezbook/packages-types";
 
 const env = environmentId(multiLocationGym.environment_id);
 const tenant = tenantId(multiLocationGym.tenant_id);
@@ -60,7 +56,7 @@ const params = {
 
 async function getReferenceData(deps: EndpointDependencies): Promise<{
     personalTrainingService: Service,
-    personalTrainerRequirement: ResourceRequirement,
+    personalTrainerRequirement: ResourceRequirementSpec,
     ptMike: ResourceSummary,
     ptMete: ResourceSummary,
 }> {
@@ -80,7 +76,7 @@ async function getReferenceData(deps: EndpointDependencies): Promise<{
 async function bookLastSlotOnDay(deps: EndpointDependencies, requirementOverrides: {
     resourceId: string;
     requirementId: string
-}[], personalTrainingService: Service, personalTrainerRequirement: ResourceRequirement, preferredPt: ResourceSummary, day: IsoDate): Promise<OrderCreatedResponse> {
+}[], personalTrainingService: Service, personalTrainerRequirement: ResourceRequirementSpec, preferredPt: ResourceSummary, day: IsoDate): Promise<OrderCreatedResponse> {
     const onDay = `?fromDate=${day.value}&toDate=${day.value}`
     const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onDay, {requirementOverrides}), params)))
     const availableSlots = availabilityResponse.slots?.[friday.value] ?? []

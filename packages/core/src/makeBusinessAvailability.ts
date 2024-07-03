@@ -1,9 +1,5 @@
+import {BlockedTime, businessAvailability, BusinessAvailability, businessHours, BusinessHours,} from "./types.js";
 import {
-    BlockedTime,
-    businessAvailability,
-    BusinessAvailability,
-    businessHours,
-    BusinessHours,
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
@@ -12,7 +8,7 @@ import {
     isoDateFns,
     timePeriod,
     TwentyFourHourClockTime
-} from "./types.js";
+} from "@breezbook/packages-types";
 
 function availabilityForDate(businessHours: BusinessHours[], date: IsoDate): DayAndTimePeriod[] {
     const dayOfWeek = isoDateFns.dayOfWeek(date);

@@ -1,6 +1,6 @@
 import {CompositeKey, Create, Entity, Mutation, Update, Upsert} from '../mutation/mutations.js';
 import { AirtableMapping } from '../airtable/mappings.js';
-import { id, Id } from '@breezbook/packages-core';
+import { id, Id } from '@breezbook/packages-types';
 import { SynchronisationIdRepository } from './dataSynchronisation.js';
 
 interface AirtableCreate {

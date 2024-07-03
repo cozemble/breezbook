@@ -1,9 +1,10 @@
-import { onMount } from 'svelte';
 import { derived, get, type Readable, writable } from 'svelte/store';
 import { H } from 'highlight.run';
 
-import * as core from '@breezbook/packages-core';
-import { addOnId, addOnOrder } from '@breezbook/packages-core';
+import * as types from '@breezbook/packages-types';
+import * as core from '@breezbook/packages-core'
+import { addOnId } from '@breezbook/packages-types';
+import {addOnOrder} from '@breezbook/packages-core';
 import {
 	type PricedBasket,
 	pricedCreateOrderRequest,
@@ -51,16 +52,16 @@ function createCheckoutStore() {
 
 			const basketItems = $items.map((item) => {
 				return unpricedBasketLine(
-					core.serviceId(item.service.id),
-					core.locationId(tenantLocation.id),
+					types.serviceId(item.service.id),
+					types.locationId(tenantLocation.id),
 					item.extras.map((extra) => addOnOrder(addOnId(extra.id))),
-					core.isoDate(item.time.day),
-					core.time24(item.time.start),
+					types.isoDate(item.time.day),
+					types.time24(item.time.start),
 					[item.details]
 				);
 			});
 
-			const coupon = $couponCode ? core.couponCode($couponCode) : undefined;
+			const coupon = $couponCode ? types.couponCode($couponCode) : undefined;
 			const unpriced = unpricedBasket(basketItems, coupon);
 
 			api.basket
@@ -113,8 +114,8 @@ function createCheckoutStore() {
 		const patchedCustomer = {
 			...theCustomer,
 			id: core.customerId(),
-			email: core.email(theCustomer.email as unknown as string),
-			phone: core.phoneNumber(theCustomer.phone as unknown as string),
+			email: types.email(theCustomer.email as unknown as string),
+			phone: types.phoneNumber(theCustomer.phone as unknown as string),
 		};
 		console.log({patchedCustomer})
 

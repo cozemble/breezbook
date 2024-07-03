@@ -35,7 +35,7 @@ import {
     service_resource_requirements,
     booking_resource_requirements
 } from '@prisma/client';
-import {TenantEnvironment} from '@breezbook/packages-core';
+import {TenantEnvironment} from '@breezbook/packages-types';
 
 export type {
     resource_availability as DbResourceAvailability,

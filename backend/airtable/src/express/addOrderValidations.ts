@@ -1,31 +1,27 @@
 import {
+    availability,
+    availabilityConfiguration,
     booking,
-    Booking,
+    businessAvailability,
+    mandatory,
+} from '@breezbook/packages-core';
+import {EverythingForAvailability} from './getEverythingForAvailability.js';
+import {errorResponse, ErrorResponse} from '@breezbook/backend-api-types';
+import {addOrderErrorCodes, EverythingToCreateOrder, hydratedBasketFns} from './onAddOrderExpress.js';
+import Ajv from 'ajv';
+import {priceBasket} from "../core/basket/priceBasket.js";
+import {
     CouponCode,
     Form,
     FormId,
     IsoDate,
     isoDateFns,
-    mandatory,
     time24Fns,
     TimePeriod,
     timePeriod,
     timePeriodFns
-} from '@breezbook/packages-core';
-import {EverythingForAvailability, everythingForAvailabilityFns} from './getEverythingForAvailability.js';
-import {
-    errorResponse,
-    ErrorResponse,
-    pricedBasketFns,
-    pricedBasketLineFns,
-    PricedCreateOrderRequest
-} from '@breezbook/backend-api-types';
-import {
-    applyBookingsToResourceAvailability
-} from '@breezbook/packages-core/dist/applyBookingsToResourceAvailability.js';
-import {addOrderErrorCodes, EverythingToCreateOrder, HydratedBasket, hydratedBasketFns} from './onAddOrderExpress.js';
-import Ajv from 'ajv';
-import {priceBasket} from "../core/basket/priceBasket.js";
+} from "@breezbook/packages-types";
+import {resourcing} from "@breezbook/packages-resourcing";
 
 // @ts-ignore
 const ajv = new Ajv({allErrors: true});
@@ -109,20 +105,20 @@ export function validateServiceForms(everythingForTenant: EverythingForAvailabil
 }
 
 export function validateAvailability(everythingForAvailability: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder) {
-    const projectedBookings: Booking[] = [...everythingForAvailability.bookings];
-    for (const [index, line] of everythingToCreateOrder.basket.lines.entries()) {
-        const service = line.service;
-        const projectedBooking = booking(everythingToCreateOrder.customer.id, service, line.date, timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, service.duration)));
-        projectedBookings.push(projectedBooking);
-        try {
-            applyBookingsToResourceAvailability(
-                everythingForAvailability.businessConfiguration.resourceAvailability,
-                projectedBookings
-            );
-        } catch (e: unknown) {
-            return errorResponse(addOrderErrorCodes.noAvailability, (e as Error).message + ` for service ${line.service.id.value} in order line ${index}`);
+    const availabilityConfig = availabilityConfiguration(
+        businessAvailability(everythingForAvailability.businessConfiguration.availability.availability),
+        everythingForAvailability.businessConfiguration.resourceAvailability,
+        everythingForAvailability.businessConfiguration.timeslots,
+        everythingForAvailability.businessConfiguration.startTimeSpec)
+    const newBookings = everythingToCreateOrder.basket.lines.map(line => booking(everythingToCreateOrder.customer.id, line.service, line.date, timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, line.service.duration))));
+    const availabilityOutcomes: resourcing.ResourceBookingResult[] = availability.checkAvailability(availabilityConfig, everythingForAvailability.bookings, newBookings);
+    for (const [index, outcome] of availabilityOutcomes.entries()) {
+        if (outcome._type === 'unresourceable.booking') {
+            const line = mandatory(everythingToCreateOrder.basket.lines[index], `Order line ${index} missing`);
+            return errorResponse(addOrderErrorCodes.noAvailability, `For service ${line.service.id.value} in order line ${index}`);
         }
-    }    return null;
+    }
+    return null
 }
 
 function businessIsOpen(everythingForTenant: EverythingForAvailability, date: IsoDate, period: TimePeriod): ErrorResponse | null {
@@ -135,7 +131,7 @@ function businessIsOpen(everythingForTenant: EverythingForAvailability, date: Is
 
 export function validateOpeningHours(everythingForTenant: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder): ErrorResponse | null {
 
-    const validationOutcomes = everythingToCreateOrder.basket.lines.map(line => businessIsOpen(everythingForTenant, line.date, timePeriodFns.calcPeriod(line.startTime,line.service.duration)))
+    const validationOutcomes = everythingToCreateOrder.basket.lines.map(line => businessIsOpen(everythingForTenant, line.date, timePeriodFns.calcPeriod(line.startTime, line.service.duration)))
     return validationOutcomes.find(o => o != null) ?? null
 }
 

@@ -6,6 +6,7 @@ import {
     isoDate,
     IsoDate,
     mandatory,
+    Metadata,
     resourceId,
     ResourceId,
     resourceRequirementId,
@@ -17,7 +18,7 @@ import {
     timePeriod,
     timePeriodFns,
     TwentyFourHourClockTime
-} from "@breezbook/packages-core";
+} from "@breezbook/packages-types";
 
 export namespace resourcing {
     type ResourceRequirements = ResourceRequirementsWithCapacity | ResourceRequirementsWithoutCapacity
@@ -52,10 +53,23 @@ export namespace resourcing {
         return capacity ? resourceRequirementsWithCapacity(resourceRequirements, capacity) : resourceRequirementsWithoutCapacity(resourceRequirements)
     }
 
+    export type ResourceAllocationRule =
+        | { type: 'any' }
+        | { type: 'unique' }
+        | { type: 'sameAs', referenceRequirementId: string }
+        | { type: 'differentFrom', referenceRequirementId: string }
+        | { type: 'custom', rule: (allocatedResources: Resource[]) => boolean }
+
+    export const resourceAllocationRules = {
+        any: {type: 'any'} as const,
+        unique: {type: 'unique'} as const,
+    }
+
     export interface AnySuitableResource {
         _type: 'any.suitable.resource'
         id: ResourceRequirementId
-        requirement: ResourceType
+        resourceType: ResourceType
+        allocationRule: ResourceAllocationRule
     }
 
     export interface SpecificResource {
@@ -64,10 +78,17 @@ export namespace resourcing {
         resource: Resource
     }
 
-    export function anySuitableResource(requirement: ResourceType, id = resourceRequirementId()): AnySuitableResource {
+    export interface SpecificResourceSpec {
+        _type: 'specific.resource.spec'
+        id: ResourceRequirementId
+        resourceId: ResourceId
+    }
+
+    export function anySuitableResource(requirement: ResourceType, allocationRule: ResourceAllocationRule = resourceAllocationRules.any, id = resourceRequirementId()): AnySuitableResource {
         return {
             _type: 'any.suitable.resource',
-            requirement,
+            resourceType: requirement,
+            allocationRule,
             id
         }
     }
@@ -80,7 +101,15 @@ export namespace resourcing {
         }
     }
 
-    interface AttributeRequirement {
+    export function specificResourceSpec(resourceId: ResourceId, id = resourceRequirementId()): SpecificResourceSpec {
+        return {
+            _type: 'specific.resource.spec',
+            resourceId,
+            id
+        }
+    }
+
+    interface MetadataRequirement {
         name: string;
         value: string | number | boolean;
         operator: 'equals' | 'greaterThan' | 'lessThan' | 'contains';
@@ -90,21 +119,37 @@ export namespace resourcing {
         _type: 'complex.resource.requirement';
         id: ResourceRequirementId;
         resourceType: ResourceType;
-        attributeRequirements: AttributeRequirement[];
+        metadataRequirements: MetadataRequirement[];
     }
 
-    export function complexResourceRequirement(resourceType: ResourceType, attributeRequirements: AttributeRequirement[], id = resourceRequirementId()): ComplexResourceRequirement {
+    export function complexResourceRequirement(resourceType: ResourceType, metadataRequirements: MetadataRequirement[], id = resourceRequirementId()): ComplexResourceRequirement {
         return {
             _type: 'complex.resource.requirement',
             id,
             resourceType,
-            attributeRequirements
+            metadataRequirements
         }
     }
 
     export type ResourceRequirement = AnySuitableResource | SpecificResource | ComplexResourceRequirement;
 
-    interface Service {
+    export const resourceRequirementFns = {
+        getAllocationRule(requirement: ResourceRequirement): ResourceAllocationRule {
+            if (requirement._type === "any.suitable.resource") {
+                return requirement.allocationRule
+            }
+            return resourceAllocationRules.any
+        },
+        getResourceType(requirement: ResourceRequirement): ResourceType {
+            if (requirement._type === "specific.resource") {
+                return requirement.resource.type
+            }
+            return requirement.resourceType
+        }
+    }
+
+
+    export interface Service {
         _type: "service"
         id: ServiceId
         resourceRequirements: ResourceRequirements
@@ -148,7 +193,7 @@ export namespace resourcing {
         }
     }
 
-    interface BookingSpec {
+    export interface BookingSpec {
         id: BookingId
         service: Service
         fixedResourceCommitments: ResourceCommitment[]
@@ -164,7 +209,7 @@ export namespace resourcing {
         }
     }
 
-    interface Booking extends BookingSpec {
+    export interface Booking extends BookingSpec {
         timeslot: Timeslot
     }
 
@@ -220,26 +265,21 @@ export namespace resourcing {
         }
     }
 
-    interface ResourceAttribute {
-        name: string;
-        value: string | number | boolean;
-    }
-
-    interface Resource {
+    export interface Resource {
         _type: "resource"
         id: ResourceId
         type: ResourceType
         availability: Timeslot[]
-        attributes: ResourceAttribute[];
+        metadata: Metadata;
     }
 
-    export function resource(type: ResourceType, availability: Timeslot[], attributes: ResourceAttribute[] = [], id = resourceId()): Resource {
+    export function resource(type: ResourceType, availability: Timeslot[], metadata: Metadata = {}, id = resourceId()): Resource {
         return {
             _type: "resource",
             id,
             type,
             availability,
-            attributes
+            metadata
         }
     }
 
@@ -274,19 +314,21 @@ export namespace resourcing {
             return false;
         }
 
-        return requirement.attributeRequirements.every(attrReq => {
-            const resourceAttr = resource.attributes.find(attr => attr.name === attrReq.name);
-            if (!resourceAttr) return false;
+        return requirement.metadataRequirements.every(metadataReq => {
+            if (!(metadataReq.name in resource.metadata)) {
+                return false;
+            }
+            const value = resource.metadata[metadataReq.name];
 
-            switch (attrReq.operator) {
+            switch (metadataReq.operator) {
                 case 'equals':
-                    return resourceAttr.value === attrReq.value;
+                    return value === metadataReq.value;
                 case 'greaterThan':
-                    return typeof resourceAttr.value === 'number' && typeof attrReq.value === 'number' && resourceAttr.value > attrReq.value;
+                    return typeof value === 'number' && typeof metadataReq.value === 'number' && value > metadataReq.value;
                 case 'lessThan':
-                    return typeof resourceAttr.value === 'number' && typeof attrReq.value === 'number' && resourceAttr.value < attrReq.value;
+                    return typeof value === 'number' && typeof metadataReq.value === 'number' && value < metadataReq.value;
                 case 'contains':
-                    return typeof resourceAttr.value === 'string' && resourceAttr.value.includes(attrReq.value as string);
+                    return typeof value === 'string' && value.includes(metadataReq.value as string);
                 default:
                     return false;
             }
@@ -295,7 +337,7 @@ export namespace resourcing {
 
     function resourceMatchesRequirement(resource: Resource, requirement: ResourceRequirement): boolean {
         if (requirement._type === "any.suitable.resource") {
-            return resource.type.value === requirement.requirement.value;
+            return resource.type.value === requirement.resourceType.value;
         }
         if (requirement._type === "specific.resource") {
             return resource.id.value === requirement.resource.id.value;
@@ -306,7 +348,7 @@ export namespace resourcing {
         return false;
     }
 
-    type ResourceBookingResult = ResourcedBooking | UnresourceableBooking
+    export type ResourceBookingResult = ResourcedBooking | UnresourceableBooking
 
     interface ResourceUsage {
         _type: "resource.usage"
@@ -334,8 +376,24 @@ export namespace resourcing {
         }
     }
 
+    function validateBooking(booking: Booking): string | null {
+        const complexRequirements = booking.service.resourceRequirements.resourceRequirements.filter(r => r._type === "complex.resource.requirement") as ComplexResourceRequirement[]
+        const complexResourceTypes = complexRequirements.map(r => r.resourceType.value)
+        const uniqueComplexResourceTypes = new Set(complexResourceTypes)
+        if (complexResourceTypes.length !== uniqueComplexResourceTypes.size) {
+            return "Multiple complex requirements against the same resource type are disallowed"
+        }
+        return null
+    }
+
     function allocateResources(accumulator: ResourcingAccumulator, booking: Booking, options: ResourceBookingsOptions): ResourcingAccumulator {
-        const resourcePreferences: ResourcePreferences = {disfavoredResources: options.disfavoredResources || []}
+        const maybeError = validateBooking(booking)
+        if (maybeError) {
+            throw new Error(maybeError)
+        }
+        const resourcePreferences: ResourcePreferences = {
+            disfavoredResources: options.disfavoredResources || []
+        }
         const resourcedOutcome = resourceBooking(accumulator.resources, booking, resourcePreferences)
         if (resourcedOutcome._type === "unresourceable.booking") {
             return {
@@ -372,7 +430,8 @@ export namespace resourcing {
 
     function getAvailableResources(resources: ResourceUsage[], requirement: ResourceRequirement, booking: Booking) {
         if (booking.service.resourceRequirements._type === "resource.requirements.with.capacity") {
-            const maybeExistingResource = resources.find(r => r.bookings.some(b => timeslotFns.overlaps(b.timeslot, booking.timeslot) && b.service.id.value === booking.service.id.value))
+            const maybeExistingResource = resources.find(r => r.bookings.some(b => timeslotFns.overlaps(b.timeslot, booking.timeslot)
+                && b.service.id.value === booking.service.id.value && resourceMatchesRequirement(r.resource, requirement)))
             if (maybeExistingResource) {
                 const totalBookedCapacity = maybeExistingResource.bookings.filter(b => timeslotFns.overlaps(b.timeslot, booking.timeslot)).reduce((total, b) => total + b.bookedCapacity.value, 0)
                 const serviceCapacity = booking.service.resourceRequirements.capacity.value
@@ -392,13 +451,13 @@ export namespace resourcing {
         return resource.bookings.some(b => timeslotFns.intersects(b.timeslot, timeslot))
     }
 
-    function assignSpecificResource(specificRequirement: SpecificResource, availableResources: ResourceUsage[], requestedRequirement: ResourceRequirement) {
+    function assignSpecificResource(specificRequirement: SpecificResource, availableResources: ResourceUsage[]) {
         const resource = specificRequirement.resource
         const found = availableResources.find(r => r.resource.id.value === resource.id.value)
         if (!found) {
-            return unsatisfiableResourceRequirement(requestedRequirement)
+            return unsatisfiableResourceRequirement(specificRequirement)
         }
-        return resourceCommitment(requestedRequirement, found.resource)
+        return resourceCommitment(specificRequirement, found.resource)
     }
 
     function assignLeastUsedResource(availableResources: ResourceUsage[], requirement: ResourceRequirement, resourcePreferences: ResourcePreferences, forTimeslot: Timeslot) {
@@ -415,17 +474,50 @@ export namespace resourcing {
         return resourcePreferences.disfavoredResources.some(r => r.resource.id.value === resource.id.value && r.slots.some(s => timeslotFns.overlaps(s, forTimeslot)))
     }
 
+    function pickBestResource(availableResources: ResourceUsage[], requirement: ResourceRequirement, resourcePreferences: ResourcePreferences, bookingTimeslot: Timeslot): ResourceCommitment | UnsatisfiableResourceRequirement {
+        if (availableResources.length === 0) {
+            return unsatisfiableResourceRequirement(requirement)
+        }
+        if (requirement._type === "specific.resource") {
+            return assignSpecificResource(requirement, availableResources);
+        }
+        return assignLeastUsedResource(availableResources, requirement, resourcePreferences, bookingTimeslot);
+    }
+
+    function replaceRequirement(option: ResourceCommitment | UnsatisfiableResourceRequirement, requirement: ResourceRequirement): ResourceCommitment | UnsatisfiableResourceRequirement {
+        if (option._type === "unsatisfiable.resource.requirement") {
+            return unsatisfiableResourceRequirement(requirement)
+        }
+        return resourceCommitment(requirement, option.resource)
+    }
+
+    function satisfiesAllocationRule(resource: Resource, requirement: ResourceRequirement, resourcesAllocatedToBooking: ResourceCommitment[]): boolean {
+        const allocationRule = resourceRequirementFns.getAllocationRule(requirement)
+        const resourceType = resourceRequirementFns.getResourceType(requirement)
+        if (allocationRule.type === 'any') {
+            return true
+        }
+        if (allocationRule.type === 'unique') {
+            // deny all allocated resources of the same type
+            const isSameType = resource.type.value === resourceType.value
+            if (!isSameType) {
+                return true
+            }
+            return !resourcesAllocatedToBooking.some(r => r.resource.id.value === resource.id.value)
+        }
+        return true
+    }
+
     function resourceBooking(resources: ResourceUsage[], booking: Booking, resourcePreferences: ResourcePreferences): ResourceBookingResult {
+        const resourcesAllocatedToBooking: ResourceCommitment[] = []
         const allocationOutcome = booking.service.resourceRequirements.resourceRequirements.map(requirement => {
             const activeRequirement = replaceIfFixed(requirement, booking.fixedResourceCommitments)
-            const availableResources = getAvailableResources(resources, activeRequirement, booking);
-            if (availableResources.length === 0) {
-                return unsatisfiableResourceRequirement(requirement)
+            const availableResources = getAvailableResources(resources, activeRequirement, booking).filter(r => satisfiesAllocationRule(r.resource, activeRequirement, resourcesAllocatedToBooking))
+            const pick = replaceRequirement(pickBestResource(availableResources, activeRequirement, resourcePreferences, booking.timeslot), requirement)
+            if (pick._type === "resource.commitment") {
+                resourcesAllocatedToBooking.push(pick)
             }
-            if (activeRequirement._type === "specific.resource") {
-                return assignSpecificResource(activeRequirement, availableResources, requirement);
-            }
-            return assignLeastUsedResource(availableResources, requirement, resourcePreferences, booking.timeslot);
+            return pick
         })
         const unsatisfiable = allocationOutcome.filter(a => a._type === "unsatisfiable.resource.requirement")
         if (unsatisfiable.length > 0) {

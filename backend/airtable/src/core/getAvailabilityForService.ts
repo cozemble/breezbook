@@ -11,20 +11,15 @@ import {
     calculatePrice,
     errorResponse,
     ErrorResponse,
-    Form,
-    IsoDate,
-    isoDateFns,
     mandatory,
     Price,
     PricedSlot,
     Service,
     Service as DomainService,
     serviceFns,
-    ServiceId,
     serviceRequest,
     startTimeFns,
     success,
-    values
 } from '@breezbook/packages-core';
 import {
     AddOnSummary,
@@ -34,6 +29,7 @@ import {
     TimeSlotAvailability,
     timeSlotAvailability
 } from '@breezbook/backend-api-types';
+import {Form, IsoDate, isoDateFns, ServiceId, values} from "@breezbook/packages-types";
 
 function toTimeSlotAvailability(slot: AvailableSlot, price: Price): TimeSlotAvailability {
     const startTime24 = startTimeFns.toTime24(slot.startTime)

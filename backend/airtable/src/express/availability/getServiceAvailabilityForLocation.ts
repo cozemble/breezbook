@@ -14,26 +14,24 @@ import {
 } from "../../infra/endpoint.js";
 import {byLocation} from "../../availability/byLocation.js";
 import {getAvailabilityForService} from "../../core/getAvailabilityForService.js";
+import {failure, Failure, serviceFns, success,} from "@breezbook/packages-core";
 import {
-    failure,
-    Failure,
+    byId,
     IsoDate,
     mandatory,
-    resourceFns,
     resourceId,
     ResourceId,
     resourceRequirementId,
     ResourceRequirementId,
-    serviceFns,
     ServiceId,
-    specificResource,
-    success,
     TenantEnvironmentLocation
-} from "@breezbook/packages-core";
+} from "@breezbook/packages-types";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
 import {EverythingForAvailability} from "../getEverythingForAvailability.js";
 import {HttpResponse} from "@breezbook/packages-http/dist/contract.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
+import {resourcing} from "@breezbook/packages-resourcing";
+import specificResource = resourcing.specificResource;
 
 interface RequirementOverride {
     requirementId: ResourceRequirementId;
@@ -94,14 +92,14 @@ export async function getServiceAvailabilityForLocationEndpoint(deps: EndpointDe
 
 function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAvailabilityRequest): EverythingForAvailability {
     const theService = serviceFns.maybeFindService(e.businessConfiguration.services, request.serviceId)
-    if(!theService) {
+    if (!theService) {
         return e;
     }
     const mutatedService = {
         ...theService, resourceRequirements: theService.resourceRequirements.map(req => {
             const maybeOverride = request.requirementOverrides.find(o => o.requirementId.value === req.id.value)
             if (maybeOverride) {
-                return specificResource(resourceFns.findById(e.businessConfiguration.resources, maybeOverride.resourceId), maybeOverride.requirementId)
+                return specificResource(byId.find(e.businessConfiguration.resources, maybeOverride.resourceId), maybeOverride.requirementId)
             }
             return req;
         })

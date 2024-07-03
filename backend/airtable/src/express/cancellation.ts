@@ -10,11 +10,11 @@ import {
     withThreeRequestParams,
     withTwoRequestParams
 } from '../infra/functionalExpress.js';
-import {BookingId, Clock, resourceType, SystemClock} from '@breezbook/packages-core';
+import {Clock, SystemClock} from '@breezbook/packages-core';
 import {
-    DbBooking,
     DbCancellationGrant,
-    DbRefundRule, DbResource,
+    DbRefundRule,
+    DbResource,
     DbResourceType,
     DbService,
     DbServiceResourceRequirement,
@@ -28,6 +28,7 @@ import {updateBooking, updateCancellationGrant} from '../prisma/breezPrismaMutat
 import {jsDateFns} from '@breezbook/packages-core/dist/jsDateFns.js';
 import {Mutations, mutations} from '../mutation/mutations.js';
 import {DbBookingAndResourceRequirements} from "./getEverythingForAvailability.js";
+import {BookingId, resourceType} from "@breezbook/packages-types";
 
 function findBookingById(bookingId: BookingId): DbResourceFinder<DbBookingAndResourceRequirements> {
     return (prisma, tenantEnvironment) => {
@@ -79,7 +80,7 @@ export function doCancellationRequest(
     services: DbService[],
     theBooking: DbBookingAndResourceRequirements,
     serviceResourceRequirements: DbServiceResourceRequirement[],
-    resources:DbResource[],
+    resources: DbResource[],
     clock = new SystemClock()
 ): HttpError | CancellationGranted {
     const mappedResourceTypes = resourceTypes.map((rt) => resourceType(rt.id));

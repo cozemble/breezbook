@@ -3,10 +3,8 @@ import {
 	addOnOrder,
 	carwash,
 	coupon,
-	couponCode,
 	currency,
 	customer,
-	isoDate,
 	order,
 	orderFns,
 	orderLine,
@@ -17,6 +15,7 @@ import {
 	unlimited
 } from '../src/index.js';
 import { calculateOrderTotal } from '../src/calculateOrderTotal.js';
+import {couponCode, isoDate} from "@breezbook/packages-types";
 
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671");
 const twentyPercentOff = coupon(

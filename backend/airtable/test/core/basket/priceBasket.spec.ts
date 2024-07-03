@@ -5,14 +5,12 @@ import {priceBasket, pricingErrorCodes} from '../../../src/core/basket/priceBask
 import {
     addOnOrder,
     carwash,
-    couponCode,
     currencies,
-    isoDate,
-    isoDateFns,
     price,
     priceFns
 } from '@breezbook/packages-core';
 import {addOrderErrorCodes} from '../../../src/express/onAddOrderExpress.js';
+import {couponCode, isoDate, isoDateFns} from '@breezbook/packages-types';
 
 const today = isoDate();
 const dayBeyondDynamicPricing = isoDateFns.addDays(today, 10);

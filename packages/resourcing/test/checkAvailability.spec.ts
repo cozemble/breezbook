@@ -1,6 +1,6 @@
 import {describe, expect, test} from 'vitest';
 import {resourcing} from "../src/index.js";
-import {capacity, resourceId, resourceType} from '@breezbook/packages-core';
+import {capacity, resourceId, resourceType} from '@breezbook/packages-types';
 import checkAvailability = resourcing.checkAvailability;
 import resource = resourcing.resource;
 import timeslotFns = resourcing.timeslotFns;
@@ -19,7 +19,7 @@ import unavailable = resourcing.unavailable;
 
 describe("given a service requiring fungible resources without capacity, checkAvailability", () => {
     const room = resourceType("room")
-    const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], resourceId("room1"))
+    const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")],[], resourceId("room1"))
     const resources = [room1]
     const anyRoom = anySuitableResource(room)
     const theService = service(resourceRequirements([anyRoom]))

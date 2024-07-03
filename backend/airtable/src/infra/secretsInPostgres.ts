@@ -1,4 +1,4 @@
-import {EnvironmentId, TenantEnvironment} from '@breezbook/packages-core';
+import {EnvironmentId, TenantEnvironment} from '@breezbook/packages-types';
 import {prismaClient} from '../prisma/client.js';
 
 export async function storeTenantSecret(

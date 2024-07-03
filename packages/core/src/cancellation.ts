@@ -1,6 +1,7 @@
-import { Booking, isoDateFns, PercentageAsRatio, ValueType } from './types.js';
+import { Booking, PercentageAsRatio } from './types.js';
 import { Clock } from './clock.js';
 import { jsDateFns } from './jsDateFns.js';
+import {isoDateFns, ValueType} from "@breezbook/packages-types";
 
 export interface RefundPossible {
 	_type: 'refund.possible';

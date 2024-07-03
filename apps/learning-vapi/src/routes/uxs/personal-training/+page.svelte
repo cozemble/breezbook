@@ -1,7 +1,7 @@
 <script lang="ts">
     import {onMount} from 'svelte'
     import {
-        type AnySuitableResource,
+        type AnySuitableResourceSpec,
         type ResourceSummary,
         type Service,
         type Tenant
@@ -16,7 +16,7 @@
     let selectedPersonalTrainer: ResourceSummary | null = null
     // let serviceLocation: ServiceLocation | null = null
     let locationId: string | null = null
-    let personalTrainerRequirement: AnySuitableResource
+    let personalTrainerRequirement: AnySuitableResourceSpec
     let personalTrainingService: Service
 
     onMount(async () => {
@@ -29,7 +29,7 @@
     async function fetchPersonalTrainers(locationId: string) {
         personalTrainers = await fetchJson<ResourceSummary[]>(backendUrl(`/api/dev/breezbook-gym/${locationId}/resources/personal.trainer/list`), {method: "GET"})
         personalTrainingService = mandatory(tenant.services.find(s => s.slug === 'pt1hr'), `Service pt1hr not found`)
-        personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`) as AnySuitableResource;
+        personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`) as AnySuitableResourceSpec;
     }
 
     function toggleSelection(personalTrainer: ResourceSummary) {

@@ -1,13 +1,12 @@
 import {
     AddOn,
     BusinessConfiguration,
-    isoDate,
     priceFns,
     Service,
-    time24Fns,
     TimeslotSpec
 } from "@breezbook/packages-core";
 import {PricingRule} from "@breezbook/packages-pricing";
+import {isoDate, time24Fns} from "@breezbook/packages-types";
 
 export interface BusinessDescription {
     _type: "business.description";

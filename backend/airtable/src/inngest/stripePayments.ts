@@ -5,7 +5,7 @@ import {DelegatingInngestStep, InngestStep, Logger} from "./inngestTypes.js";
 import {PaymentIntentWebhookBody} from "../stripe.js";
 import {v4 as uuid} from 'uuid';
 import {STRIPE_WEBHOOK_ID} from "../express/stripeEndpoint.js";
-import {environmentId, mandatory, tenantEnvironment, tenantId} from "@breezbook/packages-core";
+import {environmentId, mandatory, tenantEnvironment, tenantId} from "@breezbook/packages-types";
 import {createBookingPayment, createOrderPayment} from "../prisma/breezPrismaMutations.js";
 import {applyMutations} from "../prisma/applyMutations.js";
 

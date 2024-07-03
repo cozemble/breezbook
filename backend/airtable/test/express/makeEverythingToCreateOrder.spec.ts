@@ -3,7 +3,7 @@ import {
     EverythingToCreateOrderReferenceData,
     makeEverythingToCreateOrder
 } from "../../src/express/onAddOrderExpress.js";
-import {AnySuitableResource, carwash, fullPaymentOnCheckout, SpecificResource} from "@breezbook/packages-core";
+import {carwash, fullPaymentOnCheckout} from "@breezbook/packages-core";
 import {
     pricedBasket,
     pricedBasketLine,
@@ -12,6 +12,9 @@ import {
     resourceRequirementOverride
 } from "@breezbook/backend-api-types";
 import {fourDaysFromNow, goodCustomer} from "../helper.js";
+import {resourcing} from "@breezbook/packages-resourcing";
+import AnySuitableResource = resourcing.AnySuitableResource;
+import SpecificResource = resourcing.SpecificResource;
 
 function createOrder(overrides: ResourceRequirementOverride[]) {
     return pricedCreateOrderRequest(pricedBasket([
@@ -42,7 +45,7 @@ test("services retain their existing resource requirements when no overrides are
         throw new Error(`Expected 1 resource requirement but got ${allServiceResourceRequirements.length}`)
     }
     const finalResourceRequirement = allServiceResourceRequirements[0] as AnySuitableResource
-    expect(finalResourceRequirement.requirement).toBe(carwash.van)
+    expect(finalResourceRequirement.resourceType).toBe(carwash.van)
 })
 
 test("replaces resource requirements in contained services", () => {

@@ -21,7 +21,7 @@ import {
 } from "../prisma/breezPrismaMutations.js";
 import {prismaMutationToPromise} from "../infra/prismaMutations.js";
 import {Upsert} from "../mutation/mutations.js";
-import {JsonSchemaForm} from "@breezbook/packages-core";
+import {JsonSchemaForm} from "@breezbook/packages-types";
 import {add, jexlCondition, PricingRule} from "@breezbook/packages-pricing";
 
 const tenant_id = 'breezbook-gym';

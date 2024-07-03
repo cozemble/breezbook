@@ -1,6 +1,13 @@
 import {describe, expect, test} from "vitest";
 import {resourcing} from "../src/index.js";
-import {anySuitableResource, capacity, mandatory, resourceId, resourceType} from "@breezbook/packages-core";
+import {
+    bookingId,
+    capacity,
+    mandatory,
+    resourceId,
+    resourceRequirementId,
+    resourceType
+} from "@breezbook/packages-types";
 import resourceBookings = resourcing.resourceBookings;
 import timeslotFns = resourcing.timeslotFns;
 import booking = resourcing.booking;
@@ -12,11 +19,14 @@ import resourceCommitment = resourcing.resourceCommitment;
 import unresourceableBooking = resourcing.unresourceableBooking;
 import resourceAndSlots = resourcing.resourceAndSlots;
 import complexResourceRequirement = resourcing.complexResourceRequirement;
+import anySuitableResource = resourcing.anySuitableResource;
+import resourceAllocationRules = resourcing.resourceAllocationRules;
+import specificResource = resourcing.specificResource;
 
 describe("given a service requiring fungible resources without capacity, resourceBookings", () => {
     const room = resourceType("room")
-    const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [],resourceId("room1"))
-    const room2 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [],resourceId("room2"))
+    const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [], resourceId("room1"))
+    const room2 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [], resourceId("room2"))
     const resources = [room1, room2]
     const anyRoom = anySuitableResource(room)
     const theService = service(resourceRequirements([anyRoom]))
@@ -109,8 +119,8 @@ describe("given a service requiring fungible resources without capacity, resourc
 
 describe("given services with a fungible resource with capacity, resourceBookings", () => {
     const meetingRoom = resourceType("meeting room")
-    const meetingRoom1 = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [],resourceId("meetingRoom1"))
-    const meetingRoom2 = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [],resourceId("meetingRoom2"))
+    const meetingRoom1 = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [], resourceId("meetingRoom1"))
+    const meetingRoom2 = resource(meetingRoom, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [], resourceId("meetingRoom2"))
     const resources = [meetingRoom1, meetingRoom2]
     const teamOnePlanning = service(resourceRequirements([anySuitableResource(meetingRoom)], capacity(10)))
     const teamTwoPlanning = service(resourceRequirements([anySuitableResource(meetingRoom)], capacity(10)))
@@ -150,14 +160,13 @@ describe("given services with a fungible resource with capacity, resourceBooking
 describe("given a service that requires two resources without capacity", () => {
     const room = resourceType("room")
     const equipment = resourceType("equipment")
-    const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [],resourceId("room1"))
-    const projector = resource(equipment, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")],[], resourceId("projector1"))
+    const room1 = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [], resourceId("room1"))
+    const projector = resource(equipment, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")], [], resourceId("projector1"))
     const resources = [room1, projector]
     const anySuitableRoom = anySuitableResource(room)
     const anySuitableEquipment = anySuitableResource(equipment)
     const roomAndEquipmentService = service(resourceRequirements([anySuitableRoom, anySuitableEquipment]))
     const justRoomService = service(resourceRequirements([anySuitableRoom]))
-    const justEquipmentService = service(resourceRequirements([anySuitableEquipment]))
 
     test("should allocate multiple resource types for a single booking", () => {
         const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "10:00"), roomAndEquipmentService)
@@ -195,33 +204,21 @@ describe('Complex Resource Selection', () => {
     const room101 = resource(
         meetingRoom,
         [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")],
-        [
-            { name: "capacity", value: 15 },
-            { name: "hasWhiteboard", value: true },
-            { name: "hasProjector", value: true }
-        ],
+        {"capacity": 15, "hasWhiteboard": true, "hasProjector": true},
         resourceId("room101")
     );
 
     const room102 = resource(
         meetingRoom,
         [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")],
-        [
-            { name: "capacity", value: 8 },
-            { name: "hasWhiteboard", value: true },
-            { name: "hasProjector", value: false }
-        ],
+        {"capacity": 8, "hasWhiteboard": true, "hasProjector": false},
         resourceId("room102")
     );
 
     const room103 = resource(
         meetingRoom,
         [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")],
-        [
-            { name: "capacity", value: 20 },
-            { name: "hasWhiteboard", value: false },
-            { name: "hasProjector", value: true }
-        ],
+        {"capacity": 20, "hasWhiteboard": false, "hasProjector": true},
         resourceId("room103")
     );
 
@@ -229,9 +226,9 @@ describe('Complex Resource Selection', () => {
         const meetingRequirement = complexResourceRequirement(
             meetingRoom,
             [
-                { name: "capacity", value: 10, operator: "greaterThan" },
-                { name: "hasWhiteboard", value: true, operator: "equals" },
-                { name: "hasProjector", value: true, operator: "equals" }
+                {name: "capacity", value: 10, operator: "greaterThan"},
+                {name: "hasWhiteboard", value: true, operator: "equals"},
+                {name: "hasProjector", value: true, operator: "equals"}
             ]
         );
 
@@ -250,9 +247,9 @@ describe('Complex Resource Selection', () => {
         const strictRequirement = complexResourceRequirement(
             meetingRoom,
             [
-                { name: "capacity", value: 25, operator: "greaterThan" },
-                { name: "hasWhiteboard", value: true, operator: "equals" },
-                { name: "hasProjector", value: true, operator: "equals" }
+                {name: "capacity", value: 25, operator: "greaterThan"},
+                {name: "hasWhiteboard", value: true, operator: "equals"},
+                {name: "hasProjector", value: true, operator: "equals"}
             ]
         );
 
@@ -267,41 +264,38 @@ describe('Complex Resource Selection', () => {
         );
     });
 
-    test('should handle multiple complex requirements', () => {
+    test('multiple complex requirements against the same resourceType are disallowed', () => {
         const complexRequirement1 = complexResourceRequirement(
             meetingRoom,
-            [{ name: "capacity", value: 10, operator: "greaterThan" }]
+            [{name: "capacity", value: 10, operator: "greaterThan"}]
         );
         const complexRequirement2 = complexResourceRequirement(
             meetingRoom,
-            [{ name: "hasProjector", value: true, operator: "equals" }]
+            [{name: "hasProjector", value: true, operator: "equals"}]
         );
 
         const multiRequirementService = service(resourceRequirements([complexRequirement1, complexRequirement2]));
         const multiRequirementBooking = booking(timeslotFns.sameDay("2023-07-01", "10:00", "11:00"), multiRequirementService);
 
-        const result = resourceBookings([room101, room102, room103], [multiRequirementBooking]);
-
-        expect(result.resourced).toHaveLength(1);
-        expect(result.resourced[0]).toEqual(
-            resourcedBooking(multiRequirementBooking, [
-                resourceCommitment(complexRequirement1, room101),
-                resourceCommitment(complexRequirement2, room101)
-            ])
-        );
+        try {
+            resourceBookings([room101, room102, room103], [multiRequirementBooking]);
+            expect("this").toBe("should not be reached")
+        } catch (e: any) {
+            expect(e.message).toEqual("Multiple complex requirements against the same resource type are disallowed");
+        }
     });
 
     test('should handle contains operator for string attributes', () => {
         const roomWithFeatures = resource(
             meetingRoom,
             [timeslotFns.sameDay("2023-07-01", "09:00", "17:00")],
-            [{ name: "features", value: "whiteboard,projector,video conferencing" }],
+            {"features": "whiteboard,projector,video conferencing"},
             resourceId("roomWithFeatures")
         );
 
         const featureRequirement = complexResourceRequirement(
             meetingRoom,
-            [{ name: "features", value: "video conferencing", operator: "contains" }]
+            [{name: "features", value: "video conferencing", operator: "contains"}]
         );
 
         const featureService = service(resourceRequirements([featureRequirement]));
@@ -319,7 +313,7 @@ describe('Complex Resource Selection', () => {
         const simpleRequirement = anySuitableResource(meetingRoom);
         const complexRequirement = complexResourceRequirement(
             meetingRoom,
-            [{ name: "capacity", value: 10, operator: "greaterThan" }]
+            [{name: "capacity", value: 10, operator: "greaterThan"}]
         );
 
         const mixedService = service(resourceRequirements([simpleRequirement, complexRequirement]));
@@ -336,3 +330,111 @@ describe('Complex Resource Selection', () => {
         );
     });
 });
+
+describe("given a medical centre and an appointment type that requires two doctors", () => {
+    const doctor = resourceType("doctor")
+    const examinationRoom = resourceType("examinationRoom")
+    const allDay = timeslotFns.sameDay("2024-05-31", "09:00", "17:00");
+    const doctorMike = resource(doctor, [allDay], [], resourceId("doctorMike"))
+    const doctorMete = resource(doctor, [allDay], [], resourceId("doctorMete"))
+    const roomA = resource(examinationRoom, [allDay], [], resourceId("roomA"))
+    const roomB = resource(examinationRoom, [allDay], [], resourceId("roomB"))
+    const lead = resourceRequirementId('lead');
+    const assistant = resourceRequirementId('assistant');
+    const anyLeadDoctor = anySuitableResource(doctor, resourceAllocationRules.any, lead)
+    const aDifferentAssistantDoctor = anySuitableResource(doctor, resourceAllocationRules.unique, assistant)
+    const anyDoctor = anySuitableResource(doctor)
+    const anyRoom = anySuitableResource(examinationRoom)
+    const doubleDoctorExam = service(resourceRequirements([anyLeadDoctor, aDifferentAssistantDoctor, anyRoom]))
+    const singleDoctorExam = service(resourceRequirements([anyDoctor, anyRoom]))
+
+    test("should allocate two different doctors and an examination room when they are available", () => {
+        const booking1 = booking(timeslotFns.sameDay("2024-05-31", "09:00", "10:00"), doubleDoctorExam)
+        const booking2 = booking(timeslotFns.sameDay("2024-05-31", "10:00", "11:00"), doubleDoctorExam)
+
+        const result = resourceBookings([doctorMike, doctorMete, roomA, roomB], [booking1, booking2])
+        expect(result.resourced[0]).toEqual(resourcedBooking(booking1, [
+            resourceCommitment(anyLeadDoctor, doctorMike),
+            resourceCommitment(aDifferentAssistantDoctor, doctorMete),
+            resourceCommitment(anyRoom, roomA)
+        ]));
+        expect(result.resourced[1]).toEqual(resourcedBooking(booking2, [
+            resourceCommitment(anyLeadDoctor, doctorMike),
+            resourceCommitment(aDifferentAssistantDoctor, doctorMete),
+            resourceCommitment(anyRoom, roomB)
+        ]));
+    })
+
+    test("if only one doctor is available, the booking should be unresourceable", () => {
+        const bookingWithOneDoctor = booking(timeslotFns.sameDay("2024-05-31", "09:00", "10:00"), singleDoctorExam)
+        const bookingWithBothDoctors = booking(timeslotFns.sameDay("2024-05-31", "09:00", "10:00"), doubleDoctorExam)
+
+        const result = resourceBookings([doctorMike, doctorMete, roomA, roomB], [bookingWithOneDoctor, bookingWithBothDoctors])
+        expect(result.resourced[0]).toEqual(
+            resourcedBooking(bookingWithOneDoctor, [
+                resourceCommitment(anyDoctor, doctorMike),
+                resourceCommitment(anyRoom, roomA)
+            ]));
+        expect(result.resourced[1]).toEqual(unresourceableBooking(bookingWithBothDoctors, [aDifferentAssistantDoctor]));
+    });
+
+    test("if one doctor can be used for both roles, the booking should be allocated", () => {
+        const bookingWithOneDoctor = booking(timeslotFns.sameDay("2024-05-31", "09:00", "10:00"), singleDoctorExam)
+        const anyAssistantDoctor = anySuitableResource(doctor, resourceAllocationRules.any, assistant)
+
+        const doubleDoctorExamWithFungibleRoles = service(resourceRequirements([anyLeadDoctor, anyAssistantDoctor, anyRoom]))
+        const bookingWithBothDoctors = booking(timeslotFns.sameDay("2024-05-31", "09:00", "10:00"), doubleDoctorExamWithFungibleRoles)
+
+        const result = resourceBookings([doctorMike, doctorMete, roomA, roomB], [bookingWithOneDoctor, bookingWithBothDoctors])
+
+        expect(result.resourced[0]).toEqual(
+            resourcedBooking(bookingWithOneDoctor, [
+                resourceCommitment(anyDoctor, doctorMike),
+                resourceCommitment(anyRoom, roomA)
+            ]));
+        expect(result.resourced[1]).toEqual(
+            resourcedBooking(bookingWithBothDoctors, [
+                resourceCommitment(anyLeadDoctor, doctorMete),
+                resourceCommitment(anyAssistantDoctor, doctorMete),
+                resourceCommitment(anyRoom, roomB)
+            ]));
+    });
+
+    test("its possible for the same resource to act in multiple roles", () => {
+        const anyRoom = anySuitableResource(examinationRoom)
+        const anyRoomAgain = anySuitableResource(examinationRoom)
+        const serviceRequiringRoomTwice = service(resourceRequirements([anyRoom, anyRoomAgain]))
+        const bookingWithRoomTwice = booking(timeslotFns.sameDay("2024-05-31", "09:00", "10:00"), serviceRequiringRoomTwice)
+        const outcome = resourceBookings([roomA], [bookingWithRoomTwice])
+        expect(outcome.resourced[0]).toEqual(
+            resourcedBooking(bookingWithRoomTwice, [
+                resourceCommitment(anyRoom, roomA),
+                resourceCommitment(anyRoomAgain, roomA)
+            ]))
+    });
+
+});
+
+describe("specific resources with capacity", () => {
+    const room = resourceType("room");
+    const instructor = resourceType("instructor");
+    const smallRoom = resource(room, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")]);
+    const mikeInstructor = resource(instructor, [timeslotFns.sameDay("2021-01-01", "09:00", "12:00")]);
+    const theSmallRoom = specificResource(smallRoom);
+    const withMike = specificResource(mikeInstructor);
+    const yogaWithMikeInTheSmallRoom = service(resourceRequirements([withMike, theSmallRoom], capacity(12)));
+
+    test("can make multiple bookings at the same same time", () => {
+        const booking1 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), yogaWithMikeInTheSmallRoom, [], capacity(1), bookingId("booking1"));
+        const booking2 = booking(timeslotFns.sameDay("2021-01-01", "09:00", "09:30"), yogaWithMikeInTheSmallRoom, [], capacity(1), bookingId("booking2"));
+        const resourced = resourceBookings([smallRoom, mikeInstructor], [booking1, booking2]).resourced;
+        expect(resourced[0]).toEqual(resourcedBooking(booking1, [
+            resourceCommitment(withMike, mikeInstructor),
+            resourceCommitment(theSmallRoom, smallRoom)
+        ]));
+        expect(resourced[1]).toEqual(resourcedBooking(booking2, [
+            resourceCommitment(withMike, mikeInstructor),
+            resourceCommitment(theSmallRoom, smallRoom)
+        ]));
+    })
+})

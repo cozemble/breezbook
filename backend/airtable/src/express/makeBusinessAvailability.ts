@@ -1,6 +1,5 @@
+import {businessAvailability, BusinessAvailability,} from "@breezbook/packages-core";
 import {
-    businessAvailability,
-    BusinessAvailability,
     dayAndTimePeriod,
     DayAndTimePeriod,
     dayAndTimePeriodFns,
@@ -9,8 +8,8 @@ import {
     isoDateFns,
     time24,
     timePeriod
-} from "@breezbook/packages-core";
-import { DbBlockedTime, DbBusinessHours } from '../prisma/dbtypes.js';
+} from "@breezbook/packages-types";
+import {DbBlockedTime, DbBusinessHours} from '../prisma/dbtypes.js';
 
 function availabilityForDate(businessHours: DbBusinessHours[], date: IsoDate): DayAndTimePeriod[] {
     const dayOfWeek = isoDateFns.dayOfWeek(date);

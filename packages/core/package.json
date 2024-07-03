@@ -21,7 +21,9 @@
     "vitest": "0.33.0"
   },
   "dependencies": {
+    "@breezbook/packages-types": "workspace:*",
     "@breezbook/packages-pricing": "workspace:*",
+    "@breezbook/packages-resourcing": "workspace:*",
     "dayjs": "^1.11.10",
     "to-words": "^4.0.1",
     "uuid": "^9.0.1"

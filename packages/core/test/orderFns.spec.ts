@@ -1,5 +1,6 @@
 import {expect, test} from 'vitest';
-import {addOnOrder, carwash, customer, isoDate, isoDateFns, order, orderFns, orderLine} from '../src/index.js';
+import {addOnOrder, carwash, customer,  order, orderFns, orderLine} from '../src/index.js';
+import {isoDate, isoDateFns} from "@breezbook/packages-types";
 
 const tomorrow = isoDateFns.addDays(isoDate(), 1);
 const dayAfterTomorrow = isoDateFns.addDays(isoDate(), 2);
