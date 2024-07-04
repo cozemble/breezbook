@@ -11,8 +11,10 @@ import {
     upsertResourceImage,
     upsertResourceMarkup,
     upsertResourceType,
+    UpsertService,
     upsertService,
     upsertServiceForm,
+    upsertServiceLabel,
     upsertServiceLocation,
     upsertServiceResourceRequirement,
     upsertTenant,
@@ -21,7 +23,7 @@ import {
 } from "../prisma/breezPrismaMutations.js";
 import {prismaMutationToPromise} from "../infra/prismaMutations.js";
 import {Upsert} from "../mutation/mutations.js";
-import {JsonSchemaForm} from "@breezbook/packages-types";
+import {JsonSchemaForm, languages} from "@breezbook/packages-types";
 import {add, jexlCondition, PricingRule} from "@breezbook/packages-pricing";
 
 const tenant_id = 'breezbook-gym';
@@ -54,7 +56,7 @@ export const multiLocationGym = {
     ptMete
 }
 
-async function runUpserts(prisma: PrismaClient, upserts: Upsert<any, any, any>[]) {
+export async function runUpserts(prisma: PrismaClient, upserts: Upsert<any, any, any>[]) {
     for (const upsert of upserts) {
         await prismaMutationToPromise(prisma, upsert)
     }
@@ -345,73 +347,145 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
         description: goalsForm.description ?? goalsForm.name,
         definition: goalsForm as any
     })])
+    const en = languages.en.value
+    const tr = languages.tr.value
     const serviceUpserts = [
         upsertService({
             id: gym1Hr,
             tenant_id,
             environment_id,
             slug: 'gym1hr',
-            name: 'Gym session (1hr)',
-            description: 'Gym session (1hr)',
             duration_minutes: 60,
             price: 1500,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
             requires_time_slot: false
         }),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: gym1Hr,
+            language_id: en,
+            name: 'Gym session (1hr)',
+            description: 'Gym session (1hr)'
+        }),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: gym1Hr,
+            language_id: tr,
+            name: 'Spor salonu seansı (1 saat)',
+            description: 'Spor salonu seansı (1 saat)'
+        }),
         upsertService({
             id: pt1Hr,
             tenant_id,
             environment_id,
             slug: 'pt1hr',
-            name: 'Personal training (1hr)',
-            description: 'A personal training session with one of our trainers, 60 minutes duration',
             duration_minutes: 60,
             price: 7000,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
             requires_time_slot: false
         }),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: pt1Hr,
+            language_id: en,
+            name: 'Personal training (1hr)',
+            description: 'A personal training session with one of our trainers, 60 minutes duration'
+        }),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: pt1Hr,
+            language_id: tr,
+            name: 'Kişisel antrenman (1 saat)',
+            description: 'Antrenörlerimizden biriyle kişisel antrenman seansı, 60 dakika süreli'
+        }),
         upsertService({
             id: yoga1Hr,
             tenant_id,
             environment_id,
             slug: 'yoga.1to1.1hr',
-            name: '1hr 1-to-1 Yoga',
-            description: 'A 1-to-1 yoga session with one of our instructors, 60 minutes duration',
             duration_minutes: 60,
             price: 7900,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
             requires_time_slot: false
         }),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: yoga1Hr,
+            language_id: en,
+            name: '1hr 1-to-1 Yoga',
+            description: 'A 1-to-1 yoga session with one of our instructors, 60 minutes duration'
+        }),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: yoga1Hr,
+            language_id: tr,
+            name: '1 saatlik birebir yoga',
+            description: 'Eğitmenlerimizden biriyle birebir yoga seansı, 60 dakika süreli'
+        }),
         upsertService({
             id: massage30mins,
             tenant_id,
             environment_id,
             slug: 'massage.30mins',
-            name: '30 minute massage',
-            description: 'A 30 minute massage session with one of our therapists',
             duration_minutes: 30,
             price: 4900,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
             requires_time_slot: false
         }),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: massage30mins,
+            language_id: en,
+            name: '30 minute massage',
+            description: 'A 30 minute massage session with one of our therapists'
+        }),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: massage30mins,
+            language_id: tr,
+            name: '30 dakikalık masaj',
+            description: 'Terapistlerimizden biriyle 30 dakikalık masaj seansı'
+        }),
         upsertService({
                 id: swim30mins,
                 tenant_id,
                 environment_id,
                 slug: 'swim.30mins',
-                name: '30 minute swim',
-                description: 'A 30 minute swim session',
                 duration_minutes: 30,
                 price: 4900,
                 price_currency: 'GBP',
                 permitted_add_on_ids: [],
                 requires_time_slot: false
             }
-        )
+        ),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: swim30mins,
+            language_id: en,
+            name: '30 minute swim',
+            description: 'A 30 minute swim session'
+        }),
+        upsertServiceLabel({
+            tenant_id,
+            environment_id,
+            service_id: swim30mins,
+            language_id: tr,
+            name: '30 dakikalık yüzme',
+            description: '30 dakikalık yüzme seansı'
+        })
     ]
     await runUpserts(prisma, serviceUpserts);
     await runUpserts(prisma, [
@@ -440,7 +514,8 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             resource_type: makeTestId(tenant_id, environment_id, `resource.massage.therapist`)
         }),
     ])
-    await runUpserts(prisma, serviceUpserts.map(su => upsertServiceForm({
+    const onlyServiceUpserts = serviceUpserts.filter(u => u.create.entity === 'services') as UpsertService[]
+    await runUpserts(prisma, onlyServiceUpserts.map(su => upsertServiceForm({
         tenant_id,
         environment_id,
         service_id: su.create.data.id,

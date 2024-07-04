@@ -83,6 +83,7 @@ export function languageId(value: string): LanguageId {
 
 export const languages = {
     en: languageId('en'),
+    tr: languageId('tr')
 }
 
 export interface LocationId extends ValueType<string> {

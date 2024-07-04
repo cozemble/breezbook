@@ -25,6 +25,7 @@ import {
     Id,
     IsoDate,
     isoDateFns,
+    LanguageId,
     LocationId,
     makeId,
     Minutes,
@@ -452,6 +453,7 @@ export interface ServiceLabels {
     name: string;
     description: string;
     serviceId: ServiceId
+    languageId: LanguageId
 }
 
 export interface ServiceOptionId extends ValueType<string> {
@@ -539,11 +541,12 @@ export function service(
     };
 }
 
-export function serviceLabels(name: string, description: string, serviceId: ServiceId): ServiceLabels {
+export function serviceLabels(name: string, description: string, serviceId: ServiceId, languageId: LanguageId): ServiceLabels {
     return {
         name,
         description,
-        serviceId
+        serviceId,
+        languageId
     }
 }
 

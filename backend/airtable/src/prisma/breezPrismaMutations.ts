@@ -165,7 +165,7 @@ export function updateCancellationGrant(
 }
 
 type UpsertAddOn = Upsert<Prisma.add_onCreateArgs['data'], Prisma.add_onUpdateArgs['data'], Prisma.add_onWhereUniqueInput>;
-type UpsertService = Upsert<Prisma.servicesCreateArgs['data'], Prisma.servicesUpdateArgs['data'], Prisma.servicesWhereUniqueInput>;
+export type UpsertService = Upsert<Prisma.servicesCreateArgs['data'], Prisma.servicesUpdateArgs['data'], Prisma.servicesWhereUniqueInput>;
 
 export function upsertAddOn(
     create: Prisma.add_onCreateArgs['data']
@@ -365,5 +365,16 @@ export type UpsertPricingRule = Upsert<Prisma.pricing_rulesCreateArgs['data'], P
 export function upsertPricingRule(create: Prisma.pricing_rulesCreateArgs['data']): UpsertPricingRule {
     const entityId = compositeKey("id", mandatory(create.id, "Service Resource Requirement ID"))
     return makeUpsert('pricing_rules', entityId, create)
+}
+
+export type UpsertServiceLabel = Upsert<Prisma.service_labelsCreateArgs['data'], Prisma.service_labelsUpdateArgs['data'], Prisma.service_labelsUpdateArgs['where']>
+
+export function upsertServiceLabel(create: Prisma.service_labelsCreateArgs['data']): UpsertServiceLabel {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "service_id", mandatory(create.service_id, "service_id"),
+        "language_id", mandatory(create.language_id, "language_id"))
+    return makeUpsert('service_labels', entityId, create)
 }
 

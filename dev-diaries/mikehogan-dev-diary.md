@@ -2000,3 +2000,53 @@ Using an extension of the `Service` type as `NamedService` meant that concerns w
 with just the name and description of a service, I had to deal with the price and resource requirements too.  So I split
 the `Service` type into `Service` and `ServiceLabels`, and there is no hard referential connection - they have to be
 joined via the service id.  I think this will work out ok.
+
+# Thu 4 Jul 2024
+Sometimes doing a big revert is the best possible move, deflating as it might be at the time.  In fact, surely a refactor
+that is never ending MUST be reverted, coz its a sign that it's wandering away from simplicity.  In any case, I am following
+up on the above domain model changes with the corresponding database changes.  Again, focusing on `service` only to get 
+to the end.  It is looking nice so far.  This feels solid:
+
+```typescript
+    const serviceUpserts = [
+    upsertService({
+        id: gym1Hr,
+        tenant_id,
+        environment_id,
+        slug: 'gym1hr',
+        duration_minutes: 60,
+        price: 1500,
+        price_currency: 'GBP',
+        permitted_add_on_ids: [],
+        requires_time_slot: false
+    }),
+    upsertServiceLabel({
+        tenant_id,
+        environment_id,
+        service_id: gym1Hr,
+        language_id: en,
+        name: 'Gym session (1hr)',
+        description: 'Gym session (1hr)'
+    }),
+    upsertService({
+        id: pt1Hr,
+        tenant_id,
+        environment_id,
+        slug: 'pt1hr',
+        duration_minutes: 60,
+        price: 7000,
+        price_currency: 'GBP',
+        permitted_add_on_ids: [],
+        requires_time_slot: false
+    }),
+    upsertServiceLabel({
+        tenant_id,
+        environment_id,
+        service_id: pt1Hr,
+        language_id: en,
+        name: 'Personal training (1hr)',
+        description: 'A personal training session with one of our trainers, 60 minutes duration'
+    }),
+]
+
+```

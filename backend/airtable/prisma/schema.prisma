@@ -499,8 +499,6 @@ model services {
   tenant_id                     String
   environment_id                String
   slug                          String
-  name                          String
-  description                   String
   duration_minutes              Int
   price                         Decimal                         @db.Decimal
   price_currency                String
@@ -514,6 +512,7 @@ model services {
   order_lines                   order_lines[]
   service_forms                 service_forms[]
   service_images                service_images[]
+  service_labels                service_labels[]
   service_locations             service_locations[]
   service_resource_requirements service_resource_requirements[]
   tenants                       tenants                         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
@@ -580,6 +579,7 @@ model tenants {
   tenant_id                        String                             @id
   name                             String
   slug                             String                             @unique
+  default_language_id              String                             @default("en")
   created_at                       DateTime                           @default(now()) @db.Timestamptz(6)
   updated_at                       DateTime                           @default(now()) @db.Timestamptz(6)
   add_on                           add_on[]
@@ -613,12 +613,14 @@ model tenants {
   resources                        resources[]
   service_forms                    service_forms[]
   service_images                   service_images[]
+  service_labels                   service_labels[]
   service_locations                service_locations[]
   service_resource_requirements    service_resource_requirements[]
   services                         services[]
   tenant_branding                  tenant_branding[]
   tenant_images                    tenant_images[]
   tenant_settings                  tenant_settings[]
+  languages                        languages                          @relation(fields: [default_language_id], references: [language_id], onDelete: NoAction, onUpdate: NoAction)
   time_slots                       time_slots[]
 }
 
@@ -708,6 +710,32 @@ model booking_resource_requirements {
   resources        resources?                @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   resource_types   resource_types?           @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants          tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model languages {
+  id             String           @id
+  name           String
+  language_id    String           @unique
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
+  service_labels service_labels[]
+  tenants        tenants[]
+}
+
+model service_labels {
+  tenant_id      String
+  environment_id String
+  service_id     String
+  language_id    String
+  name           String
+  description    String
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  languages      languages @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services       services  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, service_id, language_id])
 }
 
 enum booking_event_type {

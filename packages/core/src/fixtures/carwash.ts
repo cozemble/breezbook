@@ -5,6 +5,7 @@ import {
     couponId,
     id,
     isoDate,
+    languages,
     locationId,
     minutes,
     resourceType,
@@ -72,9 +73,9 @@ const largeCarWash = serviceFns.setStartTimes(service(
     serviceId('largeCarWash.id')
 ), timeslots);
 
-const smallCarWashLabels = serviceLabels('Small Car Wash', 'Small Car Wash', smallCarWash.id);
-const mediumCarWashLabels = serviceLabels('Medium Car Wash', 'Medium Car Wash', mediumCarWash.id);
-const largeCarWashLabels = serviceLabels('Large Car Wash', 'Large Car Wash', largeCarWash.id);
+const smallCarWashLabels = serviceLabels('Small Car Wash', 'Small Car Wash', smallCarWash.id, languages.en);
+const mediumCarWashLabels = serviceLabels('Medium Car Wash', 'Medium Car Wash', mediumCarWash.id, languages.en);
+const largeCarWashLabels = serviceLabels('Large Car Wash', 'Large Car Wash', largeCarWash.id, languages.en);
 
 const chargeMoreForSoonBookings: PricingRule = {
     id: 'charge-more-for-soon-bookings',

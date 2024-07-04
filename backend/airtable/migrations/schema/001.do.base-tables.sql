@@ -3,13 +3,30 @@ create extension if not exists pgcrypto;
 create extension if not exists pg_net;
 create extension if not exists pg_cron;
 
+create table languages
+(
+    id          text primary key,
+    name        text                     not null,
+    language_id text                     not null,
+    created_at  timestamp with time zone not null default current_timestamp,
+    updated_at  timestamp with time zone not null default current_timestamp,
+    unique (language_id)
+);
+
+insert into languages (id, name, language_id)
+values ('en', 'English', 'en');
+
+insert into languages (id, name, language_id)
+values ('tr', 'Turkish', 'tr');
+
 create table tenants
 (
-    tenant_id  text primary key,
-    name       text                     not null,
-    slug       text                     not null,
-    created_at timestamp with time zone not null default current_timestamp,
-    updated_at timestamp with time zone not null default current_timestamp,
+    tenant_id           text primary key,
+    name                text                                    not null,
+    slug                text                                    not null,
+    default_language_id text references languages (language_id) not null default 'en',
+    created_at          timestamp with time zone                not null default current_timestamp,
+    updated_at          timestamp with time zone                not null default current_timestamp,
     unique (slug)
 );
 
@@ -137,8 +154,6 @@ create table services
     tenant_id            text references tenants (tenant_id) not null,
     environment_id       text                                not null,
     slug                 text                                not null,
-    name                 text                                not null,
-    description          text                                not null,
     duration_minutes     integer                             not null,
     price                numeric                             not null,
     price_currency       text                                not null,
@@ -149,6 +164,19 @@ create table services
     created_at           timestamp with time zone            not null default current_timestamp,
     updated_at           timestamp with time zone            not null default current_timestamp,
     unique (tenant_id, environment_id, slug)
+);
+
+create table service_labels
+(
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    service_id     text references services (id)       not null,
+    language_id    text references languages (id)      not null,
+    name           text                                not null,
+    description    text                                not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    primary key (tenant_id, environment_id, service_id, language_id)
 );
 
 create type resource_requirement_type as enum ('any_suitable', 'specific_resource');

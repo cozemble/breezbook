@@ -134,14 +134,11 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
     });
     await prisma.services.createMany({
         data: carwash.services.map((service) => {
-            const labels = serviceFns.findLabels( carwash.serviceLabels, service.id);
             return ({
                 id: service.id.value,
                 tenant_id,
                 environment_id,
                 slug: service.id.value.replace('/.id/', ''),
-                name: labels.name,
-                description: labels.description,
                 duration_minutes: service.duration.value,
                 price: service.price.amount.value,
                 price_currency: service.price.currency.value,
@@ -150,6 +147,19 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
             });
         })
     });
+    await prisma.service_labels.createMany({
+        data: carwash.services.flatMap((service) => {
+            const labels = carwash.serviceLabels.filter(l => l.serviceId.value === service.id.value);
+            return labels.map(l => ({
+                tenant_id,
+                environment_id,
+                service_id: service.id.value,
+                language_id: l.languageId.value,
+                name: l.name,
+                description: l.description
+            }))
+        })
+    })
     await prisma.service_resource_requirements.createMany({
         data: carwash.services.map(s => ({
             id: `${s.id.value}-resource-requirement-vanResourceType`,

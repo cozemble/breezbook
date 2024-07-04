@@ -1,10 +1,15 @@
 import express from 'express';
 import {tenantEnvironmentParam, withOneRequestParam} from '../../infra/functionalExpress.js';
 import {prismaClient} from '../../prisma/client.js';
-import {upsertAddOn, upsertService, upsertServiceResourceRequirement} from '../../prisma/breezPrismaMutations.js';
+import {
+    upsertAddOn,
+    upsertService,
+    upsertServiceLabel,
+    upsertServiceResourceRequirement
+} from '../../prisma/breezPrismaMutations.js';
 import {compositeKeyFns} from "../../mutation/mutations.js";
 import {PrismaClient} from "@prisma/client";
-import {TenantEnvironment} from '@breezbook/packages-types';
+import {languages, mandatory, TenantEnvironment} from '@breezbook/packages-types';
 
 export async function publishReferenceData(prisma: PrismaClient, tenantEnvironment: TenantEnvironment) {
     const addOns = await prisma.add_on.findMany({
@@ -17,6 +22,13 @@ export async function publishReferenceData(prisma: PrismaClient, tenantEnvironme
         where: {
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value
+        },
+        include: {
+            service_labels: {
+                where: {
+                    language_id: languages.en.value
+                }
+            }
         }
     });
     const serviceRequirements = await prisma.service_resource_requirements.findMany({
@@ -39,22 +51,32 @@ export async function publishReferenceData(prisma: PrismaClient, tenantEnvironme
             }
         )
     );
-    const servicesAsMutations = services.map((service) =>
-        upsertService(
-            {
-                id: service.id,
-                tenant_id: service.tenant_id,
-                environment_id: service.environment_id,
-                slug: service.slug,
-                name: service.name,
-                description: service.description,
-                duration_minutes: service.duration_minutes,
-                price: service.price,
-                price_currency: service.price_currency,
-                permitted_add_on_ids: service.permitted_add_on_ids,
-                requires_time_slot: service.requires_time_slot
-            }
-        )
+    const servicesAsMutations = services.flatMap((service) => {
+            const labels = mandatory(service.service_labels[0], `Service ${service.id} has no labels`);
+            return [
+                upsertService(
+                    {
+                        id: service.id,
+                        tenant_id: service.tenant_id,
+                        environment_id: service.environment_id,
+                        slug: service.slug,
+                        duration_minutes: service.duration_minutes,
+                        price: service.price,
+                        price_currency: service.price_currency,
+                        permitted_add_on_ids: service.permitted_add_on_ids,
+                        requires_time_slot: service.requires_time_slot
+                    }
+                ),
+                upsertServiceLabel({
+                    tenant_id: service.tenant_id,
+                    environment_id: service.environment_id,
+                    service_id: service.id,
+                    language_id: languages.en.value,
+                    name: labels.name,
+                    description: labels.description,
+                })
+            ];
+        }
     );
     const serviceRequirementsAsMutations = serviceRequirements.map(srr => upsertServiceResourceRequirement({
         id: srr.id,

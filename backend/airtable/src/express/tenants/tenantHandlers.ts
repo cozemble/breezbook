@@ -3,7 +3,6 @@ import {
     DbForm,
     DbLocation,
     DbPricingRule,
-    DbService,
     DbServiceLocation,
     DbServiceResourceRequirement,
     DbTenant,
@@ -14,7 +13,7 @@ import {
 import {Tenant} from "@breezbook/backend-api-types";
 import {PrismaClient} from "@prisma/client";
 import {EnvironmentId, LanguageId, mandatory} from "@breezbook/packages-types";
-import {toApiService} from "../services/serviceHandlers.js";
+import {RequiredServiceData, toApiService} from "../services/serviceHandlers.js";
 import {
     asHandler,
     EndpointDependencies,
@@ -37,7 +36,7 @@ type DbTenantAndStuff = DbTenant & {
     tenant_images: DbTenantImage[],
     locations: DbLocation[],
     tenant_branding: DbTenantBranding[],
-    services: DbService[],
+    services: RequiredServiceData[],
     service_locations: DbServiceLocation[],
     service_resource_requirements: DbServiceResourceRequirement[],
     pricing_rules: DbPricingRule[],
@@ -93,6 +92,14 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
             services: {
                 where: {
                     environment_id
+                },
+                include: {
+                    service_images: true,
+                    service_labels: {
+                        where: {
+                            language_id
+                        }
+                    }
                 }
             },
             service_locations: {
