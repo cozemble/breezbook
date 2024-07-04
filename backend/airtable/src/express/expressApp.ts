@@ -1,4 +1,6 @@
 import express, {Express} from 'express';
+import multer from 'multer';
+
 import cors from 'cors';
 import {logRequest} from '../infra/logRequest.js';
 import {onAddOrderExpress} from './onAddOrderExpress.js';
@@ -22,10 +24,13 @@ import {onVapiVoiceBotPromptRequest} from "./voicebot/vapiHandlers.js";
 import {onWaitlistSignup} from "./waitlist/onWaitlistSignup.js";
 import {onListResourcesByTypeRequestExpress} from "./resources/resourcesHandler.js";
 import {onGetServiceAvailabilityForLocationExpress} from "./availability/getServiceAvailabilityForLocation.js";
+import {onLoadTenantFromExcel} from "../load/onLoadTenantFromExcel.js";
 
 interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
 }
+
+const upload = multer({ storage: multer.memoryStorage() })
 
 export function expressApp(): Express {
     const app: Express = express();
@@ -87,6 +92,7 @@ export function expressApp(): Express {
     app.get(internalApiPaths.getAccessToken, onGetAccessToken);
     app.post(internalApiPaths.publishReferenceDataAsMutationEvents, onPublishReferenceDataAsMutationEvents);
     app.post(internalApiPaths.onAppStart, onAppStartRequest);
+    app.post(internalApiPaths.loadTenantFromExcel, upload.single('file'), onLoadTenantFromExcel);
 
     bindInngestToExpress(app);
 
@@ -97,6 +103,7 @@ export const internalApiPaths = {
     getAccessToken: '/internal/api/:envId/:tenantId/oauth/:systemId/accessToken',
     publishReferenceDataAsMutationEvents: '/internal/api/:envId/:tenantId/referenceData/publishAsMutationEvents',
     onAppStart: '/internal/api/onAppStart',
+    loadTenantFromExcel: '/internal/api/loadTenantFromExcel',
 };
 
 export const externalApiPaths = {

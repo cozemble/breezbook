@@ -5,7 +5,7 @@ import express from "express";
 import {Mutations} from "../mutation/mutations.js";
 import {applyMutations} from "../prisma/applyMutations.js";
 import {inngest} from "../inngest/client.js";
-import {asRequestContext, RequestContext, sendExpressResponse} from "./http/expressHttp4t.js";
+import {asRequestContext, PostedFile, RequestContext, sendExpressResponse} from "./http/expressHttp4t.js";
 import {query as httpQuery} from "@breezbook/packages-http/dist/queries.js";
 import {HttpResponse} from "@breezbook/packages-http/dist/contract.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
@@ -13,7 +13,10 @@ import {
     environmentId,
     EnvironmentId,
     isoDate,
-    IsoDate, languageId, LanguageId, languages,
+    IsoDate,
+    languageId,
+    LanguageId,
+    languages,
     locationId,
     LocationId,
     serviceId,
@@ -36,14 +39,17 @@ export interface EndpointDependencies {
 export type EndpointDependenciesFactory = (request: RequestContext) => EndpointDependencies;
 
 export interface Handler {
+    withOneRequestParam<A>(aParam: ParamExtractor<A>,
+                           f: (deps: EndpointDependencies, a: A) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]>
+
     withTwoRequestParams<A, B>(aParam: ParamExtractor<A>,
                                bParam: ParamExtractor<B>,
                                f: (deps: EndpointDependencies, a: A, b: B) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]>
 
     withThreeRequestParams<A, B, C>(aParam: ParamExtractor<A>,
-                                      bParam: ParamExtractor<B>,
-                                      cParam: ParamExtractor<C>,
-                                      f: (deps: EndpointDependencies, a: A, b: B, c: C) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]>
+                                    bParam: ParamExtractor<B>,
+                                    cParam: ParamExtractor<C>,
+                                    f: (deps: EndpointDependencies, a: A, b: B, c: C) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]>
 
     withFourRequestParams<A, B, C, D>(aParam: ParamExtractor<A>,
                                       bParam: ParamExtractor<B>,
@@ -62,7 +68,7 @@ export function query(paramName: string): RequestValueExtractor {
     return {name: paramName, extractor};
 }
 
-export function defaultValue(value:string, requestValue: RequestValueExtractor): RequestValueExtractor {
+export function defaultValue(value: string, requestValue: RequestValueExtractor): RequestValueExtractor {
     const extractor = (req: RequestContext) => requestValue.extractor(req) ?? value;
     return {name: requestValue.name, extractor};
 }
@@ -119,8 +125,18 @@ export function locationIdParam(requestValue: RequestValueExtractor = path('loca
     return paramExtractor('locationId', requestValue.extractor, locationId);
 }
 
-export function languageIdParam(requestValue: RequestValueExtractor = defaultValue(languages.en.value,query('lang'))): ParamExtractor<LanguageId> {
+export function languageIdParam(requestValue: RequestValueExtractor = defaultValue(languages.en.value, query('lang'))): ParamExtractor<LanguageId> {
     return paramExtractor('lang', requestValue.extractor, languageId);
+}
+
+export function postedFile(name: string): ParamExtractor<PostedFile> {
+    return (req: RequestContext) => {
+        const file = req.files[name] ?? null
+        if (!file) {
+            return failure(responseOf(400, `Missing required file ${name}`));
+        }
+        return success(file);
+    };
 }
 
 export function tenantEnvironmentLocationParam(
@@ -177,6 +193,14 @@ function failureOutcome(...outcomes: ParamExtractorOutcome[]) {
 
 export function asHandler(deps: EndpointDependencies, httpRequest: RequestContext): Handler {
     return {
+        async withOneRequestParam<A>(aParam: ParamExtractor<A>,
+                                     fn: (deps: EndpointDependencies, a: A) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]> {
+            const [a] = [aParam(httpRequest)];
+            if (a._type === 'success') {
+                return fn(deps, a.value);
+            }
+            return failureOutcome(a);
+        },
         async withTwoRequestParams<A, B>(aParam: ParamExtractor<A>,
                                          bParam: ParamExtractor<B>,
                                          fn: (deps: EndpointDependencies, a: A, b: B) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]> {

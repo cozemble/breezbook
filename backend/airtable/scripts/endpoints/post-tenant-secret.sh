@@ -15,7 +15,6 @@ read secret_short_name
 echo "Please enter the api key"
 read api_key
 
-
 body=$(cat <<EOF
 {
   "_type": "secret.value.specification",

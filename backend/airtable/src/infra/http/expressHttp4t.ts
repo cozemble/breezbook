@@ -12,13 +12,16 @@ export function sendExpressResponse(response: HttpResponse, res: express.Respons
     }
 }
 
+export type PostedFile = Express.Multer.File
+
 export interface RequestContext {
     request: HttpRequest;
-    params: { [key: string]: string };
+    params: Record<string, string>;
+    files: Record<string, PostedFile>;
 }
 
-export function requestContext(request: HttpRequest, params: { [key: string]: string }): RequestContext {
-    return {request, params}
+export function requestContext(request: HttpRequest, params: Record<string, string>, files: Record<string, PostedFile>): RequestContext {
+    return {request, params, files}
 }
 
 export function asRequestContext(req: express.Request): RequestContext {
@@ -30,5 +33,12 @@ export function asRequestContext(req: express.Request): RequestContext {
         }
         return acc
     }, [] as Header[])
-    return requestContext(requestOf(req.method, req.url, req.body, ...theHeaders), req.params)
+    let files = {} as Record<string, PostedFile>
+    if (req.files) {
+        files = (req.files as Express.Multer.File[]).reduce((acc, file) => ({...acc, [file.fieldname]: file}), files)
+    }
+    if(req.file) {
+        files = {...files, [req.file.fieldname]: req.file}
+    }
+    return requestContext(requestOf(req.method, req.url, req.body, ...theHeaders), req.params, files)
 }
