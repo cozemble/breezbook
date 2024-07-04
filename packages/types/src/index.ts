@@ -70,6 +70,21 @@ export const minuteFns = {
     }
 }
 
+export interface LanguageId extends ValueType<string> {
+    _type: 'language.id';
+}
+
+export function languageId(value: string): LanguageId {
+    return {
+        _type: 'language.id',
+        value
+    };
+}
+
+export const languages = {
+    en: languageId('en'),
+}
+
 export interface LocationId extends ValueType<string> {
     _type: 'location.id';
 }

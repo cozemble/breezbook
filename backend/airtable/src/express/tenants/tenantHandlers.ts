@@ -13,7 +13,7 @@ import {
 } from "../../prisma/dbtypes.js";
 import {Tenant} from "@breezbook/backend-api-types";
 import {PrismaClient} from "@prisma/client";
-import {EnvironmentId, mandatory} from "@breezbook/packages-types";
+import {EnvironmentId, LanguageId, mandatory} from "@breezbook/packages-types";
 import {toApiService} from "../services/serviceHandlers.js";
 import {
     asHandler,
@@ -22,6 +22,7 @@ import {
     environmentIdParam,
     expressBridge,
     httpResponseOutcome,
+    languageIdParam,
     paramExtractor,
     ParamExtractor,
     productionDeps,
@@ -60,7 +61,7 @@ function toApiTenant(tenant: DbTenantAndStuff): Tenant {
         theme: branding.theme,
         services: tenant.services.map(s => toApiService(s, tenant.service_resource_requirements, tenant.pricing_rules.length > 0)),
         serviceLocations: tenant.service_locations.map(sl => ({serviceId: sl.service_id, locationId: sl.location_id})),
-        customerForm: customerForm ? toDomainForm(customerForm): null
+        customerForm: customerForm ? toDomainForm(customerForm) : null
     }
 }
 
@@ -68,8 +69,8 @@ function slugQueryParam(requestValue: RequestValueExtractor = query('slug')): Pa
     return paramExtractor('slug', requestValue.extractor, (s) => s);
 }
 
-async function findTenantAndLocations(prisma: PrismaClient, slug: string, environment_id: string): Promise<DbTenantAndStuff | null> {
-    return await prisma.tenants.findUnique({
+async function findTenantAndLocations(prisma: PrismaClient, slug: string, environment_id: string, language_id: string): Promise<DbTenantAndStuff | null> {
+    return prisma.tenants.findUnique({
         where: {
             slug
         },
@@ -128,11 +129,11 @@ export async function onGetTenantRequestExpress(req: express.Request, res: expre
 }
 
 export async function onGetTenantRequestEndpoint(deps: EndpointDependencies, req: RequestContext): Promise<EndpointOutcome[]> {
-    return asHandler(deps, req).withTwoRequestParams(environmentIdParam(), slugQueryParam(), getTenant);
+    return asHandler(deps, req).withThreeRequestParams(environmentIdParam(), slugQueryParam(), languageIdParam(), getTenant);
 }
 
-async function getTenant(deps: EndpointDependencies, environmentId: EnvironmentId, slug: string): Promise<EndpointOutcome[]> {
-    const tenant = await findTenantAndLocations(deps.prisma, slug, environmentId.value);
+async function getTenant(deps: EndpointDependencies, environmentId: EnvironmentId, slug: string, languageId: LanguageId): Promise<EndpointOutcome[]> {
+    const tenant = await findTenantAndLocations(deps.prisma, slug, environmentId.value, languageId.value);
     if (!tenant) {
         return [httpResponseOutcome(responseOf(404))];
     }

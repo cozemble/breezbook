@@ -1,10 +1,5 @@
 import {PrismaClient} from "@prisma/client";
-import {
-    failure,
-    Failure,
-    success,
-    Success,
-} from "@breezbook/packages-core";
+import {failure, Failure, success, Success,} from "@breezbook/packages-core";
 import {prismaClient} from "../prisma/client.js";
 import express from "express";
 import {Mutations} from "../mutation/mutations.js";
@@ -12,15 +7,21 @@ import {applyMutations} from "../prisma/applyMutations.js";
 import {inngest} from "../inngest/client.js";
 import {asRequestContext, RequestContext, sendExpressResponse} from "./http/expressHttp4t.js";
 import {query as httpQuery} from "@breezbook/packages-http/dist/queries.js";
-import { HttpResponse } from "@breezbook/packages-http/dist/contract.js";
+import {HttpResponse} from "@breezbook/packages-http/dist/contract.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 import {
     environmentId,
     EnvironmentId,
     isoDate,
-    IsoDate, locationId, LocationId,
+    IsoDate, languageId, LanguageId, languages,
+    locationId,
+    LocationId,
     serviceId,
-    ServiceId, tenantEnvironment, TenantEnvironment, tenantEnvironmentLocation, TenantEnvironmentLocation,
+    ServiceId,
+    tenantEnvironment,
+    TenantEnvironment,
+    tenantEnvironmentLocation,
+    TenantEnvironmentLocation,
     tenantId,
     TenantId
 } from "@breezbook/packages-types";
@@ -39,6 +40,11 @@ export interface Handler {
                                bParam: ParamExtractor<B>,
                                f: (deps: EndpointDependencies, a: A, b: B) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]>
 
+    withThreeRequestParams<A, B, C>(aParam: ParamExtractor<A>,
+                                      bParam: ParamExtractor<B>,
+                                      cParam: ParamExtractor<C>,
+                                      f: (deps: EndpointDependencies, a: A, b: B, c: C) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]>
+
     withFourRequestParams<A, B, C, D>(aParam: ParamExtractor<A>,
                                       bParam: ParamExtractor<B>,
                                       cParam: ParamExtractor<C>,
@@ -54,6 +60,11 @@ export interface RequestValueExtractor {
 export function query(paramName: string): RequestValueExtractor {
     const extractor = (req: RequestContext) => httpQuery(req.request.uri.query, paramName) ?? null;
     return {name: paramName, extractor};
+}
+
+export function defaultValue(value:string, requestValue: RequestValueExtractor): RequestValueExtractor {
+    const extractor = (req: RequestContext) => requestValue.extractor(req) ?? value;
+    return {name: requestValue.name, extractor};
 }
 
 export function path(paramName: string): RequestValueExtractor {
@@ -106,6 +117,10 @@ export function environmentIdParam(requestValue: RequestValueExtractor = path('e
 
 export function locationIdParam(requestValue: RequestValueExtractor = path('locationId')): ParamExtractor<LocationId> {
     return paramExtractor('locationId', requestValue.extractor, locationId);
+}
+
+export function languageIdParam(requestValue: RequestValueExtractor = defaultValue(languages.en.value,query('lang'))): ParamExtractor<LanguageId> {
+    return paramExtractor('lang', requestValue.extractor, languageId);
 }
 
 export function tenantEnvironmentLocationParam(
@@ -171,6 +186,15 @@ export function asHandler(deps: EndpointDependencies, httpRequest: RequestContex
             }
             return failureOutcome(a, b);
         },
+        async withThreeRequestParams<A, B, C>(aParam: ParamExtractor<A>,
+                                              bParam: ParamExtractor<B>,
+                                              cParam: ParamExtractor<C>, fn: (deps: EndpointDependencies, a: A, b: B, c: C) => Promise<EndpointOutcome[]>): Promise<EndpointOutcome[]> {
+            const [a, b, c] = [aParam(httpRequest), bParam(httpRequest), cParam(httpRequest)];
+            if (a._type === 'success' && b._type === 'success' && c._type === 'success') {
+                return fn(deps, a.value, b.value, c.value);
+            }
+            return failureOutcome(a, b, c);
+        },
         async withFourRequestParams<A, B, C, D>(aParam: ParamExtractor<A>,
                                                 bParam: ParamExtractor<B>,
                                                 cParam: ParamExtractor<C>,
@@ -204,8 +228,8 @@ export function httpResponseOutcome(response: HttpResponse): HttpResponseOutcome
     return {response, _type: 'http.response.outcome'};
 }
 
-export function mutationOutcome(tenantEnvironment: TenantEnvironment,mutations: Mutations): MutationOutcome {
-    return {mutations,tenantEnvironment, _type: 'mutation.outcome'};
+export function mutationOutcome(tenantEnvironment: TenantEnvironment, mutations: Mutations): MutationOutcome {
+    return {mutations, tenantEnvironment, _type: 'mutation.outcome'};
 }
 
 export function sendEventOutcome(event: { name: string, data: any }): SendEventOutcome {
