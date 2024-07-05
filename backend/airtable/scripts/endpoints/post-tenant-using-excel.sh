@@ -15,6 +15,6 @@ echo "Please enter the api key"
 read api_key
 
 # Assumption: The backend expects the file with the parameter name 'file'
-curl -s -X POST "http://localhost:3000/internal/api/loadTenantFromExcel" \
+curl -s -X POST "http://localhost:3000/internal/api/dev/loadTenantFromExcel" \
   -H "Authorization: ${api_key}" \
   -F "file=@${path_to_excel}"

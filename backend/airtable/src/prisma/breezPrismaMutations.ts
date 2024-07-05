@@ -1,10 +1,11 @@
 import {Prisma} from '@prisma/client';
 import {CompositeKey, compositeKey, compositeKeyFns, Create, Entity, Update, Upsert} from '../mutation/mutations.js';
 import {mandatory, omit} from '@breezbook/packages-core';
+import {v4 as uuid} from 'uuid';
 
 export type CreateOrder = Create<Prisma.ordersCreateArgs['data']>;
 
-export function createOrder(data: Prisma.ordersCreateArgs['data']): CreateOrder {
+export function createOrder(data: Prisma.ordersUncheckedCreateInput): CreateOrder {
     return {
         _type: 'create',
         data,
@@ -15,7 +16,8 @@ export function createOrder(data: Prisma.ordersCreateArgs['data']): CreateOrder 
 
 export type CreateBooking = Create<Prisma.bookingsCreateArgs['data']>;
 
-export function createBooking(data: Prisma.bookingsCreateArgs['data']): CreateBooking {
+export function createBooking(minusId: Omit<Prisma.bookingsUncheckedCreateInput, 'id'>): CreateBooking {
+    const data = {...minusId, id: makeId(minusId.environment_id, "bookings")}
     return {
         _type: 'create',
         data,
@@ -26,7 +28,8 @@ export function createBooking(data: Prisma.bookingsCreateArgs['data']): CreateBo
 
 export type CreateBookingResourceRequirement = Create<Prisma.booking_resource_requirementsCreateArgs['data']>;
 
-export function createBookingResourceRequirement(data: Prisma.booking_resource_requirementsCreateArgs['data']): CreateBookingResourceRequirement {
+export function createBookingResourceRequirement(minusId: Omit<Prisma.booking_resource_requirementsUncheckedCreateInput, 'id'>): CreateBookingResourceRequirement {
+    const data = {...minusId, id: makeId(minusId.environment_id, "booking_resource_requirements")}
     return {
         _type: 'create',
         data,
@@ -37,7 +40,8 @@ export function createBookingResourceRequirement(data: Prisma.booking_resource_r
 
 export type CreateReservation = Create<Prisma.reservationsCreateArgs['data']>;
 
-export function createReservation(data: Prisma.reservationsCreateArgs['data']): CreateReservation {
+export function createReservation(minusId: Omit<Prisma.reservationsUncheckedCreateInput, 'id'>): CreateReservation {
+    const data = {...minusId, id: makeId(minusId.environment_id, "reservations")}
     return {
         _type: 'create',
         data,
@@ -48,23 +52,13 @@ export function createReservation(data: Prisma.reservationsCreateArgs['data']): 
 
 export type CreateOrderLine = Create<Prisma.order_linesCreateArgs['data']>;
 
-export function createOrderLine(data: Prisma.order_linesCreateArgs['data']): CreateOrderLine {
+export function createOrderLine(minusId: Omit<Prisma.order_linesUncheckedCreateInput, 'id'>): CreateOrderLine {
+    const data = {...minusId, id: makeId(minusId.environment_id, "order_lines")}
     return {
         _type: 'create',
         data,
         entity: 'order_lines',
         entityId: compositeKey("id", mandatory(data.id, 'Order Line ID'))
-    };
-}
-
-export type CreateBookingEvent = Create<Prisma.booking_eventsCreateArgs['data']>;
-
-export function createBookingEvent(data: Prisma.booking_eventsCreateArgs['data']): CreateBookingEvent {
-    return {
-        _type: 'create',
-        data,
-        entity: 'booking_events',
-        entityId: compositeKey("id", mandatory(data.id, 'Booking Event ID'))
     };
 }
 
@@ -174,6 +168,10 @@ export function upsertAddOn(
     return makeUpsert('add_on', entityId, create)
 }
 
+export function makeId(environment_id: string, entity: string): string {
+    return `${entity}-${environment_id}-${uuid().replace(/-/g, '')}`.replace(/-/g, '_')
+}
+
 export function upsertService(
     create: Prisma.servicesCreateArgs['data']
 ): UpsertService {
@@ -184,17 +182,18 @@ export function upsertService(
 export type CreateOrderPayment = Create<Prisma.order_paymentsCreateArgs['data']>;
 export type CreateBookingPayment = Create<Prisma.booking_paymentsCreateArgs['data']>;
 
-export function createOrderPayment(data: Prisma.order_paymentsCreateArgs['data']): CreateOrderPayment {
+export function createOrderPayment(minusId: Omit<Prisma.order_paymentsUncheckedCreateInput, 'id'>): CreateOrderPayment {
+    const data = {...minusId, id: makeId(minusId.environment_id, "order_payments")}
     return {
         _type: 'create',
         data,
         entity: 'order_payments',
         entityId: compositeKey("id", mandatory(data.id, 'Order Payment ID'))
     };
-
 }
 
-export function createBookingPayment(data: Prisma.booking_paymentsCreateArgs['data']): CreateBookingPayment {
+export function createBookingPayment(minusId: Omit<Prisma.booking_paymentsUncheckedCreateInput, 'id'>): CreateBookingPayment {
+    const data = {...minusId, id: makeId(minusId.environment_id, "booking_payments")}
     return {
         _type: 'create',
         data,
@@ -376,5 +375,40 @@ export function upsertServiceLabel(create: Prisma.service_labelsCreateArgs['data
         "service_id", mandatory(create.service_id, "service_id"),
         "language_id", mandatory(create.language_id, "language_id"))
     return makeUpsert('service_labels', entityId, create)
+}
+
+export type UpsertTimeslot = Upsert<Prisma.time_slotsCreateArgs['data'], Prisma.time_slotsUpdateArgs['data'], Prisma.time_slotsUpdateArgs['where']>
+
+export function upsertTimeslot(create: Prisma.time_slotsUncheckedCreateInput): UpsertTimeslot {
+    const entityId = compositeKey("id", mandatory(create.id, "Timeslot ID"))
+    return makeUpsert('time_slots', entityId, create)
+}
+
+export type UpsertCoupon = Upsert<Prisma.couponsCreateArgs['data'], Prisma.couponsUpdateArgs['data'], Prisma.couponsUpdateArgs['where']>
+
+export function upsertCoupon(create: Prisma.couponsUncheckedCreateInput): UpsertCoupon {
+    const entityId = compositeKey("id", mandatory(create.id, "Coupon ID"))
+    return makeUpsert('coupons', entityId, create)
+}
+
+export type UpsertServiceImage = Upsert<Prisma.service_imagesCreateArgs['data'], Prisma.service_imagesUpdateArgs['data'], Prisma.service_imagesUpdateArgs['where']>
+
+export function upsertServiceImage(create: Prisma.service_imagesUncheckedCreateInput): UpsertServiceImage {
+    const entityId = compositeKey(
+        "service_id", mandatory(create.service_id, "Service ID"),
+        "tenant_id", mandatory(create.tenant_id, "Tenant ID"),
+        "environment_id", mandatory(create.environment_id, "Environment ID"),
+        "context", mandatory(create.context, "Service Image Context"))
+    return makeUpsert('service_images', entityId, create)
+}
+
+export type UpsertTenantImage = Upsert<Prisma.tenant_imagesCreateArgs['data'], Prisma.tenant_imagesUpdateArgs['data'], Prisma.tenant_imagesUpdateArgs['where']>
+
+export function upsertTenantImage(create: Prisma.tenant_imagesUncheckedCreateInput): UpsertTenantImage {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "Tenant ID"),
+        "environment_id", mandatory(create.environment_id, "Environment ID"),
+        "context", mandatory(create.context, "Service Image Context"))
+    return makeUpsert('tenant_images', entityId, create)
 }
 

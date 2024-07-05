@@ -67,6 +67,6 @@ test("applies airtable plan when pending event", async () => {
         "First name": "Mike",
         "Last name": "Hogan"
     });
-    expect(await synchronisationIdRepository.getTargetId("customers", {id: "customer#1"}, "Customers")).toEqual(compositeKey("airtableRecordId", "rec100"));
+    expect(await synchronisationIdRepository.getTargetId("customers", {id: upsert.create.data.id}, "Customers")).toEqual(compositeKey("airtableRecordId", "rec100"));
     expect((prismock as any).getData()['replicated_mutation_events']).toHaveLength(1)
 });

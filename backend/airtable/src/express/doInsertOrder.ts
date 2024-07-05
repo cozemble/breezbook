@@ -1,11 +1,5 @@
-import {
-    Customer,
-    PaymentIntent,
-    Service,
-    TenantSettings,
-} from '@breezbook/packages-core';
+import {Customer, PaymentIntent, TenantSettings,} from '@breezbook/packages-core';
 import {orderCreatedResponse, OrderCreatedResponse} from '@breezbook/backend-api-types';
-import {v4 as uuidv4} from 'uuid';
 import {Prisma} from '@prisma/client';
 import {
     createBooking,
@@ -15,6 +9,7 @@ import {
     CreateOrder,
     createOrderLine,
     createReservation,
+    makeId,
     upsertBookingServiceFormValues,
     UpsertBookingServiceFormValues,
     upsertCustomer,
@@ -31,19 +26,18 @@ function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, custome
     const tenant_id = tenantEnvironment.tenantId.value;
     const environment_id = tenantEnvironment.environmentId.value;
     const email = customer.email.value;
-    const upserts: Mutation[] = [
-        upsertCustomer(
-            {
-                id: customer.id.value,
-                email,
-                phone_e164: customer.phone.value,
-                first_name: customer.firstName,
-                last_name: customer.lastName,
-                environment_id,
-                tenant_id
-            }
-        )
-    ];
+    const customerUpsert = upsertCustomer(
+        {
+            id: customer.id.value,
+            email,
+            phone_e164: customer.phone.value,
+            first_name: customer.firstName,
+            last_name: customer.lastName,
+            environment_id,
+            tenant_id
+        }
+    )
+    const upserts: Mutation[] = [customerUpsert];
     if (tenantSettings.customerFormId && customer.formData) {
         const create: Prisma.customer_form_valuesCreateArgs['data'] = {
             environment_id: tenantEnvironment.environmentId.value,
@@ -91,9 +85,12 @@ function createOrderAsPrismaMutation(tenantEnvironment: TenantEnvironment, every
 function upsertServiceFormValues(
     tenantEnvironment: TenantEnvironment,
     serviceFormId: FormId,
-    serviceFormData: unknown,
+    serviceFormData: any | null,
     bookingId: string
 ): UpsertBookingServiceFormValues {
+    if (serviceFormData === undefined) {
+        throw new Error("Service form data is undefined");
+    }
     const create: Prisma.booking_service_form_valuesCreateArgs['data'] = {
         environment_id: tenantEnvironment.environmentId.value,
         booking_id: bookingId,
@@ -116,12 +113,11 @@ function upsertServiceFormValues(
 }
 
 function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment, requirement: ResourceRequirement, bookingId: string): CreateBookingResourceRequirement {
-    if(requirement._type === "complex.resource.requirement") {
+    if (requirement._type === "complex.resource.requirement") {
         throw new Error("Cannot handle complex resource requirements");
     }
     if (requirement._type === "specific.resource") {
         return createBookingResourceRequirement({
-            id: uuidv4(),
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value,
             booking_id: bookingId,
@@ -131,7 +127,6 @@ function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment
         })
     } else {
         return createBookingResourceRequirement({
-            id: uuidv4(),
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value,
             booking_id: bookingId,
@@ -161,57 +156,54 @@ function processOrderLines(
     for (const line of lines) {
         const service = line.service;
         const servicePeriod = timePeriodFns.calcPeriod(line.startTime, service.duration);
-        const orderLineId = uuidv4();
-        orderLineIds.push(orderLineId);
+        // const orderLineId = uuidv4();
 
-        mutations.push(
-            createOrderLine({
-                id: orderLineId,
-                tenant_id,
-                environment_id,
-                order_id: orderId,
-                service_id: service.id.value,
-                location_id: line.locationId.value,
-                start_time_24hr: servicePeriod.from.value,
-                end_time_24hr: servicePeriod.to.value,
-                add_on_ids: line.addOns.map((a) => a.addOn.id.value),
-                date: line.date.value,
-                total_price_in_minor_units: line.total.amount.value,
-                total_price_currency: line.total.currency.value
-            })
-        );
-        const bookingId = uuidv4();
+        const createOrderLineMutation = createOrderLine({
+            tenant_id,
+            environment_id,
+            order_id: orderId,
+            service_id: service.id.value,
+            location_id: line.locationId.value,
+            start_time_24hr: servicePeriod.from.value,
+            end_time_24hr: servicePeriod.to.value,
+            add_on_ids: line.addOns.map((a) => a.addOn.id.value),
+            date: line.date.value,
+            total_price_in_minor_units: line.total.amount.value,
+            total_price_currency: line.total.currency.value
+        })
+        orderLineIds.push(createOrderLineMutation.data.id);
+        mutations.push(createOrderLineMutation);
+        const createBookingMutation = createBooking({
+            environment_id,
+            tenant_id,
+            service_id: service.id.value,
+            location_id: line.locationId.value,
+            add_on_ids: line.addOns.map((a) => a.addOn.id.value),
+            order_id: orderId,
+            customer_id: customer.id.value,
+            date: line.date.value,
+            start_time_24hr: servicePeriod.from.value,
+            end_time_24hr: servicePeriod.to.value,
+            order_line_id: createOrderLineMutation.data.id
+        });
+        const bookingId = createBookingMutation.data.id;
         bookingIds.push(bookingId);
-        mutations.push(
-            createBooking({
-                id: bookingId,
-                environment_id,
-                tenant_id,
-                service_id: service.id.value,
-                location_id: line.locationId.value,
-                add_on_ids: line.addOns.map((a) => a.addOn.id.value),
-                order_id: orderId,
-                customer_id: customer.id.value,
-                date: line.date.value,
-                start_time_24hr: servicePeriod.from.value,
-                end_time_24hr: servicePeriod.to.value,
-                order_line_id: orderLineId
-            })
-        );
+        mutations.push(createBookingMutation);
         line.service.resourceRequirements.forEach((requirement) => {
             mutations.push(toBookingResourceRequirementCreate(tenantEnvironment, requirement, bookingId));
         });
         if (shouldMakeReservations) {
-            const reservationId = uuidv4();
-            reservationIds.push(reservationId);
+            const createReservationMutation = createReservation({
+                environment_id,
+                tenant_id,
+                booking_id: bookingId,
+                reservation_time: new Date(),
+                expiry_time: new Date(new Date().getTime() + 1000 * 60 * 30),
+                reservation_type: 'awaiting payment'
+            });
+            reservationIds.push(createReservationMutation.data.id);
             mutations.push(
-                createReservation({
-                    id: reservationId,
-                    booking_id: bookingId,
-                    reservation_time: new Date(),
-                    expiry_time: new Date(new Date().getTime() + 1000 * 60 * 30),
-                    reservation_type: 'awaiting payment'
-                })
+                createReservationMutation
             );
         }
         for (let serviceFormIndex = 0; serviceFormIndex < service.serviceFormIds.length; serviceFormIndex++) {
@@ -224,10 +216,9 @@ function processOrderLines(
 export function doInsertOrder(
     tenantEnvironment: TenantEnvironment,
     everythingToCreateOrder: EverythingToCreateOrder,
-    services: Service[],
     tenantSettings: TenantSettings
 ): { _type: 'success'; mutations: Mutations; orderCreatedResponse: OrderCreatedResponse } {
-    const theId = orderId()
+    const theId = orderId(makeId(tenantEnvironment.environmentId.value, 'orders'))
     const {
         mutations: orderLineMutations,
         bookingIds,

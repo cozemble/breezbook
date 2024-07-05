@@ -110,7 +110,11 @@ export function toDomainAddOn(a: DbAddOn): DomainAddOn {
 }
 
 export function toDomainForm(f: DbForm): Form {
-    return f.definition as unknown as Form;
+    const form = f.definition as unknown as Form;
+    if(form._type === "json.schema.form") {
+        return {...form, id: formId(f.id)}
+    }
+    throw new Error(`Unknown form type`)
 }
 
 export function toDomainTenantSettings(settings: DbTenantSettings): TenantSettings {

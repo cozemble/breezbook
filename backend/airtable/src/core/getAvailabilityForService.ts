@@ -112,7 +112,7 @@ function getServiceSummary(service: DomainService, forms: Form[]): ServiceSummar
         forms: service.serviceFormIds.map((id) =>
             mandatory(
                 forms.find((f) => values.isEqual(f.id, id)),
-                `Form with id ${id.value} not found`
+                `Form with id ${id.value} not found in available ${forms.map((f) => f.id.value)}`
             )
         )
     };

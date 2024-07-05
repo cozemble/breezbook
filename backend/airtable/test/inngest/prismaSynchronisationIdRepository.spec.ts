@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, test, expect } from 'vitest';
 import { PrismaSynchronisationIdRepository } from '../../src/inngest/dataSynchronisation.js';
 import { prismaClient } from '../../src/prisma/client.js';
-import { id } from '@breezbook/packages-core';
 import { startTestEnvironment, stopTestEnvironment } from '../setup.js';
 import { StartedDockerComposeEnvironment } from 'testcontainers';
 import {airtableRecordIdFns} from "../../src/airtable/applyAirtablePlan.js";

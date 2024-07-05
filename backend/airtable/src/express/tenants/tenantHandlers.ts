@@ -69,7 +69,7 @@ function slugQueryParam(requestValue: RequestValueExtractor = query('slug')): Pa
 }
 
 async function findTenantAndLocations(prisma: PrismaClient, slug: string, environment_id: string, language_id: string): Promise<DbTenantAndStuff | null> {
-    return prisma.tenants.findUnique({
+    const tenant = await prisma.tenants.findUnique({
         where: {
             slug
         },
@@ -129,6 +129,14 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
             }
         }
     });
+    if (tenant) {
+        for (const service of tenant.services) {
+            if (service.service_labels.length === 0) {
+                throw new Error(`No service label found for service ${service.id}, language ${language_id}`)
+            }
+        }
+    }
+    return tenant
 }
 
 export async function onGetTenantRequestExpress(req: express.Request, res: express.Response): Promise<void> {

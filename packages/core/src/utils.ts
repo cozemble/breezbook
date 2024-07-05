@@ -49,9 +49,6 @@ export const errorResponseFns = {
     toError: (response: ErrorResponse): Error => {
         return new Error(`${response.errorCode}: ${response.errorMessage ?? ''}`);
     },
-    prependMessage<T>(s: string, resourceOutcome: ErrorResponse<T>):ErrorResponse<T> {
-        return errorResponse<T>(resourceOutcome.errorCode, `${s}: ${resourceOutcome.errorMessage}`, resourceOutcome.errorData);
-    },
     arrayOrError<T,E>(lines: (ErrorResponse<E> | T)[]):T[]|ErrorResponse<E> {
         const firstError = lines.find(isErrorResponse);
         if (firstError) {

@@ -1,6 +1,5 @@
 import {
     addOnOrder,
-    carwash,
     currency,
     customer,
     fullPaymentOnCheckout,
@@ -29,6 +28,7 @@ import {
     PricedBasket,
     pricedBasketLine,
     pricedCreateOrderRequest,
+    ResourceSummary,
     Service,
     Tenant,
     unpricedBasket,
@@ -48,17 +48,19 @@ import {storeSystemSecret, storeTenantSecret} from '../src/infra/secretsInPostgr
 import {insertOrder} from "./insertOrder.js";
 import {externalApiPaths} from "../src/express/expressApp.js";
 import {multiLocationGym} from "../src/dx/loadMultiLocationGymTenant.js";
-import {ResourceSummary} from "../src/core/resources/resources.js";
-import {EverythingToCreateOrderReferenceData} from "../src/express/onAddOrderExpress.js";
+import {EverythingToCreateOrderReferenceData, toReferenceData} from "../src/express/onAddOrderExpress.js";
 import {
     environmentId,
     IsoDate,
     isoDate,
-    isoDateFns, mandatory,
+    isoDateFns,
+    mandatory,
     tenantEnvironment,
     tenantId,
     timezone
 } from "@breezbook/packages-types";
+import {dbCarwashTenant} from "../src/dx/loadTestCarWashTenant.js";
+import {getEverythingForAvailability} from "../src/express/getEverythingForAvailability.js";
 
 /**
  * This test should contain one test case for each API endpoint, or integration scenario,
@@ -89,7 +91,7 @@ describe('Given a migrated database', () => {
     });
 
     test('should be able to get service availability for a location', async () => {
-        const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/breezbook.carwash.locations.london/service/smallCarWash.id/availability?fromDate=2023-12-20&toDate=2023-12-23`, {
+        const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/${dbCarwashTenant.locations.london.value}/service/${dbCarwashTenant.smallCarWash.id.value}/availability?fromDate=2023-12-20&toDate=2023-12-23`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -108,9 +110,9 @@ describe('Given a migrated database', () => {
 
     test('can add an order for two car washes, each with different add-ons', async () => {
         const twoServicesPricedBasket = pricedBasket([
-            pricedBasketLine(carwash.locations.london, carwash.smallCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price)], carwash.smallCarWash.price, priceFns.add(carwash.smallCarWash.price, carwash.wax.price), fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData], []),
-            pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [pricedAddOn(carwash.wax.id, 1, carwash.wax.price), pricedAddOn(carwash.polish.id, 1, carwash.polish.price)], carwash.mediumCarWash.price, priceFns.add(carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price), fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData], [])
-        ], priceFns.add(carwash.smallCarWash.price, carwash.wax.price, carwash.mediumCarWash.price, carwash.wax.price, carwash.polish.price))
+            pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.smallCarWash.id, [pricedAddOn(dbCarwashTenant.wax.id, 1, dbCarwashTenant.wax.price)], dbCarwashTenant.smallCarWash.price, priceFns.add(dbCarwashTenant.smallCarWash.price, dbCarwashTenant.wax.price), fourDaysFromNow, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], []),
+            pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, [pricedAddOn(dbCarwashTenant.wax.id, 1, dbCarwashTenant.wax.price), pricedAddOn(dbCarwashTenant.polish.id, 1, dbCarwashTenant.polish.price)], dbCarwashTenant.mediumCarWash.price, priceFns.add(dbCarwashTenant.mediumCarWash.price, dbCarwashTenant.wax.price, dbCarwashTenant.polish.price), fiveDaysFromNow, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])
+        ], priceFns.add(dbCarwashTenant.smallCarWash.price, dbCarwashTenant.wax.price, dbCarwashTenant.mediumCarWash.price, dbCarwashTenant.wax.price, dbCarwashTenant.polish.price))
 
         const fetched = await postOrder(
             twoServicesPricedBasket,
@@ -131,7 +133,7 @@ describe('Given a migrated database', () => {
 
     test('can price a basket', async () => {
         const theBasket = unpricedBasket([
-            unpricedBasketLine(carwash.mediumCarWash.id, carwash.locations.london, [addOnOrder(carwash.wax.id), addOnOrder(carwash.polish.id)], threeDaysFromNow, carwash.fourToSix.slot.from, [])
+            unpricedBasketLine(dbCarwashTenant.mediumCarWash.id, dbCarwashTenant.locations.london, [addOnOrder(dbCarwashTenant.wax.id), addOnOrder(dbCarwashTenant.polish.id)], threeDaysFromNow, dbCarwashTenant.fourToSix.slot.from, [])
         ]);
 
         const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/basket/price`, {
@@ -301,10 +303,10 @@ describe('Given a migrated database', () => {
 
     // test('can create a stripe payment intent and get client_secret and public api key', async () => {
     // 	const theOrder = order(goodCustomer, [
-    // 		orderLine(carwash.smallCarWash.id, carwash.smallCarWash.price, [], threeDaysFromNow, carwash.fourToSix, [goodServiceFormData])
+    // 		orderLine(dbCarwashTenant.smallCarWash.id, dbCarwashTenant.smallCarWash.price, [], threeDaysFromNow, dbCarwashTenant.fourToSix, [goodServiceFormData])
     // 	]);
     //
-    // 	const response = await postOrder(theOrder, carwash.smallCarWash.price, expressPort);
+    // 	const response = await postOrder(theOrder, dbCarwashTenant.smallCarWash.price, expressPort);
     // 	expect(response.status).toBe(200);
     // 	const orderCreatedResponse = (await response.json()) as OrderCreatedResponse;
     //
@@ -323,7 +325,9 @@ describe('Given a migrated database', () => {
 });
 
 async function completeCancellationGrant() {
+    console.log("About to create booking")
     const bookingId = await createBooking(isoDateFns.addDays(isoDate(), 3));
+    console.log("About to complete cancellation grant")
     const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellation/grant`, {
         method: 'POST',
         headers: {
@@ -335,17 +339,14 @@ async function completeCancellationGrant() {
     return {bookingId, cancellationGrant};
 }
 
-function carwashReferenceData():EverythingToCreateOrderReferenceData {
-    return {
-        services: carwash.services,
-        resources: carwash.resources,
-        addOns: carwash.addOns,
-        coupons: [carwash.coupons.expired20PercentOffCoupon, carwash.coupons.twentyPercentOffCoupon]
-    }
+async function dbCarwashTenantReferenceData(): Promise<EverythingToCreateOrderReferenceData> {
+    const prisma = prismaClient();
+    const availabilityData = await getEverythingForAvailability(prisma, tenantEnvironment(dbCarwashTenant.environmentId, dbCarwashTenant.tenantId), isoDate(), isoDate())
+    return toReferenceData(availabilityData)
 }
 
 async function createBooking(date: IsoDate): Promise<string> {
-    const theBasket = pricedBasket([pricedBasketLine(carwash.locations.london, carwash.mediumCarWash.id, [], carwash.mediumCarWash.price, carwash.mediumCarWash.price, date, carwash.nineToOne.slot.from, [], [])], carwash.mediumCarWash.price)
+    const theBasket = pricedBasket([pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, [], dbCarwashTenant.mediumCarWash.price, dbCarwashTenant.mediumCarWash.price, date, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])], dbCarwashTenant.mediumCarWash.price)
     const createOrderResponse = await insertOrder(
         tenantEnv,
         pricedCreateOrderRequest(
@@ -353,7 +354,7 @@ async function createBooking(date: IsoDate): Promise<string> {
             goodCustomer,
             fullPaymentOnCheckout()
         ),
-        carwashReferenceData(),
+        await dbCarwashTenantReferenceData(),
         tenantSettings(timezone('Europe/London'), null)
     );
     expect(createOrderResponse.bookingIds).toHaveLength(1);

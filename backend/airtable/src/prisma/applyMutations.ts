@@ -4,9 +4,13 @@ import {Mutation, mutationFns} from "../mutation/mutations.js";
 import {prismaMutationToPromise} from "../infra/prismaMutations.js";
 
 export async function applyMutations(prisma: PrismaClient, tenantEnvironment: TenantEnvironment, mutations: Mutation[]): Promise<void> {
-    const outcomeMutations = mutations.map((mutation) => prismaMutationToPromise(prisma, mutation));
-    const storeEvents = mutations.map((m) => storeEvent(tenantEnvironment, prisma, m));
-    await prisma.$transaction([...outcomeMutations, ...storeEvents]);
+    try {
+        const outcomeMutations = mutations.map((mutation) => prismaMutationToPromise(prisma, mutation));
+        const storeEvents = mutations.map((m) => storeEvent(tenantEnvironment, prisma, m));
+        await prisma.$transaction([...outcomeMutations, ...storeEvents]);
+    } catch (e) {
+        throw e
+    }
 
 }
 

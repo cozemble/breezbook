@@ -103,7 +103,7 @@ export const internalApiPaths = {
     getAccessToken: '/internal/api/:envId/:tenantId/oauth/:systemId/accessToken',
     publishReferenceDataAsMutationEvents: '/internal/api/:envId/:tenantId/referenceData/publishAsMutationEvents',
     onAppStart: '/internal/api/onAppStart',
-    loadTenantFromExcel: '/internal/api/loadTenantFromExcel',
+    loadTenantFromExcel: '/internal/api/:envId/loadTenantFromExcel',
 };
 
 export const externalApiPaths = {

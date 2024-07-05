@@ -636,7 +636,7 @@ export const addOnFns = {
     findById(addOns: AddOn[], addOnId: AddOnId): AddOn {
         const found = addOns.find(a => a.id.value === addOnId.value);
         if (!found) {
-            throw new Error(`No add-on found with id ${addOnId.value}`);
+            throw new Error(`No add-on found with id ${addOnId.value}, available ids are ${addOns.map(a => a.id.value).join(', ')}`);
         }
         return found;
     }

@@ -38,7 +38,7 @@ model blocked_time {
 }
 
 model booking_events {
-  id             String             @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id             String             @id
   tenant_id      String
   environment_id String
   booking_id     String
@@ -79,7 +79,7 @@ model booking_service_form_values {
 }
 
 model bookings {
-  id                            String                          @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id                            String                          @id
   tenant_id                     String
   environment_id                String
   status                        booking_status                  @default(confirmed)
@@ -136,7 +136,7 @@ model cancellation_grants {
 }
 
 model coupons {
-  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id             String   @id
   tenant_id      String
   environment_id String
   code           String
@@ -161,7 +161,7 @@ model customer_form_values {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model customers {
-  id                   String                 @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id                   String                 @id
   tenant_id            String
   environment_id       String
   first_name           String
@@ -270,7 +270,7 @@ model oauth_tokens {
 }
 
 model order_lines {
-  id                         String     @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id                         String     @id
   tenant_id                  String
   environment_id             String
   order_id                   String
@@ -292,7 +292,7 @@ model order_lines {
 }
 
 model order_payments {
-  id                      String         @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id                      String         @id
   tenant_id               String
   environment_id          String
   order_id                String
@@ -308,7 +308,7 @@ model order_payments {
 }
 
 model orders {
-  id                         String           @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id                         String           @id
   tenant_id                  String
   environment_id             String
   customer_id                String
@@ -339,7 +339,7 @@ model pricing_rules {
 }
 
 model received_webhooks {
-  id             String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id             String   @id
   tenant_id      String
   environment_id String
   webhook_id     String
@@ -371,7 +371,9 @@ model replicated_mutation_events {
 }
 
 model reservations {
-  id               String   @id @default(dbgenerated("extensions.uuid_generate_v4()"))
+  id               String   @id
+  tenant_id        String
+  environment_id   String
   booking_id       String
   reservation_time DateTime @db.Timestamp(6)
   expiry_time      DateTime @db.Timestamp(6)
@@ -379,6 +381,7 @@ model reservations {
   created_at       DateTime @default(now()) @db.Timestamptz(6)
   updated_at       DateTime @default(now()) @db.Timestamptz(6)
   bookings         bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model resource_availability {
@@ -605,6 +608,7 @@ model tenants {
   pricing_rules                    pricing_rules[]
   received_webhooks                received_webhooks[]
   refund_rules                     refund_rules[]
+  reservations                     reservations[]
   resource_availability            resource_availability[]
   resource_blocked_time            resource_blocked_time[]
   resource_images                  resource_images[]

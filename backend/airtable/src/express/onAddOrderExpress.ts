@@ -115,7 +115,6 @@ export function doAddOrder(
         return doInsertOrder(
             everythingForAvailability.tenantEnvironment,
             everythingToCreateOrder,
-            everythingForAvailability.businessConfiguration.services,
             everythingForAvailability.tenantSettings
         );
     });
@@ -273,7 +272,7 @@ export function makeEverythingToCreateOrder(everything: EverythingToCreateOrderR
     };
 }
 
-function toReferenceData(everythingForAvailability: EverythingForAvailability): EverythingToCreateOrderReferenceData {
+export function toReferenceData(everythingForAvailability: EverythingForAvailability): EverythingToCreateOrderReferenceData {
     return {
         services: everythingForAvailability.businessConfiguration.services,
         resources: everythingForAvailability.businessConfiguration.resources,

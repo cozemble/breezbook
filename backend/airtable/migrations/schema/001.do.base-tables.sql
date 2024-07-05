@@ -259,7 +259,7 @@ create table tenant_settings
 
 create table customers
 (
-    id             text primary key                             default uuid_generate_v4(),
+    id             text primary key,
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
     first_name     text                                not null,
@@ -282,7 +282,7 @@ create type payment_method as enum ('upfront', 'on_delivery','deposit_and_balanc
 
 create table orders
 (
-    id                         text primary key                             default uuid_generate_v4(),
+    id                         text primary key,
     tenant_id                  text references tenants (tenant_id) not null,
     environment_id             text                                not null,
     customer_id                text references customers (id)      not null,
@@ -296,7 +296,7 @@ create table orders
 
 create table order_lines
 (
-    id                         text primary key                             default uuid_generate_v4(),
+    id                         text primary key,
     tenant_id                  text references tenants (tenant_id) not null,
     environment_id             text                                not null,
     order_id                   text                                not null,
@@ -317,7 +317,7 @@ create type booking_status as enum ('confirmed', 'cancelled');
 
 create table bookings
 (
-    id              text primary key                             default uuid_generate_v4(),
+    id              text primary key,
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
     status          booking_status                      not null default 'confirmed',
@@ -354,7 +354,7 @@ create type booking_event_type as enum ('cancelled', 'amended', 'completed', 'no
 
 create table booking_events
 (
-    id             text primary key                             default uuid_generate_v4(),
+    id             text primary key,
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
     booking_id     text references bookings (id)       not null,
@@ -365,7 +365,7 @@ create table booking_events
 
 create table coupons
 (
-    id             text primary key                             default uuid_generate_v4(),
+    id             text primary key,
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
     code           text                                not null,
@@ -378,20 +378,22 @@ create table coupons
 
 create table reservations
 (
-    id               text primary key                       default uuid_generate_v4(),
-    booking_id       text references bookings (id) not null,
-    reservation_time timestamp                     not null,
-    expiry_time      timestamp                     not null,
-    reservation_type text                          not null,
-    created_at       timestamp with time zone      not null default current_timestamp,
-    updated_at       timestamp with time zone      not null default current_timestamp
+    id               text primary key,
+    tenant_id        text references tenants (tenant_id) not null,
+    environment_id   text                                not null,
+    booking_id       text references bookings (id)       not null,
+    reservation_time timestamp                           not null,
+    expiry_time      timestamp                           not null,
+    reservation_type text                                not null,
+    created_at       timestamp with time zone            not null default current_timestamp,
+    updated_at       timestamp with time zone            not null default current_timestamp
 );
 
 create type payment_status as enum ('succeeded', 'pending', 'failed'); -- add any other statuses you have
 
 create table order_payments
 (
-    id                      text primary key                             default uuid_generate_v4(),
+    id                      text primary key,
     tenant_id               text references tenants (tenant_id) not null,
     environment_id          text                                not null,
     order_id                text references orders (id)         not null,
@@ -414,7 +416,7 @@ create table system_config
 
 create table received_webhooks
 (
-    id             text primary key                             default uuid_generate_v4(),
+    id             text primary key,
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
     webhook_id     text                                not null,

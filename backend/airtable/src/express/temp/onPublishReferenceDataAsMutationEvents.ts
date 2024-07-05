@@ -1,15 +1,10 @@
 import express from 'express';
 import {tenantEnvironmentParam, withOneRequestParam} from '../../infra/functionalExpress.js';
 import {prismaClient} from '../../prisma/client.js';
-import {
-    upsertAddOn,
-    upsertService,
-    upsertServiceLabel,
-    upsertServiceResourceRequirement
-} from '../../prisma/breezPrismaMutations.js';
+import {upsertAddOn} from '../../prisma/breezPrismaMutations.js';
 import {compositeKeyFns} from "../../mutation/mutations.js";
 import {PrismaClient} from "@prisma/client";
-import {languages, mandatory, TenantEnvironment} from '@breezbook/packages-types';
+import {languages, TenantEnvironment} from '@breezbook/packages-types';
 
 export async function publishReferenceData(prisma: PrismaClient, tenantEnvironment: TenantEnvironment) {
     const addOns = await prisma.add_on.findMany({
@@ -52,41 +47,44 @@ export async function publishReferenceData(prisma: PrismaClient, tenantEnvironme
         )
     );
     const servicesAsMutations = services.flatMap((service) => {
-            const labels = mandatory(service.service_labels[0], `Service ${service.id} has no labels`);
-            return [
-                upsertService(
-                    {
-                        id: service.id,
-                        tenant_id: service.tenant_id,
-                        environment_id: service.environment_id,
-                        slug: service.slug,
-                        duration_minutes: service.duration_minutes,
-                        price: service.price,
-                        price_currency: service.price_currency,
-                        permitted_add_on_ids: service.permitted_add_on_ids,
-                        requires_time_slot: service.requires_time_slot
-                    }
-                ),
-                upsertServiceLabel({
-                    tenant_id: service.tenant_id,
-                    environment_id: service.environment_id,
-                    service_id: service.id,
-                    language_id: languages.en.value,
-                    name: labels.name,
-                    description: labels.description,
-                })
-            ];
+            throw new Error('deprecated - build test data from mutations, and remove the need to publish entirely')
+            // const labels = mandatory(service.service_labels[0], `Service ${service.id} has no labels`);
+            // return [
+            //     upsertService(
+            //         {
+            //             tenant_id: service.tenant_id,
+            //             environment_id: service.environment_id,
+            //             slug: service.slug,
+            //             duration_minutes: service.duration_minutes,
+            //             price: service.price,
+            //             price_currency: service.price_currency,
+            //             permitted_add_on_ids: service.permitted_add_on_ids,
+            //             requires_time_slot: service.requires_time_slot
+            //         }
+            //     ),
+            //     upsertServiceLabel({
+            //         tenant_id: service.tenant_id,
+            //         environment_id: service.environment_id,
+            //         service_id: service.id,
+            //         language_id: languages.en.value,
+            //         name: labels.name,
+            //         description: labels.description,
+            //     })
+            // ];
         }
     );
-    const serviceRequirementsAsMutations = serviceRequirements.map(srr => upsertServiceResourceRequirement({
-        id: srr.id,
-        tenant_id: srr.tenant_id,
-        environment_id: srr.environment_id,
-        service_id: srr.service_id,
-        requirement_type: srr.requirement_type,
-        resource_type: srr.resource_type,
-        resource_id: srr.resource_id,
-    }))
+    const serviceRequirementsAsMutations = serviceRequirements.map(srr => {
+        throw new Error('deprecated - build test data from mutations, and remove the need to publish entirely')
+        // return upsertServiceResourceRequirement({
+        //     id: srr.id,
+        //     tenant_id: srr.tenant_id,
+        //     environment_id: srr.environment_id,
+        //     service_id: srr.service_id,
+        //     requirement_type: srr.requirement_type,
+        //     resource_type: srr.resource_type,
+        //     resource_id: srr.resource_id,
+        // });
+    })
     const allMutations = [...addOnsAsMutations, ...servicesAsMutations, ...serviceRequirementsAsMutations];
     const mutationInserts = allMutations.map((m) =>
         prisma.mutation_events.create({

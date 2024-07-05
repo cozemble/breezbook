@@ -3,7 +3,6 @@ import {prismaClient} from '../prisma/client.js';
 import {PrismaClient} from "@prisma/client";
 import {DelegatingInngestStep, InngestStep, Logger} from "./inngestTypes.js";
 import {PaymentIntentWebhookBody} from "../stripe.js";
-import {v4 as uuid} from 'uuid';
 import {STRIPE_WEBHOOK_ID} from "../express/stripeEndpoint.js";
 import {environmentId, mandatory, tenantEnvironment, tenantId} from "@breezbook/packages-types";
 import {createBookingPayment, createOrderPayment} from "../prisma/breezPrismaMutations.js";
@@ -46,7 +45,6 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
 
     await step.run('createOrderPayment', async () => {
         const mutation = createOrderPayment({
-                id: uuid(),
                 tenant_id: paymentIntent.metadata.tenantId as string,
                 environment_id: paymentIntent.metadata.environmentId as string,
                 order_id: paymentIntent.metadata.orderId as string,
@@ -60,12 +58,8 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
         await applyMutations(prisma, theTenantEnvironment, [mutation])
         return mutation
     });
-    const orderLines = await step.run('findOrderLines', async () => {
-        return await prisma.order_lines.findMany({where: {order_id: paymentIntent.metadata.orderId as string}});
-    });
-    const bookings = await step.run('findBookings', async () => {
-        return await prisma.bookings.findMany({where: {order_id: paymentIntent.metadata.orderId as string}});
-    });
+    const orderLines = await step.run('findOrderLines', async () => prisma.order_lines.findMany({where: {order_id: paymentIntent.metadata.orderId as string}}));
+    const bookings = await step.run('findBookings', async () => prisma.bookings.findMany({where: {order_id: paymentIntent.metadata.orderId as string}}));
     const bookingTotalInMinorUnits = bookings.reduce((total, booking) => {
         const orderLine = mandatory(orderLines.find(ol => ol.id === booking.order_line_id), `Order line not found for booking ${booking.id}`);
         return total + orderLine.total_price_in_minor_units;
@@ -77,7 +71,6 @@ export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: I
             const bookingPercentageOfTotal = orderLine.total_price_in_minor_units / bookingTotalInMinorUnits
             const bookingPayment = paymentIntent.amount * bookingPercentageOfTotal
             return createBookingPayment({
-                id: uuid(),
                 tenant_id: paymentIntent.metadata.tenantId as string,
                 environment_id: paymentIntent.metadata.environmentId as string,
                 booking_id: booking.id,

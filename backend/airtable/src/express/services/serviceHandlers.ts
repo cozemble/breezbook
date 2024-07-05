@@ -63,6 +63,11 @@ async function getServices(deps: EndpointDependencies, tenantEnvironment: Tenant
             }
         }
     });
+    for (const service of services) {
+        if(service.service_labels.length === 0) {
+            return [httpResponseOutcome(responseOf(404, `No service label found for service ${service.id}, language ${languageId.value}`))]
+        }
+    }
     const serviceResourceRequirements = await prisma.service_resource_requirements.findMany({
         where: {
             tenant_id: tenantEnvironment.tenantId.value,
