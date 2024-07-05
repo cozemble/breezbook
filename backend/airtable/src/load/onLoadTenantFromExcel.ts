@@ -246,17 +246,19 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         expect_quantity: false,
         description: ao.Description
     }));
-    const formUpserts = formData.map(f => upsertForm({
-        id: makeId(environment_id, "forms"),
-        tenant_id,
-        environment_id,
-        name: f.Name,
-        description: f.Description ?? f.Name,
-        definition: f["Definition JSON"]
-    }));
+    const formUpserts = formData.map(f => {
+        return upsertForm({
+            id: makeId(environment_id, "forms"),
+            tenant_id,
+            environment_id,
+            name: f.Name,
+            description: f.Description ?? f.Name,
+            definition: JSON.parse(f["Definition JSON"])
+        });
+    });
     const tenantSettingsUpserts = tenantSettingsData.map(ts => {
         const contactDetailsForm = mandatory(formUpserts.find(f => {
-            const form = JSON.parse(f.create.data.definition as any) as JsonSchemaForm;
+            const form = f.create.data.definition as any as JsonSchemaForm;
             return form.id.value === ts["Customer Form ID"];
         }), `Form not found for tenant settings ${ts["Customer Form ID"]}`);
         return upsertTenantSettings({

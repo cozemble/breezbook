@@ -168,8 +168,8 @@ export function upsertAddOn(
     return makeUpsert('add_on', entityId, create)
 }
 
-export function makeId(environment_id: string, entity: string): string {
-    return `${entity}-${environment_id}-${uuid().replace(/-/g, '')}`.replace(/-/g, '_')
+export function makeId(environment_id: string, entity: string, id = uuid().replace(/-/g, '')): string {
+    return `${entity}_${environment_id}_${id}`
 }
 
 export function upsertService(
