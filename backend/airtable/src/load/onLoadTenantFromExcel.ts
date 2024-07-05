@@ -6,6 +6,7 @@ import {
     environmentIdParam,
     expressBridge,
     httpResponseOutcome,
+    mutationOutcome,
     postedFile,
     productionDeps
 } from "../infra/endpoint.js";
@@ -13,22 +14,34 @@ import {PostedFile, RequestContext} from "../infra/http/expressHttp4t.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 import * as XLSX from 'xlsx';
 import {WorkBook} from 'xlsx';
-import {EnvironmentId, JsonSchemaForm, languages, mandatory, TenantId, tenantId} from "@breezbook/packages-types";
-import {Upsert} from "../mutation/mutations.js";
+import {
+    EnvironmentId,
+    JsonSchemaForm,
+    languages,
+    mandatory,
+    tenantEnvironment,
+    TenantId,
+    tenantId
+} from "@breezbook/packages-types";
+import {mutations, Upsert} from "../mutation/mutations.js";
 import {
     makeId,
     upsertAddOn,
     upsertBusinessHours,
     upsertForm,
     upsertLocation,
+    upsertPricingRule,
     upsertResource,
     upsertResourceAvailability,
     upsertResourceType,
     upsertService,
     upsertServiceForm,
+    upsertServiceImage,
     upsertServiceLabel,
     upsertServiceResourceRequirement,
     upsertTenant,
+    upsertTenantBranding,
+    upsertTenantImage,
     upsertTenantSettings,
     upsertTimeslot
 } from "../prisma/breezPrismaMutations.js";
@@ -89,7 +102,7 @@ const TimeslotsSchema = z.object({
 type Timeslot = z.infer<typeof TimeslotsSchema>;
 
 const ResourceAvailabilitySchema = z.object({
-    "Resource ID": z.string(),
+    "Resource Name": z.string(),
     "Day of week": z.string(),
     "Start time": z.string(),
     "End time": z.string(),
@@ -98,7 +111,7 @@ type ResourceAvailability = z.infer<typeof ResourceAvailabilitySchema>;
 const AddOnSchema = z.object({
     "ID": z.string(),
     "Name": z.string(),
-    "Price": z.string(),
+    "Price": z.number(),
     "Description": z.string(),
 });
 type AddOn = z.infer<typeof AddOnSchema>;
@@ -113,8 +126,8 @@ type Form = z.infer<typeof FormsSchema>;
 const ServicesSchema = z.object({
     "ID": z.string(),
     "Name": z.string(),
-    "Price": z.string(),
-    "Description": z.string(),
+    "Price": z.number(),
+    "Description": z.string().optional(),
     "Resource Type Required": z.string(),
     "Requires Timeslot": z.string(),
     "Service Forms": z.string(),
@@ -123,8 +136,14 @@ const ServicesSchema = z.object({
 });
 type Service = z.infer<typeof ServicesSchema>;
 
+const PricingRuleSchema = z.object({
+    "ID": z.string(),
+    "Rank": z.number(),
+    "Definition JSON": z.any(),
+});
+type PricingRule = z.infer<typeof PricingRuleSchema>;
 
-function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, workbook: XLSX.WorkBook): Upsert<any, any, any>[] {
+function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, workbook: XLSX.WorkBook): Upsert<any, any, any> [] {
     const tenantSettingsData = toJson<TenantSettings>(workbook, 'Tenant Settings', TenantSettingsSchema);
     const locationData = toJson<Location>(workbook, 'Locations', LocationsSchema);
     const businessHoursData = toJson<BusinessHours>(workbook, 'Business Hours', BusinessHoursSchema);
@@ -134,15 +153,32 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     const addOnData = toJson<AddOn>(workbook, 'Add-Ons', AddOnSchema);
     const formData = toJson<Form>(workbook, 'Forms', FormsSchema);
     const serviceData = toJson<Service>(workbook, 'Services', ServicesSchema);
+    const pricingRuleData = toJson<PricingRule>(workbook, 'Pricing Rules', PricingRuleSchema);
 
     const tenant_id = theTenantId.value;
     const environment_id = environmentId.value;
 
-    const tenantUpserts = tenantSettingsData.map(ts => upsertTenant({
-        tenant_id,
-        name: ts.Name,
-        slug: theTenantId.value,
-    }))
+    const tenantUpserts = tenantSettingsData.flatMap(ts => [
+        upsertTenant({
+            tenant_id,
+            name: ts.Name,
+            slug: theTenantId.value,
+        }),
+        upsertTenantImage({
+            tenant_id,
+            environment_id,
+            public_image_url: ts.Hero,
+            mime_type: 'image/jpeg',
+            context: 'hero',
+        }),
+        upsertTenantBranding({
+            tenant_id,
+            environment_id,
+            headline: ts.Headline,
+            description: ts.Description,
+            theme: ts.Theme
+        })
+    ])
 
     const locationsUpserts = locationData.map(l => upsertLocation({
         id: makeId(environment_id, "locations"),
@@ -189,7 +225,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         });
     })
     const resourceAvailabilityUpserts = resourceAvailabilityData.map(ra => {
-        const resourceUpsert = mandatory(resourceUpserts.find(r => r.create.data.name === ra["Resource ID"]), `Resource not found for resource availability ${ra["Resource ID"]}`);
+        const resourceUpsert = mandatory(resourceUpserts.find(resourceUpsert => resourceUpsert.create.data.name === ra["Resource Name"]), `Resource not found for resource availability ${ra["Resource Name"]}`);
         return upsertResourceAvailability({
             id: makeId(environment_id, "resource_availability"),
             tenant_id,
@@ -254,7 +290,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
                 language_id: languages.en.value,
                 service_id: serviceUpsert.create.data.id,
                 name: s.Name,
-                description: s.Description
+                description: s.Description ?? s.Name
             }),
             upsertServiceResourceRequirement({
                 id: makeId(environment_id, "service_resource_requirements"),
@@ -270,9 +306,26 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
                 service_id: serviceUpsert.create.data.id,
                 form_id: formUpsert.create.data.id,
                 rank: 0
+            }),
+            upsertServiceImage({
+                tenant_id,
+                environment_id,
+                service_id: serviceUpsert.create.data.id,
+                public_image_url: s.Thumbnail,
+                mime_type: 'image/jpeg',
+                context: 'thumbnail',
             })
         ];
     })
+
+    const pricingRuleUpserts = pricingRuleData.map(pr => upsertPricingRule({
+        id: makeId(environment_id, "pricing_rules"),
+        tenant_id,
+        environment_id,
+        rank: pr.Rank,
+        active: true,
+        definition: pr["Definition JSON"]
+    }))
 
     return [
         ...tenantUpserts,
@@ -285,7 +338,8 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         ...addOnUpserts,
         ...formUpserts,
         ...tenantSettingsUpserts,
-        ...serviceUpserts
+        ...serviceUpserts,
+        ...pricingRuleUpserts
     ]
 }
 
@@ -295,6 +349,6 @@ async function loadTenantFromExcel(deps: EndpointDependencies, environmentId: En
     const sheetData: any[] = XLSX.utils.sheet_to_json(tenantSettingsWorksheet);
     const theTenantId = tenantId(mandatory(sheetData[0]['Tenant ID'], 'Tenant ID not found in Excel file'));
     const upserts = makeTenantUpserts(theTenantId, environmentId, workbook);
-    console.log({upserts})
-    return [httpResponseOutcome(responseOf(200, 'OK'))]
+    console.log({upserts: upserts.length})
+    return [mutationOutcome(tenantEnvironment(environmentId, theTenantId), mutations(upserts)), httpResponseOutcome(responseOf(200, 'OK'))]
 }
