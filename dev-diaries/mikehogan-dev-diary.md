@@ -2050,3 +2050,12 @@ to the end.  It is looking nice so far.  This feels solid:
 ]
 
 ```
+
+# Sat 6 Jul 2024
+I spent a good chunk of yesterday bring the crazy excel-to-sql private repo - which was used to onboard tenants without giving
+away their prices and pricing rules etc - into the main app.  There is now an internal endpoint that you can post an excel file
+to and it will create dev and prod tenants for you.
+
+I took the time to invest in this, because I know so much of the schema is going to change as I move towards multi-language.
+But also afterwards also.  It also means that I can drop this mental "publish reference data as mutations" endpoint, which existed
+to get records into the `mutations` table to enable replication to airtable.

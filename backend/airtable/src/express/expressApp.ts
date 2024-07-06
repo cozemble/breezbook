@@ -14,7 +14,6 @@ import {onStoreTenantSecret} from './secretManagement.js';
 import {couponValidityCheck} from './coupons/couponHandlers.js';
 import {onBasketPriceRequestExpress} from './basket/basketHandler.js';
 import {onGetAccessToken} from './oauth/oauthHandlers.js';
-import {onPublishReferenceDataAsMutationEvents} from './temp/onPublishReferenceDataAsMutationEvents.js';
 import {onGetServicesRequest} from "./services/serviceHandlers.js";
 import {onGetTenantRequestExpress} from "./tenants/tenantHandlers.js";
 import {withNoRequestParams} from "../infra/functionalExpress.js";
@@ -30,7 +29,7 @@ interface IncomingMessageWithBody extends IncomingMessage {
     rawBody?: string;
 }
 
-const upload = multer({ storage: multer.memoryStorage() })
+const upload = multer({storage: multer.memoryStorage()})
 
 export function expressApp(): Express {
     const app: Express = express();
@@ -90,7 +89,6 @@ export function expressApp(): Express {
     app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
     app.post('/internal/api/:envId/:tenantId/secret', onStoreTenantSecret);
     app.get(internalApiPaths.getAccessToken, onGetAccessToken);
-    app.post(internalApiPaths.publishReferenceDataAsMutationEvents, onPublishReferenceDataAsMutationEvents);
     app.post(internalApiPaths.onAppStart, onAppStartRequest);
     app.post(internalApiPaths.loadTenantFromExcel, upload.single('file'), onLoadTenantFromExcel);
 
@@ -101,7 +99,6 @@ export function expressApp(): Express {
 
 export const internalApiPaths = {
     getAccessToken: '/internal/api/:envId/:tenantId/oauth/:systemId/accessToken',
-    publishReferenceDataAsMutationEvents: '/internal/api/:envId/:tenantId/referenceData/publishAsMutationEvents',
     onAppStart: '/internal/api/onAppStart',
     loadTenantFromExcel: '/internal/api/:envId/loadTenantFromExcel',
 };
