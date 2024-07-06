@@ -310,7 +310,7 @@ export function upsertTenantBranding(create: Prisma.tenant_brandingCreateArgs['d
 
 export type UpsertServiceLocation = Upsert<Prisma.service_locationsCreateArgs['data'], Prisma.service_locationsUpdateArgs['data'], Prisma.service_locationsUpdateArgs['where']>
 
-export function upsertServiceLocation(create: Prisma.service_locationsCreateArgs['data']): UpsertServiceLocation {
+export function upsertServiceLocation(create: Prisma.service_locationsUncheckedCreateInput): UpsertServiceLocation {
     const entityId = compositeKey(
         "tenant_id", mandatory(create.tenant_id, "Tenant ID"),
         "environment_id", mandatory(create.environment_id, "Environment ID"),

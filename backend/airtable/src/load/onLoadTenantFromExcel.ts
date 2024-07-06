@@ -33,11 +33,11 @@ import {
     upsertPricingRule,
     upsertResource,
     upsertResourceAvailability,
-    upsertResourceType,
+    upsertResourceType, UpsertService,
     upsertService,
     upsertServiceForm,
     upsertServiceImage,
-    upsertServiceLabel,
+    upsertServiceLabel, upsertServiceLocation,
     upsertServiceResourceRequirement,
     upsertTenant,
     upsertTenantBranding,
@@ -56,7 +56,11 @@ async function onLoadTenantFromExcelEndpoint(deps: EndpointDependencies, request
 }
 
 function toJson<T>(workbook: WorkBook, sheetName: string, type: ZodType): T[] {
-    const jsons = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName])
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) {
+        throw new Error(`Sheet ${sheetName} not found in workbook`)
+    }
+    const jsons = XLSX.utils.sheet_to_json(sheet)
     return jsons.map((json: any) => type.parse(json))
 }
 
@@ -112,7 +116,7 @@ const AddOnSchema = z.object({
     "ID": z.string(),
     "Name": z.string(),
     "Price": z.number(),
-    "Description": z.string(),
+    "Description": z.string().optional(),
 });
 type AddOn = z.infer<typeof AddOnSchema>;
 
@@ -150,7 +154,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     const timeslotData = toJson<Timeslot>(workbook, 'Timeslots', TimeslotsSchema);
     const resourceData = toJson<Resource>(workbook, 'Resources', ResourcesSchema);
     const resourceAvailabilityData = toJson<ResourceAvailability>(workbook, 'Resource Availability', ResourceAvailabilitySchema);
-    const addOnData = toJson<AddOn>(workbook, 'Add-Ons', AddOnSchema);
+    const addOnData = toJson<AddOn>(workbook, 'Add ons', AddOnSchema);
     const formData = toJson<Form>(workbook, 'Forms', FormsSchema);
     const serviceData = toJson<Service>(workbook, 'Services', ServicesSchema);
     const pricingRuleData = toJson<PricingRule>(workbook, 'Pricing Rules', PricingRuleSchema);
@@ -241,10 +245,10 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         tenant_id,
         environment_id,
         name: ao.Name,
-        price: ao.Price,
+        price: ao.Price * 100,
         price_currency: "GBP",
         expect_quantity: false,
-        description: ao.Description
+        description: ao.Description ?? ao.Name
     }));
     const formUpserts = formData.map(f => {
         return upsertForm({
@@ -270,6 +274,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         );
     })
     const allAddOnIds = addOnUpserts.map(ao => ao.create.data.id);
+    console.log({allAddOnIds})
     const serviceUpserts = serviceData.flatMap(s => {
         const resourceTypeUpsert = mandatory(resourceTypeUpserts.find(rt => rt.create.data.name === s["Resource Type Required"]), `Resource Type not found for service ${s.Name}`);
         const formUpsert = mandatory(formUpserts.find(f => f.create.data.name === s["Service Forms"]), `Form not found for service ${s.Name}`);
@@ -279,7 +284,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
             environment_id,
             slug: s.ID,
             duration_minutes: 120,
-            price: s.Price,
+            price: s.Price * 100,
             price_currency: "GBP",
             permitted_add_on_ids: allAddOnIds,
             requires_time_slot: s["Requires Timeslot"] === "Y",
@@ -320,13 +325,22 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         ];
     })
 
+    const onlyServiceUpserts = serviceUpserts.filter(s => s.create.entity === "services") as UpsertService[]
+
+    const serviceLocationUpserts = onlyServiceUpserts.flatMap(serviceUpsert => locationsUpserts.map(locationUpsert => upsertServiceLocation({
+        tenant_id,
+        environment_id,
+        service_id: serviceUpsert.create.data.id,
+        location_id: locationUpsert.create.data.id
+    })))
+
     const pricingRuleUpserts = pricingRuleData.map(pr => upsertPricingRule({
         id: makeId(environment_id, "pricing_rules"),
         tenant_id,
         environment_id,
         rank: pr.Rank,
         active: true,
-        definition: pr["Definition JSON"]
+        definition: JSON.parse(pr["Definition JSON"])
     }))
 
     return [
@@ -341,6 +355,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         ...formUpserts,
         ...tenantSettingsUpserts,
         ...serviceUpserts,
+        ...serviceLocationUpserts,
         ...pricingRuleUpserts
     ]
 }
