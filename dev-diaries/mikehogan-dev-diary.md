@@ -1886,19 +1886,18 @@ In other words, considered last. I shared that with claude and it made code wher
 answer, worth recording here:
 
 ```typescript
-interface ResourceBookingsOptions
-{
-    disfavoredResources ? : Resource[];
-    preferredResources ? : Resource[];
-    allocationStrategy ? : 'balanced' | 'concentrated' | 'random';
-    capacityThreshold ? : number; // Percentage (0-100)
-    timeBufferMinutes ? : number;
-    overbookingAllowancePercent ? : number;
-    resourceGroups ? : {[groupId: string]: Resource[] };
-    preferSameGroup ? : boolean;
-    maintenanceWindows ? : {resource: Resource, windows: Timeslot[]}[];
-    userPreferences ? : {userId: string, preferredResources: Resource[]};
-    bookingPriorities ? : {[bookingId: string]: number }; // Higher number = higher priority
+interface ResourceBookingsOptions {
+    disfavoredResources?: Resource[];
+    preferredResources?: Resource[];
+    allocationStrategy?: 'balanced' | 'concentrated' | 'random';
+    capacityThreshold?: number; // Percentage (0-100)
+    timeBufferMinutes?: number;
+    overbookingAllowancePercent?: number;
+    resourceGroups?: { [groupId: string]: Resource[] };
+    preferSameGroup?: boolean;
+    maintenanceWindows?: { resource: Resource, windows: Timeslot[] }[];
+    userPreferences?: { userId: string, preferredResources: Resource[] };
+    bookingPriorities?: { [bookingId: string]: number }; // Higher number = higher priority
 }
 
 function resourceBookings(
@@ -1929,6 +1928,7 @@ With the following commentary:
 - User Preferences: If there are user-specific preferences for certain resources.
 
 ## The disfavouring implementation
+
 It worked out quite well:
 
 ```typescript
@@ -1949,31 +1949,38 @@ function isDisfavored(resource: Resource, resourcePreferences: ResourcePreferenc
 ```
 
 # Mon 1 Jul 2024
-Pushing through the new availability check code into package-core now.  Issue is that package-resourcing depends on package-core
-and package-core now needs the availability function.  I have started pulling out the shared types from package-core into 
-package-types, and stitching it back together.  An issue has come up.  The `service` in package-core depends on resource
-requirements, which are in package-resourcing.  resource requirements express a need on a `resource` type.
+
+Pushing through the new availability check code into package-core now. Issue is that package-resourcing depends on
+package-core
+and package-core now needs the availability function. I have started pulling out the shared types from package-core into
+package-types, and stitching it back together. An issue has come up. The `service` in package-core depends on resource
+requirements, which are in package-resourcing. resource requirements express a need on a `resource` type.
 package-core also has a representation of `resource` tho, and the only difference is that is is named.
 
 What happens if I try to drop the name on the resource and just use the definition from package-resourcing?
 
 # Web 3 Jul 2024
-I've been on a multi-day push to get the new resourcing/availability library integrated into the main app.  Finally done.
-The reason for going on this bender was to make it easier, hopefully, to support multiple languages.  Certainly, `Resource`
-no longer have a name.  And the `Service` in the resourcing package also doesn't have a name.
 
-Having been burned by taking on all of the multi-language refactor in one go the last time, this time I am going to do it
-in stages.  I think a general approach might be best thought about by working on `Service` first:
+I've been on a multi-day push to get the new resourcing/availability library integrated into the main app. Finally done.
+The reason for going on this bender was to make it easier, hopefully, to support multiple languages.
+Certainly, `Resource`
+no longer have a name. And the `Service` in the resourcing package also doesn't have a name.
 
- - Split `Service` into `Service` and `NamedService`
- - Use `Service` in all endpoints and core logic
- - Use `NamedService` only when returning responses to the frontend
+Having been burned by taking on all of the multi-language refactor in one go the last time, this time I am going to do
+it
+in stages. I think a general approach might be best thought about by working on `Service` first:
 
-Actually I wonder if this is thorough enough.  There are things on service that have nothing to do with availability checking,
-for example.  Like permitted add-ons.  If I went through the entire call stack of the availability check endpoint, what
-exact parts of service would be needed.  Let me try that first.
+- Split `Service` into `Service` and `NamedService`
+- Use `Service` in all endpoints and core logic
+- Use `NamedService` only when returning responses to the frontend
+
+Actually I wonder if this is thorough enough. There are things on service that have nothing to do with availability
+checking,
+for example. Like permitted add-ons. If I went through the entire call stack of the availability check endpoint, what
+exact parts of service would be needed. Let me try that first.
 
 ## Update on the above
+
 Ok, this seems to have worked out ok:
 
 ```typescript
@@ -1996,16 +2003,18 @@ export interface ServiceLabels {
 }
 ```
 
-Using an extension of the `Service` type as `NamedService` meant that concerns were again coupled - if I wanted to deal 
-with just the name and description of a service, I had to deal with the price and resource requirements too.  So I split
+Using an extension of the `Service` type as `NamedService` meant that concerns were again coupled - if I wanted to deal
+with just the name and description of a service, I had to deal with the price and resource requirements too. So I split
 the `Service` type into `Service` and `ServiceLabels`, and there is no hard referential connection - they have to be
-joined via the service id.  I think this will work out ok.
+joined via the service id. I think this will work out ok.
 
 # Thu 4 Jul 2024
-Sometimes doing a big revert is the best possible move, deflating as it might be at the time.  In fact, surely a refactor
-that is never ending MUST be reverted, coz its a sign that it's wandering away from simplicity.  In any case, I am following
-up on the above domain model changes with the corresponding database changes.  Again, focusing on `service` only to get 
-to the end.  It is looking nice so far.  This feels solid:
+
+Sometimes doing a big revert is the best possible move, deflating as it might be at the time. In fact, surely a refactor
+that is never ending MUST be reverted, coz its a sign that it's wandering away from simplicity. In any case, I am
+following
+up on the above domain model changes with the corresponding database changes. Again, focusing on `service` only to get
+to the end. It is looking nice so far. This feels solid:
 
 ```typescript
     const serviceUpserts = [
@@ -2052,10 +2061,74 @@ to the end.  It is looking nice so far.  This feels solid:
 ```
 
 # Sat 6 Jul 2024
-I spent a good chunk of yesterday bring the crazy excel-to-sql private repo - which was used to onboard tenants without giving
-away their prices and pricing rules etc - into the main app.  There is now an internal endpoint that you can post an excel file
+
+I spent a good chunk of yesterday bring the crazy excel-to-sql private repo - which was used to onboard tenants without
+giving
+away their prices and pricing rules etc - into the main app. There is now an internal endpoint that you can post an
+excel file
 to and it will create dev and prod tenants for you.
 
-I took the time to invest in this, because I know so much of the schema is going to change as I move towards multi-language.
-But also afterwards also.  It also means that I can drop this mental "publish reference data as mutations" endpoint, which existed
+I took the time to invest in this, because I know so much of the schema is going to change as I move towards
+multi-language.
+But also afterwards also. It also means that I can drop this mental "publish reference data as mutations" endpoint,
+which existed
 to get records into the `mutations` table to enable replication to airtable.
+
+## Update on migration to multi-language
+
+It's going ok. The idea of pull out `X-Labels` types for the various types of `X` seems to hold. Most or all of the
+business logic
+has no interest in the language stuff, which I am calling "Labels". That concern sure does seem to sit at the edge of
+the backend
+and in the front end. I can do the work with un-named domain objects, then label then just before returning them.
+
+It seems to play out ok in the database too. Tables are getting companion "labels" tables, joined by primary key and
+language id.
+I'm in the process of applying this to the dynamic json forms now. I was going to just require an entire new form
+definition, but
+the keys in the form needs to stay constant across language. For example, my form requesting "goals" from a customer in
+the
+gym tenant, has to keep the property name "goals" in the json schema, otherwise the data will not have a fixed shape.
+
+So requiring an entire new json schema seems to not work. I thought of adding markup to the json schema to support
+language.
+But extending json schema seldom goes will in my experience. What I hit on is a slight tweak on the labels idea, to suit
+a json schema better. Hopefully the following types will make it clear what I am thinking:
+
+```typescript
+const goalsForm: JsonSchemaForm = {
+    "_type": "json.schema.form",
+    "id": {
+        "_type": "form.id",
+        "value": "goals-form"
+    },
+    "name": "Goals Form",
+    "schema": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "properties": {
+            "goals": {
+                "type": "string"
+            },
+        },
+        "required": [
+            "goals",
+        ],
+        "additionalProperties": false
+    }
+};
+
+const goalsFormLabelsEnglish = jsonSchemaFormLabels(
+    goalsForm.id, 
+    languages.en, 
+    "Your goals",
+    [schemaKeyLabel("goals", "Goals")],
+    "What are your fitness goals")
+
+const goalsFormLabelsTurkish = jsonSchemaFormLabels(
+    goalsForm.id, 
+    languages.tr, 
+    "Hedefleriniz", 
+    [schemaKeyLabel("goals", "Hedefler")], 
+    "Spor hedefleriniz nelerdir")
+```

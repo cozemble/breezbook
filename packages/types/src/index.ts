@@ -561,6 +561,42 @@ export interface JsonSchemaForm {
     schema: unknown;
 }
 
+export interface SchemaKeyLabel {
+    _type: 'schema.key.label';
+    schemaKey: string;
+    label: string;
+    description?: string;
+}
+
+export function schemaKeyLabel(schemaKey: string, label: string, description?: string): SchemaKeyLabel {
+    return {
+        _type: 'schema.key.label',
+        schemaKey,
+        label,
+        description
+    };
+}
+
+export interface JsonSchemaFormLabels {
+    _type: 'json.schema.form.labels';
+    formId: FormId;
+    languageId: LanguageId;
+    name: string;
+    description?: string;
+    schemaKeyLabels: SchemaKeyLabel[]
+}
+
+export function jsonSchemaFormLabels(formId: FormId, languageId: LanguageId, name: string, schemaKeyLabels: SchemaKeyLabel[], description?: string): JsonSchemaFormLabels {
+    return {
+        _type: 'json.schema.form.labels',
+        formId,
+        languageId,
+        name,
+        description,
+        schemaKeyLabels
+    };
+}
+
 export type Form = JsonSchemaForm;
 
 export interface CouponCode extends ValueType<string> {

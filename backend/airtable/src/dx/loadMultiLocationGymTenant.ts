@@ -3,7 +3,7 @@ import {
     makeId,
     upsertBlockedTime,
     upsertBusinessHours,
-    upsertForm,
+    upsertForm, upsertFormLabels,
     upsertLocation,
     upsertPricingRule,
     upsertResource,
@@ -23,7 +23,7 @@ import {
 } from "../prisma/breezPrismaMutations.js";
 import {prismaMutationToPromise} from "../infra/prismaMutations.js";
 import {Upsert} from "../mutation/mutations.js";
-import {JsonSchemaForm, languages} from "@breezbook/packages-types";
+import {JsonSchemaForm, jsonSchemaFormLabels, languages, schemaKeyLabel} from "@breezbook/packages-types";
 import {add, jexlCondition, PricingRule} from "@breezbook/packages-pricing";
 import {makeTestId} from "./testIds.js";
 
@@ -167,18 +167,17 @@ export const multiLocationGym = {
     ptMete: upsertPtMete.create.data.id
 }
 
-export async function runUpserts(prisma: PrismaClient, upserts: Upsert<any, any, any>[]): Promise<Upsert<any, any, any>[]> {
-    try {
-        for (const upsert of upserts) {
-            await prismaMutationToPromise(prisma, upsert)
-        }
-        return upserts
-    } catch (e) {
-        throw e
+export async function runUpserts(prisma: PrismaClient, upserts: Upsert[]): Promise<Upsert[]> {
+    for (const upsert of upserts) {
+        await prismaMutationToPromise(prisma, upsert)
     }
+    return upserts
 }
 
 export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<void> {
+    const en = languages.en.value
+    const tr = languages.tr.value
+
     await runUpserts(prisma, [upsertTenant({
         tenant_id,
         name: 'Multi-location Gym',
@@ -422,8 +421,14 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
         definition: goalsForm as any
     })
     await runUpserts(prisma, [upsertGoalsForm])
-    const en = languages.en.value
-    const tr = languages.tr.value
+    const formLabels = [goalsFormLabelsEnglish, goalsFormLabelsTurkish]
+    await runUpserts(prisma, formLabels.map(fl => upsertFormLabels({
+        tenant_id,
+        environment_id,
+        form_id: upsertGoalsForm.create.data.id,
+        language_id: fl.languageId.value,
+        labels: fl as any
+    })))
 
     const [gym1Hr, pt1Hr, yoga1Hr, massage30mins, swim30mins] = serviceUpserts
     const serviceLabelUpserts = [
@@ -606,7 +611,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
     const tenantBrandingId = makeTestId(tenant_id, environment_id, `tenant_branding_${tenant_id}_${environment_id}`)
     await runUpserts(prisma, [
         upsertTenantBranding({
-            id: tenantBrandingId,
+                id: tenantBrandingId,
                 tenant_id,
                 environment_id,
                 theme: {}
@@ -643,8 +648,7 @@ const goalsForm: JsonSchemaForm = {
         "type": "object",
         "properties": {
             "goals": {
-                "type": "string",
-                "description": "What are your fitness goals"
+                "type": "string"
             },
         },
         "required": [
@@ -653,6 +657,15 @@ const goalsForm: JsonSchemaForm = {
         "additionalProperties": false
     }
 };
+
+const goalsFormLabelsEnglish = jsonSchemaFormLabels(goalsForm.id, languages.en, "Your goals",
+    [schemaKeyLabel("goals", "Goals")],
+    "What are your fitness goals")
+
+const goalsFormLabelsTurkish = jsonSchemaFormLabels(goalsForm.id, languages.tr, "Hedefleriniz",[
+    schemaKeyLabel("goals", "Hedefler")
+], "Spor hedefleriniz nelerdir")
+
 
 const eliteIsMoreExpensive: PricingRule = {
     id: makeId(environment_id, `pricing_rules`),

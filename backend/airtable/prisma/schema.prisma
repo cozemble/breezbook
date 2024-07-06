@@ -207,6 +207,7 @@ model forms {
   created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
   updated_at                  DateTime                      @default(now()) @db.Timestamptz(6)
   booking_service_form_values booking_service_form_values[]
+  form_labels                 form_labels[]
   tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   service_forms               service_forms[]
   tenant_settings             tenant_settings[]
@@ -598,6 +599,7 @@ model tenants {
   customer_form_values             customer_form_values[]
   customers                        customers[]
   data_synchronisation_id_mappings data_synchronisation_id_mappings[]
+  form_labels                      form_labels[]
   forms                            forms[]
   locations                        locations[]
   mutation_events                  mutation_events[]
@@ -724,6 +726,7 @@ model languages {
   created_at             DateTime                 @default(now()) @db.Timestamptz(6)
   updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
   add_on_labels          add_on_labels[]
+  form_labels            form_labels[]
   service_labels         service_labels[]
   tenant_branding_labels tenant_branding_labels[]
   tenants                tenants[]
@@ -775,6 +778,21 @@ model add_on_labels {
   tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id, add_on_id, language_id])
+}
+
+model form_labels {
+  tenant_id      String
+  environment_id String
+  form_id        String
+  language_id    String
+  labels         Json
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  forms          forms     @relation(fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  languages      languages @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, form_id, language_id])
 }
 
 enum booking_event_type {

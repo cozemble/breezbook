@@ -434,3 +434,15 @@ export function upsertAddOnLabels(create: Prisma.add_on_labelsUncheckedCreateInp
     return makeUpsert('add_on_labels', entityId, create)
 }
 
+export type UpsertFormLabels = Upsert<Prisma.form_labelsCreateArgs['data'], Prisma.form_labelsUpdateArgs['data'], Prisma.form_labelsUpdateArgs['where']>
+
+export function upsertFormLabels(create: Prisma.form_labelsUncheckedCreateInput): UpsertFormLabels {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "form_id", mandatory(create.form_id, "form_id"),
+        "language_id", mandatory(create.language_id, "language_id"),
+    )
+    return makeUpsert('form_labels', entityId, create)
+}
+

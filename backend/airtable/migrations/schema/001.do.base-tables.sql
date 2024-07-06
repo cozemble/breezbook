@@ -155,7 +155,18 @@ create table forms
     definition     jsonb                               not null,
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp
+);
 
+create table form_labels
+(
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    form_id        text references forms (id)          not null,
+    language_id    text references languages (id)      not null,
+    labels         jsonb                               not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    primary key (tenant_id, environment_id, form_id, language_id)
 );
 
 create table services

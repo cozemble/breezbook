@@ -49,7 +49,7 @@ export interface Update<TData, TWhereUniqueInput> {
     entityId: CompositeKey;
 }
 
-export interface Upsert<TCreateInput, TUpdateInput, TWhereUniqueInput> {
+export interface Upsert<TCreateInput = any, TUpdateInput = any, TWhereUniqueInput = any> {
     _type: 'upsert';
     create: Create<TCreateInput>;
     update: Update<TUpdateInput, TWhereUniqueInput>;
