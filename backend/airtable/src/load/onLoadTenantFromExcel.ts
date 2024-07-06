@@ -43,6 +43,7 @@ import {
     upsertServiceResourceRequirement,
     upsertTenant,
     upsertTenantBranding,
+    upsertTenantBrandingLabels,
     upsertTenantImage,
     upsertTenantSettings,
     upsertTimeslot
@@ -171,6 +172,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     const tenant_id = theTenantId.value;
     const environment_id = environmentId.value;
 
+    const tenantBrandingId = makeId(environment_id, "tenant_branding", makeKey('branding', tenant_id));
     const tenantUpserts = tenantSettingsData.flatMap(ts => [
         upsertTenant({
             tenant_id,
@@ -185,11 +187,18 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
             context: 'hero',
         }),
         upsertTenantBranding({
+            id: tenantBrandingId,
             tenant_id,
             environment_id,
+            theme: JSON.parse(ts.Theme)
+        }),
+        upsertTenantBrandingLabels({
+            tenant_id,
+            environment_id,
+            tenant_branding_id: tenantBrandingId,
+            language_id: languages.en.value,
             headline: ts.Headline,
-            description: ts.Description,
-            theme: ts.Theme
+            description: ts.Description
         })
     ])
 

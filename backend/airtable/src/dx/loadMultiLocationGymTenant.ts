@@ -18,6 +18,7 @@ import {
     upsertServiceResourceRequirement,
     upsertTenant,
     upsertTenantBranding,
+    upsertTenantBrandingLabels,
     upsertTenantSettings
 } from "../prisma/breezPrismaMutations.js";
 import {prismaMutationToPromise} from "../infra/prismaMutations.js";
@@ -602,14 +603,32 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
         })
     ])
 
-    await runUpserts(prisma, [upsertTenantBranding({
+    const tenantBrandingId = makeTestId(tenant_id, environment_id, `tenant_branding_${tenant_id}_${environment_id}`)
+    await runUpserts(prisma, [
+        upsertTenantBranding({
+            id: tenantBrandingId,
+                tenant_id,
+                environment_id,
+                theme: {}
+            }
+        ),
+        upsertTenantBrandingLabels({
             tenant_id,
             environment_id,
+            language_id: en,
+            tenant_branding_id: tenantBrandingId,
             headline: 'Breez Gym',
             description: 'Getting fit and healthy has never been easier',
-            theme: {}
-        }
-    )])
+        }),
+        upsertTenantBrandingLabels({
+            tenant_id,
+            environment_id,
+            language_id: tr,
+            tenant_branding_id: tenantBrandingId,
+            headline: 'Breez Gym',
+            description: 'Fit ve sağlıklı olmak hiç bu kadar kolay olmamıştı',
+        })
+    ])
 }
 
 const goalsForm: JsonSchemaForm = {

@@ -540,16 +540,16 @@ model system_config {
 }
 
 model tenant_branding {
-  tenant_id      String
-  environment_id String
-  theme          Json?    @default("{}")
-  headline       String
-  description    String
-  created_at     DateTime @default(now()) @db.Timestamp(6)
-  updated_at     DateTime @default(now()) @db.Timestamp(6)
-  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+  id                     String                   @id
+  tenant_id              String
+  environment_id         String
+  theme                  Json?                    @default("{}")
+  created_at             DateTime                 @default(now()) @db.Timestamp(6)
+  updated_at             DateTime                 @default(now()) @db.Timestamp(6)
+  tenants                tenants                  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+  tenant_branding_labels tenant_branding_labels[]
 
-  @@id([tenant_id, environment_id])
+  @@unique([tenant_id, environment_id])
 }
 
 model tenant_images {
@@ -622,6 +622,7 @@ model tenants {
   service_resource_requirements    service_resource_requirements[]
   services                         services[]
   tenant_branding                  tenant_branding[]
+  tenant_branding_labels           tenant_branding_labels[]
   tenant_images                    tenant_images[]
   tenant_settings                  tenant_settings[]
   languages                        languages                          @relation(fields: [default_language_id], references: [language_id], onDelete: NoAction, onUpdate: NoAction)
@@ -717,13 +718,14 @@ model booking_resource_requirements {
 }
 
 model languages {
-  id             String           @id
-  name           String
-  language_id    String           @unique
-  created_at     DateTime         @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime         @default(now()) @db.Timestamptz(6)
-  service_labels service_labels[]
-  tenants        tenants[]
+  id                     String                   @id
+  name                   String
+  language_id            String                   @unique
+  created_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  service_labels         service_labels[]
+  tenant_branding_labels tenant_branding_labels[]
+  tenants                tenants[]
 }
 
 model service_labels {
@@ -740,6 +742,22 @@ model service_labels {
   tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id, service_id, language_id])
+}
+
+model tenant_branding_labels {
+  tenant_id          String
+  environment_id     String
+  language_id        String
+  tenant_branding_id String
+  headline           String
+  description        String
+  created_at         DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime        @default(now()) @db.Timestamptz(6)
+  languages          languages       @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenant_branding    tenant_branding @relation(fields: [tenant_branding_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants            tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, language_id])
 }
 
 enum booking_event_type {

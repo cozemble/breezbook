@@ -412,3 +412,13 @@ export function upsertTenantImage(create: Prisma.tenant_imagesUncheckedCreateInp
     return makeUpsert('tenant_images', entityId, create)
 }
 
+export type UpsertTenantBrandingLabels = Upsert<Prisma.tenant_branding_labelsCreateArgs['data'], Prisma.tenant_branding_labelsUpdateArgs['data'], Prisma.tenant_branding_labelsUpdateArgs['where']>
+
+export function upsertTenantBrandingLabels(create: Prisma.tenant_branding_labelsUncheckedCreateInput): UpsertTenantBrandingLabels {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "language_id", mandatory(create.language_id, "language_id"),)
+    return makeUpsert('tenant_branding_labels', entityId, create)
+}
+

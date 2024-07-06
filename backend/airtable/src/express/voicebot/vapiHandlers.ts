@@ -2,7 +2,7 @@ import express from "express";
 import {locationIdParam, tenantEnvironmentParam, withTwoRequestParams} from "../../infra/functionalExpress.js";
 import {prismaClient} from "../../prisma/client.js";
 import {byLocation} from "../../availability/byLocation.js";
-import {isoDate, tenantEnvironmentLocation} from "@breezbook/packages-types";
+import {isoDate, languages, mandatory, tenantEnvironmentLocation} from "@breezbook/packages-types";
 import {businessDescription, webQueryPrompt} from "@breezbook/packages-voicebot-prompting";
 
 export async function onVapiVoiceBotPromptRequest(req: express.Request, res: express.Response): Promise<void> {
@@ -18,11 +18,17 @@ export async function onVapiVoiceBotPromptRequest(req: express.Request, res: exp
                 }
             },
             include: {
-                tenants: true
+                tenants: true,
+                tenant_branding_labels: {
+                    where: {
+                        language_id: languages.en.value
+                    }
+                }
             }
         });
-        const description = businessDescription(tenantBranding.tenants.name, tenantBranding.description, tenantBranding.description)
+        const firstLabels = mandatory(tenantBranding.tenant_branding_labels[0], "tenantBranding.tenant_branding_labels[0]")
+        const description = businessDescription(tenantBranding.tenants.name, firstLabels.description, firstLabels.description)
         const prompt = webQueryPrompt(description, everything.businessConfiguration, everything.pricingRules, [])
-        res.status(200).setHeader("Content-type","text/plain").send(prompt)
+        res.status(200).setHeader("Content-type", "text/plain").send(prompt)
     });
 }

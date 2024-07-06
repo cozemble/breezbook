@@ -7,6 +7,7 @@ import {
     DbServiceResourceRequirement,
     DbTenant,
     DbTenantBranding,
+    DbTenantBrandingLabel,
     DbTenantImage,
     DbTenantSettings
 } from "../../prisma/dbtypes.js";
@@ -35,7 +36,7 @@ import {toDomainForm} from "../../prisma/dbToDomain.js";
 type DbTenantAndStuff = DbTenant & {
     tenant_images: DbTenantImage[],
     locations: DbLocation[],
-    tenant_branding: DbTenantBranding[],
+    tenant_branding: (DbTenantBranding & { tenant_branding_labels: DbTenantBrandingLabel[] })[],
     services: RequiredServiceData[],
     service_locations: DbServiceLocation[],
     service_resource_requirements: DbServiceResourceRequirement[],
@@ -47,14 +48,15 @@ type DbTenantAndStuff = DbTenant & {
 function toApiTenant(tenant: DbTenantAndStuff): Tenant {
     const tenantImages: DbTenantImage[] = tenant.tenant_images ?? [];
     const branding = mandatory(tenant.tenant_branding[0], `Expected exactly one branding record for tenant, got ${tenant.tenant_branding.length}`)
+    const brandingLabels = mandatory(branding.tenant_branding_labels[0], `Expected exactly one branding label record for tenant, got ${branding.tenant_branding_labels.length}`)
     const tenantSettings = mandatory(tenant.tenant_settings[0], `Expected exactly one settings record for tenant, got ${tenant.tenant_settings.length}`)
     const customerForm = tenant.forms.find(f => f.id === tenantSettings.customer_form_id) ?? null;
     return {
         id: tenant.tenant_id,
         name: tenant.name,
         slug: tenant.slug,
-        description: branding.description,
-        heading: branding.headline,
+        description: brandingLabels.description,
+        heading: brandingLabels.headline,
         heroImage: tenantImages.length > 0 ? tenantImages[0].public_image_url : 'https://picsum.photos/800/450',
         locations: tenant.locations.map(l => ({id: l.id, slug: l.slug, name: l.name})),
         theme: branding.theme,
@@ -115,6 +117,13 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
             tenant_branding: {
                 where: {
                     environment_id
+                },
+                include: {
+                    tenant_branding_labels: {
+                        where: {
+                            language_id
+                        }
+                    }
                 }
             },
             locations: {

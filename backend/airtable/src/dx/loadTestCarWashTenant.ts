@@ -5,6 +5,7 @@ import {
     AddOnId,
     environmentId,
     JsonSchemaForm,
+    languages,
     locationId,
     serviceId,
     ServiceId,
@@ -32,6 +33,7 @@ import {
     upsertServiceResourceRequirement,
     upsertTenant,
     upsertTenantBranding,
+    upsertTenantBrandingLabels,
     upsertTenantImage,
     upsertTenantSettings,
     upsertTimeslot
@@ -52,7 +54,7 @@ const locationUpserts = [
         }
     ),
     upsertLocation({
-        id: makeTestId(tenant_id, environment_id, 'liverpool'),
+            id: makeTestId(tenant_id, environment_id, 'liverpool'),
             tenant_id,
             environment_id,
             name: 'Liverpool',
@@ -145,7 +147,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
     await runUpserts(prisma, locationUpserts)
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     await runUpserts(prisma, daysOfWeek.map(day => (upsertBusinessHours({
-        id: makeTestId(tenant_id, environment_id, `business-hours-${day}`),
+            id: makeTestId(tenant_id, environment_id, `business-hours-${day}`),
             tenant_id,
             environment_id,
             day_of_week: day,
@@ -222,7 +224,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
             const serviceId = makeTestId(tenant_id, environment_id, slug)
             return serviceId === serviceUpsert.create.data.id;
         });
-        if(labels.length === 0) {
+        if (labels.length === 0) {
             throw new Error(`No labels found for service ${serviceUpsert.create.data.id}`)
         }
         return labels.map(l => upsertServiceLabel({
@@ -264,7 +266,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
         definition: pricingRule as any
     })))
     await runUpserts(prisma, Object.values(carwash.coupons).map((coupon, index) => upsertCoupon({
-        id: makeTestId(tenant_id, environment_id, `coupon-${index}`),
+            id: makeTestId(tenant_id, environment_id, `coupon-${index}`),
             tenant_id,
             environment_id,
             code: coupon.code.value,
@@ -293,10 +295,18 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
         public_image_url: `https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/tenant1/thesmartwash-hero.png`
 
     })])
+    const tenantBrandingId = makeTestId(tenant_id, environment_id, 'tenant_branding')
     await runUpserts(prisma, [
         upsertTenantBranding({
+            id: tenantBrandingId,
+            tenant_id,
+            environment_id
+        }),
+        upsertTenantBrandingLabels({
             tenant_id,
             environment_id,
+            language_id: languages.en.value,
+            tenant_branding_id: tenantBrandingId,
             headline: 'The Smart Wash',
             description: 'The Smart Wash is the best car wash in the world',
         })

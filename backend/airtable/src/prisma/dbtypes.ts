@@ -35,6 +35,7 @@ import {
     service_resource_requirements,
     booking_resource_requirements,
     service_labels,
+    tenant_branding_labels,
 } from '@prisma/client';
 import {TenantEnvironment} from '@breezbook/packages-types';
 
@@ -75,6 +76,7 @@ export type {
     service_resource_requirements as DbServiceResourceRequirement,
     booking_resource_requirements as DbBookingResourceRequirement,
     service_labels as DbServiceLabel,
+    tenant_branding_labels as DbTenantBrandingLabel,
 };
 
 export interface TenantEnvironmentPair {
