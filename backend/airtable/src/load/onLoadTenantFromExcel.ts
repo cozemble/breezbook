@@ -33,11 +33,13 @@ import {
     upsertPricingRule,
     upsertResource,
     upsertResourceAvailability,
-    upsertResourceType, UpsertService,
+    upsertResourceType,
+    UpsertService,
     upsertService,
     upsertServiceForm,
     upsertServiceImage,
-    upsertServiceLabel, upsertServiceLocation,
+    upsertServiceLabel,
+    upsertServiceLocation,
     upsertServiceResourceRequirement,
     upsertTenant,
     upsertTenantBranding,
@@ -147,6 +149,13 @@ const PricingRuleSchema = z.object({
 });
 type PricingRule = z.infer<typeof PricingRuleSchema>;
 
+function makeKey(...values: string[]): string {
+    return values.join("")
+        .replace(/\s/g, "")
+        .replace(/:/g, "")
+        .toLowerCase();
+}
+
 function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, workbook: XLSX.WorkBook): Upsert<any, any, any> [] {
     const tenantSettingsData = toJson<TenantSettings>(workbook, 'Tenant Settings', TenantSettingsSchema);
     const locationData = toJson<Location>(workbook, 'Locations', LocationsSchema);
@@ -185,7 +194,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     ])
 
     const locationsUpserts = locationData.map(l => upsertLocation({
-        id: makeId(environment_id, "locations"),
+        id: makeId(environment_id, "locations", l.ID),
         tenant_id,
         environment_id,
         name: l.Name,
@@ -193,7 +202,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     }))
 
     const businessHoursUpserts = businessHoursData.map(bh => upsertBusinessHours({
-        id: makeId(environment_id, "business_hours"),
+        id: makeId(environment_id, "business_hours", makeKey(tenant_id, bh["Day of week"], bh["Start time"], bh["End time"])),
         tenant_id,
         environment_id,
         day_of_week: bh["Day of week"],
@@ -202,7 +211,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     }))
 
     const timeslotUpserts = timeslotData.map(ts => upsertTimeslot({
-        id: makeId(environment_id, "timeslots"),
+        id: makeId(environment_id, "timeslots", makeKey(tenant_id, ts["Start time"], ts["End time"])),
         tenant_id,
         environment_id,
         description: ts["Start time"] + " - " + ts["End time"],
@@ -212,7 +221,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
 
     const resourceTypes = Array.from(new Set(resourceData.map(r => r.Type)));
     const resourceTypeUpserts = resourceTypes.map(rt => upsertResourceType({
-            id: makeId(environment_id, "resource_types"),
+            id: makeId(environment_id, "resource_types", rt),
             tenant_id,
             environment_id,
             name: rt
@@ -221,7 +230,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     const resourceUpserts = resourceData.map(r => {
         const resourceTypeUpsert = mandatory(resourceTypeUpserts.find(rt => rt.create.data.name === r.Type), `Resource Type not found for resource ${r.Name}`);
         return upsertResource({
-            id: makeId(environment_id, "resources"),
+            id: makeId(environment_id, "resources", r.ID),
             tenant_id,
             environment_id,
             name: r.Name,
@@ -231,7 +240,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     const resourceAvailabilityUpserts = resourceAvailabilityData.map(ra => {
         const resourceUpsert = mandatory(resourceUpserts.find(resourceUpsert => resourceUpsert.create.data.name === ra["Resource Name"]), `Resource not found for resource availability ${ra["Resource Name"]}`);
         return upsertResourceAvailability({
-            id: makeId(environment_id, "resource_availability"),
+            id: makeId(environment_id, "resource_availability", makeKey(tenant_id, ra["Resource Name"], ra["Day of week"], ra["Start time"], ra["End time"])),
             tenant_id,
             environment_id,
             resource_id: resourceUpsert.create.data.id,
@@ -241,7 +250,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         });
     });
     const addOnUpserts = addOnData.map(ao => upsertAddOn({
-        id: makeId(environment_id, "add_ons"),
+        id: makeId(environment_id, "add_ons", ao.ID),
         tenant_id,
         environment_id,
         name: ao.Name,
@@ -252,7 +261,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     }));
     const formUpserts = formData.map(f => {
         return upsertForm({
-            id: makeId(environment_id, "forms"),
+            id: makeId(environment_id, "forms", f.ID),
             tenant_id,
             environment_id,
             name: f.Name,
@@ -274,12 +283,11 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         );
     })
     const allAddOnIds = addOnUpserts.map(ao => ao.create.data.id);
-    console.log({allAddOnIds})
     const serviceUpserts = serviceData.flatMap(s => {
         const resourceTypeUpsert = mandatory(resourceTypeUpserts.find(rt => rt.create.data.name === s["Resource Type Required"]), `Resource Type not found for service ${s.Name}`);
         const formUpsert = mandatory(formUpserts.find(f => f.create.data.name === s["Service Forms"]), `Form not found for service ${s.Name}`);
         const serviceUpsert = upsertService({
-            id: makeId(environment_id, "services"),
+            id: makeId(environment_id, "services", s.ID),
             tenant_id,
             environment_id,
             slug: s.ID,
@@ -300,7 +308,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
                 description: s.Description ?? s.Name
             }),
             upsertServiceResourceRequirement({
-                id: makeId(environment_id, "service_resource_requirements"),
+                id: makeId(environment_id, "service_resource_requirements", makeKey(tenant_id, s.ID, resourceTypeUpsert.create.data.id)),
                 tenant_id,
                 environment_id,
                 service_id: serviceUpsert.create.data.id,
@@ -335,7 +343,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
     })))
 
     const pricingRuleUpserts = pricingRuleData.map(pr => upsertPricingRule({
-        id: makeId(environment_id, "pricing_rules"),
+        id: makeId(environment_id, "pricing_rules", pr.ID),
         tenant_id,
         environment_id,
         rank: pr.Rank,
