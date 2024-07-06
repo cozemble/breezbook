@@ -1,11 +1,19 @@
 import {PrismaClient} from '@prisma/client'
-import {ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-types";
+import {LanguageId, mandatory, ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-types";
 import {errorResponse, ErrorResponse, ResourceSummary} from "@breezbook/backend-api-types";
-import {DbResource, DbResourceAvailability, DbResourceImage, DbResourceMarkup} from "../../prisma/dbtypes.js";
+import {
+    DbResource,
+    DbResourceAvailability,
+    DbResourceImage,
+    DbResourceMarkup,
+    DbResourceMarkupLabel
+} from "../../prisma/dbtypes.js";
 
+
+type DbResourceMarkupAndLabel = DbResourceMarkup & { resource_markup_labels: DbResourceMarkupLabel[] }
 
 function toResourceSummary(r: DbResource & { resource_images: DbResourceImage[] } & {
-    resource_markup: DbResourceMarkup[]
+    resource_markup: DbResourceMarkupAndLabel[]
 } & { resource_availability: DbResourceAvailability[] }): ResourceSummary | ErrorResponse {
     if (r.resource_markup.some(m => m.markup_type !== 'markdown')) {
         return errorResponse(resources.errorCodes.unknownResourceType, `Unknown markup type: '${r.resource_markup.find(m => m.markup_type !== 'markdown')?.markup_type}'`)
@@ -24,8 +32,9 @@ function toResourceSummary(r: DbResource & { resource_images: DbResourceImage[] 
                 mimeType: i.mime_type
             })),
             markup: r.resource_markup.map(m => {
+                const theLabel = mandatory(m.resource_markup_labels[0], 'resource_markup_labels[0]')
                 return ({
-                    markup: m.markup,
+                    markup: theLabel.markup,
                     markupType: 'markdown'
                 });
             })
@@ -34,7 +43,7 @@ function toResourceSummary(r: DbResource & { resource_images: DbResourceImage[] 
 
 }
 
-async function listByType(prisma: PrismaClient, tenantEnvironmentLoc: TenantEnvironmentLocation, type: ResourceType): Promise<ResourceSummary[] | ErrorResponse> {
+async function listByType(prisma: PrismaClient, tenantEnvironmentLoc: TenantEnvironmentLocation, type: ResourceType, languageId:LanguageId): Promise<ResourceSummary[] | ErrorResponse> {
     const foundType = await prisma.resource_types.findFirst({
         where: {
             tenant_id: tenantEnvironmentLoc.tenantId.value,
@@ -53,7 +62,15 @@ async function listByType(prisma: PrismaClient, tenantEnvironmentLoc: TenantEnvi
         },
         include: {
             resource_images: true,
-            resource_markup: true,
+            resource_markup: {
+                include: {
+                    resource_markup_labels: {
+                        where: {
+                            language_id: languageId.value
+                        }
+                    }
+                }
+            },
             resource_availability: true,
         }
     })

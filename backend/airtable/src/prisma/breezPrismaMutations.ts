@@ -446,3 +446,12 @@ export function upsertFormLabels(create: Prisma.form_labelsUncheckedCreateInput)
     return makeUpsert('form_labels', entityId, create)
 }
 
+export type UpsertResourceMarkupLabels = Upsert<Prisma.resource_markup_labelsCreateArgs['data'], Prisma.resource_markup_labelsUpdateArgs['data'], Prisma.resource_markup_labelsUpdateArgs['where']>
+
+export function upsertResourceMarkupLabels(create: Prisma.resource_markup_labelsUncheckedCreateInput): UpsertResourceMarkupLabels {
+    const entityId = compositeKey("resource_markup_id", mandatory(create.resource_markup_id, "resource_markup_id"),
+        "language_id", mandatory(create.language_id, "language_id"),
+    )
+    return makeUpsert('resource_markup_labels', entityId, create)
+}
+

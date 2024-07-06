@@ -615,6 +615,7 @@ model tenants {
   resource_blocked_time            resource_blocked_time[]
   resource_images                  resource_images[]
   resource_markup                  resource_markup[]
+  resource_markup_labels           resource_markup_labels[]
   resource_types                   resource_types[]
   resources                        resources[]
   service_forms                    service_forms[]
@@ -670,18 +671,19 @@ model resource_images {
 }
 
 model resource_markup {
-  resource_id    String
-  tenant_id      String
-  environment_id String
-  markup         String
-  markup_type    String
-  context        String
-  created_at     DateTime  @default(now()) @db.Timestamp(6)
-  updated_at     DateTime  @default(now()) @db.Timestamp(6)
-  resources      resources @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+  id                     String                   @id
+  resource_id            String
+  tenant_id              String
+  environment_id         String
+  markup_type            String
+  context                String
+  created_at             DateTime                 @default(now()) @db.Timestamp(6)
+  updated_at             DateTime                 @default(now()) @db.Timestamp(6)
+  resources              resources                @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenants                tenants                  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+  resource_markup_labels resource_markup_labels[]
 
-  @@id([resource_id, context])
+  @@unique([resource_id, context])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -727,6 +729,7 @@ model languages {
   updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
   add_on_labels          add_on_labels[]
   form_labels            form_labels[]
+  resource_markup_labels resource_markup_labels[]
   service_labels         service_labels[]
   tenant_branding_labels tenant_branding_labels[]
   tenants                tenants[]
@@ -793,6 +796,21 @@ model form_labels {
   tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id, form_id, language_id])
+}
+
+model resource_markup_labels {
+  tenant_id          String
+  environment_id     String
+  language_id        String
+  resource_markup_id String
+  markup             String
+  created_at         DateTime        @default(now()) @db.Timestamp(6)
+  updated_at         DateTime        @default(now()) @db.Timestamp(6)
+  languages          languages       @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resource_markup    resource_markup @relation(fields: [resource_markup_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants            tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([resource_markup_id, language_id])
 }
 
 enum booking_event_type {

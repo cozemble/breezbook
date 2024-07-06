@@ -3,13 +3,15 @@ import {
     makeId,
     upsertBlockedTime,
     upsertBusinessHours,
-    upsertForm, upsertFormLabels,
+    upsertForm,
+    upsertFormLabels,
     upsertLocation,
     upsertPricingRule,
     upsertResource,
     upsertResourceAvailability,
     upsertResourceImage,
     upsertResourceMarkup,
+    upsertResourceMarkupLabels,
     upsertResourceType,
     upsertService,
     upsertServiceForm,
@@ -287,11 +289,18 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
     ])
     await runUpserts(prisma, [
         upsertResourceMarkup({
+            id: makeTestId(tenant_id, environment_id, `resource_markup.ptMike.description`),
             resource_id: upsertPtMike.create.data.id,
             tenant_id,
             environment_id,
             context: 'description',
             markup_type: 'markdown',
+        }),
+        upsertResourceMarkupLabels({
+            tenant_id,
+            environment_id,
+            resource_markup_id: makeTestId(tenant_id, environment_id, `resource_markup.ptMike.description`),
+            language_id: en,
             markup: 'Mike is a specialist in training people in recovery from injury.\n' +
                 '\n' +
                 'He has a background in sports science and has worked with a range of clients from professional athletes to those recovering from injury.\n' +
@@ -306,26 +315,70 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
                 '- Level 3 Personal Trainer\n' +
                 '- Level 3 Sports Massage Therapist'
         }),
+        upsertResourceMarkupLabels({
+            tenant_id,
+            environment_id,
+            resource_markup_id: makeTestId(tenant_id, environment_id, `resource_markup.ptMike.description`),
+            language_id: tr,
+            markup: 'Mike, yaralanmadan iyileşme sürecinde insanları eğitme konusunda uzmandır.\n' +
+                '\n' +
+                'Spor bilimleri alanında bir geçmişi var ve profesyonel sporculardan yaralanmadan iyileşenlere kadar çeşitli müşterilerle çalışmıştır.\n' +
+                '\n' +
+                'Yaklaşımı, müşterilerle çalışarak onların hedeflerine ulaşmalarına ve yaşam kalitelerini artırmalarına yardımcı olmaktır.\n' +
+                '\n' +
+                'Mike, insanların yaralanmadan iyileşmelerine ve sevdikleri şeyleri yapmaya geri dönmelerine yardımcı olmaktan tutkulu.\n' +
+                '\n' +
+                'Onun nitelikleri şunlardır:\n' +
+                '\n' +
+                '- Lisans (Onur) Spor Bilimleri\n' +
+                '- Seviye 3 Kişisel Antrenör\n' +
+                '- Seviye 3 Spor Masaj Terapisti'
+        }),
         upsertResourceMarkup({
+                id: makeTestId(tenant_id, environment_id, `resource_markup.ptMete.description`),
                 resource_id: upsertPtMete.create.data.id,
                 tenant_id,
                 environment_id,
                 context: 'description',
                 markup_type: 'markdown',
-                markup: 'Mete is a specialist in elite sports training, with a particular focus on power events.\n' +
-                    '\n' +
-                    'He has worked with a number of elite athletes, including Olympic gold medalists and world champions.\n' +
-                    '\n' +
-                    'Mete has a background in exercise science and has a PhD in sports science.\n' +
-                    '\n' +
-                    'His qualifications are:\n' +
-                    '\n' +
-                    '- PhD in Sports Science\n' +
-                    '- MSc in Exercise Science\n' +
-                    '- BSc in Sports Science\n' +
-                    '- Certified Strength and Conditioning Specialist (CSCS)'
             }
-        )
+        ),
+        upsertResourceMarkupLabels({
+            tenant_id,
+            environment_id,
+            resource_markup_id: makeTestId(tenant_id, environment_id, `resource_markup.ptMete.description`),
+            language_id: en,
+            markup: 'Mete is a specialist in elite sports training, with a particular focus on power events.\n' +
+                '\n' +
+                'He has worked with a number of elite athletes, including Olympic gold medalists and world champions.\n' +
+                '\n' +
+                'Mete has a background in exercise science and has a PhD in sports science.\n' +
+                '\n' +
+                'His qualifications are:\n' +
+                '\n' +
+                '- PhD in Sports Science\n' +
+                '- MSc in Exercise Science\n' +
+                '- BSc in Sports Science\n' +
+                '- Certified Strength and Conditioning Specialist (CSCS)'
+        }),
+        upsertResourceMarkupLabels({
+            tenant_id,
+            environment_id,
+            resource_markup_id: makeTestId(tenant_id, environment_id, `resource_markup.ptMete.description`),
+            language_id: tr,
+            markup: 'Mete, özellikle güç etkinliklerine odaklanarak elit spor eğitiminde uzmandır.\n' +
+                '\n' +
+                'Olimpiyat altın madalyalıları ve dünya şampiyonları da dahil olmak üzere birçok elit sporcuyla çalışmıştır.\n' +
+                '\n' +
+                'Mete, egzersiz bilimleri alanında bir geçmişi var ve spor bilimlerinde doktora yapmıştır.\n' +
+                '\n' +
+                'Onun nitelikleri şunlardır:\n' +
+                '\n' +
+                '- Spor Bilimlerinde Doktora\n' +
+                '- Egzersiz Bilimlerinde Yüksek Lisans\n' +
+                '- Spor Bilimlerinde Lisans\n' +
+                '- Sertifikalı Güç ve Kondisyon Uzmanı (CSCS)'
+        })
     ]);
 
     // ptMike is at harlow Mon-Fri and ware Sat-Sun
@@ -662,7 +715,7 @@ const goalsFormLabelsEnglish = jsonSchemaFormLabels(goalsForm.id, languages.en, 
     [schemaKeyLabel("goals", "Goals")],
     "What are your fitness goals")
 
-const goalsFormLabelsTurkish = jsonSchemaFormLabels(goalsForm.id, languages.tr, "Hedefleriniz",[
+const goalsFormLabelsTurkish = jsonSchemaFormLabels(goalsForm.id, languages.tr, "Hedefleriniz", [
     schemaKeyLabel("goals", "Hedefler")
 ], "Spor hedefleriniz nelerdir")
 
