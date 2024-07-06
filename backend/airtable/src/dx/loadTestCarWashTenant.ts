@@ -7,6 +7,7 @@ import {
     JsonSchemaForm,
     languages,
     locationId,
+    mandatory,
     serviceId,
     ServiceId,
     TenantEnvironment,
@@ -17,6 +18,7 @@ import {STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME} from "../expr
 import {runUpserts} from "./loadMultiLocationGymTenant.js";
 import {
     upsertAddOn,
+    upsertAddOnLabels,
     upsertBusinessHours,
     upsertCoupon,
     upsertForm,
@@ -65,16 +67,16 @@ const locationUpserts = [
 const [londonUpsert, liverpoolUpsert] = locationUpserts;
 
 const addOns = carwash.addOns;
-const addOnUpserts = addOns.map((addOn) => upsertAddOn({
-    id: makeTestId(tenant_id, environment_id, addOn.id.value),
-    tenant_id,
-    environment_id,
-    name: addOn.name,
-    price: addOn.price.amount.value,
-    price_currency: addOn.price.currency.value,
-    expect_quantity: addOn.requiresQuantity,
-    description: addOn.description
-}))
+const addOnUpserts = addOns.map((addOn) => {
+    return upsertAddOn({
+        id: makeTestId(tenant_id, environment_id, addOn.id.value),
+        tenant_id,
+        environment_id,
+        price: addOn.price.amount.value,
+        price_currency: addOn.price.currency.value,
+        expect_quantity: addOn.requiresQuantity,
+    });
+})
 const addOnIds = addOnUpserts.map(u => u.create.data.id)
 const [wax, polish, cleanSeats, cleanCarpets] = addOnUpserts;
 
@@ -201,6 +203,17 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
 
     }))))
     await runUpserts(prisma, addOnUpserts)
+    await runUpserts(prisma, addOnUpserts.map(addOnUpsert => {
+        const label = mandatory(carwash.addOnLabels.find(l => makeTestId(tenant_id, environment_id, l.addOnId.value) === addOnUpsert.create.data.id), `No label for add-on '${addOnUpsert.create.data.id}'`)
+        return upsertAddOnLabels({
+            tenant_id,
+            environment_id,
+            add_on_id: addOnUpsert.create.data.id,
+            language_id: label.languageId.value,
+            name: label.name,
+            description: label.description
+        })
+    }))
 
     const forms: JsonSchemaForm[] = [carDetailsForm, contactDetailsForm]
     const [carDetailsFormUpsert, contactDetailsFormUpsert] = await runUpserts(prisma, forms.map((form) => upsertForm({

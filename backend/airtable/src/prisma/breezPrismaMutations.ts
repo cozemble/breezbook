@@ -422,3 +422,15 @@ export function upsertTenantBrandingLabels(create: Prisma.tenant_branding_labels
     return makeUpsert('tenant_branding_labels', entityId, create)
 }
 
+export type UpsertAddOnLabels = Upsert<Prisma.add_on_labelsCreateArgs['data'], Prisma.add_on_labelsUpdateArgs['data'], Prisma.add_on_labelsUpdateArgs['where']>
+
+export function upsertAddOnLabels(create: Prisma.add_on_labelsUncheckedCreateInput): UpsertAddOnLabels {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "add_on_id", mandatory(create.add_on_id, "add_on_id"),
+        "language_id", mandatory(create.language_id, "language_id"),
+    )
+    return makeUpsert('add_on_labels', entityId, create)
+}
+

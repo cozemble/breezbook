@@ -9,18 +9,17 @@ datasource db {
 }
 
 model add_on {
-  id              String   @id
+  id              String          @id
   tenant_id       String
   environment_id  String
-  name            String
-  description     String?
-  price           Decimal  @db.Decimal
+  price           Decimal         @db.Decimal
   price_currency  String
   expect_quantity Boolean
   section         String?
-  created_at      DateTime @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime @default(now()) @db.Timestamptz(6)
-  tenants         tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
+  tenants         tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  add_on_labels   add_on_labels[]
 }
 
 model blocked_time {
@@ -586,6 +585,7 @@ model tenants {
   created_at                       DateTime                           @default(now()) @db.Timestamptz(6)
   updated_at                       DateTime                           @default(now()) @db.Timestamptz(6)
   add_on                           add_on[]
+  add_on_labels                    add_on_labels[]
   blocked_time                     blocked_time[]
   booking_events                   booking_events[]
   booking_payments                 booking_payments[]
@@ -723,6 +723,7 @@ model languages {
   language_id            String                   @unique
   created_at             DateTime                 @default(now()) @db.Timestamptz(6)
   updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  add_on_labels          add_on_labels[]
   service_labels         service_labels[]
   tenant_branding_labels tenant_branding_labels[]
   tenants                tenants[]
@@ -758,6 +759,22 @@ model tenant_branding_labels {
   tenants            tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id, language_id])
+}
+
+model add_on_labels {
+  tenant_id      String
+  environment_id String
+  add_on_id      String
+  language_id    String
+  name           String
+  description    String?
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  add_on         add_on    @relation(fields: [add_on_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  languages      languages @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, add_on_id, language_id])
 }
 
 enum booking_event_type {

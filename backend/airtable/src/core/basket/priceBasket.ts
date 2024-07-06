@@ -14,7 +14,8 @@ import {
 import {
     currencies,
     currency,
-    errorResponseFns, isErrorResponse,
+    errorResponseFns,
+    isErrorResponse,
     mandatory,
     price,
     priceFns,
@@ -28,10 +29,10 @@ export const pricingErrorCodes = {
     pricingError: 'pricing.error'
 };
 
-function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: EverythingForAvailability):PricedBasketLine[]|ErrorResponse {
+function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: EverythingForAvailability): PricedBasketLine[] | ErrorResponse {
     const lines = unpricedLines.map((line) => {
         const availability = getAvailabilityForService(everythingForTenant, line.serviceId, line.date, line.date);
-        if(availability._type === 'error.response') {
+        if (availability._type === 'error.response') {
             return availability;
         }
         if (Object.keys(availability.slots).length === 0) {
@@ -58,10 +59,10 @@ function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: Eve
     return errorResponseFns.arrayOrError(lines);
 }
 
-function priceLines(everythingForTenant: EverythingForAvailability, unpricedLines: UnpricedBasket['lines']): ErrorResponse | Success<PricedBasketLine[]> {
+function priceLines(everythingForTenant: EverythingForAvailability, unpricedLines: UnpricedBasket["lines"]): ErrorResponse | Success<PricedBasketLine[]> {
     try {
         const outcome: PricedBasketLine[] | ErrorResponse = priceLine(unpricedLines, everythingForTenant);
-        if(isErrorResponse(outcome)) {
+        if (isErrorResponse(outcome)) {
             return outcome;
         }
         return success(outcome as PricedBasketLine[]);

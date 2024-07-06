@@ -9,6 +9,7 @@ import {
 } from '@breezbook/packages-types';
 import {BookingIsInThePast} from '@breezbook/packages-core/dist/cancellation.js';
 import {v4 as uuidv4} from 'uuid';
+import {AddOnLabels} from "@breezbook/packages-core";
 
 export * from './secrets.js';
 export * from './pricingTypes.js';
@@ -56,11 +57,10 @@ export interface ServiceSummary {
 
 export interface AddOnSummary {
     id: string;
-    name: string;
-    description: string | null;
     priceWithNoDecimalPlaces: number;
     priceCurrency: string;
     requiresQuantity: boolean;
+    labels: AddOnLabels | null
 }
 
 export interface AvailabilityResponse {
@@ -71,7 +71,7 @@ export interface AvailabilityResponse {
 }
 
 export function emptyAvailabilityResponse(serviceSummary: ServiceSummary, addOns: AddOnSummary[]): AvailabilityResponse {
-    return {_type:'availability.response',serviceSummary, slots: {}, addOns};
+    return {_type: 'availability.response', serviceSummary, slots: {}, addOns};
 }
 
 export interface OrderCreatedResponse {

@@ -106,7 +106,7 @@ export function toDomainBooking(b: DbBookingAndResourceRequirements, services: S
 
 export function toDomainAddOn(a: DbAddOn): DomainAddOn {
     const priceAmount = (typeof a.price === "object" && "toNumber" in a.price) ? a.price.toNumber() : a.price;
-    return addOn(a.name, price(priceAmount, currency(a.price_currency)), a.expect_quantity, a.description, addOnId(a.id));
+    return addOn( price(priceAmount, currency(a.price_currency)), a.expect_quantity,  addOnId(a.id));
 }
 
 export function toDomainForm(f: DbForm): Form {

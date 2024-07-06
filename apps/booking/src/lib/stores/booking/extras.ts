@@ -19,9 +19,9 @@ export default function createExtrasStore(
 		const xtr = availabilityResponse.addOns.map(
 			(addOn): Service.Extra => ({
 				id: addOn.id,
-				name: addOn.name,
+				name: addOn?.labels?.name || "Missing name",
 				price: Number(addOn.priceWithNoDecimalPlaces),
-				description: addOn?.description || undefined,
+				description: addOn?.labels?.description || undefined,
 				selected: false
 			})
 		);

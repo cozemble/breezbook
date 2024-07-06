@@ -16,8 +16,10 @@ import {byLocation} from "../../availability/byLocation.js";
 import {getAvailabilityForService} from "../../core/getAvailabilityForService.js";
 import {failure, Failure, serviceFns, success,} from "@breezbook/packages-core";
 import {
+    addOnId,
     byId,
     IsoDate,
+    languages,
     mandatory,
     resourceId,
     ResourceId,
@@ -31,6 +33,8 @@ import {EverythingForAvailability} from "../getEverythingForAvailability.js";
 import {HttpResponse} from "@breezbook/packages-http/dist/contract.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 import {resourcing} from "@breezbook/packages-resourcing";
+import {getLabelsForTenant, Labels, labelsFns} from "../../core/labels/labels.js";
+import {AddOnSummary, AvailabilityResponse} from "@breezbook/backend-api-types";
 import specificResource = resourcing.specificResource;
 
 interface RequirementOverride {
@@ -113,14 +117,28 @@ function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAv
     }
 }
 
+function applyAddOnLabels(a: AddOnSummary, labels: Labels): AddOnSummary {
+    const theLabel = labelsFns.findAddOnLabels(labels, addOnId(a.id));
+    return {...a, labels: theLabel}
+}
+
+function applyLabels(availabilityOutcome: AvailabilityResponse, labels: Labels): AvailabilityResponse {
+    return {
+        ...availabilityOutcome,
+        addOns: availabilityOutcome.addOns.map(a => applyAddOnLabels(a, labels)),
+    }
+}
+
 async function getServiceAvailabilityForLocation(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, request: ServiceAvailabilityRequest): Promise<EndpointOutcome[]> {
     console.log(
         `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
     );
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
-    const availabilityOutcome = getAvailabilityForService(everythingForTenant, request.serviceId, request.fromDate, request.toDate);
+    let availabilityOutcome = getAvailabilityForService(everythingForTenant, request.serviceId, request.fromDate, request.toDate);
     if (availabilityOutcome._type === 'error.response') {
         return [httpResponseOutcome(responseOf(400, JSON.stringify(availabilityOutcome.errorMessage)))];
     }
+    const labels = await getLabelsForTenant(deps.prisma, tenantEnvLoc, languages.en);
+    availabilityOutcome = applyLabels(availabilityOutcome, labels);
     return [httpResponseOutcome(responseOf(200, JSON.stringify(availabilityOutcome)))];
 }

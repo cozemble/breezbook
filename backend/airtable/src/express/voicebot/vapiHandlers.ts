@@ -28,7 +28,7 @@ export async function onVapiVoiceBotPromptRequest(req: express.Request, res: exp
         });
         const firstLabels = mandatory(tenantBranding.tenant_branding_labels[0], "tenantBranding.tenant_branding_labels[0]")
         const description = businessDescription(tenantBranding.tenants.name, firstLabels.description, firstLabels.description)
-        const prompt = webQueryPrompt(description, everything.businessConfiguration, everything.pricingRules, [])
+        const prompt = webQueryPrompt(description, everything.businessConfiguration, everything.pricingRules, {serviceLabels:[], addOnLabels:[]})
         res.status(200).setHeader("Content-type", "text/plain").send(prompt)
     });
 }

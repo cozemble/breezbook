@@ -124,15 +124,25 @@ create table add_on
     id              text primary key,
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
-    name            text                                not null,
-    description     text                                null     default null,
     price           numeric                             not null,
     price_currency  text                                not null,
     expect_quantity boolean                             not null,
     section         text                                null     default null,
     created_at      timestamp with time zone            not null default current_timestamp,
     updated_at      timestamp with time zone            not null default current_timestamp
+);
 
+create table add_on_labels
+(
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    add_on_id      text references add_on (id)         not null,
+    language_id    text references languages (id)      not null,
+    name           text                                not null,
+    description    text                                null     default null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    primary key (tenant_id, environment_id, add_on_id, language_id)
 );
 
 create table forms

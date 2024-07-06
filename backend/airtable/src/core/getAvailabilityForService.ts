@@ -120,12 +120,13 @@ function getServiceSummary(service: DomainService, forms: Form[]): ServiceSummar
 
 function getAddOnSummaries(service: DomainService, addOns: DomainAddOn[]): AddOnSummary[] {
     const permittedAddOns = service.permittedAddOns.map((ao) => addOnFns.findById(addOns, ao))
-    return permittedAddOns.map((ao) => ({
-        name: ao.name,
-        id: ao.id.value,
-        description: ao.description,
-        priceWithNoDecimalPlaces: ao.price.amount.value,
-        priceCurrency: ao.price.currency.value,
-        requiresQuantity: ao.requiresQuantity
-    }));
+    return permittedAddOns.map((ao) => {
+        return ({
+            id: ao.id.value,
+            priceWithNoDecimalPlaces: ao.price.amount.value,
+            priceCurrency: ao.price.currency.value,
+            requiresQuantity: ao.requiresQuantity,
+            labels: null
+        });
+    });
 }

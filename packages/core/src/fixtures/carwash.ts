@@ -16,6 +16,7 @@ import {
 } from '@breezbook/packages-types';
 import {
     addOn,
+    addOnLabels,
     coupon,
     GBP,
     percentageAsRatio,
@@ -39,10 +40,10 @@ const onePm = time24('13:00');
 const fourPm = time24('16:00');
 const sixPm = time24('18:00');
 const nineToSix = timePeriod(nineAm, sixPm);
-const wax = addOn('Wax', price(1000, GBP), false, 'We will wax your car', addOnId('addOn-wax'));
-const polish = addOn('Polish', price(500, GBP), false, 'We will polish your car', addOnId('addOn-polish'));
-const cleanSeats = addOn('Clean seats', price(2000, GBP), true, null, addOnId('addOn-clean-seats'));
-const cleanCarpets = addOn('Clean carpets', price(2000, GBP), false, 'We will clean the foot well carpets', addOnId('addOn-clean-carpets'));
+const wax = addOn(price(1000, GBP), false, addOnId('addOn-wax'));
+const polish = addOn(price(500, GBP), false, addOnId('addOn-polish'));
+const cleanSeats = addOn(price(2000, GBP), true, addOnId('addOn-clean-seats'));
+const cleanCarpets = addOn(price(2000, GBP), false, addOnId('addOn-clean-carpets'));
 const van = resourceType('vanResourceType');
 const van1 = resource(van, [], {'tier': 2});
 const van2 = resource(van, [], {'tier': 1});
@@ -76,6 +77,11 @@ const largeCarWash = serviceFns.setStartTimes(service(
 const smallCarWashLabels = serviceLabels('Small Car Wash', 'Small Car Wash', smallCarWash.id, languages.en);
 const mediumCarWashLabels = serviceLabels('Medium Car Wash', 'Medium Car Wash', mediumCarWash.id, languages.en);
 const largeCarWashLabels = serviceLabels('Large Car Wash', 'Large Car Wash', largeCarWash.id, languages.en);
+
+const waxLabels = addOnLabels('Wax', 'We will wax your car', wax.id, languages.en);
+const polishLabels = addOnLabels('Polish', 'We will polish your car', polish.id, languages.en);
+const cleanSeatsLabels = addOnLabels('Clean seats', null, cleanSeats.id, languages.en);
+const cleanCarpetsLabels = addOnLabels('Clean carpets', 'We will clean the foot well carpets', cleanCarpets.id, languages.en);
 
 const chargeMoreForSoonBookings: PricingRule = {
     id: 'charge-more-for-soon-bookings',
@@ -135,6 +141,7 @@ export const carwash = {
     largeCarWash: largeCarWash,
     services: [smallCarWash, mediumCarWash, largeCarWash],
     serviceLabels: [smallCarWashLabels, mediumCarWashLabels, largeCarWashLabels],
+    addOnLabels: [waxLabels, polishLabels, cleanSeatsLabels, cleanCarpetsLabels],
     coupons: {
         expired20PercentOffCoupon,
         twentyPercentOffCoupon

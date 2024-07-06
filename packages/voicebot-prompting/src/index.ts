@@ -1,5 +1,6 @@
 import {
     AddOn,
+    AddOnLabels,
     BusinessConfiguration,
     mandatory,
     priceFns,
@@ -8,7 +9,7 @@ import {
     TimeslotSpec
 } from "@breezbook/packages-core";
 import {PricingRule} from "@breezbook/packages-pricing";
-import {byId, isoDate, time24Fns} from "@breezbook/packages-types";
+import {isoDate, time24Fns} from "@breezbook/packages-types";
 
 export interface BusinessDescription {
     _type: "business.description";
@@ -91,7 +92,7 @@ function serviceWordList(services: Service[], serviceLabels: ServiceLabels[], pr
     const hasDynamicPricing = pricingRules.length > 0;
     return [`[Services]`, services.map((service) => {
         const labels = mandatory(serviceLabels.find(sl => sl.serviceId.value === service.id.value), `No labels for service ${service.id}`);
-        return serviceWords(service, labels,hasDynamicPricing);
+        return serviceWords(service, labels, hasDynamicPricing);
     }).join("\n")].join("\n");
 }
 
@@ -102,14 +103,17 @@ function serviceWords(service: Service, serviceLabels: ServiceLabels, hasDynamic
     return [`- '${serviceLabels.name}'`, maybeDescription, priceWords, "."].filter(s => s.trim().length > 0).join(". ")
 }
 
-function addOnWordList(a: AddOn): string {
-    const maybeDescription = a.description ?? ""
+function addOnWordList(a: AddOn, labels: AddOnLabels): string {
+    const maybeDescription = labels.description ?? ""
     const priceWords = `The price of this add on is ${priceFns.toWords(a.price)}`
-    return [`- '${a.name}'`, maybeDescription, priceWords, "."].filter(s => s.trim().length > 0).join(". ")
+    return [`- '${labels.name}'`, maybeDescription, priceWords, "."].filter(s => s.trim().length > 0).join(". ")
 }
 
-function addOnsWordList(addOns: AddOn[]): string {
-    return ['[Add-ons]', ...addOns.map(a => addOnWordList(a))].join("\n")
+function addOnsWordList(addOns: AddOn[], addOnLabels: AddOnLabels[]): string {
+    return ['[Add-ons]', ...addOns.map(a => {
+        const labels = mandatory(addOnLabels.find(al => al.addOnId.value === a.id.value), `No labels for add-on ${a.id}`);
+        return addOnWordList(a, labels);
+    })].join("\n")
 }
 
 function patches(): string {
@@ -120,6 +124,11 @@ function patches(): string {
 `
 }
 
-export function webQueryPrompt(description: BusinessDescription, business: BusinessConfiguration, pricingRules: PricingRule[], namedServices: ServiceLabels[]): string {
-    return [toVapiHeader(description), webQueryTask(business), serviceWordList(business.services, namedServices, pricingRules), addOnsWordList(business.addOns), patches()].join("\n")
+export interface Labels {
+    serviceLabels: ServiceLabels[];
+    addOnLabels: AddOnLabels[];
+}
+
+export function webQueryPrompt(description: BusinessDescription, business: BusinessConfiguration, pricingRules: PricingRule[], labels: Labels): string {
+    return [toVapiHeader(description), webQueryTask(business), serviceWordList(business.services, labels.serviceLabels, pricingRules), addOnsWordList(business.addOns, labels.addOnLabels), patches()].join("\n")
 }

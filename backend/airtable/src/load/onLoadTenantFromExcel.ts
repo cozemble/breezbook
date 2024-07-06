@@ -27,6 +27,7 @@ import {mutations, Upsert} from "../mutation/mutations.js";
 import {
     makeId,
     upsertAddOn,
+    upsertAddOnLabels,
     upsertBusinessHours,
     upsertForm,
     upsertLocation,
@@ -258,16 +259,24 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
             end_time_24hr: ra["End time"]
         });
     });
-    const addOnUpserts = addOnData.map(ao => upsertAddOn({
-        id: makeId(environment_id, "add_ons", ao.ID),
-        tenant_id,
-        environment_id,
-        name: ao.Name,
-        price: ao.Price * 100,
-        price_currency: "GBP",
-        expect_quantity: false,
-        description: ao.Description ?? ao.Name
-    }));
+    const addOnUpserts = addOnData.flatMap(ao => [
+        upsertAddOn({
+            id: makeId(environment_id, "add_ons", ao.ID),
+            tenant_id,
+            environment_id,
+            price: ao.Price * 100,
+            price_currency: "GBP",
+            expect_quantity: false
+        }),
+        upsertAddOnLabels({
+            tenant_id,
+            environment_id,
+            language_id: languages.en.value,
+            add_on_id: makeId(environment_id, "add_ons", ao.ID),
+            name: ao.Name,
+            description: ao.Description ?? ao.Name
+        })
+    ]);
     const formUpserts = formData.map(f => {
         return upsertForm({
             id: makeId(environment_id, "forms", f.ID),
@@ -291,7 +300,8 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
             }
         );
     })
-    const allAddOnIds = addOnUpserts.map(ao => ao.create.data.id);
+    const onlyAddOnUpserts = addOnUpserts.filter(ao => ao.create.entity === "add_on") as Upsert<any, any, any>[];
+    const allAddOnIds = onlyAddOnUpserts.map(ao => ao.create.data.id);
     const serviceUpserts = serviceData.flatMap(s => {
         const resourceTypeUpsert = mandatory(resourceTypeUpserts.find(rt => rt.create.data.name === s["Resource Type Required"]), `Resource Type not found for service ${s.Name}`);
         const formUpsert = mandatory(formUpserts.find(f => f.create.data.name === s["Service Forms"]), `Form not found for service ${s.Name}`);
