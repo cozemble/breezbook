@@ -81,7 +81,7 @@ async function getServices(deps: EndpointDependencies, tenantEnvironment: Tenant
         }
     });
     const result = services.map(s => toApiService(s, serviceResourceRequirements, pricingRules.length > 0))
-    return [httpResponseOutcome(responseOf(200, JSON.stringify(result)))]
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(result),['Content-Type', 'application/json']))]
 }
 
 

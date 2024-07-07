@@ -34,11 +34,11 @@ async function handlePriceBasket(deps: EndpointDependencies, tenantEnvironment: 
     const locations = unpricedBasket.lines.map((line) => line.locationId);
     const allTheSameLocation = locations.every((val, i, arr) => val.value === arr[0]?.value);
     if (!allTheSameLocation) {
-        return [httpResponseOutcome(responseOf(400, JSON.stringify({error: 'All line items must be for the same location'})))];
+        return [httpResponseOutcome(responseOf(400, JSON.stringify({error: 'All line items must be for the same location'}),['Content-Type', 'application/json']))];
     }
     const location = tenantEnvironmentLocation(tenantEnvironment.environmentId, tenantEnvironment.tenantId, mandatory(locations[0], `Missing first location`));
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, location, fromDate, toDate);
     const response = priceBasket(everythingForTenant, unpricedBasket);
     const statusCode = response._type === 'error.response' ? 400 : 200;
-    return [httpResponseOutcome(responseOf(statusCode, JSON.stringify(response)))];
+    return [httpResponseOutcome(responseOf(statusCode, JSON.stringify(response),['Content-Type', 'application/json']))];
 }

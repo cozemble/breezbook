@@ -310,7 +310,7 @@ async function handleAddOrder(deps: EndpointDependencies, tenantEnvironment: Ten
         return doAddOrder(everythingForAvailability, everythingToCreateOrder);
     });
     if (outcome._type === 'error.response') {
-        return [httpResponseOutcome(responseOf(400, JSON.stringify(outcome)))]
+        return [httpResponseOutcome(responseOf(400, JSON.stringify(outcome),['Content-Type', 'application/json']))]
     }
     const {mutations, orderCreatedResponse} = outcome;
     return [
@@ -319,6 +319,6 @@ async function handleAddOrder(deps: EndpointDependencies, tenantEnvironment: Ten
             name: announceChangesToAirtable.deferredChangeAnnouncement,
             data: {tenantId: tenantEnvironment.tenantId.value, environmentId: tenantEnvironment.environmentId.value}
         }),
-        httpResponseOutcome(responseOf(200, JSON.stringify(orderCreatedResponse)))
+        httpResponseOutcome(responseOf(200, JSON.stringify(orderCreatedResponse),['Content-Type', 'application/json']))
     ];
 }

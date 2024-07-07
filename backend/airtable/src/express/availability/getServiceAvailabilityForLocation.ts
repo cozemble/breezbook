@@ -136,9 +136,9 @@ async function getServiceAvailabilityForLocation(deps: EndpointDependencies, ten
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
     let availabilityOutcome = getAvailabilityForService(everythingForTenant, request.serviceId, request.fromDate, request.toDate);
     if (availabilityOutcome._type === 'error.response') {
-        return [httpResponseOutcome(responseOf(400, JSON.stringify(availabilityOutcome.errorMessage)))];
+        return [httpResponseOutcome(responseOf(400, JSON.stringify(availabilityOutcome.errorMessage),['Content-Type', 'application/json']))];
     }
     const labels = await getLabelsForTenant(deps.prisma, tenantEnvLoc, languages.en);
     availabilityOutcome = applyLabels(availabilityOutcome, labels);
-    return [httpResponseOutcome(responseOf(200, JSON.stringify(availabilityOutcome)))];
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(availabilityOutcome), ['Content-Type', 'application/json']))];
 }

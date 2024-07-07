@@ -6,5 +6,8 @@ export default {
     extend: {},
   },
   plugins: [daisyui],
+  daisyui: {
+    themes: true, // This enables all themes
+  },
 }
 

@@ -177,6 +177,6 @@ async function getTenant(deps: EndpointDependencies, environmentId: EnvironmentI
     if (!tenant) {
         return [httpResponseOutcome(responseOf(404))];
     }
-    return [httpResponseOutcome(responseOf(200, JSON.stringify(toApiTenant(tenant))))]
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(toApiTenant(tenant)),['Content-Type', 'application/json']))]
 
 }

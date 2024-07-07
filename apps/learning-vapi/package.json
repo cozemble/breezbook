@@ -31,8 +31,9 @@
 	"type": "module",
 	"dependencies": {
 		"@breezbook/backend-api-types": "workspace:*",
-		"@breezbook/packages-types": "workspace:*",
 		"@breezbook/packages-core": "workspace:*",
-		"@vapi-ai/web": "^1.1.5"
+		"@breezbook/packages-types": "workspace:*",
+		"@vapi-ai/web": "^1.1.5",
+		"lucide-svelte": "^0.399.0"
 	}
 }

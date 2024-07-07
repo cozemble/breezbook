@@ -20,7 +20,7 @@ export interface RequestContext {
     files: Record<string, PostedFile>;
 }
 
-export function requestContext(request: HttpRequest, params: Record<string, string>, files: Record<string, PostedFile>): RequestContext {
+export function requestContext(request: HttpRequest, params: Record<string, string>, files: Record<string, PostedFile> = {}): RequestContext {
     return {request, params, files}
 }
 

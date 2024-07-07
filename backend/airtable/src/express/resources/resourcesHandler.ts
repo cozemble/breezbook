@@ -31,5 +31,5 @@ export async function listResourcesByTypeRequestEndpoint(deps: EndpointDependenc
 
 async function listResourcesByType(deps: EndpointDependencies, tenantEnvironmentLocation: TenantEnvironmentLocation, resourceType: ResourceType): Promise<EndpointOutcome[]> {
     const outcome = await resources.listByType(deps.prisma, tenantEnvironmentLocation, resourceType, languages.en);
-    return [httpResponseOutcome(responseOf(Array.isArray(outcome) ? 200 : 400, JSON.stringify(outcome)))];
+    return [httpResponseOutcome(responseOf(Array.isArray(outcome) ? 200 : 400, JSON.stringify(outcome),['Content-Type', 'application/json']))];
 }
