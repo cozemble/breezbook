@@ -59,7 +59,7 @@ function toAirtableUpdateSync(mapping: AirtableMapping, event: Update<any, any>,
 
 async function toAirtableUpsert(
 	mapping: AirtableMapping,
-	event: Upsert<any, any, any>,
+	event: Upsert,
 	repo: SynchronisationIdRepository
 ): Promise<ToAirtableSynchronisation[]> {
 	// const targetId = await repo.getTargetId(event.create.entity, event.create.entityId);

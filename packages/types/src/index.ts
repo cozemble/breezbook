@@ -561,6 +561,17 @@ export interface JsonSchemaForm {
     schema: unknown;
 }
 
+export const jsonSchemaFormFns = {
+    extractLabels: (form: JsonSchemaForm, languageId: LanguageId): JsonSchemaFormLabels => {
+        const schema = form.schema as any;
+        const keyLabels = Object.keys(schema.properties).map(key => {
+            const itemDef = schema.properties[key];
+            return schemaKeyLabel(key, key, itemDef.description);
+        });
+        return jsonSchemaFormLabels(form.id, languageId, form.name, keyLabels, form.description);
+    }
+}
+
 export interface SchemaKeyLabel {
     _type: 'schema.key.label';
     schemaKey: string;

@@ -55,7 +55,7 @@ export interface Upsert<TCreateInput = any, TUpdateInput = any, TWhereUniqueInpu
     update: Update<TUpdateInput, TWhereUniqueInput>;
 }
 
-export type Mutation = Create<any> | Delete<any> | Update<any, any> | Upsert<any, any, any>;
+export type Mutation = Create<any> | Delete<any> | Update<any, any> | Upsert;
 
 export interface Mutations {
     _type: 'mutations';

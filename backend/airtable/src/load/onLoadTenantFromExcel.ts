@@ -16,7 +16,7 @@ import * as XLSX from 'xlsx';
 import {WorkBook} from 'xlsx';
 import {
     EnvironmentId,
-    JsonSchemaForm,
+    JsonSchemaForm, jsonSchemaFormFns,
     languages,
     mandatory,
     tenantEnvironment,
@@ -29,7 +29,7 @@ import {
     upsertAddOn,
     upsertAddOnLabels,
     upsertBusinessHours,
-    upsertForm,
+    upsertForm, upsertFormLabels,
     upsertLocation,
     upsertPricingRule,
     upsertResource,
@@ -158,7 +158,7 @@ function makeKey(...values: string[]): string {
         .toLowerCase();
 }
 
-function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, workbook: XLSX.WorkBook): Upsert<any, any, any> [] {
+function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, workbook: XLSX.WorkBook): Upsert [] {
     const tenantSettingsData = toJson<TenantSettings>(workbook, 'Tenant Settings', TenantSettingsSchema);
     const locationData = toJson<Location>(workbook, 'Locations', LocationsSchema);
     const businessHoursData = toJson<BusinessHours>(workbook, 'Business Hours', BusinessHoursSchema);
@@ -287,6 +287,13 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
             definition: JSON.parse(f["Definition JSON"])
         });
     });
+    const formLabelUpserts = formUpserts.map(fu => upsertFormLabels({
+        tenant_id,
+        environment_id,
+        form_id: fu.create.data.id,
+        language_id: languages.en.value,
+        labels: jsonSchemaFormFns.extractLabels(fu.create.data.definition as any, languages.en) as any
+    }))
     const tenantSettingsUpserts = tenantSettingsData.map(ts => {
         const contactDetailsForm = mandatory(formUpserts.find(f => {
             const form = f.create.data.definition as any as JsonSchemaForm;
@@ -300,7 +307,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
             }
         );
     })
-    const onlyAddOnUpserts = addOnUpserts.filter(ao => ao.create.entity === "add_on") as Upsert<any, any, any>[];
+    const onlyAddOnUpserts = addOnUpserts.filter(ao => ao.create.entity === "add_on") as Upsert[];
     const allAddOnIds = onlyAddOnUpserts.map(ao => ao.create.data.id);
     const serviceUpserts = serviceData.flatMap(s => {
         const resourceTypeUpsert = mandatory(resourceTypeUpserts.find(rt => rt.create.data.name === s["Resource Type Required"]), `Resource Type not found for service ${s.Name}`);
@@ -380,6 +387,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         ...resourceAvailabilityUpserts,
         ...addOnUpserts,
         ...formUpserts,
+        ...formLabelUpserts,
         ...tenantSettingsUpserts,
         ...serviceUpserts,
         ...serviceLocationUpserts,
