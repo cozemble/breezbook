@@ -5,9 +5,11 @@ import {
     AddOnId,
     environmentId,
     JsonSchemaForm,
+    jsonSchemaFormLabels,
     languages,
     locationId,
     mandatory,
+    schemaKeyLabel,
     serviceId,
     ServiceId,
     TenantEnvironment,
@@ -21,7 +23,7 @@ import {
     upsertAddOnLabels,
     upsertBusinessHours,
     upsertCoupon,
-    upsertForm,
+    upsertForm, upsertFormLabels,
     upsertLocation,
     upsertPricingRule,
     upsertResource,
@@ -224,6 +226,22 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
         description: form.description ?? form.name,
         definition: form as any
     })))
+    await runUpserts(prisma, [
+        upsertFormLabels({
+            tenant_id,
+            environment_id,
+            form_id: carDetailsFormUpsert.create.data.id,
+            language_id: languages.en.value,
+            labels: carDetailsFormLabelsEn as any
+        }),
+        upsertFormLabels({
+            tenant_id,
+            environment_id,
+            form_id: contactDetailsFormUpsert.create.data.id,
+            language_id: languages.en.value,
+            labels: contactDetailsFormLabelsEn as any
+        })
+    ]);
     await runUpserts(prisma, [upsertTenantSettings({
         tenant_id,
         environment_id,
@@ -350,28 +368,22 @@ const carDetailsForm: JsonSchemaForm = {
         "type": "object",
         "properties": {
             "make": {
-                "type": "string",
-                "description": "The manufacturer of the car."
+                "type": "string"
             },
             "model": {
-                "type": "string",
-                "description": "The model of the car."
+                "type": "string"
             },
             "colour": {
-                "type": "string",
-                "description": "The color of the car."
+                "type": "string"
             },
             "year": {
-                "type": "integer",
-                "description": "The manufacturing year of the car."
+                "type": "integer"
             },
             "firstLineOfAddress": {
-                "type": "string",
-                "description": "The first line of your address."
+                "type": "string"
             },
             "postcode": {
-                "type": "string",
-                "description": "Your postcode."
+                "type": "string"
             }
         },
         "required": [
@@ -385,6 +397,16 @@ const carDetailsForm: JsonSchemaForm = {
         "additionalProperties": false
     }
 };
+
+const carDetailsFormLabelsEn = jsonSchemaFormLabels(carDetailsForm.id, languages.en, "Car Details Form", [
+    schemaKeyLabel("make", "Make", "The manufacturer of the car."),
+    schemaKeyLabel("model", "Model", "The model of the car."),
+    schemaKeyLabel("colour", "Colour", "The color of the car."),
+    schemaKeyLabel("year", "Year", "The manufacturing year of the car."),
+    schemaKeyLabel("firstLineOfAddress", "First Line of Address", "The first line of your address."),
+    schemaKeyLabel("postcode", "Postcode", "Your postcode.")
+], "Please fill in the details of your car");
+
 const contactDetailsForm: JsonSchemaForm = {
     "_type": "json.schema.form",
     "id": {
@@ -398,7 +420,6 @@ const contactDetailsForm: JsonSchemaForm = {
         "properties": {
             "age": {
                 "type": "number",
-                "description": "Just a test property"
             }
         },
         "required": [
@@ -407,3 +428,7 @@ const contactDetailsForm: JsonSchemaForm = {
         "additionalProperties": false
     }
 };
+
+const contactDetailsFormLabelsEn = jsonSchemaFormLabels(contactDetailsForm.id, languages.en, "Customer Details Form", [
+    schemaKeyLabel("age", "Age", "Your age (just a test property)")
+], "Please fill in your contact details");

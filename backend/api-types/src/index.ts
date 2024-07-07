@@ -1,5 +1,6 @@
 import {
     Form,
+    JsonSchemaFormLabels,
     resourceId,
     ResourceId,
     resourceRequirementId,
@@ -173,6 +174,11 @@ export interface ServiceLocation {
     locationId: string;
 }
 
+export interface FormAndLabels {
+    form: Form;
+    labels: JsonSchemaFormLabels;
+}
+
 export interface Tenant {
     id: string;
     slug: string;
@@ -185,6 +191,7 @@ export interface Tenant {
     serviceLocations: ServiceLocation[]
     theme: any;
     customerForm: Form | null;
+    forms: FormAndLabels[];
 }
 
 export * from './waitlistRegistration.js'

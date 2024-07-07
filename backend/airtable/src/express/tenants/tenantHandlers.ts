@@ -1,6 +1,7 @@
 import express from "express";
 import {
     DbForm,
+    DbFormLabel,
     DbLocation,
     DbPricingRule,
     DbServiceLocation,
@@ -13,7 +14,7 @@ import {
 } from "../../prisma/dbtypes.js";
 import {Tenant} from "@breezbook/backend-api-types";
 import {PrismaClient} from "@prisma/client";
-import {EnvironmentId, LanguageId, mandatory} from "@breezbook/packages-types";
+import {EnvironmentId, JsonSchemaFormLabels, LanguageId, mandatory} from "@breezbook/packages-types";
 import {RequiredServiceData, toApiService} from "../services/serviceHandlers.js";
 import {
     asHandler,
@@ -41,7 +42,7 @@ type DbTenantAndStuff = DbTenant & {
     service_locations: DbServiceLocation[],
     service_resource_requirements: DbServiceResourceRequirement[],
     pricing_rules: DbPricingRule[],
-    forms: DbForm[],
+    forms: (DbForm & { form_labels: DbFormLabel[] })[],
     tenant_settings: DbTenantSettings[]
 };
 
@@ -62,7 +63,15 @@ function toApiTenant(tenant: DbTenantAndStuff): Tenant {
         theme: branding.theme,
         services: tenant.services.map(s => toApiService(s, tenant.service_resource_requirements, tenant.pricing_rules.length > 0)),
         serviceLocations: tenant.service_locations.map(sl => ({serviceId: sl.service_id, locationId: sl.location_id})),
-        customerForm: customerForm ? toDomainForm(customerForm) : null
+        customerForm: customerForm ? toDomainForm(customerForm) : null,
+        forms: tenant.forms.map(dbForm => {
+            const labels = mandatory(dbForm.form_labels[0], `Expected exactly one form label record for form ${dbForm.id}, got ${dbForm.form_labels.length}`)
+            const domainLabels = labels.labels as any as JsonSchemaFormLabels;
+            if (domainLabels._type !== "json.schema.form.labels") {
+                throw new Error(`Expected json.schema.form.labels, got ${domainLabels._type}`)
+            }
+            return ({form: toDomainForm(dbForm), labels: domainLabels});
+        })
     }
 }
 
@@ -89,6 +98,13 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
             forms: {
                 where: {
                     environment_id
+                },
+                include: {
+                    form_labels: {
+                        where: {
+                            language_id
+                        }
+                    }
                 }
             },
             services: {
@@ -135,7 +151,7 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
                 where: {
                     environment_id
                 }
-            }
+            },
         }
     });
     if (tenant) {
