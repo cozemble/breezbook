@@ -11,7 +11,6 @@
     let tenant: Tenant
     let personalTrainers: ResourceSummary[] = []
     let selectedPersonalTrainer: ResourceSummary | null = null
-    // let serviceLocation: ServiceLocation | null = null
     let locationId: string | null = null
     let personalTrainerRequirement: AnySuitableResourceSpec
     let personalTrainingService: Service
@@ -62,7 +61,7 @@
 <div class="flex">
     {#each personalTrainers as personalTrainer}
         <div class="card w-96 bg-base-100 shadow-xl border p-2 ml-2"
-             class:border-success={personalTrainer === selectedPersonalTrainer}
+             class:border-success={personalTrainer.id === selectedPersonalTrainer?.id}
              on:click={() => toggleSelection(personalTrainer)}>
             <figure>
                 <img src={personalTrainer.branding?.images?.[0]?.publicUrl} alt={personalTrainer.name} width="60px"/>

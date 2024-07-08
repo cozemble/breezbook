@@ -89,5 +89,15 @@ export const journeyStateFns = {
             ...journeyState,
             isPaid: true
         }
+    },
+    reset(journeyState: JourneyState): JourneyState {
+        return {
+            ...journeyState,
+            selectedSlot: null,
+            selectedAddOns: null,
+            filledForms: null,
+            customerDetails: null,
+            isPaid: false
+        }
     }
 }

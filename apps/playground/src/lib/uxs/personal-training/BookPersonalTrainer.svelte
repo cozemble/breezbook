@@ -28,6 +28,7 @@
     export let service: Service
     export let personalTrainerRequirement: AnySuitableResourceSpec
     let availableSlots: AvailabilityResponse
+    let showNoAvailabilityMessage = false
     const today = isoDate()
     const sevenDaysFromNow = isoDateFns.addDays(today, 7)
     const dayList = isoDateFns.listDays(today, sevenDaysFromNow)
@@ -39,11 +40,18 @@
             requirementId: personalTrainerRequirement.id.value,
             resourceId: trainer.id
         }]
-        availableSlots = await fetchJson(backendUrl(`/api/dev/breezbook-gym/${locationId}/service/${service.id}/availability?${dateRange}&lang=${$language}`), {
-            method: "POST",
-            body: JSON.stringify({requirementOverrides})
-        })
-        journeyState = initialJourneyState(tenant,availableSlots, locationId, requirementOverrides)
+        try {
+            availableSlots = await fetchJson(backendUrl(`/api/dev/breezbook-gym/${locationId}/service/${service.id}/availability?${dateRange}&lang=${$language}`), {
+                method: "POST",
+                body: JSON.stringify({requirementOverrides})
+            })
+            journeyState = initialJourneyState(tenant, availableSlots, locationId, requirementOverrides)
+            showNoAvailabilityMessage = false
+        } catch (error) {
+            // console.error({error})
+            showNoAvailabilityMessage = true
+            journeyState = journeyStateFns.reset(journeyState)
+        }
     })
 
     function slotSelected(event: CustomEvent<Slot>) {
@@ -65,7 +73,11 @@
 {#if journeyState}
     {#if journeyState.selectedSlot === null}
         <h3>{$translations.availabilityFor} {trainer.name}</h3>
-        <SelectSlot {availableSlots} {dayList} on:slotSelected={slotSelected}/>
+        {#if showNoAvailabilityMessage}
+            <p>{$translations.noSlotsAvailable}</p>
+        {:else}
+            <SelectSlot {availableSlots} {dayList} on:slotSelected={slotSelected}/>
+        {/if}
     {:else if journeyStateFns.requiresAddOns(journeyState) && !journeyStateFns.addOnsFilled(journeyState)}
         <p>Add-ons {JSON.stringify(journeyState.possibleAddOns)}</p>
     {:else if journeyStateFns.requiresForms(journeyState) && !journeyStateFns.formsFilled(journeyState)}
