@@ -2132,3 +2132,64 @@ const goalsFormLabelsTurkish = jsonSchemaFormLabels(
     [schemaKeyLabel("goals", "Hedefler")], 
     "Spor hedefleriniz nelerdir")
 ```
+
+# Mon 8 Jul 2024
+The personal training demo is done now.  It demonstrates the following:
+
+ - themeing
+ - multiple languages
+ - multiple locations
+ - resource dependent pricing (Mete is more expensive as an "elite" trainer)
+
+Am starting on the dog walking demo now.  And I quickly hit on a new pricing mechanism that I don't support.  Per-hour pricing.  How did I miss this????
+
+I asked Claude how a dog walker might price their services.  It said this:
+
+## Dog Walking and Pet Care Services Pricing Structure
+
+### 1. Individual Walk
+- Base rate: $20-$30 for a 30-minute walk
+- Additional time: $10-$15 per 15 minutes
+- Factors affecting price:
+    - Dog size/energy level
+    - Number of dogs from the same household
+    - Time of day (premium for early morning or late evening)
+
+### 2. Group Walk
+- Base rate: $15-$25 per dog for a 60-minute walk
+- Usually limited to 3-5 dogs per group
+- Potential discount for multiple dogs from the same household
+
+### 3. Drop-in Visit
+- Base rate: $15-$25 for a 20-30 minute visit
+- Additional services (e.g., administering medication): $5-$10 extra
+
+### 4. Pet Sitting Visit
+- Base rate: $40-$60 for a 2-hour visit
+- Additional time: $15-$20 per hour
+- Overnight stay (8-12 hours): $70-$100
+- Services typically included:
+    - Feeding and refreshing water
+    - Playtime and exercise
+    - Administering medication (if needed)
+    - Litter box cleaning for cats
+    - Brief house-sitting duties (mail collection, plant watering)
+
+### Additional Fees
+- Holiday surcharge: 1.5x regular rate
+- Last-minute booking fee (less than 24 hours notice): $5-$10
+- Extended travel fee (outside normal service area): $0.50-$1 per mile
+
+### Package Deals
+- Weekly package (5 walks or visits): 10% discount
+- Monthly package (20 walks or visits): 15% discount
+- Mix and match services (e.g., 3 walks, 2 pet sitting visits per week): Custom pricing
+
+### Cancellation Policy
+- More than 24 hours notice: Full refund
+- 12-24 hours notice: 50% refund
+- Less than 12 hours notice: No refund
+
+Note: All prices are in USD and should be adjusted based on local market rates and cost of living. Pet sitting rates may vary based on the number and types of pets, and any special care requirements.
+
+
