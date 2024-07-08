@@ -2247,6 +2247,14 @@ when it comes to figuring out when a group walk is full.  Will this be complex? 
 Another approach is in the general case of a group booking, where the price is per person/dog/cat, and the option
 to express a discount for the second and subsequent party members.  This is a more general case.
 
+Thinking about add-ons, adding time could be a priced add-on that extends the duration of the service.  We support this
+already, so this would mean no need to add in pricing matrices and sheets etc.  Lets see how far we can get 
+with that. 
+
+If I add the ability to mark "capacity" based services as permitting extra party members during booking, at an optional
+discounted rate, then I think I will have a general solution for the dog walking pricing - without getting seduced into 
+the complexity of pricing matrices and sheets.
+
 
 
 
