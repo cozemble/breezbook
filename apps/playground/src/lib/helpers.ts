@@ -1,9 +1,15 @@
 import {env, tenantId} from "$lib/uxs/personal-training/constants";
 
 export function backendUrl(path: string): string {
-    path = path.replace(/:envId/, env)
-    path = path.replace(/:tenantId/, tenantId)
-    return `http://localhost:3000${path}`;
+    path = path.replace(/:envId/, env);
+    path = path.replace(/:tenantId/, tenantId);
+
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const baseUrl = isHttps
+        ? 'https://breezbook-backend-airtable-qwquwvrytq-nw.a.run.app'
+        : 'http://localhost:3000';
+
+    return `${baseUrl}${path}`;
 }
 
 export async function expectJson<T>(responseP: Promise<Response>): Promise<T> {
