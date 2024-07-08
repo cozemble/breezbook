@@ -1,5 +1,12 @@
 <script lang="ts">
-    import {Calendar, CheckCircle, ChevronLeft, ChevronRight, Clock, Dog, MapPin, User} from 'lucide-svelte';
+    import {Calendar, CheckCircle, ChevronLeft, ChevronRight, Clock, Dog, MapPin, User, Plus} from 'lucide-svelte';
+
+    type AddOn = {
+        id: string;
+        name: string;
+        price: number;
+        quantity: number;
+    };
 
     type BookingData = {
         service: string;
@@ -7,6 +14,8 @@
         time: string;
         petName: string;
         address: string;
+        duration: number;
+        addOns: AddOn[];
     };
 
     let step: number = 0;
@@ -16,10 +25,48 @@
         time: '',
         petName: '',
         address: '',
+        duration: 30,
+        addOns: [
+            { id: 'extra30', name: 'Extra 30 minutes', price: 10, quantity: 0 },
+            { id: 'extra60', name: 'Extra 60 minutes', price: 18, quantity: 0 },
+            { id: 'extraDog', name: 'Extra dog', price: 15, quantity: 0 }
+        ]
     };
 
     const timeSlots = ['9:00 AM', '11:00 AM', '1:00 PM', '3:00 PM', '5:00 PM'];
-    const serviceOptions = ['Individual Walk', 'Group Walk', 'Drop-in Visit', 'Pet sitting visit'];
+    const serviceOptions = [
+        { name: 'Individual Walk', type: 'individual' },
+        { name: 'Group Walk', type: 'group' },
+        { name: 'Drop-in Visit', type: 'fixed' },
+        { name: 'Pet Sitting Visit', type: 'fixed' }
+    ];
+
+    // Simple pricing model
+    const basePrices = {
+        'Individual Walk': 20,
+        'Group Walk': 15,
+        'Drop-in Visit': 15,
+        'Pet Sitting Visit': 40
+    };
+
+    function calculatePrice(): number {
+        if (!bookingData.service) return 0;
+
+        let price = basePrices[bookingData.service];
+
+        if (serviceOptions.find(s => s.name === bookingData.service)?.type === 'individual') {
+            price = (price / 30) * bookingData.duration; // Adjust price for duration
+        }
+
+        // Add prices for add-ons
+        bookingData.addOns.forEach(addon => {
+            price += addon.price * addon.quantity;
+        });
+
+        return Math.round(price * 100) / 100; // Round to 2 decimal places
+    }
+
+    $: currentPrice = calculatePrice();
 
     function nextStep() {
         step++;
@@ -27,6 +74,11 @@
 
     function prevStep() {
         step--;
+    }
+
+    function updateAddonQuantity(addon: AddOn, change: number) {
+        addon.quantity = Math.max(0, addon.quantity + change);
+        bookingData = {...bookingData}; // Trigger reactivity
     }
 
     // Simple Calendar Component
@@ -48,6 +100,7 @@
     }
 
     $: monthYear = currentDate.toLocaleString('default', {month: 'long', year: 'numeric'});
+    $: serviceType = serviceOptions.find(s => s.name === bookingData.service)?.type;
 </script>
 
 <div class="flex justify-center items-center min-h-screen bg-base-200">
@@ -56,7 +109,7 @@
             <div class="flex flex-col items-center">
                 <h2 class="text-3xl font-bold mb-6 text-primary">Welcome to Paw Walks</h2>
                 <Dog size={64} class="text-primary mb-6"/>
-                <button class="btn btn-primary btn-lg" on:click={nextStep}>Book a Walk</button>
+                <button class="btn btn-primary btn-lg" on:click={nextStep}>Book a Service</button>
             </div>
         {:else if step === 1}
             <div class="flex flex-col">
@@ -68,15 +121,50 @@
                                     type="radio"
                                     name="service"
                                     class="radio radio-primary mr-4"
-                                    value={service}
-                                    bind:group={bookingData.service}/>
-                            <span class="label-text text-lg">{service}</span>
+                                    value={service.name}
+                                    bind:group={bookingData.service}
+                            />
+                            <span class="label-text text-lg">{service.name}</span>
                         </label>
                     {/each}
                 </div>
+                {#if serviceType === 'individual'}
+                    <div class="mt-4">
+                        <label class="label">
+                            <span class="label-text">Duration (minutes)</span>
+                        </label>
+                        <input
+                                type="number"
+                                min="30"
+                                step="15"
+                                bind:value={bookingData.duration}
+                                class="input input-bordered w-full"
+                        />
+                    </div>
+                {/if}
+                <p class="mt-4">Base Price: ${currentPrice}</p>
                 <button class="btn btn-primary mt-6" on:click={nextStep}>Next</button>
             </div>
         {:else if step === 2}
+            <div class="flex flex-col">
+                <h3 class="text-2xl font-semibold mb-6 text-primary">Add-ons and Extras</h3>
+                <div class="form-control">
+                    {#each bookingData.addOns as addon}
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="label-text">{addon.name} (+${addon.price})</span>
+                            <div class="flex items-center">
+                                <button class="btn btn-sm btn-outline" on:click={() => updateAddonQuantity(addon, -1)}>-</button>
+                                <span class="mx-2">{addon.quantity}</span>
+                                <button class="btn btn-sm btn-outline" on:click={() => updateAddonQuantity(addon, 1)}>+</button>
+                            </div>
+                        </div>
+                    {/each}
+                </div>
+                <p class="mt-4">Updated Price: ${currentPrice}</p>
+                <button class="btn btn-primary mt-6" on:click={nextStep}>Next</button>
+                <button class="btn btn-outline mt-2" on:click={prevStep}>Back</button>
+            </div>
+        {:else if step === 3}
             <div class="flex flex-col">
                 <h3 class="text-2xl font-semibold mb-6 text-primary">Date and Time</h3>
                 <div class="mb-6">
@@ -128,7 +216,7 @@
                 <button class="btn btn-primary mb-2" on:click={nextStep}>Next</button>
                 <button class="btn btn-outline" on:click={prevStep}>Back</button>
             </div>
-        {:else if step === 3}
+        {:else if step === 4}
             <div class="flex flex-col">
                 <h3 class="text-2xl font-semibold mb-6 text-primary">Pet Information</h3>
                 <div class="mb-4">
@@ -152,7 +240,7 @@
                 <button class="btn btn-primary mb-2" on:click={nextStep}>Review</button>
                 <button class="btn btn-outline" on:click={prevStep}>Back</button>
             </div>
-        {:else if step === 4}
+        {:else if step === 5}
             <div class="flex flex-col">
                 <h3 class="text-2xl font-semibold mb-6 text-primary">Review Booking</h3>
                 <div class="bg-base-200 p-4 rounded-lg mb-6">
@@ -161,17 +249,30 @@
                     <p><strong>Time:</strong> {bookingData.time}</p>
                     <p><strong>Pet:</strong> {bookingData.petName}</p>
                     <p><strong>Address:</strong> {bookingData.address}</p>
+                    {#if serviceType === 'individual'}
+                        <p><strong>Duration:</strong> {bookingData.duration} minutes</p>
+                    {/if}
+                    {#if bookingData.addOns.some(addon => addon.quantity > 0)}
+                        <p><strong>Add-ons:</strong></p>
+                        <ul>
+                            {#each bookingData.addOns.filter(addon => addon.quantity > 0) as addon}
+                                <li>{addon.name} x{addon.quantity} (+${addon.price * addon.quantity})</li>
+                            {/each}
+                        </ul>
+                    {/if}
+                    <p><strong>Total Price:</strong> ${currentPrice}</p>
                 </div>
-                <button class="btn btn-primary mb-2" on:click={() => step = 5}>Confirm Booking</button>
+                <button class="btn btn-primary mb-2" on:click={() => step = 6}>Confirm Booking</button>
                 <button class="btn btn-outline" on:click={prevStep}>Back</button>
             </div>
-        {:else if step === 5}
+        {:else if step === 6}
             <div class="flex flex-col items-center">
                 <CheckCircle size={64} class="text-success mb-6"/>
                 <h3 class="text-2xl font-semibold mb-4 text-primary">Booking Confirmed!</h3>
                 <p class="text-center mb-6">Thank you for booking with Paw Walks. We'll see you
-                    and {bookingData.petName} soon!</p>
-                <button class="btn btn-primary" on:click={() => step = 0}>Book Another Walk</button>
+                    and your pet{bookingData.addOns.find(a => a.id === 'extraDog')?.quantity > 0 ? 's' : ''} soon!</p>
+                <p class="text-center mb-6">Total Price: ${currentPrice}</p>
+                <button class="btn btn-primary" on:click={() => step = 0}>Book Another Service</button>
             </div>
         {/if}
     </div>
