@@ -2190,6 +2190,64 @@ I asked Claude how a dog walker might price their services.  It said this:
 - 12-24 hours notice: 50% refund
 - Less than 12 hours notice: No refund
 
-Note: All prices are in USD and should be adjusted based on local market rates and cost of living. Pet sitting rates may vary based on the number and types of pets, and any special care requirements.
+Note: All prices are in USD and should be adjusted based on local market rates and cost of living. Pet sitting rates 
+may vary based on the number and types of pets, and any special care requirements.
+
+Chatting with Claude, the key take away was something like this:
+
+```typescript
+// Example usage:
+const dogWalkingPricingMatrix = createPricingMatrix('dog-walking-matrix', [
+    { 
+        resourceId: resourceId('alex'), 
+        serviceId: serviceId('individual-walk'), 
+        timePricingRule: {
+            initialDuration: minutes(60), // might be modeled on the service
+            initialPrice: price(2000), // £20 for first hour , or the base duration of the service
+            additionalPricePoints: [
+                { duration: minutes(15), price: price(500) }, // £5 per additional 15 minutes
+                { duration: minutes(30), price: price(1000) }, // £10 per additional 30 minutes
+            ]
+        }
+    },
+    { 
+        resourceId: resourceId('jordan'), 
+        serviceId: serviceId('individual-walk'), 
+        timePricingRule: {
+            initialDuration: minutes(60),
+            initialPrice: price(1800), // £18 for first hour
+            additionalPricePoints: [
+                { duration: minutes(30), price: price(900) }, // £9 per additional 30 minutes
+            ]
+        }
+    },
+    // ... other entries ...
+]);
+```
+
+Some services have a fixed time - a group dog walk in 60 minutes.  And it will probably be offered at time slots.  Like
+a group dog walk in the morning and another in the evening.  With individual dog walks in between.  The individual dog
+walks are priced per hour or in 15 min increments, and each walker has their own pricing.
+
+So some new modeling concepts fall out of this.
+
+ - a service can be fixed in duration, or flexible, with a min, max and increment I guess.
+ - a service can be offered at specific times, or at any time. The morning and evening group walks might be 9am to 10am
+   and 6pm to 7pm.  The individual walks might be offered at any time, but crucially not at those time slotted times.  
+   In other words a service can have its own availability
+ - personalised pricing for a service.
+ - time based pricing, explicitly modeled as a "Price sheet" - in this case as a matrix
+ - accounting for additional time pricing in the price sheet
+
+One common need for dog walkers is to offer a discount for multiple dogs from the same household.  How can I model this
+pricing well?  I think it feels like an add-on.  The add-on is "additional dog from the same household", and maybe it 
+has a quantity associated with it.  The total quantity of dogs will include the initial dog and the number of add-ons -
+when it comes to figuring out when a group walk is full.  Will this be complex?  Maybe.
+
+Another approach is in the general case of a group booking, where the price is per person/dog/cat, and the option
+to express a discount for the second and subsequent party members.  This is a more general case.
+
+
+
 
 
