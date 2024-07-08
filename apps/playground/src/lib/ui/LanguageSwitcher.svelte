@@ -1,6 +1,6 @@
 <script lang="ts">
     import {onMount} from 'svelte';
-    import {language} from "$lib/ui/language";
+    import {language, translations} from "$lib/ui/stores";
 
     let currentLanguage: string
 
@@ -17,7 +17,7 @@
 </script>
 
 <div class="flex">
-    <label class="label">Language</label>
+    <label class="label">{$translations.language}</label>
     <select
             bind:value={currentLanguage}
             on:change={changeLanguage}

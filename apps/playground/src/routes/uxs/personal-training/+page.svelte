@@ -2,11 +2,16 @@
     import ThemeSwitcher from "$lib/ui/ThemeSwitcher.svelte";
     import LanguageSwitcher from "$lib/ui/LanguageSwitcher.svelte";
     import PersonalTrainingUx from "$lib/uxs/personal-training/PersonalTrainingUx.svelte";
-    import {language} from "$lib/ui/language";
+    import {language} from "$lib/ui/stores";
 </script>
 <div class="flex mb-4">
-    <ThemeSwitcher/>
-    <LanguageSwitcher/>
+    <div>
+        <ThemeSwitcher/>
+    </div>
+    <div class="ml-2">
+        <LanguageSwitcher/>
+    </div>
+
 </div>
 
 {#key $language}

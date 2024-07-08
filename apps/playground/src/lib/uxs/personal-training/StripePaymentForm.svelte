@@ -11,6 +11,7 @@
     import {loadStripe, type Stripe} from '@stripe/stripe-js';
     import {customer, fullPaymentOnCheckout} from "@breezbook/packages-core";
     import type {CoreCustomerDetails} from "$lib/uxs/personal-training/journeyState";
+    import {translations} from "$lib/ui/stores";
 
     export let priced: PricedBasket
     export let customerDetails: CoreCustomerDetails
@@ -22,8 +23,6 @@
     const dispatch = createEventDispatcher()
 
     onMount(async () => {
-        // "/api/:envId/:tenantId/orders"
-        // "/api/:envId/:tenantId/orders/:orderId/paymentIntent"
         const orderRequest = pricedCreateOrderRequest(priced, customer(customerDetails.firstName, customerDetails.lastName, customerDetails.email, customerDetails.phone), fullPaymentOnCheckout())
         order = await fetchJson<OrderCreatedResponse>(backendUrl('/api/:envId/:tenantId/orders'), {
             method: "POST",
@@ -74,9 +73,9 @@
 
             <button class="btn btn-primary btn-lg mt-4" disabled={processing}>
                 {#if processing}
-                    Processing...
+                    {$translations.processingDotDotDot}
                 {:else}
-                    Pay
+                    {$translations.pay}
                 {/if}
             </button>
 

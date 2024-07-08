@@ -3,6 +3,7 @@
     import {type IsoDate, isoDateFns} from "@breezbook/packages-types";
     import {createEventDispatcher} from "svelte";
     import type {Slot} from "$lib/uxs/personal-training/journeyState";
+    import {translations} from "$lib/ui/stores";
 
     export let availableSlots: AvailabilityResponse
     export let dayList: IsoDate[]
@@ -14,8 +15,8 @@
     }
 
     function priceForDay(availableSlots: AvailabilityResponse, day: IsoDate): string {
-        const priceInMinorUnits =  slotsForDay(availableSlots,day)?.[0]?.priceWithNoDecimalPlaces
-        if(!priceInMinorUnits) {
+        const priceInMinorUnits = slotsForDay(availableSlots, day)?.[0]?.priceWithNoDecimalPlaces
+        if (!priceInMinorUnits) {
             return ""
         }
         return `£ ${priceInMinorUnits / 100}`
@@ -34,7 +35,7 @@
     }
 
     function confirm() {
-        if(selectedSlot) {
+        if (selectedSlot) {
             dispatch("slotSelected", selectedSlot)
         }
     }
@@ -45,7 +46,7 @@
         {#each dayList as day}
             {@const slots = slotsForDay(availableSlots, day)}
             <div class="card p-2 ml-2 border">
-                <h3><strong>{day.value} - {isoDateFns.dayOfWeek(day)}</strong></h3>
+                <h3><strong>{day.value} - {$translations.daysOfTheWeek[isoDateFns.indexOfDayOfWeek(day)]}</strong></h3>
                 {#each slots as slot}
                     <div on:click={() => toggleTimeSelection(day, slot)} class="border-success"
                          class:border={isSelectedSlot(selectedSlot,day,slot)}>
@@ -53,7 +54,7 @@
                     </div>
                 {/each}
                 {#if slots.length === 0}
-                    <p class="mt-12">No slots available</p>
+                    <p class="mt-12">{$translations.noSlotsAvailable}</p>
                 {/if}
                 <p class="mt-2">{priceForDay(availableSlots, day)}</p>
             </div>
@@ -63,8 +64,8 @@
 
 {#if selectedSlot}
     <div class="mt-4">
-        <h3>Selected slot</h3>
+        <h3>{$translations.selectedSlot}</h3>
         <p>{selectedSlot.day.value} {selectedSlot.slot.startTime24hr}</p>
-        <button class="btn btn-primary btn-lg" on:click={confirm}>Confirm</button>
+        <button class="btn btn-primary btn-lg" on:click={confirm}>{$translations.confirm}</button>
     </div>
 {/if}

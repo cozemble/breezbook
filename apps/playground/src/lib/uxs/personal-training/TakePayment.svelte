@@ -6,6 +6,7 @@
     import {backendUrl, fetchJson} from "$lib/helpers";
     import StripePaymentForm from "$lib/uxs/personal-training/StripePaymentForm.svelte";
     import {time24} from "@breezbook/packages-types";
+    import {translations} from "$lib/ui/stores";
 
     export let state: JourneyState
     let priced:PricedBasket
@@ -31,8 +32,8 @@
     <StripePaymentForm {priced} customerDetails={state.customerDetails} on:paymentComplete/>
 {:else if priced}
     <div>
-        <h2>Payment</h2>
-        <p>Price: £ {priceFns.format(priced.total)}</p>
-        <button class="btn btn-primary" on:click={onPay}>Pay</button>
+        <h2>{$translations.payment}</h2>
+        <p>{$translations.price}: £ {priceFns.format(priced.total)}</p>
+        <button class="btn btn-primary" on:click={onPay}>{$translations.pay}</button>
     </div>
 {/if}

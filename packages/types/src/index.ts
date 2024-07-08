@@ -172,6 +172,9 @@ export const isoDateFns = {
     dayOfWeek(date: IsoDate) {
         return new Date(date.value).toLocaleDateString('en-GB', {weekday: 'long'}) as DayOfWeek;
     },
+    indexOfDayOfWeek(date: IsoDate) {
+        return daysOfWeek.indexOf(this.dayOfWeek(date));
+    },
     gte(date1: IsoDate, date2: IsoDate) {
         return date1.value >= date2.value;
     },
@@ -546,7 +549,7 @@ export interface FormId extends ValueType<string> {
     _type: 'form.id';
 }
 
-export function formId(value: string): FormId {
+export function formId(value = uuidv4()): FormId {
     return {
         _type: 'form.id',
         value
@@ -561,6 +564,16 @@ export interface JsonSchemaForm {
     schema: unknown;
 }
 
+export function jsonSchemaForm(id: FormId, name: string, schema: unknown, description?: string): JsonSchemaForm {
+    return {
+        _type: 'json.schema.form',
+        id,
+        name,
+        schema,
+        description
+    };
+}
+
 export const jsonSchemaFormFns = {
     extractLabels: (form: JsonSchemaForm, languageId: LanguageId): JsonSchemaFormLabels => {
         const schema = form.schema as any;
@@ -569,6 +582,34 @@ export const jsonSchemaFormFns = {
             return schemaKeyLabel(key, key, itemDef.description);
         });
         return jsonSchemaFormLabels(form.id, languageId, form.name, keyLabels, form.description);
+    },
+    applyLabels(form: JsonSchemaForm, labels: JsonSchemaFormLabels) {
+        const schema = form.schema as any;
+        const propertyKeys = Object.keys(schema.properties);
+        const labeledProperties = propertyKeys.reduce((acc, key) => {
+            const itemDef = schema.properties[key];
+            const label = labels.schemaKeyLabels.find(sl => sl.schemaKey === key);
+            if (!label) {
+                return {...acc, [key]: itemDef};
+            }
+            return {
+                ...acc,
+                [key]: {
+                    ...itemDef,
+                    title: label.label,
+                    description: label.description
+                }
+            };
+        },{});
+        return {
+            ...form,
+            name: labels.name,
+            description: labels.description,
+            schema: {
+                ...schema,
+                properties: labeledProperties
+            }
+        };
     }
 }
 

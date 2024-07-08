@@ -1,5 +1,5 @@
 import express from "express";
-import {languages, resourceType, ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-types";
+import {LanguageId, resourceType, ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-types";
 import {resources} from "../../core/resources/resources.js";
 import {
     asHandler,
@@ -7,6 +7,7 @@ import {
     EndpointOutcome,
     expressBridge,
     httpResponseOutcome,
+    languageIdParam,
     paramExtractor,
     ParamExtractor,
     path,
@@ -15,7 +16,7 @@ import {
     tenantEnvironmentLocationParam
 } from "../../infra/endpoint.js";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
-import { responseOf } from "@breezbook/packages-http/dist/responses.js";
+import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 
 export function resourceTypeParam(requestValue: RequestValueExtractor = path('type')): ParamExtractor<ResourceType> {
     return paramExtractor('type', requestValue.extractor, resourceType);
@@ -26,10 +27,10 @@ export async function onListResourcesByTypeRequestExpress(req: express.Request, 
 }
 
 export async function listResourcesByTypeRequestEndpoint(deps: EndpointDependencies, request: RequestContext): Promise<EndpointOutcome[]> {
-    return asHandler(deps, request).withTwoRequestParams(tenantEnvironmentLocationParam(), resourceTypeParam(), listResourcesByType);
+    return asHandler(deps, request).withThreeRequestParams(tenantEnvironmentLocationParam(), resourceTypeParam(), languageIdParam(), listResourcesByType);
 }
 
-async function listResourcesByType(deps: EndpointDependencies, tenantEnvironmentLocation: TenantEnvironmentLocation, resourceType: ResourceType): Promise<EndpointOutcome[]> {
-    const outcome = await resources.listByType(deps.prisma, tenantEnvironmentLocation, resourceType, languages.en);
-    return [httpResponseOutcome(responseOf(Array.isArray(outcome) ? 200 : 400, JSON.stringify(outcome),['Content-Type', 'application/json']))];
+async function listResourcesByType(deps: EndpointDependencies, tenantEnvironmentLocation: TenantEnvironmentLocation, resourceType: ResourceType, languageId: LanguageId): Promise<EndpointOutcome[]> {
+    const outcome = await resources.listByType(deps.prisma, tenantEnvironmentLocation, resourceType, languageId);
+    return [httpResponseOutcome(responseOf(Array.isArray(outcome) ? 200 : 400, JSON.stringify(outcome), ['Content-Type', 'application/json']))];
 }

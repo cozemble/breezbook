@@ -1,5 +1,5 @@
 {
-	"name": "@breezbook/apps-learning-vapi",
+	"name": "@breezbook/apps-playground",
 	"version": "0.0.1",
 	"scripts": {
 		"dev": "vite dev",

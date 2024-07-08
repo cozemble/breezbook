@@ -5,6 +5,7 @@
     import {mandatory} from "@breezbook/packages-core";
     import Markdown from "$lib/markdown/Markdown.svelte";
     import BookPersonalTrainer from "$lib/uxs/personal-training/BookPersonalTrainer.svelte";
+    import {translations} from "$lib/ui/stores";
 
     export let languageId: string
     let tenant: Tenant
@@ -23,7 +24,7 @@
     })
 
     async function fetchPersonalTrainers(locationId: string) {
-        personalTrainers = await fetchJson<ResourceSummary[]>(backendUrl(`/api/dev/breezbook-gym/${locationId}/resources/personal.trainer/list`), {method: "GET"})
+        personalTrainers = await fetchJson<ResourceSummary[]>(backendUrl(`/api/dev/breezbook-gym/${locationId}/resources/personal.trainer/list?lang=${languageId}`), {method: "GET"})
         personalTrainingService = mandatory(tenant.services.find(s => s.slug === 'pt1hr'), `Service pt1hr not found`)
         personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`) as AnySuitableResourceSpec;
     }
@@ -44,8 +45,8 @@
 </script>
 
 {#if locationId && tenant}
-    <div class="flex">
-        <label class="label">Location</label>
+    <div class="flex mb-4">
+        <label class="label">{$translations.location}</label>
         <select class="input input-bordered select" on:change={onLocationChanged}>
             {#each tenant.locations as location}
                 <option value={location.id} selected={location.id === locationId}>{location.name}</option>
@@ -54,8 +55,8 @@
     </div>
 {/if}
 {#if personalTrainers}
-    <div>
-        <h3>Personal Trainers</h3>
+    <div class="mb-2">
+        <h3>{$translations.personalTrainers}</h3>
     </div>
 {/if}
 <div class="flex">
@@ -77,7 +78,7 @@
     {#key selectedPersonalTrainer.id}
         {#key locationId}
             <div class="mt-4">
-                <BookPersonalTrainer trainer={selectedPersonalTrainer} locationId={locationId}
+                <BookPersonalTrainer {tenant} trainer={selectedPersonalTrainer} locationId={locationId}
                                      {personalTrainerRequirement} service={personalTrainingService}/>
             </div>
         {/key}

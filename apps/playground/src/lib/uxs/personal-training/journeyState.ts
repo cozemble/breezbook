@@ -1,9 +1,11 @@
-import {type Form, type IsoDate, mandatory} from "@breezbook/packages-types";
+import {type Form, type IsoDate, jsonSchemaFormFns, mandatory} from "@breezbook/packages-types";
 import {
     type AddOnSummary,
     type Availability,
     type AvailabilityResponse,
-    type ResourceRequirementOverride
+    type FormAndLabels,
+    type ResourceRequirementOverride,
+    type Tenant
 } from "@breezbook/backend-api-types";
 
 export interface Slot {
@@ -19,6 +21,7 @@ export interface CoreCustomerDetails {
 }
 
 export interface JourneyState {
+    tenant: Tenant
     selectedSlot: Slot | null
     possibleAddOns: AddOnSummary[]
     selectedAddOns: AddOnSummary[] | null
@@ -31,8 +34,9 @@ export interface JourneyState {
     requirementOverrides: ResourceRequirementOverride[]
 }
 
-export function initialJourneyState(availabilityResponse: AvailabilityResponse, locationId: string, requirementOverrides: ResourceRequirementOverride[]): JourneyState {
+export function initialJourneyState(tenant: Tenant, availabilityResponse: AvailabilityResponse, locationId: string, requirementOverrides: ResourceRequirementOverride[]): JourneyState {
     return {
+        tenant,
         selectedSlot: null,
         possibleAddOns: availabilityResponse.addOns,
         selectedAddOns: null,
@@ -44,6 +48,11 @@ export function initialJourneyState(availabilityResponse: AvailabilityResponse, 
         locationId,
         requirementOverrides
     }
+}
+
+function applyFormLabels(form: Form, formLabels: FormAndLabels[]): Form {
+    const labels = mandatory(formLabels.find(f => f.form.id.value === form.id.value), `Form with id ${form.id.value} not found`)
+    return jsonSchemaFormFns.applyLabels(form, labels.labels)
 }
 
 export const journeyStateFns = {
@@ -60,7 +69,8 @@ export const journeyStateFns = {
     },
     currentUnfilledForm(state: JourneyState): Form {
         const indexOfLastFilledForm = state.filledForms ? state.filledForms.length : 0
-        return mandatory(state.expectedForms[indexOfLastFilledForm], `Expected form at index ${indexOfLastFilledForm} not found`)
+        const form = mandatory(state.expectedForms[indexOfLastFilledForm], `Expected form at index ${indexOfLastFilledForm} not found`)
+        return applyFormLabels(form, state.tenant.forms)
     },
     customerDetailsFilled(journeyState: JourneyState) {
         return journeyState.customerDetails !== null

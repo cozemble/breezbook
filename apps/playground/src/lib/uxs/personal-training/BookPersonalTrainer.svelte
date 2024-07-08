@@ -3,7 +3,8 @@
         type AnySuitableResourceSpec,
         type AvailabilityResponse,
         type ResourceSummary,
-        type Service
+        type Service,
+        type Tenant
     } from "@breezbook/backend-api-types";
     import {onMount} from 'svelte';
     import {backendUrl, fetchJson} from "$lib/helpers";
@@ -19,7 +20,9 @@
     import FillForm from "$lib/uxs/personal-training/FillForm.svelte";
     import FillCustomerDetails from "$lib/uxs/personal-training/FillCustomerDetails.svelte";
     import TakePayment from "$lib/uxs/personal-training/TakePayment.svelte";
+    import {language, translations} from "$lib/ui/stores";
 
+    export let tenant: Tenant
     export let trainer: ResourceSummary
     export let locationId: string
     export let service: Service
@@ -36,11 +39,11 @@
             requirementId: personalTrainerRequirement.id.value,
             resourceId: trainer.id
         }]
-        availableSlots = await fetchJson(backendUrl(`/api/dev/breezbook-gym/${locationId}/service/${service.id}/availability?${dateRange}`), {
+        availableSlots = await fetchJson(backendUrl(`/api/dev/breezbook-gym/${locationId}/service/${service.id}/availability?${dateRange}&lang=${$language}`), {
             method: "POST",
             body: JSON.stringify({requirementOverrides})
         })
-        journeyState = initialJourneyState(availableSlots, locationId, requirementOverrides)
+        journeyState = initialJourneyState(tenant,availableSlots, locationId, requirementOverrides)
     })
 
     function slotSelected(event: CustomEvent<Slot>) {
@@ -61,7 +64,7 @@
 </script>
 {#if journeyState}
     {#if journeyState.selectedSlot === null}
-        <h3>Availability for {trainer.name}</h3>
+        <h3>{$translations.availabilityFor} {trainer.name}</h3>
         <SelectSlot {availableSlots} {dayList} on:slotSelected={slotSelected}/>
     {:else if journeyStateFns.requiresAddOns(journeyState) && !journeyStateFns.addOnsFilled(journeyState)}
         <p>Add-ons {JSON.stringify(journeyState.possibleAddOns)}</p>
@@ -72,6 +75,6 @@
     {:else if !journeyStateFns.isPaid(journeyState)}
         <TakePayment state={journeyState} on:paymentComplete={onPaymentComplete}/>
     {:else}
-        <p>Thank you</p>
+        <p>{$translations.thankYou}</p>
     {/if}
 {/if}

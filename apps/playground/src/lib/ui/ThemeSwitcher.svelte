@@ -1,6 +1,7 @@
 <script lang="ts">
     import {browser} from '$app/environment';
     import {onMount} from 'svelte';
+    import {translations} from '$lib/ui/stores.js';
 
     // List of all DaisyUI themes
     const themes = [
@@ -29,7 +30,7 @@
 </script>
 
 <div class="flex">
-    <label class="label">Theme</label>
+    <label class="label">{$translations.theme}</label>
     <select
             bind:value={currentTheme}
             on:change={changeTheme}
