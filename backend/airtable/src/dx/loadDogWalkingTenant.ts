@@ -694,6 +694,12 @@ function breezbookDogWalkUpserts(): Upsert[] {
             headline: 'Breez Walks',
             description: 'Where dog walking is a breez',
         }),
+        upsertTenantSettings({
+            tenant_id,
+            environment_id,
+            customer_form_id: null,
+            iana_timezone: 'Europe/London'
+        })
     ]
 }
 

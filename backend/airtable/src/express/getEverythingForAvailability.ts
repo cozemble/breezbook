@@ -92,16 +92,6 @@ export function everythingForAvailability(
     };
 }
 
-export const everythingForAvailabilityFns = {
-
-    findService(everythingForAvailability: EverythingForAvailability, serviceId: ServiceId): Service {
-        return mandatory(
-            everythingForAvailability.businessConfiguration.services.find((s) => values.isEqual(s.id, serviceId)),
-            `Service with id ${serviceId.value} not found`
-        );
-    }
-}
-
 interface FlattenedResourceDayAvailability {
     resource: Resource;
     availability: DayAndTimePeriod;

@@ -1,10 +1,12 @@
 <script lang="ts">
-    import {Calendar, CheckCircle, ChevronLeft, ChevronRight, Clock, Dog, MapPin, User} from 'lucide-svelte';
+    import {CheckCircle, Dog, MapPin, User} from 'lucide-svelte';
     import {onMount} from "svelte";
     import {backendUrl, fetchJson} from "$lib/helpers";
-    import type {Service, ServiceOption, Tenant} from "@breezbook/backend-api-types";
+    import {type Service, type ServiceLocation, type ServiceOption, type Tenant} from "@breezbook/backend-api-types";
     import ServiceCard from "$lib/uxs/dog-walking/ServiceCard.svelte";
     import ServiceOptionCard from "$lib/uxs/dog-walking/ServiceOptionCard.svelte";
+    import {mandatory} from "@breezbook/packages-types";
+    import SelectDateAndTime from "$lib/uxs/dog-walking/SelectDateAndTime.svelte";
 
     let tenant: Tenant | null = null;
     let services: Service[] = []
@@ -20,6 +22,7 @@
     type BookingData = {
         service: Service | null;
         serviceOptions: ServiceOption[];
+        serviceLocation: ServiceLocation|null
         date: Date | null;
         time: string;
         petName: string;
@@ -32,6 +35,7 @@
     let bookingData: BookingData = {
         service: null,
         serviceOptions: [],
+        serviceLocation: null,
         date: null,
         time: '',
         petName: '',
@@ -43,8 +47,6 @@
             {id: 'extraDog', name: 'Extra dog', price: 15, quantity: 0}
         ]
     };
-
-    const timeSlots = ['9:00 AM', '11:00 AM', '1:00 PM', '3:00 PM', '5:00 PM'];
 
 
     function calculatePrice(): number {
@@ -61,30 +63,13 @@
         step--;
     }
 
-    // Simple Calendar Component
-    let currentDate: Date = new Date();
-
-    $: daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-    $: firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-
-    function prevMonth() {
-        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
-    }
-
-    function nextMonth() {
-        currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
-    }
-
-    function selectDate(day: number) {
-        bookingData.date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    }
-
     function selectService(service: Service) {
-        bookingData.service = service;
-        bookingData.duration = service.durationMinutes;
+        if (tenant) {
+            bookingData.service = service;
+            bookingData.duration = service.durationMinutes;
+            bookingData.serviceLocation = mandatory(tenant.serviceLocations.find(location => location.serviceId === service.id), `Service location not found`);
+        }
     }
-
-    $: monthYear = currentDate.toLocaleString('default', {month: 'long', year: 'numeric'});
 
     onMount(async () => {
         try {
@@ -156,53 +141,14 @@
             {:else if step === 3}
                 <div class="flex flex-col">
                     <h3 class="text-2xl font-semibold mb-6 text-primary">Date and Time</h3>
-                    <div class="mb-6">
-                        <Calendar class="text-primary mb-2"/>
-                        <div class="mb-4">
-                            <div class="flex justify-between items-center mb-2">
-                                <button on:click={prevMonth} class="btn btn-sm btn-ghost">
-                                    <ChevronLeft/>
-                                </button>
-                                <span class="font-semibold">{monthYear}</span>
-                                <button on:click={nextMonth} class="btn btn-sm btn-ghost">
-                                    <ChevronRight/>
-                                </button>
-                            </div>
-                            <div class="grid grid-cols-7 gap-1 text-center">
-                                {#each ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'] as day}
-                                    <div class="text-xs font-semibold">{day}</div>
-                                {/each}
-                                {#each Array(firstDayOfMonth) as _, i}
-                                    <div class="p-2"></div>
-                                {/each}
-                                {#each Array(daysInMonth) as _, i}
-                                    {@const day = i + 1}
-                                    {@const isSelected = bookingData.date?.getDate() === day &&
-                                    bookingData.date?.getMonth() === currentDate.getMonth() &&
-                                    bookingData.date?.getFullYear() === currentDate.getFullYear()}
-                                    <button
-                                            on:click={() => selectDate(day)}
-                                            class="p-2 rounded-full {isSelected ? 'bg-primary text-white' : 'hover:bg-base-200'}">
-                                        {day}
-                                    </button>
-                                {/each}
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mb-6">
-                        <Clock class="text-primary mb-2"/>
-                        <select
-                                bind:value={bookingData.time}
-                                class="select select-bordered w-full"
-                        >
-                            <option value="">Select a time</option>
-                            {#each timeSlots as slot}
-                                <option value={slot}>{slot}</option>
-                            {/each}
-                        </select>
-                    </div>
-                    <button class="btn btn-primary mb-2" on:click={nextStep}>Next</button>
-                    <button class="btn btn-outline" on:click={prevStep}>Back</button>
+                    {#if bookingData.service && bookingData.serviceLocation}
+                        <SelectDateAndTime service={bookingData.service}
+                                           locationId={bookingData.serviceLocation.locationId}
+                                           tenantId={tenant.id}
+                                           serviceOptions={bookingData.serviceOptions}/>
+                        <button class="btn btn-primary mb-2" on:click={nextStep}>Next</button>
+                        <button class="btn btn-outline" on:click={prevStep}>Back</button>
+                    {/if}
                 </div>
             {:else if step === 4}
                 <div class="flex flex-col">
