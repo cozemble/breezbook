@@ -145,6 +145,19 @@ create table add_on_labels
     primary key (tenant_id, environment_id, add_on_id, language_id)
 );
 
+create table add_on_images
+(
+    add_on_id        text references add_on (id) on delete cascade         not null,
+    tenant_id        text references tenants (tenant_id) on delete cascade not null,
+    environment_id   text                                                  not null,
+    public_image_url text                                                  not null,
+    mime_type        text                                                  not null,
+    context          text                                                  not null,
+    created_at       timestamp                                             not null default current_timestamp,
+    updated_at       timestamp                                             not null default current_timestamp,
+    primary key (add_on_id, tenant_id, environment_id, context)
+);
+
 create table forms
 (
     id             text primary key,
@@ -239,6 +252,36 @@ create table service_service_options
     primary key (tenant_id, environment_id, service_id, service_option_id)
 );
 
+create table service_option_images
+(
+    service_option_id text references service_options (id) on delete cascade not null,
+    tenant_id         text references tenants (tenant_id) on delete cascade  not null,
+    environment_id    text                                                   not null,
+    public_image_url  text                                                   not null,
+    mime_type         text                                                   not null,
+    context           text                                                   not null,
+    created_at        timestamp                                              not null default current_timestamp,
+    updated_at        timestamp                                              not null default current_timestamp,
+    primary key (service_option_id, tenant_id, environment_id, context)
+);
+
+create type resource_requirement_type as enum ('any_suitable', 'specific_resource');
+
+create table service_option_resource_requirements
+(
+    id                text primary key,
+    tenant_id         text references tenants (tenant_id)  not null,
+    environment_id    text                                 not null,
+    service_option_id text references service_options (id) not null,
+    requirement_type  resource_requirement_type            not null,
+    resource_id       text references resources (id)       null     default null,
+    resource_type     text references resource_types (id)  null     default null,
+    created_at        timestamp with time zone             not null default current_timestamp,
+    updated_at        timestamp with time zone             not null default current_timestamp,
+    check ((requirement_type = 'any_suitable' and resource_type is not null)
+        or (requirement_type = 'specific_resource' and resource_id is not null))
+);
+
 create table service_time_slots
 (
     id             text primary key,
@@ -264,7 +307,6 @@ create table service_labels
     primary key (tenant_id, environment_id, service_id, language_id)
 );
 
-create type resource_requirement_type as enum ('any_suitable', 'specific_resource');
 
 create table service_resource_requirements
 (
@@ -304,7 +346,8 @@ create table service_forms
     primary key (tenant_id, environment_id, service_id, form_id)
 );
 
-create table service_option_forms (
+create table service_option_forms
+(
     tenant_id         text references tenants (tenant_id)  not null,
     environment_id    text                                 not null,
     service_option_id text references service_options (id) not null,

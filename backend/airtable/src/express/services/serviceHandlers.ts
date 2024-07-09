@@ -1,6 +1,17 @@
 import express from "express";
-import {DbService, DbServiceImage, DbServiceLabel, DbServiceResourceRequirement} from "../../prisma/dbtypes.js";
-import {anySuitableResourceSpec, Service, specificResourceSpec} from "@breezbook/backend-api-types";
+import {
+    DbService,
+    DbServiceImage,
+    DbServiceLabel,
+    DbServiceOption,
+    DbServiceOptionForm,
+    DbServiceOptionImage,
+    DbServiceOptionLabel,
+    DbServiceOptionResourceRequirement,
+    DbServiceResourceRequirement,
+    DbServiceTimeslot
+} from "../../prisma/dbtypes.js";
+import {anySuitableResourceSpec, Service, ServiceOption, specificResourceSpec} from "@breezbook/backend-api-types";
 import {mandatory} from "@breezbook/packages-core";
 import {
     asHandler,
@@ -9,13 +20,51 @@ import {
     expressBridge,
     httpResponseOutcome,
     languageIdParam,
-    productionDeps, tenantEnvironmentParam
+    productionDeps,
+    tenantEnvironmentParam
 } from "../../infra/endpoint.js";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
-import {LanguageId, TenantEnvironment} from "@breezbook/packages-types";
+import {formId, LanguageId, TenantEnvironment} from "@breezbook/packages-types";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 
-export type RequiredServiceData = DbService & { service_images: DbServiceImage[] } & { service_labels: DbServiceLabel[] }
+export type RequiredServiceOptionData = DbServiceOption & {
+    service_option_images: DbServiceOptionImage[];
+    service_option_resource_requirements: DbServiceOptionResourceRequirement[];
+    service_option_labels: DbServiceOptionLabel[];
+    service_option_forms: DbServiceOptionForm[];
+}
+
+export type RequiredServiceData = DbService & {
+    service_images: DbServiceImage[];
+    service_labels: DbServiceLabel[];
+    service_resource_requirements: DbServiceResourceRequirement[];
+    service_service_options: {
+        service_options: RequiredServiceOptionData;
+    }[];
+    service_time_slots: DbServiceTimeslot[];
+};
+
+export function toApiServiceOption(so: RequiredServiceOptionData): ServiceOption {
+    const firstLabel = mandatory(so.service_option_labels[0], `Service option has no labels`)
+    const priceAmount = (typeof so.price === "object" && "toNumber" in so.price) ? so.price.toNumber() : so.price;
+    return {
+        id: so.id,
+        name: firstLabel.name,
+        description: firstLabel.description,
+        image: so.service_option_images.length > 0 ? so.service_option_images[0].public_image_url : 'https://picsum.photos/800/450',
+        priceWithNoDecimalPlaces: priceAmount,
+        priceCurrency: so.price_currency,
+        durationMinutes: so.duration_minutes,
+        resourceRequirements: so.service_option_resource_requirements.map(sorr => {
+            if (sorr.requirement_type === 'specific_resource') {
+                return specificResourceSpec(sorr.id, mandatory(sorr.resource_id, `Service option ${so.id} has a specific resource requirement with no resource id`))
+            }
+            return anySuitableResourceSpec(sorr.id, mandatory(sorr.resource_type, `Service option ${so.id} has an any suitable resource requirement with no resource type`))
+        }),
+        requiresQuantity: so.requires_quantity,
+        forms: so.service_option_forms.map(f => formId(f.form_id))
+    }
+}
 
 export function toApiService(service: RequiredServiceData, serviceResourceRequirements: DbServiceResourceRequirement[], hasPricingRules: boolean): Service {
     const allImages = (service.service_images ?? []) as DbServiceImage[]
@@ -28,7 +77,7 @@ export function toApiService(service: RequiredServiceData, serviceResourceRequir
         return anySuitableResourceSpec(srr.id, mandatory(srr.resource_type, `Service ${service.id} has an any suitable resource requirement with no resource type`))
     });
     const firstLanguage = mandatory(service.service_labels[0], `Service ${service.id} has no labels`)
-
+    const serviceOptions = service.service_service_options.flatMap(ss => ss.service_options).map(toApiServiceOption)
     return {
         id: service.id,
         name: firstLanguage.name,
@@ -39,7 +88,8 @@ export function toApiService(service: RequiredServiceData, serviceResourceRequir
         durationMinutes: service.duration_minutes,
         hasDynamicPricing: hasPricingRules,
         image,
-        resourceRequirements
+        resourceRequirements,
+        serviceOptions
     };
 }
 
@@ -60,11 +110,30 @@ async function getServices(deps: EndpointDependencies, tenantEnvironment: Tenant
                 where: {
                     language_id: languageId.value
                 }
-            }
+            },
+            service_time_slots: true,
+            service_resource_requirements: true,
+            service_service_options: {
+                include: {
+                    service_options: {
+                        include: {
+                            service_option_labels: {
+                                where: {
+                                    language_id: languageId.value
+                                }
+                            },
+                            service_option_images: true,
+                            service_option_resource_requirements: true,
+                            service_option_forms: true
+                        }
+                    }
+                }
+            },
         }
     });
+
     for (const service of services) {
-        if(service.service_labels.length === 0) {
+        if (service.service_labels.length === 0) {
             return [httpResponseOutcome(responseOf(404, `No service label found for service ${service.id}, language ${languageId.value}`))]
         }
     }
@@ -81,7 +150,7 @@ async function getServices(deps: EndpointDependencies, tenantEnvironment: Tenant
         }
     });
     const result = services.map(s => toApiService(s, serviceResourceRequirements, pricingRules.length > 0))
-    return [httpResponseOutcome(responseOf(200, JSON.stringify(result),['Content-Type', 'application/json']))]
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(result), ['Content-Type', 'application/json']))]
 }
 
 

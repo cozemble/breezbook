@@ -8,6 +8,7 @@ import {
     upsertResourceAvailability,
     upsertResourceType,
     upsertService,
+    upsertServiceImage,
     upsertServiceLabel,
     upsertServiceLocation,
     upsertServiceOption,
@@ -17,6 +18,8 @@ import {
     upsertServiceServiceOption,
     upsertServiceTimeslot,
     upsertTenant,
+    upsertTenantBranding,
+    upsertTenantBrandingLabels,
     upsertTenantSettings,
     upsertTimeslot
 } from "../prisma/breezPrismaMutations.js";
@@ -307,6 +310,8 @@ function breezbookDogWalkUpserts(): Upsert[] {
     const end_time_24hr = '18:00';
     const dogWalkerResourceTypeId = makeTestId(tenant_id, environment_id, `resource_type.walker`);
     const resourceAlexId = makeTestId(tenant_id, environment_id, `resource.alex`);
+    const tenantBrandingId = makeTestId(tenant_id, environment_id, `tenant_branding_${tenant_id}_${environment_id}`)
+
 
     return [
 
@@ -488,6 +493,14 @@ function breezbookDogWalkUpserts(): Upsert[] {
             service_id: makeTestId(tenant_id, environment_id, 'individual-dog-walk'),
             service_option_id: makeTestId(tenant_id, environment_id, 'extra_dog.1')
         }),
+        upsertServiceImage({
+            tenant_id,
+            environment_id,
+            service_id: makeTestId(tenant_id, environment_id, 'individual-dog-walk'),
+            public_image_url: 'https://picsum.photos/id/237/800/450',
+            mime_type: 'image/jpeg',
+            context: 'thumbnail'
+        }),
 
 
         upsertService({
@@ -666,6 +679,21 @@ function breezbookDogWalkUpserts(): Upsert[] {
             location_id: makeTestId(tenant_id, environment_id, 'main')
         }),
 
+        upsertTenantBranding({
+                id: tenantBrandingId,
+                tenant_id,
+                environment_id,
+                theme: {}
+            }
+        ),
+        upsertTenantBrandingLabels({
+            tenant_id,
+            environment_id,
+            language_id: languages.en.value,
+            tenant_branding_id: tenantBrandingId,
+            headline: 'Breez Walks',
+            description: 'Where dog walking is a breez',
+        }),
     ]
 }
 

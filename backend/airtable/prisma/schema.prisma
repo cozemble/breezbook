@@ -19,6 +19,7 @@ model add_on {
   created_at      DateTime        @default(now()) @db.Timestamptz(6)
   updated_at      DateTime        @default(now()) @db.Timestamptz(6)
   tenants         tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  add_on_images   add_on_images[]
   add_on_labels   add_on_labels[]
 }
 
@@ -416,35 +417,37 @@ model resource_blocked_time {
 }
 
 model resource_types {
-  id                            String                          @id
-  tenant_id                     String
-  environment_id                String
-  name                          String
-  created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
-  updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
-  booking_resource_requirements booking_resource_requirements[]
-  tenants                       tenants                         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  resources                     resources[]
-  service_resource_requirements service_resource_requirements[]
+  id                                   String                                 @id
+  tenant_id                            String
+  environment_id                       String
+  name                                 String
+  created_at                           DateTime                               @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime                               @default(now()) @db.Timestamptz(6)
+  booking_resource_requirements        booking_resource_requirements[]
+  tenants                              tenants                                @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  resources                            resources[]
+  service_option_resource_requirements service_option_resource_requirements[]
+  service_resource_requirements        service_resource_requirements[]
 }
 
 model resources {
-  id                            String                          @id
-  tenant_id                     String
-  environment_id                String
-  resource_type                 String
-  name                          String
-  metadata                      Json                            @default("{}")
-  created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
-  updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
-  booking_resource_requirements booking_resource_requirements[]
-  resource_availability         resource_availability[]
-  resource_blocked_time         resource_blocked_time[]
-  resource_images               resource_images[]
-  resource_markup               resource_markup[]
-  resource_types                resource_types                  @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                       tenants                         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  service_resource_requirements service_resource_requirements[]
+  id                                   String                                 @id
+  tenant_id                            String
+  environment_id                       String
+  resource_type                        String
+  name                                 String
+  metadata                             Json                                   @default("{}")
+  created_at                           DateTime                               @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime                               @default(now()) @db.Timestamptz(6)
+  booking_resource_requirements        booking_resource_requirements[]
+  resource_availability                resource_availability[]
+  resource_blocked_time                resource_blocked_time[]
+  resource_images                      resource_images[]
+  resource_markup                      resource_markup[]
+  resource_types                       resource_types                         @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                              tenants                                @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  service_option_resource_requirements service_option_resource_requirements[]
+  service_resource_requirements        service_resource_requirements[]
 }
 
 model schemaversion {
@@ -583,62 +586,65 @@ model tenant_settings {
 }
 
 model tenants {
-  tenant_id                        String                             @id
-  name                             String
-  slug                             String                             @unique
-  default_language_id              String                             @default("en")
-  created_at                       DateTime                           @default(now()) @db.Timestamptz(6)
-  updated_at                       DateTime                           @default(now()) @db.Timestamptz(6)
-  add_on                           add_on[]
-  add_on_labels                    add_on_labels[]
-  blocked_time                     blocked_time[]
-  booking_events                   booking_events[]
-  booking_payments                 booking_payments[]
-  booking_resource_requirements    booking_resource_requirements[]
-  booking_service_form_values      booking_service_form_values[]
-  bookings                         bookings[]
-  business_hours                   business_hours[]
-  cancellation_grants              cancellation_grants[]
-  coupons                          coupons[]
-  customer_form_values             customer_form_values[]
-  customers                        customers[]
-  data_synchronisation_id_mappings data_synchronisation_id_mappings[]
-  form_labels                      form_labels[]
-  forms                            forms[]
-  locations                        locations[]
-  mutation_events                  mutation_events[]
-  oauth_tokens                     oauth_tokens[]
-  order_lines                      order_lines[]
-  order_payments                   order_payments[]
-  orders                           orders[]
-  pricing_rules                    pricing_rules[]
-  received_webhooks                received_webhooks[]
-  refund_rules                     refund_rules[]
-  reservations                     reservations[]
-  resource_availability            resource_availability[]
-  resource_blocked_time            resource_blocked_time[]
-  resource_images                  resource_images[]
-  resource_markup                  resource_markup[]
-  resource_markup_labels           resource_markup_labels[]
-  resource_types                   resource_types[]
-  resources                        resources[]
-  service_forms                    service_forms[]
-  service_images                   service_images[]
-  service_labels                   service_labels[]
-  service_locations                service_locations[]
-  service_option_forms             service_option_forms[]
-  service_option_labels            service_option_labels[]
-  service_options                  service_options[]
-  service_resource_requirements    service_resource_requirements[]
-  service_service_options          service_service_options[]
-  service_time_slots               service_time_slots[]
-  services                         services[]
-  tenant_branding                  tenant_branding[]
-  tenant_branding_labels           tenant_branding_labels[]
-  tenant_images                    tenant_images[]
-  tenant_settings                  tenant_settings[]
-  languages                        languages                          @relation(fields: [default_language_id], references: [language_id], onDelete: NoAction, onUpdate: NoAction)
-  time_slots                       time_slots[]
+  tenant_id                            String                                 @id
+  name                                 String
+  slug                                 String                                 @unique
+  default_language_id                  String                                 @default("en")
+  created_at                           DateTime                               @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime                               @default(now()) @db.Timestamptz(6)
+  add_on                               add_on[]
+  add_on_images                        add_on_images[]
+  add_on_labels                        add_on_labels[]
+  blocked_time                         blocked_time[]
+  booking_events                       booking_events[]
+  booking_payments                     booking_payments[]
+  booking_resource_requirements        booking_resource_requirements[]
+  booking_service_form_values          booking_service_form_values[]
+  bookings                             bookings[]
+  business_hours                       business_hours[]
+  cancellation_grants                  cancellation_grants[]
+  coupons                              coupons[]
+  customer_form_values                 customer_form_values[]
+  customers                            customers[]
+  data_synchronisation_id_mappings     data_synchronisation_id_mappings[]
+  form_labels                          form_labels[]
+  forms                                forms[]
+  locations                            locations[]
+  mutation_events                      mutation_events[]
+  oauth_tokens                         oauth_tokens[]
+  order_lines                          order_lines[]
+  order_payments                       order_payments[]
+  orders                               orders[]
+  pricing_rules                        pricing_rules[]
+  received_webhooks                    received_webhooks[]
+  refund_rules                         refund_rules[]
+  reservations                         reservations[]
+  resource_availability                resource_availability[]
+  resource_blocked_time                resource_blocked_time[]
+  resource_images                      resource_images[]
+  resource_markup                      resource_markup[]
+  resource_markup_labels               resource_markup_labels[]
+  resource_types                       resource_types[]
+  resources                            resources[]
+  service_forms                        service_forms[]
+  service_images                       service_images[]
+  service_labels                       service_labels[]
+  service_locations                    service_locations[]
+  service_option_forms                 service_option_forms[]
+  service_option_images                service_option_images[]
+  service_option_labels                service_option_labels[]
+  service_option_resource_requirements service_option_resource_requirements[]
+  service_options                      service_options[]
+  service_resource_requirements        service_resource_requirements[]
+  service_service_options              service_service_options[]
+  service_time_slots                   service_time_slots[]
+  services                             services[]
+  tenant_branding                      tenant_branding[]
+  tenant_branding_labels               tenant_branding_labels[]
+  tenant_images                        tenant_images[]
+  tenant_settings                      tenant_settings[]
+  languages                            languages                              @relation(fields: [default_language_id], references: [language_id], onDelete: NoAction, onUpdate: NoAction)
+  time_slots                           time_slots[]
 }
 
 model time_slots {
@@ -856,19 +862,21 @@ model service_option_labels {
 }
 
 model service_options {
-  id                      String                    @id
-  tenant_id               String
-  environment_id          String
-  price                   Decimal                   @db.Decimal
-  price_currency          String
-  requires_quantity       Boolean
-  duration_minutes        Int
-  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
-  service_option_forms    service_option_forms[]
-  service_option_labels   service_option_labels[]
-  tenants                 tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  service_service_options service_service_options[]
+  id                                   String                                 @id
+  tenant_id                            String
+  environment_id                       String
+  price                                Decimal                                @db.Decimal
+  price_currency                       String
+  requires_quantity                    Boolean
+  duration_minutes                     Int
+  created_at                           DateTime                               @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime                               @default(now()) @db.Timestamptz(6)
+  service_option_forms                 service_option_forms[]
+  service_option_images                service_option_images[]
+  service_option_labels                service_option_labels[]
+  service_option_resource_requirements service_option_resource_requirements[]
+  tenants                              tenants                                @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  service_service_options              service_service_options[]
 }
 
 model service_service_options {
@@ -898,6 +906,53 @@ model service_option_forms {
   tenants           tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id, service_option_id, form_id])
+}
+
+model add_on_images {
+  add_on_id        String
+  tenant_id        String
+  environment_id   String
+  public_image_url String
+  mime_type        String
+  context          String
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  add_on           add_on   @relation(fields: [add_on_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([add_on_id, tenant_id, environment_id, context])
+}
+
+model service_option_images {
+  service_option_id String
+  tenant_id         String
+  environment_id    String
+  public_image_url  String
+  mime_type         String
+  context           String
+  created_at        DateTime        @default(now()) @db.Timestamp(6)
+  updated_at        DateTime        @default(now()) @db.Timestamp(6)
+  service_options   service_options @relation(fields: [service_option_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenants           tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([service_option_id, tenant_id, environment_id, context])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model service_option_resource_requirements {
+  id                String                    @id
+  tenant_id         String
+  environment_id    String
+  service_option_id String
+  requirement_type  resource_requirement_type
+  resource_id       String?
+  resource_type     String?
+  created_at        DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime                  @default(now()) @db.Timestamptz(6)
+  resources         resources?                @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resource_types    resource_types?           @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_options   service_options           @relation(fields: [service_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants           tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum booking_event_type {

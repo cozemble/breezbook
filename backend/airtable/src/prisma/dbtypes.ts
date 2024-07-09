@@ -37,7 +37,15 @@ import {
     service_labels,
     tenant_branding_labels,
     form_labels,
-    resource_markup_labels
+    resource_markup_labels,
+    service_options,
+    service_option_labels,
+    service_service_options,
+    service_option_images,
+    add_on_images,
+    service_option_resource_requirements,
+    service_time_slots,
+    service_option_forms
 } from '@prisma/client';
 import {TenantEnvironment} from '@breezbook/packages-types';
 
@@ -80,7 +88,15 @@ export type {
     service_labels as DbServiceLabel,
     tenant_branding_labels as DbTenantBrandingLabel,
     form_labels as DbFormLabel,
-    resource_markup_labels as DbResourceMarkupLabel
+    resource_markup_labels as DbResourceMarkupLabel,
+    service_options as DbServiceOption,
+    service_option_labels as DbServiceOptionLabel,
+    service_service_options as DbServiceServiceOption,
+    service_option_images as DbServiceOptionImage,
+    add_on_images as DbAddOnImage,
+    service_option_resource_requirements as DbServiceOptionResourceRequirement,
+    service_time_slots as DbServiceTimeslot,
+    service_option_forms as DbServiceOptionForm
 };
 
 export interface TenantEnvironmentPair {

@@ -1,5 +1,6 @@
 import {
     Form,
+    FormId,
     JsonSchemaFormLabels,
     resourceId,
     ResourceId,
@@ -150,6 +151,19 @@ export function specificResourceSpec(id: string, rid: string): SpecificResourceS
     return {_type: 'specific.resource.spec', id: resourceRequirementId(id), resourceId: resourceId(rid)};
 }
 
+export interface ServiceOption {
+    id: string;
+    name: string;
+    description: string;
+    image: string;
+    priceWithNoDecimalPlaces: number;
+    priceCurrency: string;
+    durationMinutes: number;
+    resourceRequirements: ResourceRequirementSpec[]
+    requiresQuantity: boolean;
+    forms: FormId[]
+}
+
 export interface Service {
     id: string;
     slug: string;
@@ -161,6 +175,7 @@ export interface Service {
     durationMinutes: number;
     image: string;
     resourceRequirements: ResourceRequirementSpec[]
+    serviceOptions: ServiceOption[]
 }
 
 export interface Location {
