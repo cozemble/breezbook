@@ -169,6 +169,20 @@ create table form_labels
     primary key (tenant_id, environment_id, form_id, language_id)
 );
 
+create table time_slots
+(
+    id              text primary key,
+    tenant_id       text references tenants (tenant_id) not null,
+    environment_id  text                                not null,
+    location_id     text references locations (id),
+    description     text                                not null,
+    start_time_24hr varchar(10)                         not null,
+    end_time_24hr   varchar(10)                         not null,
+    tag             text                                null     default null,
+    created_at      timestamp with time zone            not null default current_timestamp,
+    updated_at      timestamp with time zone            not null default current_timestamp
+);
+
 create table services
 (
     id                   text primary key,
@@ -180,11 +194,61 @@ create table services
     price_currency       text                                not null,
     permitted_add_on_ids text[]                              not null,
     requires_time_slot   boolean                             not null,
+    capacity             integer                             not null default 1,
     start_date           timestamp with time zone            not null default current_timestamp,
     end_date             timestamp with time zone            null     default null,
     created_at           timestamp with time zone            not null default current_timestamp,
     updated_at           timestamp with time zone            not null default current_timestamp,
     unique (tenant_id, environment_id, slug)
+);
+
+create table service_options
+(
+    id                text primary key,
+    tenant_id         text references tenants (tenant_id) not null,
+    environment_id    text                                not null,
+    price             numeric                             not null,
+    price_currency    text                                not null,
+    requires_quantity boolean                             not null,
+    duration_minutes  integer                             not null,
+    created_at        timestamp with time zone            not null default current_timestamp,
+    updated_at        timestamp with time zone            not null default current_timestamp
+);
+
+create table service_option_labels
+(
+    tenant_id         text references tenants (tenant_id)  not null,
+    environment_id    text                                 not null,
+    service_option_id text references service_options (id) not null,
+    language_id       text references languages (id)       not null,
+    name              text                                 not null,
+    description       text                                 not null,
+    created_at        timestamp with time zone             not null default current_timestamp,
+    updated_at        timestamp with time zone             not null default current_timestamp,
+    primary key (tenant_id, environment_id, service_option_id, language_id)
+);
+
+create table service_service_options
+(
+    tenant_id         text references tenants (tenant_id)  not null,
+    environment_id    text                                 not null,
+    service_id        text references services (id)        not null,
+    service_option_id text references service_options (id) not null,
+    created_at        timestamp with time zone             not null default current_timestamp,
+    updated_at        timestamp with time zone             not null default current_timestamp,
+    primary key (tenant_id, environment_id, service_id, service_option_id)
+);
+
+create table service_time_slots
+(
+    id             text primary key,
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    service_id     text references services (id)       not null,
+    time_slot_id   text references time_slots (id)     not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    unique (tenant_id, environment_id, service_id, time_slot_id)
 );
 
 create table service_labels
@@ -240,18 +304,15 @@ create table service_forms
     primary key (tenant_id, environment_id, service_id, form_id)
 );
 
-create table time_slots
-(
-    id              text primary key,
-    tenant_id       text references tenants (tenant_id) not null,
-    environment_id  text                                not null,
-    location_id     text references locations (id),
-    description     text                                not null,
-    start_time_24hr varchar(10)                         not null,
-    end_time_24hr   varchar(10)                         not null,
-    tag             text                                null     default null,
-    created_at      timestamp with time zone            not null default current_timestamp,
-    updated_at      timestamp with time zone            not null default current_timestamp
+create table service_option_forms (
+    tenant_id         text references tenants (tenant_id)  not null,
+    environment_id    text                                 not null,
+    service_option_id text references service_options (id) not null,
+    form_id           text references forms (id)           not null,
+    rank              integer                              not null,
+    created_at        timestamp with time zone             not null default current_timestamp,
+    updated_at        timestamp with time zone             not null default current_timestamp,
+    primary key (tenant_id, environment_id, service_option_id, form_id)
 );
 
 create table pricing_rules

@@ -2,6 +2,7 @@ import {prismaClient} from "../prisma/client.js";
 import {ensureStripeKeys, loadTestCarWashTenant} from "./loadTestCarWashTenant.js";
 import {environmentId, tenantEnvironment, tenantId} from "@breezbook/packages-types";
 import {loadMultiLocationGymTenant} from "./loadMultiLocationGymTenant.js";
+import {loadDogWalkingTenant} from "./loadDogWalkingTenant.js";
 
 export async function setupDevEnvironment() {
     const prisma = prismaClient();
@@ -11,6 +12,7 @@ export async function setupDevEnvironment() {
         await loadTestCarWashTenant(prisma);
     }
     await loadMultiLocationGymTenant(prisma)
+    await loadDogWalkingTenant(prisma)
     await ensureStripeKeys(tenantEnvironment(environmentId('dev'), tenantId('tenant1')));
     await ensureStripeKeys(tenantEnvironment(environmentId('dev'), tenantId('thesmartwashltd')));
     await ensureStripeKeys(tenantEnvironment(environmentId('dev'), tenantId('breezbook-gym')));

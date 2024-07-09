@@ -458,13 +458,14 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
         resource_type: yogaInstructorResourceTypeId
     }))
     await runUpserts(prisma, upsertYogaInstructors)
-    await runUpserts(prisma, [upsertTenantSettings({
-            tenant_id,
-            environment_id,
-            customer_form_id: null,
-            iana_timezone: 'Europe/London'
-        }
-    )])
+    await runUpserts(prisma, [
+        upsertTenantSettings({
+                tenant_id,
+                environment_id,
+                customer_form_id: null,
+                iana_timezone: 'Europe/London'
+            }
+        )])
     const upsertGoalsForm = upsertForm({
         id: makeTestId(tenant_id, environment_id, 'goals-form'),
         tenant_id,

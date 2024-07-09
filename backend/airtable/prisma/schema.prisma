@@ -210,6 +210,7 @@ model forms {
   form_labels                 form_labels[]
   tenants                     tenants                       @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   service_forms               service_forms[]
+  service_option_forms        service_option_forms[]
   tenant_settings             tenant_settings[]
 }
 
@@ -507,6 +508,7 @@ model services {
   price_currency                String
   permitted_add_on_ids          String[]
   requires_time_slot            Boolean
+  capacity                      Int                             @default(1)
   start_date                    DateTime                        @default(now()) @db.Timestamptz(6)
   end_date                      DateTime?                       @db.Timestamptz(6)
   created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
@@ -518,6 +520,8 @@ model services {
   service_labels                service_labels[]
   service_locations             service_locations[]
   service_resource_requirements service_resource_requirements[]
+  service_service_options       service_service_options[]
+  service_time_slots            service_time_slots[]
   tenants                       tenants                         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([tenant_id, environment_id, slug])
@@ -622,7 +626,12 @@ model tenants {
   service_images                   service_images[]
   service_labels                   service_labels[]
   service_locations                service_locations[]
+  service_option_forms             service_option_forms[]
+  service_option_labels            service_option_labels[]
+  service_options                  service_options[]
   service_resource_requirements    service_resource_requirements[]
+  service_service_options          service_service_options[]
+  service_time_slots               service_time_slots[]
   services                         services[]
   tenant_branding                  tenant_branding[]
   tenant_branding_labels           tenant_branding_labels[]
@@ -633,18 +642,19 @@ model tenants {
 }
 
 model time_slots {
-  id              String     @id
-  tenant_id       String
-  environment_id  String
-  location_id     String?
-  description     String
-  start_time_24hr String     @db.VarChar(10)
-  end_time_24hr   String     @db.VarChar(10)
-  tag             String?
-  created_at      DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime   @default(now()) @db.Timestamptz(6)
-  locations       locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants         tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  id                 String               @id
+  tenant_id          String
+  environment_id     String
+  location_id        String?
+  description        String
+  start_time_24hr    String               @db.VarChar(10)
+  end_time_24hr      String               @db.VarChar(10)
+  tag                String?
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  service_time_slots service_time_slots[]
+  locations          locations?           @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants            tenants              @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model prospects {
@@ -731,6 +741,7 @@ model languages {
   form_labels            form_labels[]
   resource_markup_labels resource_markup_labels[]
   service_labels         service_labels[]
+  service_option_labels  service_option_labels[]
   tenant_branding_labels tenant_branding_labels[]
   tenants                tenants[]
 }
@@ -811,6 +822,82 @@ model resource_markup_labels {
   tenants            tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@id([resource_markup_id, language_id])
+}
+
+model service_time_slots {
+  id             String     @id
+  tenant_id      String
+  environment_id String
+  service_id     String
+  time_slot_id   String
+  created_at     DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime   @default(now()) @db.Timestamptz(6)
+  services       services   @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  time_slots     time_slots @relation(fields: [time_slot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenant_id, environment_id, service_id, time_slot_id])
+}
+
+model service_option_labels {
+  tenant_id         String
+  environment_id    String
+  service_option_id String
+  language_id       String
+  name              String
+  description       String
+  created_at        DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime        @default(now()) @db.Timestamptz(6)
+  languages         languages       @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_options   service_options @relation(fields: [service_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants           tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, service_option_id, language_id])
+}
+
+model service_options {
+  id                      String                    @id
+  tenant_id               String
+  environment_id          String
+  price                   Decimal                   @db.Decimal
+  price_currency          String
+  requires_quantity       Boolean
+  duration_minutes        Int
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  service_option_forms    service_option_forms[]
+  service_option_labels   service_option_labels[]
+  tenants                 tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  service_service_options service_service_options[]
+}
+
+model service_service_options {
+  tenant_id         String
+  environment_id    String
+  service_id        String
+  service_option_id String
+  created_at        DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime        @default(now()) @db.Timestamptz(6)
+  services          services        @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_options   service_options @relation(fields: [service_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants           tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, service_id, service_option_id])
+}
+
+model service_option_forms {
+  tenant_id         String
+  environment_id    String
+  service_option_id String
+  form_id           String
+  rank              Int
+  created_at        DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime        @default(now()) @db.Timestamptz(6)
+  forms             forms           @relation(fields: [form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_options   service_options @relation(fields: [service_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants           tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, service_option_id, form_id])
 }
 
 enum booking_event_type {

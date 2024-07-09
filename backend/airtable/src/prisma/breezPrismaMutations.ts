@@ -455,3 +455,53 @@ export function upsertResourceMarkupLabels(create: Prisma.resource_markup_labels
     return makeUpsert('resource_markup_labels', entityId, create)
 }
 
+export type UpsertServiceTimeslot = Upsert<Prisma.service_time_slotsCreateArgs['data'], Prisma.service_time_slotsUpdateArgs['data'], Prisma.service_time_slotsUpdateArgs['where']>
+
+export function upsertServiceTimeslot(create: Prisma.service_time_slotsUncheckedCreateInput): UpsertServiceTimeslot {
+    const entityId = compositeKey("id", mandatory(create.id, "id"))
+    return makeUpsert('service_time_slots', entityId, create)
+}
+
+export type UpsertServiceOption = Upsert<Prisma.service_optionsCreateArgs['data'], Prisma.service_optionsUpdateArgs['data'], Prisma.service_optionsUpdateArgs['where']>
+
+export function upsertServiceOption(create: Prisma.service_optionsUncheckedCreateInput): UpsertServiceOption {
+    const entityId = compositeKey("id", mandatory(create.id, "id"))
+    return makeUpsert('service_options', entityId, create)
+}
+
+export type UpsertServiceOptionLabel = Upsert<Prisma.service_option_labelsCreateArgs['data'], Prisma.service_option_labelsUpdateArgs['data'], Prisma.service_option_labelsUpdateArgs['where']>
+
+export function upsertServiceOptionLabel(create: Prisma.service_option_labelsUncheckedCreateInput): UpsertServiceOptionLabel {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "service_option_id", mandatory(create.service_option_id, "service_option_id"),
+        "language_id", mandatory(create.language_id, "language_id")
+    )
+    return makeUpsert('service_option_labels', entityId, create)
+}
+
+export type UpsertServiceServiceOption = Upsert<Prisma.service_service_optionsCreateArgs['data'], Prisma.service_service_optionsUpdateArgs['data'], Prisma.service_service_optionsUpdateArgs['where']>
+
+export function upsertServiceServiceOption(create: Prisma.service_service_optionsUncheckedCreateInput): UpsertServiceServiceOption {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "service_id", mandatory(create.service_id, "service_id"),
+        "service_option_id", mandatory(create.service_option_id, "service_option_id")
+    )
+    return makeUpsert('service_service_options', entityId, create)
+}
+
+export type UpsertServiceOptionForm = Upsert<Prisma.service_option_formsCreateArgs['data'], Prisma.service_option_formsUpdateArgs['data'], Prisma.service_option_formsUpdateArgs['where']>
+
+export function upsertServiceOptionForm(create: Prisma.service_option_formsUncheckedCreateInput): UpsertServiceOptionForm {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "service_option_id", mandatory(create.service_option_id, "service_option_id"),
+        "form_id", mandatory(create.form_id, "form_id")
+    )
+    return makeUpsert('service_option_forms', entityId, create)
+}
+

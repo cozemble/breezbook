@@ -2255,6 +2255,18 @@ If I add the ability to mark "capacity" based services as permitting extra party
 discounted rate, then I think I will have a general solution for the dog walking pricing - without getting seduced into 
 the complexity of pricing matrices and sheets.
 
+The UX of the app might be best placed to select the initial service, show add-ons and on that screen, prompt for extra
+party members i.e. "adding" is done in one place.
+
+# Tue 9 Jul 2024
+I was working through creating the necessary mutations to make my test dog walking client, and I was about to make the add-ons
+for the extra 30 mins and the extra dog.  But then I realised that add-ons do not extend the duration of a booking.  And then I 
+remembered that `Service Options` do.  This makes sense.  First you pick all things that define the length, capacity and base 
+price of the service.  Then add-ons, their purpose is to add items that can be done in the same time, for an extra charge.  
+So that might be watering plants or giving the dog medicine.
+
+So am going to push through the service option implementation
+
 
 
 

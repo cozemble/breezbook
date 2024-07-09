@@ -50,20 +50,7 @@
     };
 
     function calculatePrice(): number {
-        if (!bookingData.service) return 0;
-
-        let price = basePrices[bookingData.service];
-
-        if (serviceOptions.find(s => s.name === bookingData.service)?.type === 'individual') {
-            price = (price / 30) * bookingData.duration; // Adjust price for duration
-        }
-
-        // Add prices for add-ons
-        bookingData.addOns.forEach(addon => {
-            price += addon.price * addon.quantity;
-        });
-
-        return Math.round(price * 100) / 100; // Round to 2 decimal places
+        return 0
     }
 
     $: currentPrice = calculatePrice();
@@ -270,7 +257,7 @@
                 <CheckCircle size={64} class="text-success mb-6"/>
                 <h3 class="text-2xl font-semibold mb-4 text-primary">Booking Confirmed!</h3>
                 <p class="text-center mb-6">Thank you for booking with Paw Walks. We'll see you
-                    and your pet{bookingData.addOns.find(a => a.id === 'extraDog')?.quantity > 0 ? 's' : ''} soon!</p>
+                    and your pet soon!</p>
                 <p class="text-center mb-6">Total Price: ${currentPrice}</p>
                 <button class="btn btn-primary" on:click={() => step = 0}>Book Another Service</button>
             </div>
