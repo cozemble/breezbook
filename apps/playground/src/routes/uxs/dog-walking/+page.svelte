@@ -22,8 +22,8 @@
     type BookingData = {
         service: Service | null;
         serviceOptions: ServiceOption[];
-        serviceLocation: ServiceLocation|null
-        date: Date | null;
+        serviceLocation: ServiceLocation | null
+        date: string | null;
         time: string;
         petName: string;
         address: string;
@@ -57,6 +57,7 @@
 
     function nextStep() {
         step++;
+        console.log({bookingData})
     }
 
     function prevStep() {
@@ -145,7 +146,9 @@
                         <SelectDateAndTime service={bookingData.service}
                                            locationId={bookingData.serviceLocation.locationId}
                                            tenantId={tenant.id}
-                                           serviceOptions={bookingData.serviceOptions}/>
+                                           serviceOptions={bookingData.serviceOptions}
+                                           bind:selectedDate={bookingData.date}
+                                           bind:selectedTime={bookingData.time }/>
                         <button class="btn btn-primary mb-2" on:click={nextStep}>Next</button>
                         <button class="btn btn-outline" on:click={prevStep}>Back</button>
                     {/if}
@@ -179,7 +182,7 @@
                     <h3 class="text-2xl font-semibold mb-6 text-primary">Review Booking</h3>
                     <div class="bg-base-200 p-4 rounded-lg mb-6">
                         <p><strong>Service:</strong> {bookingData.service}</p>
-                        <p><strong>Date:</strong> {bookingData.date?.toDateString()}</p>
+                        <p><strong>Date:</strong> {bookingData.date}</p>
                         <p><strong>Time:</strong> {bookingData.time}</p>
                         <p><strong>Pet:</strong> {bookingData.petName}</p>
                         <p><strong>Address:</strong> {bookingData.address}</p>

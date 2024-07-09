@@ -10,6 +10,8 @@
     export let service: Service
     export let serviceOptions: ServiceOption[]
     export let locationId: string
+    export let selectedDate: string | null = null
+    export let selectedTime: string | null = null
     const today = isoDate()
     const dateInTheFuture = isoDateFns.addDays(today, 14)
     let availableSlots: AvailabilityResponse
@@ -25,5 +27,7 @@
 </script>
 
 {#if availableSlots}
-    <HorizontalDateAndTimePicker availability={availabilityResponseToItems(dateRange, availableSlots)} />
+    <HorizontalDateAndTimePicker availability={availabilityResponseToItems(dateRange, availableSlots)}
+                                 bind:selectedDate={selectedDate}
+                                 bind:selectedTime={selectedTime}/>
 {/if}
