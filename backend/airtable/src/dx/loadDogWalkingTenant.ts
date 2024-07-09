@@ -28,6 +28,273 @@ import {runUpserts} from "./loadMultiLocationGymTenant.js";
 const tenant_id = 'breezbook-dog-walks';
 const environment_id = 'dev';
 
+/**
+ * Consider a configuration language, like maybe this:
+ * import { languages } from "@breezbook/packages-types";
+ *
+ * type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
+ *
+ * interface ServiceConfig {
+ *     slug: string;
+ *     durationMinutes: number;
+ *     price: number;
+ *     requiresTimeSlot: boolean;
+ *     capacity?: number;
+ *     labels: { [key: string]: { name: string; description: string } };
+ *     addOns?: string[];
+ * }
+ *
+ * interface ServiceOptionConfig {
+ *     slug: string;
+ *     price: number;
+ *     requiresQuantity: boolean;
+ *     durationMinutes: number;
+ *     labels: { [key: string]: { name: string; description: string } };
+ *     form?: string;
+ * }
+ *
+ * interface TimeslotConfig {
+ *     slug: string;
+ *     description: string;
+ *     startTime: string;
+ *     endTime: string;
+ * }
+ *
+ * interface FormConfig {
+ *     slug: string;
+ *     name: string;
+ *     schema: any;
+ *     labels: { [key: string]: { name: string; description?: string; labels: { [key: string]: string } } };
+ * }
+ *
+ * interface DogWalkingConfig {
+ *     tenantId: string;
+ *     environmentId: string;
+ *     tenantName: string;
+ *     tenantSlug: string;
+ *     location: {
+ *         slug: string;
+ *         name: string;
+ *     };
+ *     businessHours: {
+ *         [key in DayOfWeek]: { start: string; end: string };
+ *     };
+ *     resourceTypes: {
+ *         [key: string]: string;
+ *     };
+ *     resources: {
+ *         [key: string]: {
+ *             name: string;
+ *             type: string;
+ *             availability?: {
+ *                 [key in DayOfWeek]?: { start: string; end: string };
+ *             };
+ *         };
+ *     };
+ *     services: {
+ *         [key: string]: ServiceConfig;
+ *     };
+ *     serviceOptions: {
+ *         [key: string]: ServiceOptionConfig;
+ *     };
+ *     timeslots: {
+ *         [key: string]: TimeslotConfig;
+ *     };
+ *     forms: {
+ *         [key: string]: FormConfig;
+ *     };
+ * }
+ *
+ * const dogWalkingConfig: DogWalkingConfig = {
+ *     tenantId: 'breezbook-dog-walks',
+ *     environmentId: 'dev',
+ *     tenantName: 'Breez Walks',
+ *     tenantSlug: 'breezbook-dog-walks',
+ *     location: {
+ *         slug: 'main',
+ *         name: 'Main'
+ *     },
+ *     businessHours: {
+ *         Monday: { start: '09:00', end: '18:00' },
+ *         Tuesday: { start: '09:00', end: '18:00' },
+ *         Wednesday: { start: '09:00', end: '18:00' },
+ *         Thursday: { start: '09:00', end: '18:00' },
+ *         Friday: { start: '09:00', end: '18:00' },
+ *         Saturday: { start: '09:00', end: '18:00' },
+ *         Sunday: { start: '09:00', end: '18:00' }
+ *     },
+ *     resourceTypes: {
+ *         walker: 'Walker'
+ *     },
+ *     resources: {
+ *         alex: {
+ *             name: 'Alex',
+ *             type: 'walker',
+ *             availability: {
+ *                 Monday: { start: '09:00', end: '18:00' },
+ *                 Tuesday: { start: '09:00', end: '18:00' },
+ *                 Wednesday: { start: '09:00', end: '18:00' },
+ *                 Thursday: { start: '09:00', end: '18:00' },
+ *                 Friday: { start: '09:00', end: '18:00' },
+ *                 Saturday: { start: '09:00', end: '18:00' },
+ *                 Sunday: { start: '09:00', end: '18:00' }
+ *             }
+ *         }
+ *     },
+ *     services: {
+ *         individualDogWalk: {
+ *             slug: 'individual_dog_walk',
+ *             durationMinutes: 60,
+ *             price: 1500,
+ *             requiresTimeSlot: false,
+ *             labels: {
+ *                 [languages.en.value]: {
+ *                     name: 'Individual dog walk',
+ *                     description: 'A 60-min walk for your dog'
+ *                 }
+ *             },
+ *             addOns: ['extra30', 'extra60', 'extraDog']
+ *         },
+ *         groupDogWalk: {
+ *             slug: 'group_dog_walk',
+ *             durationMinutes: 60,
+ *             price: 1200,
+ *             requiresTimeSlot: true,
+ *             capacity: 5,
+ *             labels: {
+ *                 [languages.en.value]: {
+ *                     name: 'Group dog walk',
+ *                     description: 'A 60-min walk for your dog with 3 - 5 other dogs'
+ *                 }
+ *             },
+ *             addOns: ['extraDog']
+ *         },
+ *         dropInVisit: {
+ *             slug: 'drop_in_visit',
+ *             durationMinutes: 30,
+ *             price: 1200,
+ *             requiresTimeSlot: false,
+ *             labels: {
+ *                 [languages.en.value]: {
+ *                     name: 'Drop in visit',
+ *                     description: 'We will visit your dog in your home for a quick check-in and playtime'
+ *                 }
+ *             },
+ *             addOns: ['extra30']
+ *         },
+ *         petSit: {
+ *             slug: 'pet_sit',
+ *             durationMinutes: 120,
+ *             price: 2500,
+ *             requiresTimeSlot: false,
+ *             labels: {
+ *                 [languages.en.value]: {
+ *                     name: 'Pet sit',
+ *                     description: 'We will stay with your dog in your home'
+ *                 }
+ *             },
+ *             addOns: ['extra30', 'extra60']
+ *         }
+ *     },
+ *     serviceOptions: {
+ *         extra30: {
+ *             slug: 'extra_30_minutes',
+ *             price: 800,
+ *             requiresQuantity: false,
+ *             durationMinutes: 30,
+ *             labels: {
+ *                 [languages.en.value]: {
+ *                     name: 'Extra 30 minutes',
+ *                     description: 'Add 30 minutes to your dog walk'
+ *                 }
+ *             }
+ *         },
+ *         extra60: {
+ *             slug: 'extra_60_minutes',
+ *             price: 1200,
+ *             requiresQuantity: false,
+ *             durationMinutes: 60,
+ *             labels: {
+ *                 [languages.en.value]: {
+ *                     name: 'Extra 60 minutes',
+ *                     description: 'Add 60 minutes to your dog walk'
+ *                 }
+ *             }
+ *         },
+ *         extraDog: {
+ *             slug: 'extra_dog',
+ *             price: 800,
+ *             requiresQuantity: false,
+ *             durationMinutes: 0,
+ *             labels: {
+ *                 [languages.en.value]: {
+ *                     name: 'Extra dog from the same household',
+ *                     description: 'Add an extra dog from the same household'
+ *                 }
+ *             },
+ *             form: 'secondDogDetails'
+ *         }
+ *     },
+ *     timeslots: {
+ *         morningGroupWalk: {
+ *             slug: 'group_dog_walk_morning',
+ *             description: 'Morning group dog walk',
+ *             startTime: '09:00',
+ *             endTime: '10:00'
+ *         },
+ *         eveningGroupWalk: {
+ *             slug: 'group_dog_walk_evening',
+ *             description: 'Evening group dog walk',
+ *             startTime: '17:00',
+ *             endTime: '18:00'
+ *         }
+ *     },
+ *     forms: {
+ *         dogDetails: {
+ *             slug: 'pet-details-form',
+ *             name: "Your dog's details",
+ *             schema: {
+ *                 type: "object",
+ *                 properties: {
+ *                     dogsName: { type: "string" }
+ *                 },
+ *                 required: ["dogsName"],
+ *                 additionalProperties: false
+ *             },
+ *             labels: {
+ *                 [languages.en.value]: {
+ *                     name: "Your dog's details",
+ *                     labels: {
+ *                         dogsName: "Dog's name"
+ *                     }
+ *                 }
+ *             }
+ *         },
+ *         secondDogDetails: {
+ *             slug: 'second-dog-details-form',
+ *             name: "Your second dog's details",
+ *             schema: {
+ *                 type: "object",
+ *                 properties: {
+ *                     secondDogsName: { type: "string" }
+ *                 },
+ *                 required: ["secondDogsName"],
+ *                 additionalProperties: false
+ *             },
+ *             labels: {
+ *                 [languages.en.value]: {
+ *                     name: "Your second dog's details",
+ *                     description: "Your second dog's name",
+ *                     labels: {
+ *                         secondDogsName: "Dog's name"
+ *                     }
+ *                 }
+ *             }
+ *         }
+ *     }
+ * };
+ */
+
 export async function loadDogWalkingTenant(prisma: PrismaClient): Promise<void> {
     await runUpserts(prisma, breezbookDogWalkUpserts());
 }
