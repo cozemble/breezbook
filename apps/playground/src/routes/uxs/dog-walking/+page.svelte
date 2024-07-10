@@ -7,7 +7,7 @@
         type Service,
         type ServiceLocation,
         type ServiceOption,
-        type Tenant
+        type Tenant,
     } from "@breezbook/backend-api-types";
     import ServiceCard from "$lib/uxs/dog-walking/ServiceCard.svelte";
     import ServiceOptionCard from "$lib/uxs/dog-walking/ServiceOptionCard.svelte";
@@ -15,17 +15,12 @@
     import SelectDateAndTime from "$lib/uxs/dog-walking/SelectDateAndTime.svelte";
     import FillJsonSchemaForm from "$lib/uxs/dog-walking/FillJsonSchemaForm.svelte";
     import type {JSONSchema} from "$lib/uxs/dog-walking/types";
+    import BookingSummary from "$lib/uxs/dog-walking/BookingSummary.svelte";
 
     let tenant: Tenant | null = null;
     let services: Service[] = []
     let isLoading = true;
 
-    type AddOn = {
-        id: string;
-        name: string;
-        price: number;
-        quantity: number;
-    };
 
     type BookingData = {
         service: Service | null;
@@ -37,35 +32,37 @@
         petName: string;
         address: string;
         duration: number;
-        addOns: AddOn[];
     };
 
-    // let steps = ['Welcome', 'Select Service', 'Configure Service', 'Date and Time', 'Fill Forms', 'Review Booking', 'Booking Confirmed'];
     let step = 0;
     let formIndex = 0;
-    let bookingData: BookingData = {
-        service: null,
-        serviceOptions: [],
-        serviceLocation: null,
-        date: null,
-        time: '',
-        serviceFormData: [],
-        petName: '',
-        address: '',
-        duration: 30,
-        addOns: [
-            {id: 'extra30', name: 'Extra 30 minutes', price: 10, quantity: 0},
-            {id: 'extra60', name: 'Extra 60 minutes', price: 18, quantity: 0},
-            {id: 'extraDog', name: 'Extra dog', price: 15, quantity: 0}
-        ]
-    };
+    let bookingData = initialBookingData()
 
-
-    function calculatePrice(): number {
-        return 0
+    function initialBookingData(): BookingData {
+        return {
+            service: null,
+            serviceOptions: [],
+            serviceLocation: null,
+            date: null,
+            time: '',
+            serviceFormData: [],
+            petName: '',
+            address: '',
+            duration: 0
+        }
     }
 
-    $: currentPrice = calculatePrice();
+
+    function calculatePrice(bookingData: BookingData): number {
+        if (!bookingData.service) return 0;
+        let total = bookingData.service.priceWithNoDecimalPlaces;
+        bookingData.serviceOptions.forEach(option => {
+            total += option.priceWithNoDecimalPlaces;
+        });
+        return total;
+    }
+
+    $: currentPrice = calculatePrice(bookingData);
 
     function nextStep() {
         step++;
@@ -77,6 +74,7 @@
 
     function selectService(service: Service) {
         if (tenant) {
+            bookingData = initialBookingData();
             bookingData.service = service;
             bookingData.duration = service.durationMinutes;
             bookingData.serviceLocation = mandatory(tenant.serviceLocations.find(location => location.serviceId === service.id), `Service location not found`);
@@ -173,6 +171,16 @@
         </div>
     {:else if tenant}
         <div class="w-full max-w-md bg-base-100 shadow-xl rounded-lg p-8">
+            {#if step > 1 && step < 6}
+                <BookingSummary
+                        service={bookingData.service}
+                        serviceOptions={bookingData.serviceOptions}
+                        date={bookingData.date}
+                        time={bookingData.time}
+                        totalPrice={currentPrice}
+                />
+            {/if}
+
             {#if step === 0}
                 <div class="flex flex-col items-center">
                     <h2 class="text-3xl font-bold mb-6 text-primary">Welcome to Breez Walks</h2>
@@ -234,23 +242,6 @@
                 </div>
             {:else if step === 5}
                 <div class="flex flex-col">
-                    <h3 class="text-2xl font-semibold mb-6 text-primary">Review Booking</h3>
-                    <div class="bg-base-200 p-4 rounded-lg mb-6">
-                        <p><strong>Service:</strong> {bookingData.service}</p>
-                        <p><strong>Date:</strong> {bookingData.date}</p>
-                        <p><strong>Time:</strong> {bookingData.time}</p>
-                        <p><strong>Pet:</strong> {bookingData.petName}</p>
-                        <p><strong>Address:</strong> {bookingData.address}</p>
-                        {#if bookingData.addOns.some(addon => addon.quantity > 0)}
-                            <p><strong>Add-ons:</strong></p>
-                            <ul>
-                                {#each bookingData.addOns.filter(addon => addon.quantity > 0) as addon}
-                                    <li>{addon.name} x{addon.quantity} (+${addon.price * addon.quantity})</li>
-                                {/each}
-                            </ul>
-                        {/if}
-                        <p><strong>Total Price:</strong> ${currentPrice}</p>
-                    </div>
                     <button class="btn btn-primary mb-2" on:click={() => step = 6}>Confirm Booking</button>
                     <button class="btn btn-outline" on:click={prevStep}>Back</button>
                 </div>
