@@ -17,6 +17,7 @@ import {
     Service,
     Service as DomainService,
     serviceFns,
+    ServiceOption,
     serviceRequest,
     startTimeFns,
     success,
@@ -29,7 +30,15 @@ import {
     TimeSlotAvailability,
     timeSlotAvailability
 } from '@breezbook/backend-api-types';
-import {Form, IsoDate, isoDateFns, ServiceId, values} from "@breezbook/packages-types";
+import {
+    Form,
+    IsoDate,
+    isoDateFns,
+    ServiceId,
+    ServiceOptionId,
+    ServiceOptionRequest,
+    values
+} from "@breezbook/packages-types";
 
 function toTimeSlotAvailability(slot: AvailableSlot, price: Price): TimeSlotAvailability {
     const startTime24 = startTimeFns.getStartTime(slot.startTime)
@@ -68,6 +77,7 @@ export const getAvailabilityForServiceErrorCodes = {
 export function getAvailabilityForService(
     everythingForAvailability: EverythingForAvailability,
     serviceId: ServiceId,
+    serviceOptionRequests: ServiceOptionRequest[],
     fromDate: IsoDate,
     toDate: IsoDate
 ): AvailabilityResponse | ErrorResponse {
@@ -80,7 +90,8 @@ export function getAvailabilityForService(
     if (!service) {
         return errorResponse(getAvailabilityForServiceErrorCodes.serviceUnavailable, `Service with id ${serviceId.value} not found`);
     }
-    const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, fromDate, toDate)
+    const serviceOptions = serviceOptionRequests.map((id) => mandatory(everythingForAvailability.businessConfiguration.serviceOptions.find((so) => so.id.value === id.serviceOptionId.value), `Service option with id ${id.serviceOptionId.value} not found`));
+    const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, serviceOptions, fromDate, toDate)
     const priced = availability.map((a) => calculatePrice(a, everythingForAvailability.pricingRules))
     return toAvailabilityResponse(
         priced,
@@ -89,10 +100,10 @@ export function getAvailabilityForService(
         everythingForAvailability.businessConfiguration.forms);
 }
 
-function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
+function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, serviceOptions: ServiceOption[], fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
     const dates = isoDateFns.listDays(fromDate, toDate);
     const eachDate = dates.map(date => {
-        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(service, date));
+        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(service, date, serviceOptions));
         if (outcome._type === 'error.response' && outcome.errorCode === availability.errorCodes.noAvailabilityForDay) {
             return success([])
         }

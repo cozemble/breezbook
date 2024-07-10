@@ -97,9 +97,10 @@ export const byLocation = {
     async gatherAvailabilityData(prisma: PrismaClient, location: TenantEnvironmentLocation, fromDate: IsoDate, toDate: IsoDate): Promise<AvailabilityData> {
         const tenantEnv = tenantEnvironment(location.environmentId, location.tenantId)
         const dateWhereOpts = {date: {gte: fromDate.value, lte: toDate.value}};
+        const findMany = findManyForTenant(tenantEnv);
 
         const services = await byLocation.findServices(prisma, location).then(l => l ? l.service_locations.map(s => s.services) : [])
-        const findMany = findManyForTenant(tenantEnv);
+
         const serviceResourceRequirements = await findMany(prisma.service_resource_requirements, {});
         const resourceTypes = await findMany(prisma.resource_types, {});
         const businessHours = await byLocation.findBusinessHours(prisma, location);
@@ -130,6 +131,17 @@ export const byLocation = {
                 booking_resource_requirements: true
             }
         });
+        const serviceOptions = await prisma.service_options.findMany({
+            where: {
+                tenant_id: location.tenantId.value,
+                environment_id: location.environmentId.value,
+            },
+            include: {
+                service_option_forms: true,
+                service_option_resource_requirements: true
+            }
+        });
+
 
         return {
             businessHours,
@@ -138,6 +150,7 @@ export const byLocation = {
             resourceAvailability,
             resourceOutage,
             services,
+            serviceOptions,
             serviceResourceRequirements,
             timeSlots,
             pricingRules,

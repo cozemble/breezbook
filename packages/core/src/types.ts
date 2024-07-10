@@ -12,7 +12,6 @@ import {
     CouponCode,
     couponId,
     CouponId,
-    dayAndTimePeriod,
     DayAndTimePeriod,
     DayOfWeek,
     Duration,
@@ -36,7 +35,7 @@ import {
     ResourceId,
     ResourceRequirementId,
     ServiceId,
-    serviceId,
+    serviceId, serviceOptionId, ServiceOptionId,
     timePeriod,
     TimePeriod,
     Timezone,
@@ -183,9 +182,6 @@ export function booking(
 }
 
 export const bookingFns = {
-    calcPeriod(booking: Booking): DayAndTimePeriod {
-        return dayAndTimePeriod(booking.date, booking.period);
-    },
     cancel(booking: Booking): Booking {
         return {
             ...booking,
@@ -456,27 +452,30 @@ export interface ServiceLabels {
     languageId: LanguageId
 }
 
-export interface ServiceOptionId extends ValueType<string> {
-    _type: 'service.option.id';
-}
-
-export function serviceOptionId(value: string): ServiceOptionId {
-    return {
-        _type: 'service.option.id',
-        value
-    };
-}
-
 export interface ServiceOption {
     _type: 'service.option';
     id: ServiceOptionId;
-    name: string;
-    description: string;
     price: Price;
     requiresQuantity: boolean;
     duration: Duration;
     resourceRequirements: ResourceRequirement[];
     forms: FormId[]
+}
+
+export interface ServiceOptionLabels {
+    serviceOptionId: ServiceOptionId;
+    languageId: LanguageId;
+    name: string;
+    description: string;
+}
+
+export function serviceOptionLabels(serviceOptionId: ServiceOptionId, languageId: LanguageId, name: string, description: string): ServiceOptionLabels {
+    return {
+        serviceOptionId,
+        languageId,
+        name,
+        description
+    };
 }
 
 export const serviceFns = {
@@ -509,14 +508,6 @@ export const serviceFns = {
             resourceRequirements: theService.resourceRequirements.map(r => r.id.value === existing.id.value ? replacement : r)
         }
     },
-    findLabels(serviceLabels: ServiceLabels[], serviceId: ServiceId): ServiceLabels {
-        const found = serviceLabels.find(sl => sl.serviceId.value === serviceId.value);
-        if (!found) {
-            throw new Error(`No service labels found for service ${serviceId.value}`);
-        }
-        return found;
-
-    }
 }
 
 export function service(
@@ -551,8 +542,6 @@ export function serviceLabels(name: string, description: string, serviceId: Serv
 }
 
 export function serviceOption(
-    name: string,
-    description: string,
     price: Price,
     requiresQuantity: boolean,
     duration: Duration,
@@ -563,8 +552,6 @@ export function serviceOption(
     return {
         _type: 'service.option',
         id,
-        name,
-        description,
         price,
         requiresQuantity,
         duration,
@@ -579,6 +566,7 @@ export interface BusinessConfiguration {
     resourceAvailability: ResourceDayAvailability[];
     resources: Resource[];
     services: Service[];
+    serviceOptions: ServiceOption[];
     addOns: AddOn[];
     timeslots: TimeslotSpec[];
     forms: Form[];
@@ -635,7 +623,7 @@ export function addOn(price: Price, requiresQuantity: boolean, id = addOnId(uuid
     };
 }
 
-export function addOnLabels(name: string, description: string|null, addOnId: AddOnId, languageId: LanguageId): AddOnLabels {
+export function addOnLabels(name: string, description: string | null, addOnId: AddOnId, languageId: LanguageId): AddOnLabels {
     return {
         name,
         description,
@@ -659,6 +647,7 @@ export function businessConfiguration(
     resources: Resource[],
     resourceAvailability: ResourceDayAvailability[],
     services: Service[],
+    serviceOptions: ServiceOption[],
     addOns: AddOn[],
     timeslots: TimeslotSpec[],
     forms: Form[],
@@ -671,6 +660,7 @@ export function businessConfiguration(
         resources,
         resourceAvailability,
         services,
+        serviceOptions,
         timeslots,
         startTimeSpec,
         addOns,
@@ -777,13 +767,6 @@ export interface PercentageCoupon {
     percentage: PercentageAsRatio;
 }
 
-export function amountCoupon(amount: Price): AmountCoupon {
-    return {
-        _type: 'amount.coupon',
-        amount
-    };
-}
-
 export function percentageCoupon(percentage: PercentageAsRatio): PercentageCoupon {
     return {
         _type: 'percentage.coupon',
@@ -881,23 +864,6 @@ export function businessHours(day_of_week: DayOfWeek,
         end_time_24hr
     };
 }
-
-export interface DaysFromTimeSpec {
-    _type: 'days.from.time.spec';
-    relativeTo: 'today';
-    days: number;
-}
-
-export function daysFromToday(days: number): DaysFromTimeSpec {
-    return {
-        _type: 'days.from.time.spec',
-        relativeTo: 'today',
-        days
-    };
-}
-
-export type TimeSpec = DaysFromTimeSpec;
-
 
 export interface AddOnWithTotal {
     _type: 'add.on.with.total';

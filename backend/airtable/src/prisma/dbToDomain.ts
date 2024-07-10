@@ -5,6 +5,7 @@ import {
     DbResource,
     DbService,
     DbServiceForm,
+    DbServiceOptionResourceRequirement,
     DbServiceResourceRequirement,
     DbTenantSettings,
     DbTimeSlot
@@ -24,17 +25,23 @@ import {
     Service as DomainService,
     Service,
     serviceFns,
+    serviceOption,
+    ServiceOption,
     tenantSettings,
     TenantSettings,
     timeslotSpec,
     TimeslotSpec
 } from '@breezbook/packages-core';
-import {DbBookingAndResourceRequirements} from "../express/getEverythingForAvailability.js";
+import {
+    DbBookingAndResourceRequirements,
+    DbServiceOptionFormsAndResources
+} from "../express/getEverythingForAvailability.js";
 import {PricingRule} from "@breezbook/packages-pricing";
 import {
     addOnId,
     byId,
     capacity,
+    duration,
     Form,
     formId,
     id,
@@ -44,7 +51,7 @@ import {
     resourceRequirementId,
     ResourceType,
     resourceTypeFns,
-    serviceId,
+    serviceId, serviceOptionId,
     time24,
     timePeriod,
     timezone
@@ -57,12 +64,25 @@ import resource = resourcing.resource;
 import Resource = resourcing.Resource;
 import resourceAllocationRules = resourcing.resourceAllocationRules;
 
-function toDomainResourceRequirement(rr: DbServiceResourceRequirement, resourceTypes: ResourceType[], mappedResources: Resource[]): ResourceRequirement {
+function toDomainResourceRequirement(rr: DbServiceResourceRequirement | DbServiceOptionResourceRequirement, resourceTypes: ResourceType[], mappedResources: Resource[]): ResourceRequirement {
     if (rr.requirement_type === 'specific_resource') {
         return specificResource(byId.find(mappedResources, resourceId(rr.id)), resourceRequirementId(rr.id))
     } else {
-        return anySuitableResource(resourceTypeFns.findByValue(resourceTypes, mandatory(rr.resource_type, `No resource type`)), resourceAllocationRules.any,resourceRequirementId(rr.id))
+        return anySuitableResource(resourceTypeFns.findByValue(resourceTypes, mandatory(rr.resource_type, `No resource type`)), resourceAllocationRules.any, resourceRequirementId(rr.id))
     }
+}
+
+export function toDomainServiceOption(so: DbServiceOptionFormsAndResources, resourceTypes: ResourceType[], mappedResources: Resource[]): ServiceOption {
+    const mappedResourceRequirements = so.service_option_resource_requirements.map(rr => toDomainResourceRequirement(rr, resourceTypes, mappedResources));
+    const priceAmount = (typeof so.price === "object" && "toNumber" in so.price) ? so.price.toNumber() : so.price;
+    const formIds = so.service_option_forms.map(f => formId(f.form_id));
+    return serviceOption(
+        price(priceAmount, currency(so.price_currency)),
+        so.requires_quantity,
+        duration(minutes(so.duration_minutes)),
+        mappedResourceRequirements,
+        formIds,
+        serviceOptionId(so.id));
 }
 
 export function toDomainService(dbService: DbService, resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], timeslots: TimeslotSpec[], resourceRequirements: DbServiceResourceRequirement[], mappedResources: Resource[]): DomainService {
@@ -106,12 +126,12 @@ export function toDomainBooking(b: DbBookingAndResourceRequirements, services: S
 
 export function toDomainAddOn(a: DbAddOn): DomainAddOn {
     const priceAmount = (typeof a.price === "object" && "toNumber" in a.price) ? a.price.toNumber() : a.price;
-    return addOn( price(priceAmount, currency(a.price_currency)), a.expect_quantity,  addOnId(a.id));
+    return addOn(price(priceAmount, currency(a.price_currency)), a.expect_quantity, addOnId(a.id));
 }
 
 export function toDomainForm(f: DbForm): Form {
     const form = f.definition as unknown as Form;
-    if(form._type === "json.schema.form") {
+    if (form._type === "json.schema.form") {
         return {...form, id: formId(f.id)}
     }
     throw new Error(`Unknown form type`)

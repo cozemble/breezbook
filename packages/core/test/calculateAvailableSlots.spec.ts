@@ -496,9 +496,9 @@ describe("given a hair salon that offers configurable services, and is available
         resourceDayAvailability(mikeStylist, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(meteStylist, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
-    const colouring = serviceOption("Colouring", "Colouring", price(1500, currencies.GBP), false, duration(minutes(20)), [anySuitableResource(colouringMachine)], []);
-    const cutting = serviceOption("Cutting", "Cutting", price(2000, currencies.GBP), false, duration(minutes(30)), [anySuitableResource(someSharedResource)], []);
-    const curling = serviceOption("Curling", "Curling", price(2500, currencies.GBP), false, duration(minutes(40)), [anySuitableResource(someSharedResource)], []);
+    const colouring = serviceOption(price(1500, currencies.GBP), false, duration(minutes(20)), [anySuitableResource(colouringMachine)], []);
+    const cutting = serviceOption(price(2000, currencies.GBP), false, duration(minutes(30)), [anySuitableResource(someSharedResource)], []);
+    const curling = serviceOption(price(2500, currencies.GBP), false, duration(minutes(40)), [anySuitableResource(someSharedResource)], []);
     const hairStylingService = serviceFns.addOptions(service( [anySuitableResource(hairStylist)], minutes(30), price(3500, currencies.GBP), [], []), []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),

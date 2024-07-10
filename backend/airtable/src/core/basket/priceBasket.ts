@@ -31,7 +31,7 @@ export const pricingErrorCodes = {
 
 function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: EverythingForAvailability): PricedBasketLine[] | ErrorResponse {
     const lines = unpricedLines.map((line) => {
-        const availability = getAvailabilityForService(everythingForTenant, line.serviceId, line.date, line.date);
+        const availability = getAvailabilityForService(everythingForTenant, line.serviceId, line.options,line.date, line.date);
         if (availability._type === 'error.response') {
             return availability;
         }

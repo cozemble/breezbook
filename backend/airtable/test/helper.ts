@@ -93,6 +93,7 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
             [carwash.van1, carwash.van2],
             theResourceAvailability,
             [carwash.smallCarWash],
+            [],
             carwash.addOns,
             carwash.timeslots,
             [carwashForm, customerForm],

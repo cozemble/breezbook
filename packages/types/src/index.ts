@@ -704,3 +704,28 @@ export function mandatory<T>(value: T | undefined | null, errorMessage: string):
 }
 
 export type Metadata = Record<string, string | number | boolean>
+
+export interface ServiceOptionId extends ValueType<string> {
+    _type: 'service.option.id';
+}
+
+export function serviceOptionId(value: string): ServiceOptionId {
+    return {
+        _type: 'service.option.id',
+        value
+    };
+}
+
+
+export interface ServiceOptionRequest {
+    serviceOptionId: ServiceOptionId;
+    quantity: number;
+}
+
+export function serviceOptionRequest(serviceOptionId: ServiceOptionId, quantity = 1): ServiceOptionRequest {
+    return {
+        serviceOptionId,
+        quantity
+    };
+}
+

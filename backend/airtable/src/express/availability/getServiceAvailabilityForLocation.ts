@@ -14,7 +14,7 @@ import {
 } from "../../infra/endpoint.js";
 import {byLocation} from "../../availability/byLocation.js";
 import {getAvailabilityForService} from "../../core/getAvailabilityForService.js";
-import {failure, Failure, serviceFns, success,} from "@breezbook/packages-core";
+import {failure, Failure, serviceFns, ServiceRequest, success,} from "@breezbook/packages-core";
 import {
     addOnId,
     byId,
@@ -25,7 +25,7 @@ import {
     ResourceId,
     resourceRequirementId,
     ResourceRequirementId,
-    ServiceId,
+    ServiceId, serviceOptionId, ServiceOptionId, serviceOptionRequest, ServiceOptionRequest,
     TenantEnvironmentLocation
 } from "@breezbook/packages-types";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
@@ -47,9 +47,10 @@ export interface ServiceAvailabilityRequest {
     fromDate: IsoDate;
     toDate: IsoDate;
     requirementOverrides: RequirementOverride[]
+    serviceOptionRequests: ServiceOptionRequest[]
 }
 
-export function requirementOverridesParam(): ParamExtractor<RequirementOverride[]> {
+function requirementOverridesParam(): ParamExtractor<RequirementOverride[]> {
     return (req: RequestContext) => {
         const bodyJson = req.request.body as any ?? {}
         const requirementOverrides = bodyJson.requirementOverrides;
@@ -70,9 +71,27 @@ export function requirementOverridesParam(): ParamExtractor<RequirementOverride[
     };
 }
 
+function serviceOptionIdsParam(): ParamExtractor<ServiceOptionRequest[]> {
+    return (req: RequestContext) => {
+        const bodyJson = req.request.body as any ?? {}
+        const serviceOptionRequests = bodyJson.serviceOptionRequests as ServiceOptionRequest[]
+        if (!serviceOptionRequests) {
+            return success([]);
+        }
+        try {
+            if (!Array.isArray(serviceOptionRequests)) {
+                return failure(responseOf(400, `serviceOptionRequests must be an array`));
+            }
+            return success(serviceOptionRequests);
+        } catch (e) {
+            return failure(responseOf(400, `serviceOptionRequests must be a JSON array`));
+        }
+    };
+}
+
 export function serviceAvailabilityRequestParam(): ParamExtractor<ServiceAvailabilityRequest> {
     return (req: RequestContext) => {
-        const params = [serviceIdParam()(req), date(query('fromDate'))(req), date(query('toDate'))(req), requirementOverridesParam()(req)];
+        const params = [serviceIdParam()(req), date(query('fromDate'))(req), date(query('toDate'))(req), requirementOverridesParam()(req), serviceOptionIdsParam()(req)];
         const firstFailure = params.find(p => p._type === 'failure');
         if (firstFailure) {
             return firstFailure as Failure<HttpResponse>;
@@ -81,7 +100,8 @@ export function serviceAvailabilityRequestParam(): ParamExtractor<ServiceAvailab
             serviceId: params[0].value,
             fromDate: params[1].value,
             toDate: params[2].value,
-            requirementOverrides: params[3].value
+            requirementOverrides: params[3].value,
+            serviceOptionRequests: params[4].value
         } as ServiceAvailabilityRequest);
     };
 }
@@ -130,13 +150,14 @@ function applyLabels(availabilityOutcome: AvailabilityResponse, labels: Labels):
 }
 
 async function getServiceAvailabilityForLocation(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, request: ServiceAvailabilityRequest): Promise<EndpointOutcome[]> {
+    const serviceOptionIds = request.serviceOptionRequests.map(sor => sor.serviceOptionId.value);
     console.log(
-        `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
+        `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} with service option ids '${serviceOptionIds.join(",")}' from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
     );
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
-    let availabilityOutcome = getAvailabilityForService(everythingForTenant, request.serviceId, request.fromDate, request.toDate);
+    let availabilityOutcome = getAvailabilityForService(everythingForTenant, request.serviceId, request.serviceOptionRequests,request.fromDate, request.toDate);
     if (availabilityOutcome._type === 'error.response') {
-        return [httpResponseOutcome(responseOf(400, JSON.stringify(availabilityOutcome.errorMessage),['Content-Type', 'application/json']))];
+        return [httpResponseOutcome(responseOf(400, JSON.stringify(availabilityOutcome.errorMessage), ['Content-Type', 'application/json']))];
     }
     const labels = await getLabelsForTenant(deps.prisma, tenantEnvLoc, languages.en);
     availabilityOutcome = applyLabels(availabilityOutcome, labels);

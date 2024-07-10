@@ -1,10 +1,10 @@
 import {
     Booking,
     businessConfiguration,
-    BusinessConfiguration, configuration,
+    BusinessConfiguration,
+    configuration,
     Coupon,
     periodicStartTime,
-    Service,
     TenantSettings,
 } from '@breezbook/packages-core';
 import {
@@ -17,8 +17,8 @@ import {
     IsoDate,
     isoDateFns,
     mandatory,
-    minutes, resourceType,
-    ServiceId,
+    minutes,
+    resourceType,
     TenantEnvironment,
     time24,
     timePeriod,
@@ -40,6 +40,9 @@ import {
     DbResourceType,
     DbService,
     DbServiceForm,
+    DbServiceOption,
+    DbServiceOptionForm,
+    DbServiceOptionResourceRequirement,
     DbServiceResourceRequirement,
     DbTenantSettings,
     DbTimeSlot,
@@ -52,12 +55,13 @@ import {
     toDomainPricingRule,
     toDomainResource,
     toDomainService,
+    toDomainServiceOption,
     toDomainTenantSettings,
     toDomainTimeslotSpec
 } from '../prisma/dbToDomain.js';
-import {PrismaClient} from "@prisma/client";
 import {PricingRule} from "@breezbook/packages-pricing";
 import {resourcing} from "@breezbook/packages-resourcing";
+import {PrismaClient} from "@prisma/client";
 import Resource = resourcing.Resource;
 import ResourceDayAvailability = configuration.ResourceDayAvailability;
 import availabilityBlock = configuration.availabilityBlock;
@@ -158,6 +162,11 @@ export type DbBookingAndResourceRequirements = DbBooking & {
     booking_resource_requirements: DbBookingResourceRequirement[]
 };
 
+export type DbServiceOptionFormsAndResources = (DbServiceOption & {
+    service_option_forms: DbServiceOptionForm[]
+    service_option_resource_requirements: DbServiceOptionResourceRequirement[]
+})
+
 export interface AvailabilityData {
     businessHours: DbBusinessHours[];
     blockedTime: DbBlockedTime[];
@@ -165,6 +174,7 @@ export interface AvailabilityData {
     resourceAvailability: DbResourceAvailability[];
     resourceOutage: DbResourceBlockedTime[];
     services: DbService[];
+    serviceOptions: DbServiceOptionFormsAndResources[];
     serviceResourceRequirements: DbServiceResourceRequirement[]
     timeSlots: DbTimeSlot[];
     pricingRules: DbPricingRule[];
@@ -204,6 +214,16 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
             booking_resource_requirements: true
         }
     })
+    const serviceOptions = await prisma.service_options.findMany({
+        where: {
+            tenant_id,
+            environment_id,
+        },
+        include: {
+            service_option_forms: true,
+            service_option_resource_requirements: true
+        }
+    });
     const forms = await findMany(prisma.forms, {});
     const tenantSettings = await prisma.tenant_settings.findFirstOrThrow({where: {tenant_id, environment_id}});
     const coupons = await findMany(prisma.coupons, {});
@@ -214,6 +234,7 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
         resourceAvailability,
         resourceOutage,
         services,
+        serviceOptions,
         serviceResourceRequirements,
         timeSlots,
         pricingRules,
@@ -246,6 +267,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
 
     const mappedResourceAvailability = makeResourceAvailability(mappedResources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates)
     const services = availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots, availabilityData.serviceResourceRequirements, mappedResources))
+    const serviceOptions = availabilityData.serviceOptions.map((so) => toDomainServiceOption(so, mappedResourceTypes, mappedResources))
 
     return everythingForAvailability(
         businessConfiguration(
@@ -253,6 +275,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
             mappedResources,
             mappedResourceAvailability,
             services,
+            serviceOptions,
             mappedAddOns,
             mappedTimeSlots,
             mappedForms,
