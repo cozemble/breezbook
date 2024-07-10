@@ -19,6 +19,7 @@
     import type {CoreCustomerDetails} from "$lib/uxs/personal-training/journeyState";
     import FillCustomerDetails from "$lib/uxs/dog-walking/FillCustomerDetails.svelte";
     import TakePayment from "$lib/uxs/dog-walking/TakePayment.svelte";
+    import ThemeSwitcher from "$lib/ui/ThemeSwitcher.svelte";
 
     let tenant: Tenant | null = null;
     let services: Service[] = []
@@ -215,6 +216,13 @@
             {/if}
 
             {#if step === 0}
+                <div class="flex justify-between items-center mb-4">
+                    <div class="text-sm text-base-content/70">This is a demo to show what Breezbook can do</div>
+                </div>
+                <div class="flex justify-between items-center mb-4">
+                    <div class="text-sm text-base-content/70">Choose a colour schema</div>
+                    <ThemeSwitcher showLabel={false}/>
+                </div>
                 <div class="flex flex-col items-center">
                     <h2 class="text-3xl font-bold mb-6 text-primary">Welcome to Breez Walks</h2>
                     <Dog size={64} class="text-primary mb-6"/>

@@ -11,7 +11,8 @@
         "autumn", "business", "acid", "lemonade", "night", "coffee", "winter"
     ];
 
-    let currentTheme:string;
+    let currentTheme: string;
+    export let showLabel = true;
 
     onMount(() => {
         if (browser) {
@@ -20,7 +21,7 @@
         }
     });
 
-    function changeTheme(event:Event) {
+    function changeTheme(event: Event) {
         currentTheme = (event.target as HTMLSelectElement).value;
         if (browser) {
             localStorage.setItem('theme', currentTheme);
@@ -30,7 +31,9 @@
 </script>
 
 <div class="flex">
-    <label class="label">{$translations.theme}</label>
+    {#if showLabel}
+        <label class="label">{$translations.theme}</label>
+    {/if}
     <select
             bind:value={currentTheme}
             on:change={changeTheme}
