@@ -1,6 +1,7 @@
 import express from "express";
 import {
-    DbService,
+    DbForm,
+    DbService, DbServiceForm,
     DbServiceImage,
     DbServiceLabel,
     DbServiceOption,
@@ -42,6 +43,7 @@ export type RequiredServiceData = DbService & {
         service_options: RequiredServiceOptionData;
     }[];
     service_time_slots: DbServiceTimeslot[];
+    service_forms: DbServiceForm[];
 };
 
 export function toApiServiceOption(so: RequiredServiceOptionData): ServiceOption {
@@ -89,7 +91,8 @@ export function toApiService(service: RequiredServiceData, serviceResourceRequir
         hasDynamicPricing: hasPricingRules,
         image,
         resourceRequirements,
-        serviceOptions
+        serviceOptions,
+        forms: service.service_forms.map(f => formId(f.form_id))
     };
 }
 
@@ -113,6 +116,7 @@ async function getServices(deps: EndpointDependencies, tenantEnvironment: Tenant
             },
             service_time_slots: true,
             service_resource_requirements: true,
+            service_forms: true,
             service_service_options: {
                 include: {
                     service_options: {

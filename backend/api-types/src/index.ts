@@ -176,6 +176,7 @@ export interface Service {
     image: string;
     resourceRequirements: ResourceRequirementSpec[]
     serviceOptions: ServiceOption[]
+    forms: FormId[]
 }
 
 export interface Location {

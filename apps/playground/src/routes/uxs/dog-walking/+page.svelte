@@ -1,12 +1,20 @@
 <script lang="ts">
-    import {CheckCircle, Dog, MapPin, User} from 'lucide-svelte';
+    import {CheckCircle, Dog} from 'lucide-svelte';
     import {onMount} from "svelte";
     import {backendUrl, fetchJson} from "$lib/helpers";
-    import {type Service, type ServiceLocation, type ServiceOption, type Tenant} from "@breezbook/backend-api-types";
+    import {
+        type FormAndLabels,
+        type Service,
+        type ServiceLocation,
+        type ServiceOption,
+        type Tenant
+    } from "@breezbook/backend-api-types";
     import ServiceCard from "$lib/uxs/dog-walking/ServiceCard.svelte";
     import ServiceOptionCard from "$lib/uxs/dog-walking/ServiceOptionCard.svelte";
     import {mandatory} from "@breezbook/packages-types";
     import SelectDateAndTime from "$lib/uxs/dog-walking/SelectDateAndTime.svelte";
+    import FillJsonSchemaForm from "$lib/uxs/dog-walking/FillJsonSchemaForm.svelte";
+    import type {JSONSchema} from "$lib/uxs/dog-walking/types";
 
     let tenant: Tenant | null = null;
     let services: Service[] = []
@@ -25,19 +33,23 @@
         serviceLocation: ServiceLocation | null
         date: string | null;
         time: string;
+        serviceFormData: Record<string, any>[];
         petName: string;
         address: string;
         duration: number;
         addOns: AddOn[];
     };
 
-    let step: number = 0;
+    // let steps = ['Welcome', 'Select Service', 'Configure Service', 'Date and Time', 'Fill Forms', 'Review Booking', 'Booking Confirmed'];
+    let step = 0;
+    let formIndex = 0;
     let bookingData: BookingData = {
         service: null,
         serviceOptions: [],
         serviceLocation: null,
         date: null,
         time: '',
+        serviceFormData: [],
         petName: '',
         address: '',
         duration: 30,
@@ -57,7 +69,6 @@
 
     function nextStep() {
         step++;
-        console.log({bookingData})
     }
 
     function prevStep() {
@@ -69,6 +80,7 @@
             bookingData.service = service;
             bookingData.duration = service.durationMinutes;
             bookingData.serviceLocation = mandatory(tenant.serviceLocations.find(location => location.serviceId === service.id), `Service location not found`);
+            updateFormValues()
         }
     }
 
@@ -94,7 +106,63 @@
         } else {
             bookingData.serviceOptions = [...bookingData.serviceOptions, option]
         }
+        updateFormValues()
     }
+
+    function updateFormValues() {
+        if (tenant) {
+            bookingData.serviceFormData = formsToFill(tenant, bookingData).map(form => ensureSchema(castSchema(form.form.schema), {}));
+            console.log({bookingData})
+        }
+    }
+
+    function formsToFill(tenant: Tenant, bookingData: BookingData): FormAndLabels[] {
+        const forms = tenant?.forms ?? []
+        const serviceFormIds = bookingData?.service?.forms ?? []
+        const serviceOptionForms = bookingData.serviceOptions.flatMap(option => option.forms)
+        const allIds = [...serviceFormIds, ...serviceOptionForms]
+        return allIds.map(id => mandatory(forms.find(f => f.form.id.value === id.value), `Form with id ${id.value} not found`))
+    }
+
+    function ensureSchema(schema: JSONSchema, data: { [key: string]: any }): { [key: string]: any } {
+        const newData: { [key: string]: any } = {};
+        for (const [field, fieldSchema] of Object.entries(schema.properties)) {
+            if (data[field] === undefined) {
+                if (fieldSchema.type === 'string') {
+                    newData[field] = '';
+                } else if (fieldSchema.type === 'number') {
+                    newData[field] = 0;
+                } else if (fieldSchema.type === 'boolean') {
+                    newData[field] = false;
+                }
+            } else {
+                newData[field] = data[field];
+            }
+        }
+        return newData;
+    }
+
+    function castSchema(schema: any): JSONSchema {
+        return schema as JSONSchema;
+    }
+
+    function onNextForm() {
+        formIndex = formIndex + 1
+        if (formIndex > bookingData.serviceFormData.length - 1) {
+            formIndex = bookingData.serviceFormData.length - 1
+            nextStep()
+        }
+    }
+
+    function onPrevForm() {
+        formIndex = formIndex - 1
+        if (formIndex < 0) {
+            formIndex = 0
+            prevStep()
+        }
+    }
+
+    $: formToFill = tenant ? formsToFill(tenant, bookingData)[formIndex] : null
 </script>
 
 <div class="flex justify-center items-center min-h-screen bg-base-200">
@@ -153,29 +221,16 @@
                         <button class="btn btn-outline" on:click={prevStep}>Back</button>
                     {/if}
                 </div>
-            {:else if step === 4}
+            {:else if step === 4 && formToFill}
                 <div class="flex flex-col">
-                    <h3 class="text-2xl font-semibold mb-6 text-primary">Pet Information</h3>
-                    <div class="mb-4">
-                        <User class="text-primary mb-2"/>
-                        <input
-                                type="text"
-                                placeholder="Pet's name"
-                                bind:value={bookingData.petName}
-                                class="input input-bordered w-full"
+                    <h3 class="text-2xl font-semibold mb-6 text-primary">{formToFill.form.name}</h3>
+                    <div class="bg-base-200 p-4 rounded-lg mb-6">
+                        <FillJsonSchemaForm schema={castSchema(formToFill.form.schema)}
+                                            bind:data={bookingData.serviceFormData[formIndex]}
+                                            on:next={onNextForm}
+                                            on:prev={onPrevForm}
                         />
                     </div>
-                    <div class="mb-4">
-                        <MapPin class="text-primary mb-2"/>
-                        <input
-                                type="text"
-                                placeholder="Pick-up address"
-                                bind:value={bookingData.address}
-                                class="input input-bordered w-full"
-                        />
-                    </div>
-                    <button class="btn btn-primary mb-2" on:click={nextStep}>Review</button>
-                    <button class="btn btn-outline" on:click={prevStep}>Back</button>
                 </div>
             {:else if step === 5}
                 <div class="flex flex-col">

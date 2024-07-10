@@ -16,7 +16,6 @@
     function formatDate(dateString: string): string {
         const date = new Date(dateString);
         const localeDate =  date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-        console.log({date, localeDate})
         return localeDate.split(' ')[0].substring(0, 3)
     }
 
@@ -67,12 +66,12 @@
 
     <div class="mt-6 relative" style="min-height: 120px;">
         {#if selectedDate && availabilityMap.get(selectedDate)}
-            <div in:fly={{ y: 20, duration: 300, delay: 300 }} out:fly={{ y: 20, duration: 300 }}>
-                <div class="flex items-center mb-4" in:fade={{ duration: 300, delay: 300 }}>
+            <div in:fly={{ y: 20, duration: 300, delay: 200 }} out:fly={{ y: 20, duration: 300 }}>
+                <div class="flex items-center mb-4" in:fade={{ duration: 300, delay: 200 }}>
                     <Clock class="text-primary mr-2" size={20} />
                     <h3 class="text-lg font-semibold">Select a Time</h3>
                 </div>
-                <div class="grid grid-cols-3 gap-2" in:fade={{ duration: 300, delay: 400 }}>
+                <div class="grid grid-cols-3 gap-2" in:fade={{ duration: 300, delay: 200 }}>
                     {#each availabilityMap.get(selectedDate) || [] as time}
                         <button
                                 class="btn btn-sm {selectedTime === time ? 'btn-secondary' : 'btn-outline'}"

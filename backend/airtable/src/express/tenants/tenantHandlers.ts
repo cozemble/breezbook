@@ -14,7 +14,7 @@ import {
 } from "../../prisma/dbtypes.js";
 import {Tenant} from "@breezbook/backend-api-types";
 import {PrismaClient} from "@prisma/client";
-import {EnvironmentId, JsonSchemaFormLabels, LanguageId, mandatory} from "@breezbook/packages-types";
+import {EnvironmentId, jsonSchemaFormFns, JsonSchemaFormLabels, LanguageId, mandatory} from "@breezbook/packages-types";
 import {RequiredServiceData, toApiService} from "../services/serviceHandlers.js";
 import {
     asHandler,
@@ -70,7 +70,8 @@ function toApiTenant(tenant: DbTenantAndStuff): Tenant {
             if (domainLabels._type !== "json.schema.form.labels") {
                 throw new Error(`Expected json.schema.form.labels, got ${domainLabels._type}`)
             }
-            return ({form: toDomainForm(dbForm), labels: domainLabels});
+            const form = jsonSchemaFormFns.applyLabels(toDomainForm(dbForm), domainLabels);
+            return ({form, labels: domainLabels});
         })
     }
 }
@@ -120,6 +121,7 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
                     },
                     service_time_slots: true,
                     service_resource_requirements: true,
+                    service_forms: true,
                     service_service_options: {
                         include: {
                             service_options: {

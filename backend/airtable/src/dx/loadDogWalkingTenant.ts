@@ -8,6 +8,7 @@ import {
     upsertResourceAvailability,
     upsertResourceType,
     upsertService,
+    upsertServiceForm,
     upsertServiceImage,
     upsertServiceLabel,
     upsertServiceLocation,
@@ -678,6 +679,34 @@ function breezbookDogWalkUpserts(): Upsert[] {
             service_id: makeTestId(tenant_id, environment_id, 'pet_sit'),
             location_id: makeTestId(tenant_id, environment_id, 'main')
         }),
+        upsertServiceForm({
+            tenant_id,
+            environment_id,
+            service_id: makeTestId(tenant_id, environment_id, 'individual-dog-walk'),
+            form_id: makeTestId(tenant_id, environment_id, 'pet-details-form'),
+            rank: 0
+        }),
+        upsertServiceForm({
+            tenant_id,
+            environment_id,
+            service_id: makeTestId(tenant_id, environment_id, 'group-dog-walk'),
+            form_id: makeTestId(tenant_id, environment_id, 'pet-details-form'),
+            rank: 0
+        }),
+        upsertServiceForm({
+            tenant_id,
+            environment_id,
+            service_id: makeTestId(tenant_id, environment_id, 'drop_in_visit'),
+            form_id: makeTestId(tenant_id, environment_id, 'pet-details-form'),
+            rank: 0
+        }),
+        upsertServiceForm({
+            tenant_id,
+            environment_id,
+            service_id: makeTestId(tenant_id, environment_id, 'pet_sit'),
+            form_id: makeTestId(tenant_id, environment_id, 'pet-details-form'),
+            rank: 0
+        }),
 
         upsertTenantBranding({
                 id: tenantBrandingId,
@@ -715,7 +744,7 @@ const dogDetailsForm: JsonSchemaForm = {
         "type": "object",
         "properties": {
             "dogsName": {
-                "type": "string"
+                "type": "string",
             },
         },
         "required": [
@@ -751,6 +780,6 @@ const dogDetailsFormLabelsEnglish = jsonSchemaFormLabels(dogDetailsForm.id, lang
     [schemaKeyLabel("dogsName", "Dog's name")])
 
 const secondDogDetailsFormLabelsEnglish = jsonSchemaFormLabels(secondDogDetailsForm.id, languages.en, "Your second dog's details", [
-    schemaKeyLabel("secondDogsName", "Dog's name")
+    schemaKeyLabel("secondDogsName", "Second dog's name")
 ], "Your second dog's name")
 
