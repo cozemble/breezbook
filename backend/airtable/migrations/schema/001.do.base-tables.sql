@@ -262,7 +262,7 @@ create table service_option_images
     context           text                                                   not null,
     created_at        timestamp                                              not null default current_timestamp,
     updated_at        timestamp                                              not null default current_timestamp,
-    primary key (service_option_id, tenant_id, environment_id, context)
+    primary key (tenant_id, environment_id, service_option_id, context)
 );
 
 create type resource_requirement_type as enum ('any_suitable', 'specific_resource');

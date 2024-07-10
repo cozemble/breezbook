@@ -24,7 +24,6 @@
     let services: Service[] = []
     let isLoading = true;
 
-
     type BookingData = {
         service: Service | null;
         serviceOptions: ServiceOption[];
@@ -57,7 +56,6 @@
         }
     }
 
-
     function calculatePrice(bookingData: BookingData): number {
         if (!bookingData.service) return 0;
         let total = bookingData.service.priceWithNoDecimalPlaces;
@@ -69,17 +67,24 @@
 
     $: currentPrice = calculatePrice(bookingData);
 
+    function scrollToTop() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     function nextStep() {
         step++;
+        scrollToTop();
     }
 
     function bookAnotherService() {
         step = 1;
         bookingData = initialBookingData();
+        scrollToTop();
     }
 
     function prevStep() {
         step--;
+        scrollToTop();
     }
 
     function selectService(service: Service) {
@@ -158,6 +163,8 @@
         if (formIndex > bookingData.serviceFormData.length - 1) {
             formIndex = bookingData.serviceFormData.length - 1
             nextStep()
+        } else {
+            scrollToTop();
         }
     }
 
@@ -166,6 +173,8 @@
         if (formIndex < 0) {
             formIndex = 0
             prevStep()
+        } else {
+            scrollToTop();
         }
     }
 

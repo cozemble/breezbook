@@ -14,6 +14,7 @@ import {
     upsertServiceLocation,
     upsertServiceOption,
     upsertServiceOptionForm,
+    upsertServiceOptionImage,
     upsertServiceOptionLabel,
     upsertServiceResourceRequirement,
     upsertServiceServiceOption,
@@ -447,6 +448,30 @@ function breezbookDogWalkUpserts(): Upsert[] {
             requires_quantity: false,
             duration_minutes: 0
         }),
+        upsertServiceOptionImage({
+            tenant_id,
+            environment_id,
+            service_option_id: dogWalkingTenant.serviceOptions.extraDog,
+            public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/extra_dog.jpg',
+            mime_type: 'image/jpeg',
+            context: 'thumbnail'
+        }),
+        upsertServiceOptionImage({
+            tenant_id,
+            environment_id,
+            service_option_id: dogWalkingTenant.serviceOptions.extra30Mins,
+            public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/clock.jpg',
+            mime_type: 'image/jpeg',
+            context: 'thumbnail'
+        }),
+        upsertServiceOptionImage({
+            tenant_id,
+            environment_id,
+            service_option_id: dogWalkingTenant.serviceOptions.extra60Mins,
+            public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/clock.jpg',
+            mime_type: 'image/jpeg',
+            context: 'thumbnail'
+        }),
         upsertServiceOptionForm({
             tenant_id,
             environment_id,
@@ -491,6 +516,14 @@ function breezbookDogWalkUpserts(): Upsert[] {
             permitted_add_on_ids: [],
             requires_time_slot: false
         }),
+        upsertServiceImage({
+            tenant_id,
+            environment_id,
+            service_id: dogWalkingTenant.services.individualDogWalk,
+            public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/individual_dog_walk.jpg',
+            mime_type: 'image/jpeg',
+            context: 'thumbnail'
+        }),
         upsertServiceLabel({
             tenant_id,
             environment_id,
@@ -517,15 +550,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
             service_id: dogWalkingTenant.services.individualDogWalk,
             service_option_id: dogWalkingTenant.serviceOptions.extraDog
         }),
-        upsertServiceImage({
-            tenant_id,
-            environment_id,
-            service_id: dogWalkingTenant.services.individualDogWalk,
-            public_image_url: 'https://picsum.photos/id/237/800/450',
-            mime_type: 'image/jpeg',
-            context: 'thumbnail'
-        }),
-
 
         upsertService({
             tenant_id,
@@ -538,6 +562,14 @@ function breezbookDogWalkUpserts(): Upsert[] {
             permitted_add_on_ids: [],
             requires_time_slot: true,
             capacity: 5
+        }),
+        upsertServiceImage({
+            tenant_id,
+            environment_id,
+            service_id: dogWalkingTenant.services.groupDogWalk,
+            public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/group_dog_walk.jpg',
+            mime_type: 'image/jpeg',
+            context: 'thumbnail'
         }),
         upsertServiceServiceOption({
             tenant_id,
@@ -598,6 +630,14 @@ function breezbookDogWalkUpserts(): Upsert[] {
             permitted_add_on_ids: [],
             requires_time_slot: false
         }),
+        upsertServiceImage({
+            tenant_id,
+            environment_id,
+            service_id: dogWalkingTenant.services.dropInVisit,
+            public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/drop_in_visit.jpg',
+            mime_type: 'image/jpeg',
+            context: 'thumbnail'
+        }),
         upsertServiceLabel({
             tenant_id,
             environment_id,
@@ -624,6 +664,14 @@ function breezbookDogWalkUpserts(): Upsert[] {
             price_currency: 'GBP',
             permitted_add_on_ids: [],
             requires_time_slot: false
+        }),
+        upsertServiceImage({
+            tenant_id,
+            environment_id,
+            service_id: dogWalkingTenant.services.petSit,
+            public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/pet_sit.jpg',
+            mime_type: 'image/jpeg',
+            context: 'thumbnail'
         }),
         upsertServiceLabel({
             tenant_id,

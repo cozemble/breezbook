@@ -505,3 +505,15 @@ export function upsertServiceOptionForm(create: Prisma.service_option_formsUnche
     return makeUpsert('service_option_forms', entityId, create)
 }
 
+export type UpsertServiceOptionImage = Upsert<Prisma.service_option_imagesCreateArgs['data'], Prisma.service_option_imagesUpdateArgs['data'], Prisma.service_option_imagesUpdateArgs['where']>
+
+export function upsertServiceOptionImage(create: Prisma.service_option_imagesUncheckedCreateInput): UpsertServiceOptionImage {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "service_option_id", mandatory(create.service_option_id, "service_option_id"),
+        "context", mandatory(create.context, "context")
+    )
+    return makeUpsert('service_option_images', entityId, create)
+}
+

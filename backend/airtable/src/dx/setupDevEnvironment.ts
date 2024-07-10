@@ -1,5 +1,5 @@
 import {prismaClient} from "../prisma/client.js";
-import {dbCarwashTenant, ensureStripeKeys, loadTestCarWashTenant} from "./loadTestCarWashTenant.js";
+import {ensureStripeKeys, loadTestCarWashTenant} from "./loadTestCarWashTenant.js";
 import {environmentId, tenantEnvironment, tenantId} from "@breezbook/packages-types";
 import {loadMultiLocationGymTenant} from "./loadMultiLocationGymTenant.js";
 import {dogWalkingTenant, loadDogWalkingTenant} from "./loadDogWalkingTenant.js";
