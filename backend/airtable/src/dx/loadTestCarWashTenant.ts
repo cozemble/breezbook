@@ -12,6 +12,7 @@ import {
     schemaKeyLabel,
     serviceId,
     ServiceId,
+    tenantEnvironment,
     TenantEnvironment,
     tenantId
 } from "@breezbook/packages-types";
@@ -23,7 +24,8 @@ import {
     upsertAddOnLabels,
     upsertBusinessHours,
     upsertCoupon,
-    upsertForm, upsertFormLabels,
+    upsertForm,
+    upsertFormLabels,
     upsertLocation,
     upsertPricingRule,
     upsertResource,
@@ -345,14 +347,25 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
 }
 
 
-export async function ensureStripeKeys(tenantEnvironment: TenantEnvironment): Promise<void> {
-    const maybeExistingSecretKey = await maybeGetTenantSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME)
-    if (!maybeExistingSecretKey && process.env.TEST_STRIPE_SECRET_KEY) {
-        await storeTenantSecret(tenantEnvironment, STRIPE_API_KEY_SECRET_NAME, 'Test Stripe Secret Key', process.env.TEST_STRIPE_SECRET_KEY)
+export async function ensureStripeKeys(tenantEnv: TenantEnvironment): Promise<void> {
+    console.info(`Ensuring Stripe keys for tenant ${tenantEnv.tenantId.value}, ${tenantEnv.environmentId.value}`)
+    const maybeExistingSecretKey = await maybeGetTenantSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME)
+    if (!maybeExistingSecretKey) {
+        const mayExistingSecretKey = await maybeGetTenantSecret(tenantEnvironment(dbCarwashTenant.environmentId, dbCarwashTenant.tenantId), STRIPE_API_KEY_SECRET_NAME)
+        if (mayExistingSecretKey) {
+            await storeTenantSecret(tenantEnv, STRIPE_API_KEY_SECRET_NAME, 'Test Stripe Secret Key', mayExistingSecretKey)
+        } else {
+            console.warn(`No Stripe secret key found for tenant ${tenantEnv.tenantId.value}, ${tenantEnv.environmentId.value}`)
+        }
     }
-    const maybeExistingPublishableKey = await maybeGetTenantSecret(tenantEnvironment, STRIPE_PUBLIC_KEY_SECRET_NAME)
-    if (!maybeExistingPublishableKey && process.env.TEST_STRIPE_PUBLIC_KEY) {
-        await storeTenantSecret(tenantEnvironment, STRIPE_PUBLIC_KEY_SECRET_NAME, 'Test Stripe Publishable Key', process.env.TEST_STRIPE_PUBLIC_KEY)
+    const maybeExistingPublishableKey = await maybeGetTenantSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME)
+    if (!maybeExistingPublishableKey) {
+        const mayExistingPublishableKey = await maybeGetTenantSecret(tenantEnvironment(dbCarwashTenant.environmentId, dbCarwashTenant.tenantId), STRIPE_PUBLIC_KEY_SECRET_NAME)
+        if (mayExistingPublishableKey) {
+            await storeTenantSecret(tenantEnv, STRIPE_PUBLIC_KEY_SECRET_NAME, 'Test Stripe Publishable Key', mayExistingPublishableKey)
+        } else {
+            console.warn(`No Stripe publishable key found for tenant ${tenantEnv.tenantId.value}, ${tenantEnv.environmentId.value}`)
+        }
     }
 }
 

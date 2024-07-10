@@ -7,6 +7,7 @@
     import StripePaymentForm from "$lib/uxs/personal-training/StripePaymentForm.svelte";
     import {time24} from "@breezbook/packages-types";
     import {translations} from "$lib/ui/stores";
+    import {env, tenantId} from "$lib/uxs/personal-training/constants";
 
     export let state: JourneyState
     let priced: PricedBasket
@@ -25,11 +26,16 @@
     function onPay() {
         showStripe = true
     }
-
 </script>
 
 {#if showStripe && priced && state.customerDetails}
-    <StripePaymentForm {priced} customerDetails={state.customerDetails} on:paymentComplete/>
+    <div class="w-2/6">
+        <StripePaymentForm {priced}
+                           customerDetails={state.customerDetails}
+                           {tenantId}
+                           environmentId={env}
+                           on:paymentComplete/>
+    </div>
 {:else if priced}
     <div>
         <h2>{$translations.payment}</h2>

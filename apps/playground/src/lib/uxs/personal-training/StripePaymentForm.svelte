@@ -15,6 +15,8 @@
 
     export let priced: PricedBasket
     export let customerDetails: CoreCustomerDetails
+    export let tenantId: string
+    export let environmentId: string
     let order: OrderCreatedResponse
     let paymentIntent: PaymentIntentResponse
     let stripe: Stripe | null = null
@@ -24,14 +26,15 @@
 
     onMount(async () => {
         const orderRequest = pricedCreateOrderRequest(priced, customer(customerDetails.firstName, customerDetails.lastName, customerDetails.email, customerDetails.phone), fullPaymentOnCheckout())
-        order = await fetchJson<OrderCreatedResponse>(backendUrl('/api/:envId/:tenantId/orders'), {
+        order = await fetchJson<OrderCreatedResponse>(backendUrl(`/api/${environmentId}/${tenantId}/orders`), {
             method: "POST",
             body: JSON.stringify(orderRequest)
         })
-        paymentIntent = await fetchJson<PaymentIntentResponse>(backendUrl(`/api/:envId/:tenantId/orders/${order.orderId}/paymentIntent`), {
+        paymentIntent = await fetchJson<PaymentIntentResponse>(backendUrl(`/api/${environmentId}/${tenantId}/orders/${order.orderId}/paymentIntent`), {
             method: "POST",
         })
         stripe = await loadStripe(paymentIntent.stripePublicKey)
+        dispatch("paymentFormLoaded")
     })
 
     async function submit() {
@@ -50,7 +53,6 @@
                 redirect: 'if_required'
             })
 
-        console.log({result})
         if (result.error) {
             alert(result.error.message)
             processing = false
@@ -59,27 +61,28 @@
             processing = false
         }
     }
+
+    function prevStep() {
+        dispatch("prevStep")
+    }
 </script>
 
-<div class="w-2/6">
-    {#if paymentIntent && stripe}
-        <form on:submit|preventDefault={submit}>
+{#if paymentIntent && stripe}
+    <form on:submit|preventDefault={submit} class="flex flex-col">
 
-            <Elements {stripe}>
-                <Elements {stripe} clientSecret={paymentIntent.clientSecret} bind:elements>
-                    <PaymentElement/>
-                </Elements>
+        <Elements {stripe}>
+            <Elements {stripe} clientSecret={paymentIntent.clientSecret} bind:elements>
+                <PaymentElement/>
             </Elements>
+        </Elements>
 
-            <button class="btn btn-primary btn-lg mt-4" disabled={processing}>
-                {#if processing}
-                    {$translations.processingDotDotDot}
-                {:else}
-                    {$translations.pay}
-                {/if}
-            </button>
-
-        </form>
-    {/if}
-
-</div>
+        <button class="btn btn-primary mt-4" disabled={processing}>
+            {#if processing}
+                {$translations.processingDotDotDot}
+            {:else}
+                {$translations.pay}
+            {/if}
+        </button>
+        <button class="btn btn-outline mt-2" on:click={prevStep}>Back</button>
+    </form>
+{/if}

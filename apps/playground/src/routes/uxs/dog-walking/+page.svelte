@@ -18,7 +18,7 @@
     import BookingSummary from "$lib/uxs/dog-walking/BookingSummary.svelte";
     import type {CoreCustomerDetails} from "$lib/uxs/personal-training/journeyState";
     import FillCustomerDetails from "$lib/uxs/dog-walking/FillCustomerDetails.svelte";
-    import {booking} from "@breezbook/packages-core";
+    import TakePayment from "$lib/uxs/dog-walking/TakePayment.svelte";
 
     let tenant: Tenant | null = null;
     let services: Service[] = []
@@ -35,7 +35,7 @@
         petName: string;
         address: string;
         duration: number;
-        customer: CoreCustomerDetails|null
+        customer: CoreCustomerDetails | null
     };
 
     let step = 0;
@@ -71,6 +71,11 @@
 
     function nextStep() {
         step++;
+    }
+
+    function bookAnotherService() {
+        step = 1;
+        bookingData = initialBookingData();
     }
 
     function prevStep() {
@@ -115,7 +120,6 @@
     function updateFormValues() {
         if (tenant) {
             bookingData.serviceFormData = formsToFill(tenant, bookingData).map(form => ensureSchema(castSchema(form.form.schema), {}));
-            console.log({bookingData})
         }
     }
 
@@ -165,7 +169,7 @@
         }
     }
 
-    function onCustomerDetailsFilled(event:CustomEvent<CoreCustomerDetails>) {
+    function onCustomerDetailsFilled(event: CustomEvent<CoreCustomerDetails>) {
         bookingData = {...bookingData, customer: event.detail}
         nextStep()
     }
@@ -177,6 +181,10 @@
     }
 
     $: formToFill = tenant ? formsToFill(tenant, bookingData)[formIndex] : null
+
+    function formatPrice(price: number, currency: string): string {
+        return new Intl.NumberFormat('en-US', {style: 'currency', currency: currency}).format(price / 100);
+    }
 </script>
 
 <div class="flex justify-center items-center min-h-screen bg-base-200">
@@ -268,12 +276,32 @@
                 </div>
             {:else if step === 7}
                 <div class="flex flex-col items-center">
+                    <h3 class="text-2xl font-semibold mb-4 text-primary">Take Payment</h3>
+                    {#if bookingData.service && bookingData.serviceLocation && bookingData.customer && bookingData.date && bookingData.time}
+                        <TakePayment tenantId={tenant.id}
+                                     environmentId="dev"
+                                     serviceId={bookingData.service.id}
+                                     locationId={bookingData.serviceLocation.locationId}
+                                     serviceOptions={bookingData.serviceOptions}
+                                     filledForms={bookingData.serviceFormData}
+                                     customerDetails={bookingData.customer}
+                                     date={bookingData.date}
+                                     time={bookingData.time}
+                                     on:prevStep={prevStep}
+                                     on:paymentComplete={nextStep}/>
+                    {:else}
+                        <p>Error: Missing booking data</p>
+                    {/if}
+                </div>
+            {:else if step === 8}
+                <div class="flex flex-col items-center">
                     <CheckCircle size={64} class="text-success mb-6"/>
                     <h3 class="text-2xl font-semibold mb-4 text-primary">Booking Confirmed!</h3>
                     <p class="text-center mb-6">Thank you for booking with Paw Walks. We'll see you
                         and your pet soon!</p>
-                    <p class="text-center mb-6">Total Price: ${currentPrice}</p>
-                    <button class="btn btn-primary" on:click={() => step = 0}>Book Another Service</button>
+                    <p class="text-center mb-6">Total
+                        Price: {formatPrice(currentPrice, bookingData.service?.priceCurrency || 'USD')}</p>
+                    <button class="btn btn-primary" on:click={bookAnotherService}>Book Another Service</button>
                 </div>
             {/if}
         </div>

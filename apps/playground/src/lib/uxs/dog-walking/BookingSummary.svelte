@@ -36,9 +36,9 @@
             {/each}
         {/if}
         {#if date && time}
-            <div class="text-sm text-gray-600">{formatDateWithDayOfWeek(date)} @ {time}</div>
+            <div class="text-sm text-base-content/70">{formatDateWithDayOfWeek(date)} @ {time}</div>
         {/if}
-        <div class="flex justify-between pt-2 border-t border-gray-300">
+        <div class="flex justify-between pt-2 border-t border-base-300">
             <span class="font-semibold">Total Price:</span>
             <span class="font-semibold">{formatPrice(totalPrice, service?.priceCurrency || 'USD')}</span>
         </div>
