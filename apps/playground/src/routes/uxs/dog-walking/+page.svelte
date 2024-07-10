@@ -16,6 +16,9 @@
     import FillJsonSchemaForm from "$lib/uxs/dog-walking/FillJsonSchemaForm.svelte";
     import type {JSONSchema} from "$lib/uxs/dog-walking/types";
     import BookingSummary from "$lib/uxs/dog-walking/BookingSummary.svelte";
+    import type {CoreCustomerDetails} from "$lib/uxs/personal-training/journeyState";
+    import FillCustomerDetails from "$lib/uxs/dog-walking/FillCustomerDetails.svelte";
+    import {booking} from "@breezbook/packages-core";
 
     let tenant: Tenant | null = null;
     let services: Service[] = []
@@ -32,6 +35,7 @@
         petName: string;
         address: string;
         duration: number;
+        customer: CoreCustomerDetails|null
     };
 
     let step = 0;
@@ -48,7 +52,8 @@
             serviceFormData: [],
             petName: '',
             address: '',
-            duration: 0
+            duration: 0,
+            customer: null
         }
     }
 
@@ -160,6 +165,17 @@
         }
     }
 
+    function onCustomerDetailsFilled(event:CustomEvent<CoreCustomerDetails>) {
+        bookingData = {...bookingData, customer: event.detail}
+        nextStep()
+    }
+
+    function onDateTimeComplete() {
+        if (bookingData.date && bookingData.time) {
+            nextStep();
+        }
+    }
+
     $: formToFill = tenant ? formsToFill(tenant, bookingData)[formIndex] : null
 </script>
 
@@ -171,7 +187,7 @@
         </div>
     {:else if tenant}
         <div class="w-full max-w-md bg-base-100 shadow-xl rounded-lg p-8">
-            {#if step > 1 && step < 6}
+            {#if step > 1 && step < 7}
                 <BookingSummary
                         service={bookingData.service}
                         serviceOptions={bookingData.serviceOptions}
@@ -224,9 +240,9 @@
                                            tenantId={tenant.id}
                                            serviceOptions={bookingData.serviceOptions}
                                            bind:selectedDate={bookingData.date}
-                                           bind:selectedTime={bookingData.time }/>
-                        <button class="btn btn-primary mb-2" on:click={nextStep}>Next</button>
-                        <button class="btn btn-outline" on:click={prevStep}>Back</button>
+                                           bind:selectedTime={bookingData.time}
+                                           onComplete={onDateTimeComplete}/>
+                        <button class="btn btn-outline mt-4" on:click={prevStep}>Back</button>
                     {/if}
                 </div>
             {:else if step === 4 && formToFill}
@@ -242,10 +258,15 @@
                 </div>
             {:else if step === 5}
                 <div class="flex flex-col">
-                    <button class="btn btn-primary mb-2" on:click={() => step = 6}>Confirm Booking</button>
-                    <button class="btn btn-outline" on:click={prevStep}>Back</button>
+                    <h3 class="text-2xl font-semibold mb-6 text-primary">Your Details</h3>
+                    <FillCustomerDetails on:filled={onCustomerDetailsFilled} on:prev={prevStep}/>
                 </div>
             {:else if step === 6}
+                <div class="flex flex-col">
+                    <button class="btn btn-primary mb-2" on:click={nextStep}>Confirm Booking</button>
+                    <button class="btn btn-outline" on:click={prevStep}>Back</button>
+                </div>
+            {:else if step === 7}
                 <div class="flex flex-col items-center">
                     <CheckCircle size={64} class="text-success mb-6"/>
                     <h3 class="text-2xl font-semibold mb-4 text-primary">Booking Confirmed!</h3>

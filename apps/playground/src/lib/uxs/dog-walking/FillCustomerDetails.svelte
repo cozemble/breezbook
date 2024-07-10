@@ -35,25 +35,29 @@
         }
         dispatch('filled', details)
     }
+
+    function onPrev() {
+        dispatch('prev')
+    }
 </script>
 
-<h3>{$translations.yourDetails}</h3>
-<form class="flex flex-col w-1/6">
-    <label>
-        {$translations.firstName}
-        <input class="input input-bordered" type="text" bind:value={details.firstName}/>
+<form class="flex flex-col">
+    <label class="label">
+        First name
     </label>
-    <label>
-        {$translations.lastName}
-        <input class="input input-bordered" type="text" bind:value={details.lastName}/>
+    <input class="input input-bordered" type="text" bind:value={details.firstName}/>
+    <label class="label">
+        Last name
     </label>
-    <label>
-        {$translations.firstName}
-        <input class="input input-bordered" type="email" bind:value={details.email}/>
+    <input class="input input-bordered" type="text" bind:value={details.lastName}/>
+    <label class="label">
+        Email
     </label>
-    <label>
-        {$translations.phone}
-        <input class="input input-bordered" type="tel" bind:value={details.phone}/>
+    <input class="input input-bordered" type="email" bind:value={details.email}/>
+    <label class="label">
+        Phone
     </label>
-    <button class="btn btn-primary" type="submit" on:click={onNext}>{$translations.next}</button>
+    <input class="input input-bordered" type="tel" bind:value={details.phone}/>
+    <button class="btn btn-primary mt-6" on:click={onNext}>Next</button>
+    <button class="btn btn-outline mt-2" on:click={onPrev}>Back</button>
 </form>

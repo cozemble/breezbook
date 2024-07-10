@@ -9,7 +9,7 @@
     import {translations} from "$lib/ui/stores";
 
     export let state: JourneyState
-    let priced:PricedBasket
+    let priced: PricedBasket
     let showStripe = false
 
     onMount(async () => {

@@ -17,6 +17,10 @@
     let availableSlots: AvailabilityResponse
     const dateRange = isoDateFns.listDays(today, dateInTheFuture)
 
+    export let onComplete: () => void
+
+    $: isSelectionComplete = selectedDate !== null && selectedTime !== null;
+
     onMount(async () => {
         const dateRange = `fromDate=${today.value}&toDate=${dateInTheFuture.value}`
         const serviceOptionRequests = serviceOptions.map(so => serviceOptionRequest(serviceOptionId(so.id)))
@@ -31,4 +35,7 @@
     <HorizontalDateAndTimePicker availability={availabilityResponseToItems(dateRange, availableSlots)}
                                  bind:selectedDate={selectedDate}
                                  bind:selectedTime={selectedTime}/>
+    <button class="btn btn-primary mt-4" on:click={onComplete} disabled={!isSelectionComplete}>
+        Next
+    </button>
 {/if}
