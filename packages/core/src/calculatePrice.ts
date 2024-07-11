@@ -34,7 +34,7 @@
  * 7. Channel-Based Pricing: Different prices for different booking channels, such as online versus in-person.
  */
 import {price, Price} from './types.js';
-import {AvailableSlot} from "./availability.js";
+import {AvailableSlot, availableSlotFns} from "./availability.js";
 import {
     price as pricingPrice,
     PriceAdjustment,
@@ -65,6 +65,8 @@ function factorsForSlot(requiredFactors: string[], slot: AvailableSlot): Pricing
         switch (f) {
             case 'daysUntilBooking':
                 return {type: 'daysUntilBooking', value: isoDateFns.daysUntil(slot.date)};
+            case 'isWeekend':
+                return {type: 'isWeekend', value: isoDateFns.isWeekend(slot.date)};
             case 'resourceMetadata':
                 return {
                     type: 'resourceMetadata',
@@ -80,11 +82,22 @@ function factorsForSlot(requiredFactors: string[], slot: AvailableSlot): Pricing
 
 }
 
+interface PricingContext {
+    serviceDuration: number
+}
+
+function getPricingContext(slot: AvailableSlot): PricingContext {
+    return {
+        serviceDuration: availableSlotFns.duration(slot).value
+    }
+}
+
 export function calculatePrice(slot: AvailableSlot, pricingRules: PricingRule[]): PricedSlot {
     const pricingEngine = new PricingEngine();
     pricingRules.forEach(r => pricingEngine.addRule(r));
     const requiredFactors = Array.from(new Set(pricingRules.flatMap(r => r.requiredFactors)));
+    const pricingContext = getPricingContext(slot)
 
-    const pricingOutcome = pricingEngine.calculatePrice(pricingPrice(slot.service.price.amount.value), factorsForSlot(requiredFactors, slot));
+    const pricingOutcome = pricingEngine.calculatePrice(pricingPrice(slot.service.price.amount.value), factorsForSlot(requiredFactors, slot), pricingContext);
     return pricedSlot(slot, price(pricingOutcome.finalPrice.amountInMinorUnits, slot.service.price.currency), pricingOutcome.adjustments);
 }

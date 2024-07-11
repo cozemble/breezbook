@@ -224,6 +224,10 @@ export const isoDateFns = {
         const today = dayjs(isoDate().value);
         const otherDate = dayjs(other.value);
         return otherDate.diff(today, 'days');
+    },
+    isWeekend(date: IsoDate) {
+        const dayOfWeek = this.dayOfWeek(date);
+        return dayOfWeek === 'Saturday' || dayOfWeek === 'Sunday';
     }
 };
 
@@ -302,6 +306,13 @@ export const time24Fns = {
     },
     equals(a: TwentyFourHourClockTime, b: TwentyFourHourClockTime) {
         return a.value === b.value;
+    },
+    duration(startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime):Duration {
+        const startAsDate = new Date(`2021-01-01T${startTime.value}`);
+        const endAsDate = new Date(`2021-01-01T${endTime.value}`);
+        const diff = endAsDate.getTime() - startAsDate.getTime();
+        const diffInMinutes = diff / 1000 / 60;
+        return duration(minutes(diffInMinutes));
     }
 };
 

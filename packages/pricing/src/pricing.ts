@@ -147,7 +147,16 @@ export function jexlMutation(jexlExpression: string): JexlMutation {
     return {_type: 'jexl.mutation', jexlExpression}
 }
 
-type Mutation = Multiply | Add | JexlMutation
+interface PerHour {
+    _type: 'per.hour';
+    mutation: Add;
+}
+
+export function perHour(mutation: Add): PerHour {
+    return {_type: 'per.hour', mutation}
+}
+
+type Mutation = Multiply | Add | JexlMutation | PerHour
 
 interface ConditionalMutation {
     condition?: Condition;
@@ -162,6 +171,7 @@ export interface PricingRule {
     requiredFactors: string[];
     mutations: ConditionalMutation[];
     applyAllOrFirst: 'all' | 'first';
+    context?: Record<string, any>;
 }
 
 export class PricingEngine {
@@ -183,9 +193,11 @@ export class PricingEngine {
                 return self.jexlInstance.evalSync(amendedExpression, context);
             });
         });
-        // add length as a transform
         this.jexlInstance.addTransform('length', function (arr: any[]) {
             return arr.length;
+        });
+        this.jexlInstance.addTransform('includes', function (arr: any[], value: any) {
+            return arr.includes(value);
         });
     }
 
@@ -193,12 +205,12 @@ export class PricingEngine {
         this.rules.push(rule);
     }
 
-    calculatePrice(basePrice: Price, factors: PricingFactor[]): PricingResult {
+    calculatePrice(basePrice: Price, factors: PricingFactor[], externalContext: Record<string, any> = {}): PricingResult {
         const result = pricingResult(basePrice);
 
         for (const rule of this.rules) {
             if (rule.requiredFactors.every(factor => factors.some(f => f.type === factor))) {
-                const outcome = this.executeRule(rule, result.finalPrice, factors);
+                const outcome = this.executeRule(rule, result.finalPrice, factors, externalContext);
                 if (outcome.finalPrice.amountInMinorUnits !== result.finalPrice.amountInMinorUnits) {
                     result.finalPrice = outcome.finalPrice;
                     result.adjustments.push(...outcome.adjustments);
@@ -208,8 +220,8 @@ export class PricingEngine {
         return result;
     }
 
-    private executeRule(rule: PricingRule, currentPrice: Price, factors: PricingFactor[]): PricingResult {
-        const context = this.factorsToContext(factors, currentPrice);
+    private executeRule(rule: PricingRule, currentPrice: Price, factors: PricingFactor[], externalContext: Record<string, any>): PricingResult {
+        const context = this.factorsToContext(factors, currentPrice, {...externalContext, ...(rule.context ?? {})});
         const result = pricingResult(currentPrice);
         for (const mutation of rule.mutations) {
             const condition = mutation.condition?.condition || 'true';
@@ -250,12 +262,16 @@ export class PricingEngine {
         if (mutation._type === 'add') {
             return price(context.currentPrice + mutation.amount);
         }
+        if (mutation._type === 'per.hour') {
+            return price(context.currentPrice + mutation.mutation.amount * context.serviceDuration / 60);
+        }
 
         return price(context.currentPrice * mutation.factor);
     }
 
-    private factorsToContext(factors: PricingFactor[], currentPrice: Price) {
+    private factorsToContext(factors: PricingFactor[], currentPrice: Price, externalContext: Record<string, any>) {
         const context = {
+            ...externalContext,
             currentPrice: currentPrice.amountInMinorUnits
         } as any;
         for (const factor of factors) {

@@ -2119,35 +2119,38 @@ const goalsForm: JsonSchemaForm = {
 };
 
 const goalsFormLabelsEnglish = jsonSchemaFormLabels(
-    goalsForm.id, 
-    languages.en, 
+    goalsForm.id,
+    languages.en,
     "Your goals",
     [schemaKeyLabel("goals", "Goals")],
     "What are your fitness goals")
 
 const goalsFormLabelsTurkish = jsonSchemaFormLabels(
-    goalsForm.id, 
-    languages.tr, 
-    "Hedefleriniz", 
-    [schemaKeyLabel("goals", "Hedefler")], 
+    goalsForm.id,
+    languages.tr,
+    "Hedefleriniz",
+    [schemaKeyLabel("goals", "Hedefler")],
     "Spor hedefleriniz nelerdir")
 ```
 
 # Mon 8 Jul 2024
-The personal training demo is done now.  It demonstrates the following:
 
- - themeing
- - multiple languages
- - multiple locations
- - resource dependent pricing (Mete is more expensive as an "elite" trainer)
+The personal training demo is done now. It demonstrates the following:
 
-Am starting on the dog walking demo now.  And I quickly hit on a new pricing mechanism that I don't support.  Per-hour pricing.  How did I miss this????
+- themeing
+- multiple languages
+- multiple locations
+- resource dependent pricing (Mete is more expensive as an "elite" trainer)
 
-I asked Claude how a dog walker might price their services.  It said this:
+Am starting on the dog walking demo now. And I quickly hit on a new pricing mechanism that I don't support. Per-hour
+pricing. How did I miss this????
+
+I asked Claude how a dog walker might price their services. It said this:
 
 ## Dog Walking and Pet Care Services Pricing Structure
 
 ### 1. Individual Walk
+
 - Base rate: $20-$30 for a 30-minute walk
 - Additional time: $10-$15 per 15 minutes
 - Factors affecting price:
@@ -2156,15 +2159,18 @@ I asked Claude how a dog walker might price their services.  It said this:
     - Time of day (premium for early morning or late evening)
 
 ### 2. Group Walk
+
 - Base rate: $15-$25 per dog for a 60-minute walk
 - Usually limited to 3-5 dogs per group
 - Potential discount for multiple dogs from the same household
 
 ### 3. Drop-in Visit
+
 - Base rate: $15-$25 for a 20-30 minute visit
 - Additional services (e.g., administering medication): $5-$10 extra
 
 ### 4. Pet Sitting Visit
+
 - Base rate: $40-$60 for a 2-hour visit
 - Additional time: $15-$20 per hour
 - Overnight stay (8-12 hours): $70-$100
@@ -2176,21 +2182,24 @@ I asked Claude how a dog walker might price their services.  It said this:
     - Brief house-sitting duties (mail collection, plant watering)
 
 ### Additional Fees
+
 - Holiday surcharge: 1.5x regular rate
 - Last-minute booking fee (less than 24 hours notice): $5-$10
 - Extended travel fee (outside normal service area): $0.50-$1 per mile
 
 ### Package Deals
+
 - Weekly package (5 walks or visits): 10% discount
 - Monthly package (20 walks or visits): 15% discount
 - Mix and match services (e.g., 3 walks, 2 pet sitting visits per week): Custom pricing
 
 ### Cancellation Policy
+
 - More than 24 hours notice: Full refund
 - 12-24 hours notice: 50% refund
 - Less than 12 hours notice: No refund
 
-Note: All prices are in USD and should be adjusted based on local market rates and cost of living. Pet sitting rates 
+Note: All prices are in USD and should be adjusted based on local market rates and cost of living. Pet sitting rates
 may vary based on the number and types of pets, and any special care requirements.
 
 Chatting with Claude, the key take away was something like this:
@@ -2198,26 +2207,26 @@ Chatting with Claude, the key take away was something like this:
 ```typescript
 // Example usage:
 const dogWalkingPricingMatrix = createPricingMatrix('dog-walking-matrix', [
-    { 
-        resourceId: resourceId('alex'), 
-        serviceId: serviceId('individual-walk'), 
+    {
+        resourceId: resourceId('alex'),
+        serviceId: serviceId('individual-walk'),
         timePricingRule: {
             initialDuration: minutes(60), // might be modeled on the service
             initialPrice: price(2000), // £20 for first hour , or the base duration of the service
             additionalPricePoints: [
-                { duration: minutes(15), price: price(500) }, // £5 per additional 15 minutes
-                { duration: minutes(30), price: price(1000) }, // £10 per additional 30 minutes
+                {duration: minutes(15), price: price(500)}, // £5 per additional 15 minutes
+                {duration: minutes(30), price: price(1000)}, // £10 per additional 30 minutes
             ]
         }
     },
-    { 
-        resourceId: resourceId('jordan'), 
-        serviceId: serviceId('individual-walk'), 
+    {
+        resourceId: resourceId('jordan'),
+        serviceId: serviceId('individual-walk'),
         timePricingRule: {
             initialDuration: minutes(60),
             initialPrice: price(1800), // £18 for first hour
             additionalPricePoints: [
-                { duration: minutes(30), price: price(900) }, // £9 per additional 30 minutes
+                {duration: minutes(30), price: price(900)}, // £9 per additional 30 minutes
             ]
         }
     },
@@ -2225,49 +2234,108 @@ const dogWalkingPricingMatrix = createPricingMatrix('dog-walking-matrix', [
 ]);
 ```
 
-Some services have a fixed time - a group dog walk in 60 minutes.  And it will probably be offered at time slots.  Like
-a group dog walk in the morning and another in the evening.  With individual dog walks in between.  The individual dog
+Some services have a fixed time - a group dog walk in 60 minutes. And it will probably be offered at time slots. Like
+a group dog walk in the morning and another in the evening. With individual dog walks in between. The individual dog
 walks are priced per hour or in 15 min increments, and each walker has their own pricing.
 
 So some new modeling concepts fall out of this.
 
- - a service can be fixed in duration, or flexible, with a min, max and increment I guess.
- - a service can be offered at specific times, or at any time. The morning and evening group walks might be 9am to 10am
-   and 6pm to 7pm.  The individual walks might be offered at any time, but crucially not at those time slotted times.  
-   In other words a service can have its own availability
- - personalised pricing for a service.
- - time based pricing, explicitly modeled as a "Price sheet" - in this case as a matrix
- - accounting for additional time pricing in the price sheet
+- a service can be fixed in duration, or flexible, with a min, max and increment I guess.
+- a service can be offered at specific times, or at any time. The morning and evening group walks might be 9am to 10am
+  and 6pm to 7pm. The individual walks might be offered at any time, but crucially not at those time slotted times.  
+  In other words a service can have its own availability
+- personalised pricing for a service.
+- time based pricing, explicitly modeled as a "Price sheet" - in this case as a matrix
+- accounting for additional time pricing in the price sheet
 
-One common need for dog walkers is to offer a discount for multiple dogs from the same household.  How can I model this
-pricing well?  I think it feels like an add-on.  The add-on is "additional dog from the same household", and maybe it 
-has a quantity associated with it.  The total quantity of dogs will include the initial dog and the number of add-ons -
-when it comes to figuring out when a group walk is full.  Will this be complex?  Maybe.
+One common need for dog walkers is to offer a discount for multiple dogs from the same household. How can I model this
+pricing well? I think it feels like an add-on. The add-on is "additional dog from the same household", and maybe it
+has a quantity associated with it. The total quantity of dogs will include the initial dog and the number of add-ons -
+when it comes to figuring out when a group walk is full. Will this be complex? Maybe.
 
 Another approach is in the general case of a group booking, where the price is per person/dog/cat, and the option
-to express a discount for the second and subsequent party members.  This is a more general case.
+to express a discount for the second and subsequent party members. This is a more general case.
 
-Thinking about add-ons, adding time could be a priced add-on that extends the duration of the service.  We support this
-already, so this would mean no need to add in pricing matrices and sheets etc.  Lets see how far we can get 
-with that. 
+Thinking about add-ons, adding time could be a priced add-on that extends the duration of the service. We support this
+already, so this would mean no need to add in pricing matrices and sheets etc. Lets see how far we can get
+with that.
 
 If I add the ability to mark "capacity" based services as permitting extra party members during booking, at an optional
-discounted rate, then I think I will have a general solution for the dog walking pricing - without getting seduced into 
+discounted rate, then I think I will have a general solution for the dog walking pricing - without getting seduced into
 the complexity of pricing matrices and sheets.
 
 The UX of the app might be best placed to select the initial service, show add-ons and on that screen, prompt for extra
 party members i.e. "adding" is done in one place.
 
 # Tue 9 Jul 2024
-I was working through creating the necessary mutations to make my test dog walking client, and I was about to make the add-ons
-for the extra 30 mins and the extra dog.  But then I realised that add-ons do not extend the duration of a booking.  And then I 
-remembered that `Service Options` do.  This makes sense.  First you pick all things that define the length, capacity and base 
-price of the service.  Then add-ons, their purpose is to add items that can be done in the same time, for an extra charge.  
+
+I was working through creating the necessary mutations to make my test dog walking client, and I was about to make the
+add-ons
+for the extra 30 mins and the extra dog. But then I realised that add-ons do not extend the duration of a booking. And
+then I
+remembered that `Service Options` do. This makes sense. First you pick all things that define the length, capacity and
+base
+price of the service. Then add-ons, their purpose is to add items that can be done in the same time, for an extra
+charge.  
 So that might be watering plants or giving the dog medicine.
 
 So am going to push through the service option implementation
 
+# Thu 11 Jul 2024
+
+Service Options to express the ability to extend the duration of a service are in and the dog walking demo app is not
+too
+shabby.
+
+But now I want to implement the following pricing rules, which come from a real dog walker's site:
+
+- weekends are £2 more expensive
+- holidays (bank holidays, christmas, new year) are 1.5x more expensive
+
+This is implicitly speaking about the per-hour price of the service. How might I price this service if it was on a
+Saturday:
+
+- Individual walk, 60 minutes, £20 per hour
+- Additional time, 30 minutes, £15 per hour
+- Extra dog from same house-hold, £10 fixed price (probably would be per hour in reality, but I want to cover cases)
+
+I possible could model these pricing rules using what we already have by making `numberOfHours` a pricing factor, along
+with
+`isWeekend` and `isHoliday` (which will need a holiday calendar I assume).
+
+I am torn between trying to implement this pricing using the model I have, versus modeling services that are priced per
+hour explicitly. I have to see if it can be done using what I have, but for the record, Claude and me riffed out
+something like
+this:
+
+```typescript
+export type ServicePricing = FixedPricing | HourlyPricing;
+
+export interface FixedPricing {
+    type: 'fixed';
+    price: Price;
+    duration: Minutes;
+}
+
+export interface HourlyPricing {
+    type: 'hourly';
+    pricePerHour: Price;
+    minimumDuration: Minutes;
+    maximumDuration?: Minutes;
+}
 
 
+export interface Service {
+    id: ServiceId;
+    pricing: ServicePricing
+    resourceRequirements: ResourceRequirement[]
+    permittedAddOns: AddOnId[];
+    serviceFormIds: FormId[];
+    options: ServiceOption[];
+    startTimes: StartTime[] | null;
+    capacity: Capacity;
+}
+```
 
-
+It feels compelling cos it seems to model reality better. Let's see how I get on with the model I have now, and come
+back to this.

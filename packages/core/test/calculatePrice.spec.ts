@@ -1,6 +1,6 @@
 import {expect, test} from 'vitest'
 import {availableSlot, AvailableSlot, calculatePrice, carwash,currencies, price, resourceAllocation} from "../src/index.js";
-import {add, jexlCondition, multiply, PricingRule} from "@breezbook/packages-pricing";
+import {add, jexlCondition, multiply, perHour, PricingRule} from "@breezbook/packages-pricing";
 import {capacity, exactTimeAvailability, IsoDate, isoDate, isoDateFns, time24} from '@breezbook/packages-types';
 
 const today = isoDate();
@@ -49,6 +49,36 @@ test("can make price amendments based on days until the booking", () => {
     expect(pricedCarWashInTwoDaysTime.price).toEqual(price(1000, GBP));
     expect(pricedCarWashInTwoDaysTime.adjustments).toEqual([]);
 })
+
+test("can add £2 per hour if the booking is at a weekend", () => {
+    const addMoreForWeekend: PricingRule = {
+        id: 'add-more-for-weekend',
+        name: 'Add More For Weekend',
+        description: 'Add more for weekend',
+        requiredFactors: ['isWeekend'],
+        mutations: [
+            {
+                condition: jexlCondition('isWeekend == true'),
+                mutation: perHour(add(200)),
+                description: 'Add £2 per-hour on weekends',
+            },
+        ],
+        applyAllOrFirst: 'all'
+    }
+
+    const pricingRules = [addMoreForWeekend];
+    const friday = isoDate('2024-07-12');
+    const saturday = isoDate('2024-07-13');
+
+
+    const fridayPrice = calculatePrice(carWash(friday), pricingRules);
+    expect(fridayPrice.price).toEqual(price(1000, GBP));
+    expect(fridayPrice.adjustments).toHaveLength(0);
+
+    const saturdayPrice = calculatePrice(carWash(saturday), pricingRules);
+    expect(saturdayPrice.price).toEqual(price(1400, GBP)); // service is 2 hours long
+    expect(saturdayPrice.adjustments).toHaveLength(1);
+});
 
 test("can make price amendments on the usage of a particular resource", () => {
     // van2 is £20 more expensive than van1 because van2 is tier 1 and van1 is tier 2

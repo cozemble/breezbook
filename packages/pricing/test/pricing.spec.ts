@@ -269,3 +269,45 @@ test("extended jexl can filter on deeply nested properties", () => {
     }]);
     expect(pricedForTier2.finalPrice).toEqual(basePrice)
 })
+
+test("rules can have their own context", () => {
+    const twiceThePriceOnHolidays: PricingRule = {
+        id: 'twice-the-price-on-holidays',
+        name: 'Twice The Price On Holidays',
+        description: 'Double the price on holidays',
+        context: {
+            holidays: ['2024-12-25', '2024-12-26']
+        },
+        requiredFactors: ['bookingDate'],
+        mutations: [
+            {
+                condition: jexlCondition('holidays | includes(bookingDate)'),
+                mutation: jexlMutation('currentPrice * 2'),
+                description: 'Double the price on holidays',
+            }
+        ],
+        applyAllOrFirst: 'all'
+    }
+    const pricingEngine = new PricingEngine();
+    pricingEngine.addRule(twiceThePriceOnHolidays);
+
+    const priceForXmas = pricingEngine.calculatePrice(basePrice, [{
+        type: 'bookingDate',
+        value: '2024-12-25'
+    }]);
+    expect(priceForXmas.finalPrice).toEqual(price(20000))
+
+    const priceForBoxingDay = pricingEngine.calculatePrice(basePrice, [{
+        type: 'bookingDate',
+        value: '2024-12-26'
+    }]);
+    expect(priceForBoxingDay.finalPrice).toEqual(price(20000))
+
+    const priceForNormal = pricingEngine.calculatePrice(basePrice, [{
+        type: 'bookingDate',
+        value: '2024-12-35'
+    }]);
+    expect(priceForNormal.finalPrice).toEqual(basePrice)
+
+
+})
