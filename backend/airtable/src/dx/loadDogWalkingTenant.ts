@@ -894,10 +894,13 @@ const addMoreForWeekend: PricingRule = {
     id: 'add-more-for-weekend',
     name: 'Add More For Weekend',
     description: 'Add more for weekend',
-    requiredFactors: [pricingFactorName('isWeekend')],
+    requiredFactors: [pricingFactorName('dayOfWeek')],
+    context: {
+        weekendDays: ['Saturday', 'Sunday']
+    },
     mutations: [
         {
-            condition: jexlExpression('isWeekend == true'),
+            condition: jexlExpression('weekendDays | includes(dayOfWeek)'),
             mutation: perHour(add(200)),
             description: 'Add £2 per-hour on weekends',
         },

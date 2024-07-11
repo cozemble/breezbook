@@ -67,8 +67,8 @@ function getSimplePricingFactor(f: PricingFactorName, slot: AvailableSlot) {
     switch (f.name) {
         case 'daysUntilBooking':
             return {name: 'daysUntilBooking', value: isoDateFns.daysUntil(slot.date)};
-        case 'isWeekend':
-            return {name: 'isWeekend', value: isoDateFns.isWeekend(slot.date)};
+        case 'dayOfWeek':
+            return {name: 'dayOfWeek', value: isoDateFns.dayOfWeek(slot.date)};
         case 'bookingDate':
             return {name: 'bookingDate', value: slot.date.value};
         case 'resourceMetadata':
