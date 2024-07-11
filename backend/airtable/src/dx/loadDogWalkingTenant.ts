@@ -4,6 +4,7 @@ import {
     upsertForm,
     upsertFormLabels,
     upsertLocation,
+    upsertPricingRule,
     upsertResource,
     upsertResourceAvailability,
     upsertResourceType,
@@ -33,10 +34,20 @@ import {
     languages,
     schemaKeyLabel,
     tenantEnvironment,
-    tenantId
+    tenantId,
+    time24
 } from "@breezbook/packages-types";
 import {PrismaClient} from "@prisma/client";
 import {runUpserts} from "./loadMultiLocationGymTenant.js";
+import {
+    add,
+    jexlExpression,
+    jexlMutation,
+    parameterisedPricingFactor,
+    perHour,
+    pricingFactorName,
+    PricingRule
+} from "@breezbook/packages-pricing";
 
 const tenant_id = 'breezbook-dog-walks';
 const environment_id = 'dev';
@@ -799,6 +810,31 @@ function breezbookDogWalkUpserts(): Upsert[] {
             environment_id,
             customer_form_id: null,
             iana_timezone: 'Europe/London'
+        }),
+
+        upsertPricingRule({
+            id: makeTestId(tenant_id, environment_id, `pricing_rule.addMoreForWeekend`),
+            tenant_id,
+            environment_id,
+            rank: 0,
+            active: true,
+            definition: addMoreForWeekend as any
+        }),
+        upsertPricingRule({
+            id: makeTestId(tenant_id, environment_id, `pricing_rule.moreExpensiveOnHolidays`),
+            tenant_id,
+            environment_id,
+            rank: 1,
+            active: true,
+            definition: moreExpensiveOnHolidays as any
+        }),
+        upsertPricingRule({
+            id: makeTestId(tenant_id, environment_id, `pricing_rule.addMoreForEvening`),
+            tenant_id,
+            environment_id,
+            rank: 2,
+            active: true,
+            definition: addMoreForEvening as any
         })
     ]
 }
@@ -853,4 +889,74 @@ const dogDetailsFormLabelsEnglish = jsonSchemaFormLabels(dogDetailsForm.id, lang
 const secondDogDetailsFormLabelsEnglish = jsonSchemaFormLabels(secondDogDetailsForm.id, languages.en, "Your second dog's details", [
     schemaKeyLabel("secondDogsName", "Second dog's name")
 ], "Your second dog's name")
+
+const addMoreForWeekend: PricingRule = {
+    id: 'add-more-for-weekend',
+    name: 'Add More For Weekend',
+    description: 'Add more for weekend',
+    requiredFactors: [pricingFactorName('isWeekend')],
+    mutations: [
+        {
+            condition: jexlExpression('isWeekend == true'),
+            mutation: perHour(add(200)),
+            description: 'Add £2 per-hour on weekends',
+        },
+    ],
+    applyAllOrFirst: 'all'
+}
+
+const moreExpensiveOnHolidays: PricingRule = {
+    id: 'more-expensive-on-holidays',
+    name: '1.5x The Price On Holidays',
+    description: '1.5x the price on holidays',
+    context: {
+        holidays: [
+            '2024-01-01',
+            '2024-03-29',
+            '2024-04-01',
+            '2024-05-06',
+            '2024-05-27',
+            '2024-08-26',
+            '2024-12-25',
+            '2024-12-26',
+            '2025-01-01',
+            '2025-04-18',
+            '2025-04-21',
+            '2025-05-05',
+            '2025-05-26',
+            '2025-08-25',
+            '2025-12-25',
+            '2025-12-26',
+        ]
+    },
+    requiredFactors: [pricingFactorName('bookingDate')],
+    mutations: [
+        {
+            condition: jexlExpression('holidays | includes(bookingDate)'),
+            mutation: jexlMutation('currentPrice * 1.5'),
+            description: '1.5x the price on holidays',
+        }
+    ],
+    applyAllOrFirst: 'all'
+}
+
+const addMoreForEvening: PricingRule = {
+    id: 'add-more-for-evening',
+    name: 'Add More For Evening',
+    description: 'Add more for evening hours between 18:00 and 24:00',
+    requiredFactors: [
+        parameterisedPricingFactor('hourCount', 'numberOfEveningHours', {
+            startingTime: time24("18:00"),
+            endingTime: time24("24:00")
+        })
+    ],
+    mutations: [
+        {
+            condition: jexlExpression('numberOfEveningHours > 0'),
+            mutation: add(jexlExpression('numberOfEveningHours * 100')),
+            description: 'Add £1 per-hour for evening bookings',
+        },
+    ],
+    applyAllOrFirst: 'all'
+};
 

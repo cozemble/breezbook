@@ -67,6 +67,9 @@ export function minutes(value: number): Minutes {
 export const minuteFns = {
     sum(acc: Minutes, d: Minutes) {
         return minutes(acc.value + d.value);
+    },
+    toHours(minutes: Minutes): number {
+        return minutes.value / 60;
     }
 }
 
@@ -307,12 +310,21 @@ export const time24Fns = {
     equals(a: TwentyFourHourClockTime, b: TwentyFourHourClockTime) {
         return a.value === b.value;
     },
-    duration(startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime):Duration {
+    duration(startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime): Duration {
         const startAsDate = new Date(`2021-01-01T${startTime.value}`);
         const endAsDate = new Date(`2021-01-01T${endTime.value}`);
         const diff = endAsDate.getTime() - startAsDate.getTime();
         const diffInMinutes = diff / 1000 / 60;
         return duration(minutes(diffInMinutes));
+    },
+    max(from: TwentyFourHourClockTime, from2: TwentyFourHourClockTime) {
+        return from.value > from2.value ? from : from2;
+    },
+    min(to: TwentyFourHourClockTime, to2: TwentyFourHourClockTime) {
+        return to.value < to2.value ? to : to2;
+    },
+    lt(start: TwentyFourHourClockTime, end: TwentyFourHourClockTime) {
+        return start.value < end.value;
     }
 };
 
@@ -553,6 +565,18 @@ export const timePeriodFns = {
     calcPeriod(from: TwentyFourHourClockTime, duration: Duration | Minutes): TimePeriod {
         const durationMinutes = duration._type === 'duration' ? duration.value : duration;
         return timePeriod(from, time24Fns.addMinutes(from, durationMinutes));
+    },
+    overlap(a: TimePeriod, b: TimePeriod): TimePeriod | null {
+        const start = time24Fns.max(a.from, b.from);
+        const end = time24Fns.min(a.to, b.to);
+        if (time24Fns.lt(start, end)) {
+            return timePeriod(start, end);
+        }
+        return null;
+    },
+    toDuration(t: TimePeriod): Duration {
+        return duration(minutes(dayjs(`2021-01-01T${t.to.value}`).diff(`2021-01-01T${t.from.value}`, 'minutes')));
+
     }
 };
 
@@ -611,7 +635,7 @@ export const jsonSchemaFormFns = {
                     description: label.description
                 }
             };
-        },{});
+        }, {});
         return {
             ...form,
             name: labels.name,

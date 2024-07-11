@@ -78,7 +78,7 @@ import jexl from "jexl";
  * This list covers a wide range of factors that can influence pricing in a booking/appointment SaaS. The exact attributes you'll need will depend on your specific business model and the types of services being booked. However, this list should provide a solid foundation for implementing a comprehensive dynamic pricing system.
  */
 export interface PricingFactor<T = any> {
-    type: string;
+    name: string;
     value: T
 }
 
@@ -97,28 +97,30 @@ export interface PriceAdjustment {
     originalPrice: Price;
     adjustedPrice: Price;
     explanation: string;
+    explanationContext?: Record<string, any>;
 }
 
 export interface PricingResult {
     finalPrice: Price;
     basePrice: Price;
     adjustments: PriceAdjustment[];
+    report?: Record<string, any>;
 }
 
 export function pricingResult(basePrice: Price, finalPrice: Price = basePrice, adjustments: PriceAdjustment[] = []): PricingResult {
     return {finalPrice, basePrice, adjustments}
 }
 
-interface JexlCondition {
-    _type: 'jexl.condition';
-    condition: string
+interface JexlExpression {
+    _type: 'jexl.expression';
+    expression: string
 }
 
-export function jexlCondition(condition: string): Condition {
-    return {_type: 'jexl.condition', condition}
+export function jexlExpression(expression: string): Condition {
+    return {_type: 'jexl.expression', expression}
 }
 
-type Condition = JexlCondition
+type Condition = JexlExpression
 
 interface Multiply {
     _type: 'multiply';
@@ -131,10 +133,10 @@ export function multiply(factor: number): Multiply {
 
 interface Add {
     _type: 'add';
-    amount: number;
+    amount: number | JexlExpression;
 }
 
-export function add(amount: number): Add {
+export function add(amount: number | JexlExpression): Add {
     return {_type: 'add', amount}
 }
 
@@ -164,33 +166,68 @@ interface ConditionalMutation {
     description: string;
 }
 
+export interface PricingFactorName {
+    _type: 'factor.name';
+    name: string;
+}
+
+export function pricingFactorName(name: string): PricingFactorName {
+    return {_type: 'factor.name', name}
+}
+
+export interface ParameterisedPricingFactor<T = any> {
+    _type: 'parameterised.factor';
+    type: string;
+    name: string;
+    parameters: T;
+}
+
+export function parameterisedPricingFactor<T = any>(type: string, name: string, parameters: T): ParameterisedPricingFactor<T> {
+    return {_type: 'parameterised.factor', type, name, parameters}
+}
+
+export type PricingFactorSpec = PricingFactorName | ParameterisedPricingFactor
+
 export interface PricingRule {
     id: string;
     name: string;
     description: string;
-    requiredFactors: string[];
+    requiredFactors: PricingFactorSpec[];
     mutations: ConditionalMutation[];
     applyAllOrFirst: 'all' | 'first';
     context?: Record<string, any>;
 }
 
+function getPropValue(item: any, path: string): boolean | { it: any } {
+    if (path === 'it') {
+        return {it: item};
+    }
+    const props = path.split('.');
+    let result = item;
+    for (let prop of props) {
+        result = result[prop];
+        if (result === undefined) return false;
+    }
+    return {it: result};
+
+}
+
 export class PricingEngine {
     private rules: PricingRule[] = [];
     private jexlInstance = new jexl.Jexl();
+    private ruleContext: any = {} // to get the rule context into transforms.  Not sure how to do this better
 
     constructor() {
         const self = this;
         this.jexlInstance.addTransform('filter', function (arr: any[], path: string, expression: string) {
             return arr.filter(item => {
-                const props = path.split('.');
-                let result = item;
-                for (let prop of props) {
-                    result = result[prop];
-                    if (result === undefined) return false;
+                const context = getPropValue(item, path);
+                if (!context) {
+                    return false
                 }
-                const context = {value: result};
-                const amendedExpression = "value " + expression;
-                return self.jexlInstance.evalSync(amendedExpression, context);
+                const amendedExpression = "it " + expression;
+                const executeContext = {...self.ruleContext, ...context as any};
+                return self.safeJexl(amendedExpression, executeContext)
             });
         });
         this.jexlInstance.addTransform('length', function (arr: any[]) {
@@ -209,11 +246,14 @@ export class PricingEngine {
         const result = pricingResult(basePrice);
 
         for (const rule of this.rules) {
-            if (rule.requiredFactors.every(factor => factors.some(f => f.type === factor))) {
+            if (rule.requiredFactors.every(factor => factors.some(f => f.name === factor.name))) {
                 const outcome = this.executeRule(rule, result.finalPrice, factors, externalContext);
                 if (outcome.finalPrice.amountInMinorUnits !== result.finalPrice.amountInMinorUnits) {
                     result.finalPrice = outcome.finalPrice;
                     result.adjustments.push(...outcome.adjustments);
+                    if (outcome.report) {
+                        result.report = {...(result.report ?? {}), ...outcome.report}
+                    }
                 }
             }
         }
@@ -221,10 +261,13 @@ export class PricingEngine {
     }
 
     private executeRule(rule: PricingRule, currentPrice: Price, factors: PricingFactor[], externalContext: Record<string, any>): PricingResult {
-        const context = this.factorsToContext(factors, currentPrice, {...externalContext, ...(rule.context ?? {})});
+        const ruleContext = rule.context ?? {}
+        const context = this.factorsToContext(factors, currentPrice, {...externalContext, ...ruleContext});
+        this.ruleContext = context
         const result = pricingResult(currentPrice);
         for (const mutation of rule.mutations) {
-            const condition = mutation.condition?.condition || 'true';
+            const condition = mutation.condition?.expression || 'true';
+            this.ruleContext = context
             const shouldApply = this.safeJexl(condition, context);
             if (shouldApply) {
                 const newPrice = this.applyMutation(mutation.mutation, context);
@@ -257,16 +300,22 @@ export class PricingEngine {
 
     private applyMutation(mutation: Mutation, context: any): Price {
         if (mutation._type === 'jexl.mutation') {
-            return price(this.jexlInstance.evalSync(mutation.jexlExpression, context));
+            return price(this.safeJexl(mutation.jexlExpression, context));
         }
         if (mutation._type === 'add') {
-            return price(context.currentPrice + mutation.amount);
+            return price(context.currentPrice + this.amountToAdd(mutation, context));
         }
         if (mutation._type === 'per.hour') {
-            return price(context.currentPrice + mutation.mutation.amount * context.serviceDuration / 60);
+            const numberOfHours = context.serviceDuration / 60;
+            const amount = this.amountToAdd(mutation.mutation, context) * numberOfHours;
+            return price(context.currentPrice + amount);
         }
 
         return price(context.currentPrice * mutation.factor);
+    }
+
+    private amountToAdd(add: Add, context: any) {
+        return typeof add.amount === 'number' ? add.amount : this.safeJexl(add.amount.expression, context);
     }
 
     private factorsToContext(factors: PricingFactor[], currentPrice: Price, externalContext: Record<string, any>) {
@@ -275,7 +324,7 @@ export class PricingEngine {
             currentPrice: currentPrice.amountInMinorUnits
         } as any;
         for (const factor of factors) {
-            context[factor.type] = factor.value;
+            context[factor.name] = factor.value;
         }
         return context;
     }

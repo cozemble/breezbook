@@ -2339,3 +2339,32 @@ export interface Service {
 
 It feels compelling cos it seems to model reality better. Let's see how I get on with the model I have now, and come
 back to this.
+
+## Update on the above
+
+It has not worked out terrible:
+
+```typescript
+const addMoreForEvening: PricingRule = {
+    id: 'add-more-for-evening',
+    name: 'Add More For Evening',
+    description: 'Add more for evening hours between 18:00 and 24:00',
+    requiredFactors: [
+        parameterisedPricingFactor('hourCount', 'numberOfEveningHours', {
+            startingTime: time24("18:00"),
+            endingTime: time24("24:00")
+        })
+    ],
+    mutations: [
+        {
+            condition: jexlExpression('numberOfEveningHours > 0'),
+            mutation: add(jexlExpression('numberOfEveningHours * 100')),
+            description: 'Add £1 per-hour for evening bookings',
+        },
+    ],
+    applyAllOrFirst: 'all'
+};
+```
+
+This has made pricing more general.  It used to be the case that `requiredFactors` was just the name of the factor.
+But more general support like this means we can configure factor to some small degree.

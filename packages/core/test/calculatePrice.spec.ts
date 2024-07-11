@@ -1,7 +1,31 @@
 import {expect, test} from 'vitest'
-import {availableSlot, AvailableSlot, calculatePrice, carwash,currencies, price, resourceAllocation} from "../src/index.js";
-import {add, jexlCondition, multiply, perHour, PricingRule} from "@breezbook/packages-pricing";
-import {capacity, exactTimeAvailability, IsoDate, isoDate, isoDateFns, time24} from '@breezbook/packages-types';
+import {
+    availableSlot,
+    AvailableSlot,
+    calculatePrice,
+    carwash,
+    currencies,
+    price,
+    resourceAllocation
+} from "../src/index.js";
+import {
+    add,
+    jexlExpression,
+    multiply,
+    parameterisedPricingFactor,
+    perHour,
+    pricingFactorName,
+    PricingRule
+} from "@breezbook/packages-pricing";
+import {
+    capacity,
+    exactTimeAvailability,
+    IsoDate,
+    isoDate,
+    isoDateFns,
+    time24,
+    time24Fns
+} from '@breezbook/packages-types';
 
 const today = isoDate();
 const tomorrow = isoDateFns.addDays(today, 1);
@@ -19,15 +43,15 @@ test("can make price amendments based on days until the booking", () => {
         id: 'add-more-if-booking-is-near',
         name: 'Add More If Booking Is Near',
         description: 'Add more if booking is near',
-        requiredFactors: ['daysUntilBooking'],
+        requiredFactors: [pricingFactorName('daysUntilBooking')],
         mutations: [
             {
-                condition: jexlCondition('daysUntilBooking == 0'),
+                condition: jexlExpression('daysUntilBooking == 0'),
                 mutation: add(750),
                 description: 'Add £7.50 for booking today',
             },
             {
-                condition: jexlCondition('daysUntilBooking == 1'),
+                condition: jexlExpression('daysUntilBooking == 1'),
                 mutation: multiply(1.5),
                 description: '50% increase applied for booking tomorrow',
             },
@@ -55,10 +79,10 @@ test("can add £2 per hour if the booking is at a weekend", () => {
         id: 'add-more-for-weekend',
         name: 'Add More For Weekend',
         description: 'Add more for weekend',
-        requiredFactors: ['isWeekend'],
+        requiredFactors: [pricingFactorName('isWeekend')],
         mutations: [
             {
-                condition: jexlCondition('isWeekend == true'),
+                condition: jexlExpression('isWeekend == true'),
                 mutation: perHour(add(200)),
                 description: 'Add £2 per-hour on weekends',
             },
@@ -80,16 +104,62 @@ test("can add £2 per hour if the booking is at a weekend", () => {
     expect(saturdayPrice.adjustments).toHaveLength(1);
 });
 
+test("can add £1 per hour for the evening hours of a booking", () => {
+    const addMoreForEvening: PricingRule = {
+        id: 'add-more-for-evening',
+        name: 'Add More For Evening',
+        description: 'Add more for evening hours between 18:00 and 24:00',
+        requiredFactors: [parameterisedPricingFactor('hourCount', 'numberOfEveningHours', {
+            startingTime: time24("18:00"),
+            endingTime: time24("24:00")
+        })],
+        mutations: [
+            {
+                condition: jexlExpression('numberOfEveningHours > 0'),
+                mutation: add(jexlExpression('numberOfEveningHours * 100')),
+                description: 'Add £1 per-hour for evening bookings',
+            },
+        ],
+        applyAllOrFirst: 'all'
+    };
+
+    const morningBooking = carWash(today, carwash.van1, '09:00', '11:00');
+    const eveningBooking = carWash(today, carwash.van1, '17:00', '19:00');
+    const nightBooking = carWash(today, carwash.van1, '22:00', '23:00');
+    const halfHourNightBooking = carWash(today, carwash.van1, '22:00', '22:30');
+    const fullEveningBooking = carWash(today, carwash.van1, '18:00', '24:00');
+
+    const morningPrice = calculatePrice(morningBooking, [addMoreForEvening]);
+    expect(morningPrice.price).toEqual(price(1000, GBP));
+    expect(morningPrice.adjustments).toHaveLength(0);
+
+    const eveningPrice = calculatePrice(eveningBooking, [addMoreForEvening]);
+    expect(eveningPrice.price).toEqual(price(1100, GBP)); // 1000 base + 100 * 1 hour (18:00-19:00)
+    expect(eveningPrice.adjustments).toHaveLength(1);
+
+    const nightPrice = calculatePrice(nightBooking, [addMoreForEvening]);
+    expect(nightPrice.price).toEqual(price(1100, GBP)); // 1000 base + 100 * 1 hour (23:00-24:00)
+    expect(nightPrice.adjustments).toHaveLength(1);
+
+    const halfHourNightPrice = calculatePrice(halfHourNightBooking, [addMoreForEvening]);
+    expect(halfHourNightPrice.price).toEqual(price(1050, GBP)); // 1000 base + 100 * 0.5 hour
+    expect(halfHourNightPrice.adjustments).toHaveLength(1);
+
+    const fullEveningPrice = calculatePrice(fullEveningBooking, [addMoreForEvening]);
+    expect(fullEveningPrice.price).toEqual(price(1600, GBP)); // 1000 base + 100 * 6 hours
+    expect(fullEveningPrice.adjustments).toHaveLength(1);
+})
+
 test("can make price amendments on the usage of a particular resource", () => {
     // van2 is £20 more expensive than van1 because van2 is tier 1 and van1 is tier 2
     const payMoreForTier1Van: PricingRule = {
         id: 'pay-more-for-tier-1-van',
         name: 'Pay More For Tier 1 Van',
         description: 'Pay more for tier 1 van',
-        requiredFactors: ['resourceMetadata'],
+        requiredFactors: [pricingFactorName('resourceMetadata')],
         mutations: [
             {
-                condition: jexlCondition("resourceMetadata | filter('metadata.tier', '== 1') | length > 0"),
+                condition: jexlExpression("resourceMetadata | filter('metadata.tier', '== 1') | length > 0"),
                 mutation: add(2000),
                 description: 'Add £20 for tier 1 van',
             },
@@ -105,6 +175,14 @@ test("can make price amendments on the usage of a particular resource", () => {
     expect(pricedForVan2.adjustments).toHaveLength(1);
 });
 
-function carWash(today: IsoDate, van = carwash.van1): AvailableSlot {
-    return availableSlot(carwash.smallCarWash, today, exactTimeAvailability(time24('09:00')), [resourceAllocation(carwash.resourceRequirements.anySuitableVan, van)], capacity(1), capacity(0))
+function carWash(date: IsoDate, van = carwash.van1, startTime = '09:00', endTime = '11:00'): AvailableSlot {
+    const diff = time24Fns.duration(time24(startTime), time24(endTime));
+    return availableSlot(
+        {...carwash.smallCarWash, duration: diff.value},
+        date,
+        exactTimeAvailability(time24(startTime)),
+        [resourceAllocation(carwash.resourceRequirements.anySuitableVan, van)],
+        capacity(1),
+        capacity(0)
+    );
 }

@@ -18,7 +18,7 @@ import {
 import {PricedBasket, pricedCreateOrderRequest} from '@breezbook/backend-api-types';
 import {everythingForAvailability} from '../src/express/getEverythingForAvailability.js';
 import {EndpointOutcome} from "../src/infra/endpoint.js";
-import {jexlCondition, multiply, PricingRule} from "@breezbook/packages-pricing";
+import {jexlExpression, multiply, pricingFactorName, PricingRule} from "@breezbook/packages-pricing";
 import {couponCode, dayAndTimePeriod, duration,
     environmentId, IsoDate, isoDate, isoDateFns, minutes, tenantEnvironment, tenantId, timezone} from '@breezbook/packages-types';
 import resourceDayAvailability = configuration.resourceDayAvailability;
@@ -59,20 +59,20 @@ const chargeMoreForSoonBookings: PricingRule = {
     id: 'charge-more-for-soon-bookings',
     name: 'Charge More for Soon Bookings',
     description: 'Increase price for bookings that are happening soon',
-    requiredFactors: ['daysUntilBooking'],
+    requiredFactors: [pricingFactorName('daysUntilBooking')],
     mutations: [
         {
-            condition: jexlCondition('daysUntilBooking == 0'),
+            condition: jexlExpression('daysUntilBooking == 0'),
             mutation: multiply(1.4),
             description: '40% increase applied for booking today',
         },
         {
-            condition: jexlCondition('daysUntilBooking == 1'),
+            condition: jexlExpression('daysUntilBooking == 1'),
             mutation: multiply(1.2),
             description: '20% increase applied for booking tomorrow',
         },
         {
-            condition: jexlCondition('daysUntilBooking == 2'),
+            condition: jexlExpression('daysUntilBooking == 2'),
             mutation: multiply(1.1),
             description: '10% increase applied for booking two days from now',
         }

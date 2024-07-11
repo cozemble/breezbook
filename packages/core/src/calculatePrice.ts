@@ -36,13 +36,16 @@
 import {price, Price} from './types.js';
 import {AvailableSlot, availableSlotFns} from "./availability.js";
 import {
+    ParameterisedPricingFactor,
     price as pricingPrice,
     PriceAdjustment,
     PricingEngine,
     PricingFactor,
+    PricingFactorName,
+    PricingFactorSpec,
     PricingRule
 } from "@breezbook/packages-pricing";
-import {isoDateFns} from "@breezbook/packages-types";
+import {isoDateFns, minuteFns, timePeriod, timePeriodFns, TwentyFourHourClockTime} from "@breezbook/packages-types";
 
 export interface PricedSlot {
     _type: 'priced.slot';
@@ -60,26 +63,54 @@ export function pricedSlot(slot: AvailableSlot, initialPrice: Price, adjustments
     };
 }
 
-function factorsForSlot(requiredFactors: string[], slot: AvailableSlot): PricingFactor[] {
-    return requiredFactors.map(f => {
-        switch (f) {
-            case 'daysUntilBooking':
-                return {type: 'daysUntilBooking', value: isoDateFns.daysUntil(slot.date)};
-            case 'isWeekend':
-                return {type: 'isWeekend', value: isoDateFns.isWeekend(slot.date)};
-            case 'resourceMetadata':
-                return {
-                    type: 'resourceMetadata',
-                    value: slot.resourceAllocation.map(ra => ({
-                        requirementId: ra.requirement.id.value,
-                        metadata: ra.resource.metadata
-                    }))
-                };
-            default:
-                throw new Error(`Unknown required factor ${f}`);
-        }
-    });
+function getSimplePricingFactor(f: PricingFactorName, slot: AvailableSlot) {
+    switch (f.name) {
+        case 'daysUntilBooking':
+            return {name: 'daysUntilBooking', value: isoDateFns.daysUntil(slot.date)};
+        case 'isWeekend':
+            return {name: 'isWeekend', value: isoDateFns.isWeekend(slot.date)};
+        case 'bookingDate':
+            return {name: 'bookingDate', value: slot.date.value};
+        case 'resourceMetadata':
+            return {
+                name: 'resourceMetadata',
+                value: slot.resourceAllocation.map(ra => ({
+                    requirementId: ra.requirement.id.value,
+                    metadata: ra.resource.metadata
+                }))
+            };
+        default:
+            throw new Error(`Unknown required factor ${JSON.stringify(f)}`);
+    }
+}
 
+export interface HourCountParams {
+    startingTime: TwentyFourHourClockTime;
+    endingTime: TwentyFourHourClockTime;
+}
+
+function getParameterisedPricingFactor(f: ParameterisedPricingFactor, slot: AvailableSlot): PricingFactor {
+    if (f.type === 'hourCount') {
+        const params = f.parameters as HourCountParams;
+        const reportingPeriod = timePeriod(params.startingTime, params.endingTime);
+        const servicePeriod = availableSlotFns.servicePeriod(slot);
+        const overlap = timePeriodFns.overlap(reportingPeriod, servicePeriod);
+        if(overlap === null) {
+            return {name: f.name, value: 0}
+        }
+        const overlapDuration = timePeriodFns.toDuration(overlap);
+        return {name: f.name, value: minuteFns.toHours(overlapDuration.value)}
+    }
+    throw new Error(`Unknown required factor ${JSON.stringify(f)}`);
+}
+
+function factorsForSlot(requiredFactors: PricingFactorSpec[], slot: AvailableSlot): PricingFactor[] {
+    return requiredFactors.map(f => {
+        if (f._type === "factor.name") {
+            return getSimplePricingFactor(f, slot);
+        }
+        return getParameterisedPricingFactor(f, slot);
+    });
 }
 
 interface PricingContext {

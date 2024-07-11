@@ -1,50 +1,52 @@
 import {expect, test} from 'vitest'
 import {
-    jexlCondition,
+    add,
+    jexlExpression,
     jexlMutation,
     multiply,
     price,
     PricingEngine,
     PricingFactor,
+    pricingFactorName,
     pricingResult,
     PricingRule
 } from "../src/pricing.js";
 
 interface BookingStartTimeFactor extends PricingFactor<string> {
-    type: 'bookingStartTime'
+    name: 'bookingStartTime'
     value: string;
 }
 
 interface DaysUntilBookingFactor extends PricingFactor<number> {
-    type: 'daysUntilBooking';
+    name: 'daysUntilBooking';
     value: number;
 }
 
 interface MonthOfBookingFactor extends PricingFactor<number> {
-    type: 'monthOfBooking';
+    name: 'monthOfBooking';
     value: number;
 }
 
 function bookingStartTimeFactor(value: string): BookingStartTimeFactor {
-    return {type: 'bookingStartTime', value}
+    return {name: 'bookingStartTime', value}
 }
 
 function daysUntilBookingFactor(value: number): DaysUntilBookingFactor {
-    return {type: 'daysUntilBooking', value}
+    return {name: 'daysUntilBooking', value}
 }
 
 function monthOfBookingFactor(value: number): MonthOfBookingFactor {
-    return {type: 'monthOfBooking', value}
+    return {name: 'monthOfBooking', value}
 }
 
 const moreExpensiveAfterSixPm: PricingRule = {
     id: 'more-expensive-after-six-pm',
     name: 'More Expensive After 6pm',
     description: 'Increase price by 10% after 6pm',
-    requiredFactors: ['bookingStartTime'],
+    requiredFactors: [pricingFactorName('bookingStartTime')],
     mutations: [
         {
-            condition: jexlCondition('bookingStartTime >= "18:00"'),
+            condition: jexlExpression('bookingStartTime >= "18:00"'),
             mutation: jexlMutation('currentPrice * 1.1'),
             description: '10% increase applied for evening service',
         }
@@ -56,20 +58,20 @@ const lastMinuteBookingsAreMoreExpensive: PricingRule = {
     id: 'last-minute-booking',
     name: 'Last Minute Booking',
     description: 'Increase price for bookings that are happening soon',
-    requiredFactors: ['daysUntilBooking'],
+    requiredFactors: [pricingFactorName('daysUntilBooking')],
     mutations: [
         {
-            condition: jexlCondition('daysUntilBooking == 0'),
+            condition: jexlExpression('daysUntilBooking == 0'),
             mutation: multiply(1.4),
             description: '40% increase applied for booking today',
         },
         {
-            condition: jexlCondition('daysUntilBooking == 1'),
+            condition: jexlExpression('daysUntilBooking == 1'),
             mutation: multiply(1.2),
             description: '20% increase applied for booking tomorrow',
         },
         {
-            condition: jexlCondition('daysUntilBooking == 2'),
+            condition: jexlExpression('daysUntilBooking == 2'),
             mutation: multiply(1.1),
             description: '10% increase applied for booking two days from now',
         }
@@ -81,10 +83,10 @@ const summerDiscount: PricingRule = {
     id: 'summer-discount',
     name: 'Summer Discount',
     description: 'Apply a 10% discount during summer months',
-    requiredFactors: ['monthOfBooking'],
+    requiredFactors: [pricingFactorName('monthOfBooking')],
     mutations: [
         {
-            condition: jexlCondition('monthOfBooking >= 5 && monthOfBooking <= 7'),
+            condition: jexlExpression('monthOfBooking >= 5 && monthOfBooking <= 7'),
             mutation: jexlMutation('currentPrice * 0.9'),
             description: '10% summer discount applied',
         }
@@ -96,10 +98,10 @@ const moreExpensiveIfOneInstructorIsCalledMike: PricingRule = {
     id: 'more-expensive-if-one-instructor-is-called-mike',
     name: 'More Expensive If One Instructor Is Called Mike',
     description: 'Increase price by 10% if one of the instructors is called Mike',
-    requiredFactors: ['instructorNames'],
+    requiredFactors: [pricingFactorName('instructorNames')],
     mutations: [
         {
-            condition: jexlCondition("instructorNames[.name == 'Mike'] | length > 0"),
+            condition: jexlExpression("instructorNames[.name == 'Mike'] | length > 0"),
             mutation: jexlMutation('currentPrice * 1.1'),
             description: '10% increase applied for service with Mike',
         }
@@ -111,10 +113,10 @@ const moreExpensiveWhenMetadataTierIsOne: PricingRule = {
     id: 'more-expensive-when-metadata-tier-is-one',
     name: 'More Expensive When Metadata Tier Is One',
     description: 'Increase price by £20 when the resource has a tier of 1',
-    requiredFactors: ['resourceMetadata'],
+    requiredFactors: [pricingFactorName('resourceMetadata')],
     mutations: [
         {
-            condition: jexlCondition("resourceMetadata | filter('metadata.tier', '== 1') | length > 0"),
+            condition: jexlExpression("resourceMetadata | filter('metadata.tier', '== 1') | length > 0"),
             mutation: jexlMutation('currentPrice + 2000'),
             description: '£20 increase applied for tier 1 resource',
         }
@@ -244,13 +246,13 @@ test("price is adjusted for summer discount", () => {
 
 test("extended jexl has a some operator", () => {
     const pricedForMike = pricingEngine.calculatePrice(basePrice, [{
-        type: 'instructorNames',
+        name: 'instructorNames',
         value: [{name: 'Mike'}]
     }]);
     expect(pricedForMike.finalPrice).toEqual(price(11000))
 
     const pricedForNotMike = pricingEngine.calculatePrice(basePrice, [{
-        type: 'instructorNames',
+        name: 'instructorNames',
         value: [{name: 'John'}]
     }]);
     expect(pricedForNotMike.finalPrice).toEqual(basePrice)
@@ -258,13 +260,13 @@ test("extended jexl has a some operator", () => {
 
 test("extended jexl can filter on deeply nested properties", () => {
     const pricedForTier1 = pricingEngine.calculatePrice(basePrice, [{
-        type: 'resourceMetadata',
+        name: 'resourceMetadata',
         value: [{metadata: {tier: 1}}]
     }]);
     expect(pricedForTier1.finalPrice).toEqual(price(12000))
 
     const pricedForTier2 = pricingEngine.calculatePrice(basePrice, [{
-        type: 'resourceMetadata',
+        name: 'resourceMetadata',
         value: [{metadata: {tier: 2}}]
     }]);
     expect(pricedForTier2.finalPrice).toEqual(basePrice)
@@ -278,10 +280,10 @@ test("rules can have their own context", () => {
         context: {
             holidays: ['2024-12-25', '2024-12-26']
         },
-        requiredFactors: ['bookingDate'],
+        requiredFactors: [pricingFactorName('bookingDate')],
         mutations: [
             {
-                condition: jexlCondition('holidays | includes(bookingDate)'),
+                condition: jexlExpression('holidays | includes(bookingDate)'),
                 mutation: jexlMutation('currentPrice * 2'),
                 description: 'Double the price on holidays',
             }
@@ -292,22 +294,59 @@ test("rules can have their own context", () => {
     pricingEngine.addRule(twiceThePriceOnHolidays);
 
     const priceForXmas = pricingEngine.calculatePrice(basePrice, [{
-        type: 'bookingDate',
+        name: 'bookingDate',
         value: '2024-12-25'
     }]);
     expect(priceForXmas.finalPrice).toEqual(price(20000))
 
     const priceForBoxingDay = pricingEngine.calculatePrice(basePrice, [{
-        type: 'bookingDate',
+        name: 'bookingDate',
         value: '2024-12-26'
     }]);
     expect(priceForBoxingDay.finalPrice).toEqual(price(20000))
 
     const priceForNormal = pricingEngine.calculatePrice(basePrice, [{
-        type: 'bookingDate',
+        name: 'bookingDate',
         value: '2024-12-35'
     }]);
     expect(priceForNormal.finalPrice).toEqual(basePrice)
+})
 
+test("rules can have prep steps and reports", () => {
+    const addMoreForEvening: PricingRule = {
+        id: 'add-more-for-evening',
+        name: 'Add More For Evening',
+        description: 'Add more for evening hours between 18:00 and 24:00',
+        requiredFactors: [pricingFactorName('numberOfEveningHours')],
+        mutations: [
+            {
+                condition: jexlExpression('numberOfEveningHours > 0'),
+                mutation: add(jexlExpression('numberOfEveningHours * 100')),
+                description: 'Add £1 per-hour for evening bookings',
+            },
+        ],
+        applyAllOrFirst: 'all'
+    };
 
+    const pricingEngine = new PricingEngine();
+    pricingEngine.addRule(addMoreForEvening);
+
+    const priceForNormalHours = pricingEngine.calculatePrice(basePrice, [{
+        name: 'numberOfEveningHours',
+        value: 0
+    }]);
+
+    expect(priceForNormalHours.finalPrice).toEqual(basePrice)
+
+    const priceForOnlyEveningHours = pricingEngine.calculatePrice(basePrice, [{
+        name: 'numberOfEveningHours',
+        value: 3
+    }]);
+    expect(priceForOnlyEveningHours.finalPrice).toEqual(price(10300))
+
+    const pricingForPartialEveningHours = pricingEngine.calculatePrice(basePrice, [{
+        name: 'numberOfEveningHours',
+        value: 1.5
+    }]);
+    expect(pricingForPartialEveningHours.finalPrice).toEqual(price(10150))
 })

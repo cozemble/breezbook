@@ -11,6 +11,7 @@ import {
     minutes,
     Minutes,
     time24Fns,
+    TimePeriod,
     timePeriod,
     timePeriodFns,
     TwentyFourHourClockTime
@@ -88,8 +89,11 @@ export function availableSlot(service: Service, date: IsoDate, startTime: StartT
 
 export const availableSlotFns = {
 
-    duration(slot: AvailableSlot):Minutes {
+    duration(slot: AvailableSlot): Minutes {
         return time24Fns.duration(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.service.duration)).value
+    },
+    servicePeriod(slot: AvailableSlot): TimePeriod {
+        return timePeriod(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.service.duration))
     }
 }
 

@@ -1,4 +1,5 @@
 import { test } from 'vitest';
+import {pricingFactorName} from "@breezbook/packages-pricing";
 
 interface PricingFactor {
     type: string;
@@ -67,7 +68,7 @@ const locationBasedPricing: PricingRule = {
     id: 'location-based',
     name: 'Location-based Pricing',
     description: 'Adjust price based on service location',
-    requiredFactors: ['location'],
+    requiredFactors: [pricingFactorName('location')],
     calculate: (price, factors) => {
         const location = factors.find(f => f.type === 'location')?.value;
         if (location === 'central-london') {
@@ -81,7 +82,7 @@ const timeBasedPricing: PricingRule = {
     id: 'time-based',
     name: 'Time-based Pricing',
     description: 'Adjust price based on time of service',
-    requiredFactors: ['time'],
+    requiredFactors: [pricingFactorName('time')],
     calculate: (price, factors) => {
         const time = factors.find(f => f.type === 'time')?.value;
         if (time.getHours() >= 18) {
@@ -95,7 +96,7 @@ const loyaltyDiscount: PricingRule = {
     id: 'loyalty-discount',
     name: 'Loyalty Discount',
     description: 'Apply discount for loyal customers',
-    requiredFactors: ['customer'],
+    requiredFactors: [pricingFactorName('customer')],
     calculate: (price, factors) => {
         const customer = factors.find(f => f.type === 'customer')?.value;
         if (customer.loyaltyPoints > 1000) {

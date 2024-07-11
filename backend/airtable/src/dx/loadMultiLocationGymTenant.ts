@@ -26,7 +26,7 @@ import {
 import {prismaMutationToPromise} from "../infra/prismaMutations.js";
 import {Upsert} from "../mutation/mutations.js";
 import {JsonSchemaForm, jsonSchemaFormLabels, languages, schemaKeyLabel} from "@breezbook/packages-types";
-import {add, jexlCondition, PricingRule} from "@breezbook/packages-pricing";
+import {add, jexlExpression, pricingFactorName, PricingRule} from "@breezbook/packages-pricing";
 import {makeTestId} from "./testIds.js";
 
 const tenant_id = 'breezbook-gym';
@@ -725,10 +725,10 @@ const eliteIsMoreExpensive: PricingRule = {
     id: makeId(environment_id, `pricing_rules`),
     name: 'Elite trainers are more expensive',
     description: 'Elite trainers are more expensive',
-    requiredFactors: ['resourceMetadata'],
+    requiredFactors: [pricingFactorName('resourceMetadata')],
     mutations: [
         {
-            condition: jexlCondition("resourceMetadata | filter('metadata.tier', '== \\'elite\\' ') | length > 0"),
+            condition: jexlExpression("resourceMetadata | filter('metadata.tier', '== \\'elite\\' ') | length > 0"),
             mutation: add(2000),
             description: 'Elite trainers are £20 more expensive'
         }
