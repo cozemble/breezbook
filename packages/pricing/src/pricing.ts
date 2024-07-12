@@ -91,21 +91,21 @@ export function price(amountInMinorUnits: number): Price {
     return {_type: 'price', amountInMinorUnits: Math.round(amountInMinorUnits)}
 }
 
+
+export interface PricingResult {
+    finalPrice: Price;
+    basePrice: Price;
+    adjustments: PriceAdjustment[];
+}
+
 export interface PriceAdjustment {
     ruleId: string;
     ruleName: string;
     originalPrice: Price;
     adjustedPrice: Price;
     explanation: string;
-    explanationContext?: Record<string, any>;
 }
 
-export interface PricingResult {
-    finalPrice: Price;
-    basePrice: Price;
-    adjustments: PriceAdjustment[];
-    report?: Record<string, any>;
-}
 
 export function pricingResult(basePrice: Price, finalPrice: Price = basePrice, adjustments: PriceAdjustment[] = []): PricingResult {
     return {finalPrice, basePrice, adjustments}
@@ -251,9 +251,6 @@ export class PricingEngine {
                 if (outcome.finalPrice.amountInMinorUnits !== result.finalPrice.amountInMinorUnits) {
                     result.finalPrice = outcome.finalPrice;
                     result.adjustments.push(...outcome.adjustments);
-                    if (outcome.report) {
-                        result.report = {...(result.report ?? {}), ...outcome.report}
-                    }
                 }
             }
         }
@@ -318,14 +315,14 @@ export class PricingEngine {
         return typeof add.amount === 'number' ? add.amount : this.safeJexl(add.amount.expression, context);
     }
 
-    private factorsToContext(factors: PricingFactor[], currentPrice: Price, externalContext: Record<string, any>) {
-        const context = {
-            ...externalContext,
-            currentPrice: currentPrice.amountInMinorUnits
-        } as any;
-        for (const factor of factors) {
-            context[factor.name] = factor.value;
+        private factorsToContext(factors: PricingFactor[], currentPrice: Price, externalContext: Record<string, any>) {
+            const context = {
+                ...externalContext,
+                currentPrice: currentPrice.amountInMinorUnits
+            } as any;
+            for (const factor of factors) {
+                context[factor.name] = factor.value;
+            }
+            return context;
         }
-        return context;
-    }
 }
