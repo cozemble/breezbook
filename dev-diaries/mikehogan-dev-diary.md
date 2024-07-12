@@ -2366,5 +2366,19 @@ const addMoreForEvening: PricingRule = {
 };
 ```
 
-This has made pricing more general.  It used to be the case that `requiredFactors` was just the name of the factor.
+This has made pricing more general. It used to be the case that `requiredFactors` was just the name of the factor.
 But more general support like this means we can configure factor to some small degree.
+
+# Fri 12 Jul 2024
+
+It has been valuable to do this dog walking demo, because it uses "service options" to extend the duration and price of
+the booking. Which means my availability check endpoint, which returns priced time slots, needs to returns pricing
+breakdown for the service and the service options the user has selected, for each slot
+
+So the availability endpoint will need to get a mini-basket posted to it, and it will need to return a priced basket for 
+each slot.  I assume this is the best way to go?
+
+After some poking around, it actually seems that it might be best to just use the existing `UnpricedBasket` to make the
+request for availability, and return a `PricedBasket` for each times slot. 
+
+I think the best way to get there is to to test drive the changes into the `priceBasket` function
