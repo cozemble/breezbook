@@ -1,4 +1,4 @@
-import {AddOnOrder, Price, Service} from '@breezbook/packages-core';
+import {AddOnOrder, Price} from '@breezbook/packages-core';
 import {ResourceRequirementOverride} from "./resourceTypes.js";
 import {
     AddOnId,
@@ -6,13 +6,9 @@ import {
     IsoDate,
     locationId,
     LocationId,
-    mandatory,
-    Minutes,
     serviceId,
-    ServiceId, ServiceOptionRequest,
-    time24Fns,
-    timePeriod,
-    TimePeriod,
+    ServiceId,
+    ServiceOptionRequest,
     TwentyFourHourClockTime
 } from "@breezbook/packages-types";
 
@@ -86,15 +82,6 @@ export interface PricedBasket {
     total: Price;
 }
 
-export const pricedBasketLineFns = {
-    bookingPeriod(line: PricedBasketLine, bookingDuration: Minutes): TimePeriod {
-        return timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, bookingDuration));
-    },
-    findService(services: Service[], serviceId: ServiceId): Service {
-        return mandatory(services.find((s) => s.id.value === serviceId.value), `Service ${serviceId.value} not found`);
-    }
-}
-
 export function pricedBasket(lines: PricedBasketLine[], total: Price, couponCode?: CouponCode, discount?: Price): PricedBasket {
     return {
         _type: 'priced.basket',
@@ -135,13 +122,5 @@ export const unpricedBasketFns = {
         const fromDate = dates.reduce((acc, curr) => (acc.value < curr.value ? acc : curr));
         const toDate = dates.reduce((acc, curr) => (acc.value > curr.value ? acc : curr));
         return {fromDate, toDate};
-    }
-};
-
-export const pricedBasketFns = {
-    toUnpricedBasket(pricedBasket: PricedBasket): UnpricedBasket {
-        return unpricedBasket(pricedBasket.lines.map((line) => {
-            return unpricedBasketLine(line.serviceId, line.locationId, line.addOnIds, line.date, line.startTime, line.serviceFormData);
-        }), pricedBasket.couponCode);
     }
 };

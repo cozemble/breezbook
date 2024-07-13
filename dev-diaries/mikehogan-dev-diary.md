@@ -2381,4 +2381,7 @@ each slot.  I assume this is the best way to go?
 After some poking around, it actually seems that it might be best to just use the existing `UnpricedBasket` to make the
 request for availability, and return a `PricedBasket` for each times slot. 
 
-I think the best way to get there is to to test drive the changes into the `priceBasket` function
+I think the best way to get there is to to test drive the changes into the `priceBasket` function.
+
+I'm also starting to think that services and service options will eventually need to have pricing rules associated directly
+to them, rather than just having global pricing rules.  Am not sure tho, lets see how it plays out.
