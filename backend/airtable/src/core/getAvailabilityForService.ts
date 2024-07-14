@@ -12,7 +12,6 @@ import {
     errorResponse,
     ErrorResponse,
     mandatory,
-    Price,
     PricedSlot,
     Service,
     Service as DomainService,
@@ -28,6 +27,7 @@ import {
     AddOnSummary,
     AvailabilityResponse,
     emptyAvailabilityResponse,
+    PriceBreakdown,
     ServiceSummary,
     TimeSlotAvailability,
     timeSlotAvailability
@@ -35,15 +35,27 @@ import {
 import {Form, IsoDate, isoDateFns, values} from "@breezbook/packages-types";
 import {ServiceAvailabilityRequest} from "../express/availability/getServiceAvailabilityForLocation.js";
 
-function toTimeSlotAvailability(slot: AvailableSlot, price: Price): TimeSlotAvailability {
+function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
+    const slot = priced.slot;
+    const price = priced.price;
     const startTime24 = startTimeFns.getStartTime(slot.startTime)
+    const breakDown: PriceBreakdown = {
+        servicePrice: price.amount.value,
+        pricedOptions: priced.breakdown.pricedOptions.map(po => ({
+            serviceOptionId: po.serviceOptionId.value,
+            unitPrice: po.unitPrice.amount.value,
+            quantity: po.quantity,
+            price: po.price.amount.value
+        }))
+    }
     return timeSlotAvailability(
         startTime24.value,
         startTime24.value,
         slot.startTime._type === 'timeslot.spec' ? slot.startTime.slot.to.value : "---",
         startTime24.value,
         price.amount.value,
-        price.currency.value
+        price.currency.value,
+        breakDown
     );
 }
 
@@ -51,7 +63,7 @@ function toAvailabilityResponse(priced: PricedSlot[], service: Service, addOns: 
     return priced.reduce(
         (acc, curr) => {
             const slotsForDate = acc.slots[curr.slot.serviceRequest.date.value] ?? [];
-            const currTimeslot = toTimeSlotAvailability(curr.slot, curr.price);
+            const currTimeslot = toTimeSlotAvailability(curr);
             if (!slotsForDate.some((a) => a.label === currTimeslot.label)) {
                 slotsForDate.push(currTimeslot);
             }

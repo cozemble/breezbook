@@ -15,6 +15,7 @@ import {
     tenantId
 } from "@breezbook/packages-types";
 import {serviceAvailabilityRequest} from "../../src/express/availability/getServiceAvailabilityForLocation.js";
+import {AvailabilityResponse} from "@breezbook/backend-api-types";
 
 const tenant = tenantId(multiLocationGym.tenant_id)
 const env = environmentId(multiLocationGym.environment_id)
@@ -140,6 +141,7 @@ describe("Given a gym with services at various locations", () => {
         const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
         expect(everythingHarlow.bookings).toHaveLength(1)
     });
+
 })
 
 describe("Given the test car wash tenant", async () => {
@@ -159,7 +161,14 @@ describe("Given the test car wash tenant", async () => {
         expect(everythingLondon.businessConfiguration.forms).toHaveLength(2)
         const customerForm = everythingLondon.businessConfiguration.forms.find(f => f.id.value === everythingLondon.tenantSettings.customerFormId?.value)
         expect(customerForm).toBeDefined()
-        const availability = getAvailabilityForService(everythingLondon, serviceAvailabilityRequest(dbCarwashTenant.smallCarWash.id, isoDate('2024-04-20'), isoDate('2024-04-20')))
+        const availability = getAvailabilityForService(everythingLondon, serviceAvailabilityRequest(dbCarwashTenant.smallCarWash.id, isoDate('2024-04-20'), isoDate('2024-04-20'))) as AvailabilityResponse
+        expect(availability).toBeDefined()
+        const slotsForDate = availability.slots['2024-04-20']
+        expect(slotsForDate).toBeDefined()
+        const firstSlot = mandatory(slotsForDate[0], 'first slot')
+        expect(firstSlot.label).toEqual('09:00')
+        expect(firstSlot.priceBreakdown.servicePrice).toEqual(1000)
+
     });
 });
 

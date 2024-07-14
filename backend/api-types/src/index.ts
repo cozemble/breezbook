@@ -17,6 +17,16 @@ export * from './secrets.js';
 export * from './pricingTypes.js';
 export * from './orderTypes.js';
 
+export interface PriceBreakdown {
+    servicePrice: number
+    pricedOptions: {
+        serviceOptionId: string
+        unitPrice: number
+        quantity: number
+        price: number
+    }[]
+}
+
 export interface TimeSlotAvailability {
     _type: 'time.slot.availability';
     timeslotId: string;
@@ -25,14 +35,7 @@ export interface TimeSlotAvailability {
     label: string;
     priceWithNoDecimalPlaces: number;
     priceCurrency: string;
-    // priceBreakdown: {
-    //     servicePrice: number
-    //     pricedOptions: {
-    //         serviceOptionId: string
-    //         quantity: number
-    //         price: number
-    //     }[]
-    // }
+    priceBreakdown: PriceBreakdown
 }
 
 export function timeSlotAvailability(
@@ -41,7 +44,8 @@ export function timeSlotAvailability(
     endTime24hr: string,
     label: string,
     priceWithNoDecimalPlaces: number,
-    priceCurrency: string
+    priceCurrency: string,
+    priceBreakdown: PriceBreakdown
 ): TimeSlotAvailability {
     return {
         _type: 'time.slot.availability',
@@ -50,7 +54,8 @@ export function timeSlotAvailability(
         endTime24hr,
         label,
         priceWithNoDecimalPlaces,
-        priceCurrency
+        priceCurrency,
+        priceBreakdown
     };
 }
 
