@@ -4,6 +4,7 @@
     import {backendUrl, fetchJson} from "$lib/helpers";
     import {
         type FormAndLabels,
+        type PriceBreakdown,
         type Service,
         type ServiceLocation,
         type ServiceOption,
@@ -36,6 +37,7 @@
         address: string;
         duration: number;
         customer: CoreCustomerDetails | null
+        priceBreakdown: PriceBreakdown | null
     };
 
     let step = 0;
@@ -53,23 +55,24 @@
             petName: '',
             address: '',
             duration: 0,
-            customer: null
+            customer: null,
+            priceBreakdown: null
         }
     }
 
-    function calculatePrice(bookingData: BookingData): number {
-        if (!bookingData.service) return 0;
-        let total = bookingData.service.priceWithNoDecimalPlaces;
-        bookingData.serviceOptions.forEach(option => {
-            total += option.priceWithNoDecimalPlaces;
-        });
-        return total;
-    }
-
-    $: currentPrice = calculatePrice(bookingData);
+    // function calculatePrice(bookingData: BookingData): number {
+    //     if (!bookingData.service) return 0;
+    //     let total = bookingData.service.priceWithNoDecimalPlaces;
+    //     bookingData.serviceOptions.forEach(option => {
+    //         total += option.priceWithNoDecimalPlaces;
+    //     });
+    //     return total;
+    // }
+    //
+    // $: currentPrice = calculatePrice(bookingData);
 
     function scrollToTop() {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
     function nextStep() {
@@ -211,7 +214,7 @@
                         serviceOptions={bookingData.serviceOptions}
                         date={bookingData.date}
                         time={bookingData.time}
-                        totalPrice={currentPrice}
+                        priceBreakdown={bookingData.priceBreakdown}
                 />
             {/if}
 
@@ -316,8 +319,10 @@
                     <h3 class="text-2xl font-semibold mb-4 text-primary">Booking Confirmed!</h3>
                     <p class="text-center mb-6">Thank you for booking with Paw Walks. We'll see you
                         and your pet soon!</p>
-                    <p class="text-center mb-6">Total
-                        Price: {formatPrice(currentPrice, bookingData.service?.priceCurrency || 'USD')}</p>
+                    {#if bookingData.priceBreakdown}
+                        <p class="text-center mb-6">Total
+                            Price: {formatPrice(bookingData.priceBreakdown.total, bookingData.priceBreakdown.currency)}</p>
+                    {/if}
                     <button class="btn btn-primary" on:click={bookAnotherService}>Book Another Service</button>
                 </div>
             {/if}

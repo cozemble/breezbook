@@ -40,6 +40,8 @@ function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
     const price = priced.price;
     const startTime24 = startTimeFns.getStartTime(slot.startTime)
     const breakDown: PriceBreakdown = {
+        total: priced.breakdown.total.amount.value,
+        currency: priced.breakdown.total.currency.value,
         servicePrice: priced.breakdown.servicePrice.amount.value,
         pricedOptions: priced.breakdown.pricedOptions.map(po => ({
             serviceOptionId: po.serviceOptionId.value,

@@ -20,6 +20,8 @@ export * from './pricingTypes.js';
 export * from './orderTypes.js';
 
 export interface PriceBreakdown {
+    total: number
+    currency: string
     servicePrice: number
     pricedOptions: {
         serviceOptionId: string

@@ -1,11 +1,11 @@
 <script lang="ts">
-    import type {Service, ServiceOption} from "@breezbook/backend-api-types";
+    import type {PriceBreakdown, Service, ServiceOption} from "@breezbook/backend-api-types";
 
     export let service: Service | null = null;
     export let serviceOptions: ServiceOption[] = [];
     export let date: string | null = null;
     export let time: string | null = null;
-    export let totalPrice: number = 0;
+    export let priceBreakdown: PriceBreakdown | null = null;
 
     function formatPrice(price: number, currency: string): string {
         return new Intl.NumberFormat('en-US', {style: 'currency', currency: currency}).format(price / 100);
@@ -13,8 +13,12 @@
 
     function formatDateWithDayOfWeek(dateString: string): string {
         const date = new Date(dateString);
-        const options: Intl.DateTimeFormatOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        const options: Intl.DateTimeFormatOptions = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'};
         return date.toLocaleDateString('en-US', options);
+    }
+
+    function getPriceForOption(priceBreakdown: PriceBreakdown, option: ServiceOption): number {
+        return priceBreakdown.pricedOptions.find(p => p.serviceOptionId === option.id)?.price || 0;
     }
 </script>
 
@@ -24,23 +28,29 @@
         {#if service}
             <div class="flex justify-between">
                 <span>{service.name}</span>
-                <span class="font-medium">{formatPrice(service.priceWithNoDecimalPlaces, service.priceCurrency)}</span>
+                {#if priceBreakdown}
+                    <span class="font-medium">{formatPrice(priceBreakdown.servicePrice, service.priceCurrency)}</span>
+                {/if}
             </div>
         {/if}
         {#if serviceOptions.length > 0}
             {#each serviceOptions as option}
                 <div class="flex justify-between">
                     <span>{option.name}</span>
-                    <span class="font-medium">{formatPrice(option.priceWithNoDecimalPlaces, option.priceCurrency)}</span>
+                    {#if priceBreakdown}
+                        <span class="font-medium">{formatPrice(getPriceForOption(priceBreakdown, option), option.priceCurrency)}</span>
+                    {/if}
                 </div>
             {/each}
         {/if}
         {#if date && time}
             <div class="text-sm text-base-content/70">{formatDateWithDayOfWeek(date)} @ {time}</div>
         {/if}
-        <div class="flex justify-between pt-2 border-t border-base-300">
-            <span class="font-semibold">Total Price:</span>
-            <span class="font-semibold">{formatPrice(totalPrice, service?.priceCurrency || 'USD')}</span>
-        </div>
+        {#if priceBreakdown}
+            <div class="flex justify-between pt-2 border-t border-base-300">
+                <span class="font-semibold">Total Price:</span>
+                <span class="font-semibold">{formatPrice(priceBreakdown.total, priceBreakdown.currency)}</span>
+            </div>
+        {/if}
     </div>
 </div>
