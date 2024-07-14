@@ -1,11 +1,13 @@
 <script lang="ts">
-    import type {PriceBreakdown, Service, ServiceOption} from "@breezbook/backend-api-types";
+    import type {Availability, PriceBreakdown, Service, ServiceOption} from "@breezbook/backend-api-types";
+    import {availability} from "@breezbook/packages-core";
 
     export let service: Service | null = null;
     export let serviceOptions: ServiceOption[] = [];
-    export let date: string | null = null;
-    export let time: string | null = null;
-    export let priceBreakdown: PriceBreakdown | null = null;
+    export let slot: Availability | null = null;
+    // export let date: string | null = null;
+    // export let time: string | null = null;
+    // export let priceBreakdown: PriceBreakdown | null = null;
 
     function formatPrice(price: number, currency: string): string {
         return new Intl.NumberFormat('en-US', {style: 'currency', currency: currency}).format(price / 100);
@@ -28,8 +30,8 @@
         {#if service}
             <div class="flex justify-between">
                 <span>{service.name}</span>
-                {#if priceBreakdown}
-                    <span class="font-medium">{formatPrice(priceBreakdown.servicePrice, service.priceCurrency)}</span>
+                {#if slot?.priceBreakdown}
+                    <span class="font-medium">{formatPrice(slot.priceBreakdown.servicePrice, service.priceCurrency)}</span>
                 {/if}
             </div>
         {/if}
@@ -37,19 +39,19 @@
             {#each serviceOptions as option}
                 <div class="flex justify-between">
                     <span>{option.name}</span>
-                    {#if priceBreakdown}
-                        <span class="font-medium">{formatPrice(getPriceForOption(priceBreakdown, option), option.priceCurrency)}</span>
+                    {#if slot?.priceBreakdown}
+                        <span class="font-medium">{formatPrice(getPriceForOption(slot.priceBreakdown, option), option.priceCurrency)}</span>
                     {/if}
                 </div>
             {/each}
         {/if}
-        {#if date && time}
-            <div class="text-sm text-base-content/70">{formatDateWithDayOfWeek(date)} @ {time}</div>
+        {#if slot}
+            <div class="text-sm text-base-content/70">{formatDateWithDayOfWeek(slot.date)} @ {slot.startTime24hr}</div>
         {/if}
-        {#if priceBreakdown}
+        {#if slot?.priceBreakdown}
             <div class="flex justify-between pt-2 border-t border-base-300">
                 <span class="font-semibold">Total Price:</span>
-                <span class="font-semibold">{formatPrice(priceBreakdown.total, priceBreakdown.currency)}</span>
+                <span class="font-semibold">{formatPrice(slot?.priceBreakdown.total, slot?.priceBreakdown.currency)}</span>
             </div>
         {/if}
     </div>

@@ -34,6 +34,7 @@ export interface PriceBreakdown {
 export interface TimeSlotAvailability {
     _type: 'time.slot.availability';
     timeslotId: string;
+    date: string;
     startTime24hr: string;
     endTime24hr: string;
     label: string;
@@ -44,6 +45,7 @@ export interface TimeSlotAvailability {
 
 export function timeSlotAvailability(
     timeslotId: string,
+    date: string,
     startTime24hr: string,
     endTime24hr: string,
     label: string,
@@ -54,6 +56,7 @@ export function timeSlotAvailability(
     return {
         _type: 'time.slot.availability',
         timeslotId,
+        date,
         startTime24hr,
         endTime24hr,
         label,
@@ -228,7 +231,7 @@ export interface Tenant {
     locations: Location[];
     services: Service[];
     serviceLocations: ServiceLocation[]
-    theme: any;
+    theme: unknown;
     customerForm: Form | null;
     forms: FormAndLabels[];
 }

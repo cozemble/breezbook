@@ -1,8 +1,8 @@
 <script lang="ts">
-    import {onMount} from "svelte";
+    import {createEventDispatcher, onMount} from "svelte";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import {isoDate, isoDateFns, serviceOptionId, serviceOptionRequest} from "@breezbook/packages-types";
-    import type {AvailabilityResponse, Service, ServiceOption} from "@breezbook/backend-api-types";
+    import type {Availability, AvailabilityResponse, Service, ServiceOption} from "@breezbook/backend-api-types";
     import HorizontalDateAndTimePicker from "$lib/uxs/dog-walking/HorizontalDateAndTimePicker.svelte";
     import {availabilityResponseToItems} from "$lib/uxs/dog-walking/types";
 
@@ -17,7 +17,8 @@
     let availableSlots: AvailabilityResponse
     const dateRange = isoDateFns.listDays(today, dateInTheFuture)
 
-    export let onComplete: () => void
+    export let onComplete: (slot: Availability) => void
+    const dispatch = createEventDispatcher()
 
     $: isSelectionComplete = selectedDate !== null && selectedTime !== null;
 
@@ -29,13 +30,36 @@
             body: JSON.stringify({serviceOptionRequests})
         })
     })
+
+    function oNext() {
+        if (selectedDate && selectedTime) {
+            const available = availableSlots.slots[selectedDate] ?? [] as Availability[]
+            const slot = available.find(a => a.startTime24hr === selectedTime)
+            if (slot) {
+                onComplete(slot)
+            } else {
+                console.error(`Slot not found for ${selectedDate} @ ${selectedTime}`)
+            }
+        }
+
+    }
+
+    function onTimeSelected(event: CustomEvent<{ date: string, time: string }>) {
+        const {date, time} = event.detail
+        const available = availableSlots.slots[date] ?? [] as Availability[]
+        const slot = available.find(a => a.startTime24hr === time)
+        if (slot) {
+            dispatch('slotSelected', slot)
+        }
+    }
 </script>
 
 {#if availableSlots}
     <HorizontalDateAndTimePicker availability={availabilityResponseToItems(dateRange, availableSlots)}
                                  bind:selectedDate={selectedDate}
-                                 bind:selectedTime={selectedTime}/>
-    <button class="btn btn-primary mt-4" on:click={onComplete} disabled={!isSelectionComplete}>
+                                 bind:selectedTime={selectedTime}
+                                 on:timeSelected={onTimeSelected}/>
+    <button class="btn btn-primary mt-4" on:click={oNext} disabled={!isSelectionComplete}>
         Next
     </button>
 {/if}

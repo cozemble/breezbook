@@ -1,12 +1,13 @@
 <script lang="ts">
-    import { Calendar, Clock } from 'lucide-svelte';
-    import { onMount } from 'svelte';
-    import { fade, fly } from 'svelte/transition';
+    import {Calendar, Clock} from 'lucide-svelte';
+    import {createEventDispatcher, onMount} from 'svelte';
+    import {fade, fly} from 'svelte/transition';
     import type {AvailabilityItem} from "$lib/uxs/dog-walking/types";
 
     export let availability: AvailabilityItem[] = [];
     export let selectedDate: string | null = null;
     export let selectedTime: string | null = null;
+    const dispatch = createEventDispatcher();
 
     let scrollContainer: HTMLElement;
 
@@ -15,7 +16,7 @@
 
     function formatDate(dateString: string): string {
         const date = new Date(dateString);
-        const localeDate =  date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        const localeDate = date.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'});
         return localeDate.split(' ')[0].substring(0, 3)
     }
 
@@ -30,6 +31,12 @@
         return (availabilityMap.get(dateString)?.length ?? 0) > 0;
     }
 
+
+    function selectTime(time: string) {
+        selectedTime = time;
+        dispatch('timeSelected', {date: selectedDate, time});
+    }
+
     onMount(() => {
         setTimeout(() => {
             if (scrollContainer) {
@@ -41,7 +48,7 @@
 
 <div class="bg-base-200 p-4 rounded-lg">
     <div class="flex items-center mb-4">
-        <Calendar class="text-primary mr-2" size={20} />
+        <Calendar class="text-primary mr-2" size={20}/>
         <h3 class="text-lg font-semibold">Select a Date</h3>
     </div>
     <div class="overflow-x-auto pb-2" bind:this={scrollContainer}>
@@ -55,8 +62,7 @@
                                ? 'bg-base-100 hover:bg-base-300'
                                : 'bg-base-300 text-base-content/50 cursor-not-allowed'}"
                         on:click={() => selectDate(dateString)}
-                        disabled={!isDateAvailable(dateString)}
-                >
+                        disabled={!isDateAvailable(dateString)}>
                     <span class="text-sm font-semibold">{new Date(dateString).getDate()}</span>
                     <span class="text-xs">{formatDate(dateString)}</span>
                 </button>
@@ -68,22 +74,21 @@
         {#if selectedDate && availabilityMap.get(selectedDate)}
             <div in:fly={{ y: 20, duration: 300, delay: 200 }} out:fly={{ y: 20, duration: 300 }}>
                 <div class="flex items-center mb-4" in:fade={{ duration: 300, delay: 200 }}>
-                    <Clock class="text-primary mr-2" size={20} />
+                    <Clock class="text-primary mr-2" size={20}/>
                     <h3 class="text-lg font-semibold">Select a Time</h3>
                 </div>
                 <div class="grid grid-cols-3 gap-2" in:fade={{ duration: 300, delay: 200 }}>
                     {#each availabilityMap.get(selectedDate) || [] as time}
-                        <button
-                                class="btn btn-sm {selectedTime === time ? 'btn-secondary' : 'btn-outline'}"
-                                on:click={() => selectedTime = time}
-                        >
+                        <button class="btn btn-sm {selectedTime === time ? 'btn-secondary' : 'btn-outline'}"
+                                on:click={() => selectTime(time)}>
                             {time}
                         </button>
                     {/each}
                 </div>
             </div>
         {:else}
-            <div class="absolute inset-0 flex items-center justify-center text-base-content/50" in:fade={{ duration: 300 }}>
+            <div class="absolute inset-0 flex items-center justify-center text-base-content/50"
+                 in:fade={{ duration: 300 }}>
                 {selectedDate ? 'No available times for the selected date' : 'Please select a date to view available times'}
             </div>
         {/if}
@@ -96,6 +101,7 @@
         scrollbar-width: none;
         -ms-overflow-style: none;
     }
+
     .overflow-x-auto::-webkit-scrollbar {
         display: none;
     }

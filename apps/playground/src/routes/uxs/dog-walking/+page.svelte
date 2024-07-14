@@ -3,6 +3,7 @@
     import {onMount} from "svelte";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import {
+        type Availability,
         type FormAndLabels,
         type PriceBreakdown,
         type Service,
@@ -30,14 +31,14 @@
         service: Service | null;
         serviceOptions: ServiceOption[];
         serviceLocation: ServiceLocation | null
-        date: string | null;
-        time: string;
+        selectedSlot: Availability | null
+        // date: string | null;
+        // time: string;
         serviceFormData: Record<string, any>[];
         petName: string;
         address: string;
         duration: number;
         customer: CoreCustomerDetails | null
-        priceBreakdown: PriceBreakdown | null
     };
 
     let step = 0;
@@ -49,14 +50,12 @@
             service: null,
             serviceOptions: [],
             serviceLocation: null,
-            date: null,
-            time: '',
             serviceFormData: [],
             petName: '',
             address: '',
             duration: 0,
             customer: null,
-            priceBreakdown: null
+            selectedSlot: null
         }
     }
 
@@ -78,6 +77,7 @@
     function nextStep() {
         step++;
         scrollToTop();
+        console.log({bookingData})
     }
 
     function bookAnotherService() {
@@ -187,10 +187,9 @@
         nextStep()
     }
 
-    function onDateTimeComplete() {
-        if (bookingData.date && bookingData.time) {
-            nextStep();
-        }
+    function onSlotSelected(event:CustomEvent<Availability>) {
+        const selectedSlot = event.detail
+        bookingData = {...bookingData, selectedSlot}
     }
 
     $: formToFill = tenant ? formsToFill(tenant, bookingData)[formIndex] : null
@@ -212,9 +211,7 @@
                 <BookingSummary
                         service={bookingData.service}
                         serviceOptions={bookingData.serviceOptions}
-                        date={bookingData.date}
-                        time={bookingData.time}
-                        priceBreakdown={bookingData.priceBreakdown}
+                        slot={bookingData.selectedSlot}
                 />
             {/if}
 
@@ -267,9 +264,10 @@
                                            locationId={bookingData.serviceLocation.locationId}
                                            tenantId={tenant.id}
                                            serviceOptions={bookingData.serviceOptions}
-                                           bind:selectedDate={bookingData.date}
-                                           bind:selectedTime={bookingData.time}
-                                           onComplete={onDateTimeComplete}/>
+                                           selectedDate={bookingData?.selectedSlot?.date ?? null}
+                                           selectedTime={bookingData?.selectedSlot?.startTime24hr ?? null}
+                                           on:slotSelected={onSlotSelected}
+                                           onComplete={nextStep}/>
                         <button class="btn btn-outline mt-4" on:click={prevStep}>Back</button>
                     {/if}
                 </div>
@@ -297,7 +295,7 @@
             {:else if step === 7}
                 <div class="flex flex-col items-center">
                     <h3 class="text-2xl font-semibold mb-4 text-primary">Take Payment</h3>
-                    {#if bookingData.service && bookingData.serviceLocation && bookingData.customer && bookingData.date && bookingData.time}
+                    {#if bookingData.service && bookingData.serviceLocation && bookingData.customer && bookingData.selectedSlot}
                         <TakePayment tenantId={tenant.id}
                                      environmentId="dev"
                                      serviceId={bookingData.service.id}
@@ -305,8 +303,8 @@
                                      serviceOptions={bookingData.serviceOptions}
                                      filledForms={bookingData.serviceFormData}
                                      customerDetails={bookingData.customer}
-                                     date={bookingData.date}
-                                     time={bookingData.time}
+                                     date={bookingData.selectedSlot.date}
+                                     time={bookingData.selectedSlot.startTime24hr}
                                      on:prevStep={prevStep}
                                      on:paymentComplete={nextStep}/>
                     {:else}
@@ -319,9 +317,9 @@
                     <h3 class="text-2xl font-semibold mb-4 text-primary">Booking Confirmed!</h3>
                     <p class="text-center mb-6">Thank you for booking with Paw Walks. We'll see you
                         and your pet soon!</p>
-                    {#if bookingData.priceBreakdown}
+                    {#if bookingData?.selectedSlot?.priceBreakdown}
                         <p class="text-center mb-6">Total
-                            Price: {formatPrice(bookingData.priceBreakdown.total, bookingData.priceBreakdown.currency)}</p>
+                            Price: {formatPrice(bookingData.selectedSlot.priceBreakdown.total, bookingData.selectedSlot.priceBreakdown.currency)}</p>
                     {/if}
                     <button class="btn btn-primary" on:click={bookAnotherService}>Book Another Service</button>
                 </div>

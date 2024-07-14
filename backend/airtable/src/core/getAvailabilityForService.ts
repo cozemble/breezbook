@@ -52,6 +52,7 @@ function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
     }
     return timeSlotAvailability(
         startTime24.value,
+        slot.serviceRequest.date.value,
         startTime24.value,
         slot.startTime._type === 'timeslot.spec' ? slot.startTime.slot.to.value : "---",
         startTime24.value,
