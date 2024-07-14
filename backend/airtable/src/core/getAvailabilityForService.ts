@@ -40,7 +40,7 @@ function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
     const price = priced.price;
     const startTime24 = startTimeFns.getStartTime(slot.startTime)
     const breakDown: PriceBreakdown = {
-        servicePrice: price.amount.value,
+        servicePrice: priced.breakdown.servicePrice.amount.value,
         pricedOptions: priced.breakdown.pricedOptions.map(po => ({
             serviceOptionId: po.serviceOptionId.value,
             unitPrice: po.unitPrice.amount.value,
@@ -98,7 +98,10 @@ export function getAvailabilityForService(
     const serviceOptions = serviceOptionRequests.map((id) =>
         serviceOptionAndQuantity(serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, id.serviceOptionId), id.quantity));
     const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, serviceOptions, fromDate, toDate)
-    const priced = availability.map((a) => calculatePrice(a, everythingForAvailability.pricingRules))
+    const priced = availability.map((a) => {
+        const price =  calculatePrice(a, everythingForAvailability.pricingRules);
+        return price
+    })
     return toAvailabilityResponse(
         priced,
         service,

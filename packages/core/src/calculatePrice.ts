@@ -175,6 +175,6 @@ export function calculatePrice(slot: AvailableSlot, pricingRules: PricingRule[])
         return pricedServiceOption(so.option.id, so.option.price, so.quantity, total);
     });
     const total = [servicePrice.finalPrice.amountInMinorUnits, ...pricedOptions.map(po => po.price.amount.value)].reduce((acc, curr) => acc + curr, 0)
-    const breakdown = priceBreakdown(price(servicePrice.finalPrice.amountInMinorUnits, slot.serviceRequest.service.price.currency), pricedOptions, price(total, slot.serviceRequest.service.price.currency));
+    const breakdown = priceBreakdown(slot.serviceRequest.service.price, pricedOptions, price(total, slot.serviceRequest.service.price.currency));
     return pricedSlot(slot, breakdown, servicePrice.adjustments);
 }

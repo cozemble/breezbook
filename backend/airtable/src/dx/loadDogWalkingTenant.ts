@@ -54,16 +54,27 @@ const environment_id = 'dev';
 
 export const dogWalkingTenant = {
     tenantEnv: tenantEnvironment(environmentId(environment_id), tenantId(tenant_id)),
-    services: {
+    serviceIds: {
         individualDogWalk: makeTestId(tenant_id, environment_id, 'individual_dog_walk'),
         groupDogWalk: makeTestId(tenant_id, environment_id, 'group_dog_walk'),
         dropInVisit: makeTestId(tenant_id, environment_id, 'drop_in_visit'),
         petSit: makeTestId(tenant_id, environment_id, 'pet_sit')
     },
+    servicePrices: {
+        individualDogWalk: 1500,
+        groupDogWalk: 1200,
+        dropInVisit: 1200,
+        petSit: 2500
+    },
     serviceOptions: {
         extra30Mins: makeTestId(tenant_id, environment_id, 'extra_30_minutes'),
         extra60Mins: makeTestId(tenant_id, environment_id, 'extra_60_minutes'),
         extraDog: makeTestId(tenant_id, environment_id, 'extra_dog.1')
+    },
+    serviceOptionPrices: {
+        extra30Mins: 800,
+        extra60Mins: 1200,
+        extraDog: 800
     }
 }
 
@@ -436,7 +447,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             id: dogWalkingTenant.serviceOptions.extra30Mins,
             tenant_id,
             environment_id,
-            price: 800,
+            price: dogWalkingTenant.serviceOptionPrices.extra30Mins,
             price_currency: 'GBP',
             requires_quantity: false,
             duration_minutes: 30
@@ -445,7 +456,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             id: dogWalkingTenant.serviceOptions.extra60Mins,
             tenant_id,
             environment_id,
-            price: 1200,
+            price: dogWalkingTenant.serviceOptionPrices.extra60Mins,
             price_currency: 'GBP',
             requires_quantity: false,
             duration_minutes: 60
@@ -454,7 +465,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             id: dogWalkingTenant.serviceOptions.extraDog,
             tenant_id,
             environment_id,
-            price: 800,
+            price: dogWalkingTenant.serviceOptionPrices.extraDog,
             price_currency: 'GBP',
             requires_quantity: false,
             duration_minutes: 0
@@ -519,10 +530,10 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertService({
             tenant_id,
             environment_id,
-            id: dogWalkingTenant.services.individualDogWalk,
+            id: dogWalkingTenant.serviceIds.individualDogWalk,
             slug: 'individual_dog_walk',
             duration_minutes: 60,
-            price: 1500,
+            price: dogWalkingTenant.servicePrices.individualDogWalk,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
             requires_time_slot: false
@@ -530,7 +541,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceImage({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.individualDogWalk,
+            service_id: dogWalkingTenant.serviceIds.individualDogWalk,
             public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/individual_dog_walk.jpg',
             mime_type: 'image/jpeg',
             context: 'thumbnail'
@@ -538,7 +549,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceLabel({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.individualDogWalk,
+            service_id: dogWalkingTenant.serviceIds.individualDogWalk,
             language_id: languages.en.value,
             name: 'Individual dog walk',
             description: 'A 60-min walk for your dog',
@@ -546,29 +557,29 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceServiceOption({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.individualDogWalk,
+            service_id: dogWalkingTenant.serviceIds.individualDogWalk,
             service_option_id: dogWalkingTenant.serviceOptions.extra30Mins
         }),
         upsertServiceServiceOption({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.individualDogWalk,
+            service_id: dogWalkingTenant.serviceIds.individualDogWalk,
             service_option_id: dogWalkingTenant.serviceOptions.extra60Mins
         }),
         upsertServiceServiceOption({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.individualDogWalk,
+            service_id: dogWalkingTenant.serviceIds.individualDogWalk,
             service_option_id: dogWalkingTenant.serviceOptions.extraDog
         }),
 
         upsertService({
             tenant_id,
             environment_id,
-            id: dogWalkingTenant.services.groupDogWalk,
+            id: dogWalkingTenant.serviceIds.groupDogWalk,
             slug: 'group_dog_walk',
             duration_minutes: 60,
-            price: 1200,
+            price: dogWalkingTenant.servicePrices.groupDogWalk,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
             requires_time_slot: true,
@@ -577,7 +588,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceImage({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.groupDogWalk,
+            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
             public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/group_dog_walk.jpg',
             mime_type: 'image/jpeg',
             context: 'thumbnail'
@@ -585,14 +596,14 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceServiceOption({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.groupDogWalk,
+            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
             service_option_id: dogWalkingTenant.serviceOptions.extraDog
         }),
 
         upsertServiceLabel({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.groupDogWalk,
+            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
             language_id: languages.en.value,
             name: 'Group dog walk',
             description: 'A 60-min walk for your dog with 3 - 5 other dogs',
@@ -619,24 +630,24 @@ function breezbookDogWalkUpserts(): Upsert[] {
             id: makeTestId(tenant_id, environment_id, 'group_dog_walk_morning'),
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.groupDogWalk,
+            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
             time_slot_id: makeTestId(tenant_id, environment_id, 'group_dog_walk_morning')
         }),
         upsertServiceTimeslot({
             id: makeTestId(tenant_id, environment_id, 'group_dog_walk_evening'),
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.groupDogWalk,
+            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
             time_slot_id: makeTestId(tenant_id, environment_id, 'group_dog_walk_evening')
         }),
 
         upsertService({
             tenant_id,
             environment_id,
-            id: dogWalkingTenant.services.dropInVisit,
+            id: dogWalkingTenant.serviceIds.dropInVisit,
             slug: 'drop_in_visit',
             duration_minutes: 30,
-            price: 1200,
+            price: dogWalkingTenant.servicePrices.dropInVisit,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
             requires_time_slot: false
@@ -644,7 +655,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceImage({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.dropInVisit,
+            service_id: dogWalkingTenant.serviceIds.dropInVisit,
             public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/drop_in_visit.jpg',
             mime_type: 'image/jpeg',
             context: 'thumbnail'
@@ -652,7 +663,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceLabel({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.dropInVisit,
+            service_id: dogWalkingTenant.serviceIds.dropInVisit,
             language_id: languages.en.value,
             name: 'Drop in visit',
             description: 'We will visit your dog in your home for a quick check-in and playtime',
@@ -660,7 +671,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceServiceOption({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.dropInVisit,
+            service_id: dogWalkingTenant.serviceIds.dropInVisit,
             service_option_id: dogWalkingTenant.serviceOptions.extra30Mins
         }),
 
@@ -668,10 +679,10 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertService({
             tenant_id,
             environment_id,
-            id: dogWalkingTenant.services.petSit,
+            id: dogWalkingTenant.serviceIds.petSit,
             slug: 'pet_sit',
             duration_minutes: 120,
-            price: 2500,
+            price: dogWalkingTenant.servicePrices.petSit,
             price_currency: 'GBP',
             permitted_add_on_ids: [],
             requires_time_slot: false
@@ -679,7 +690,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceImage({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.petSit,
+            service_id: dogWalkingTenant.serviceIds.petSit,
             public_image_url: 'https://ltbkixtsgzejkyicczum.supabase.co/storage/v1/object/public/service-images/dev/breezbook-dog-walks/pet_sit.jpg',
             mime_type: 'image/jpeg',
             context: 'thumbnail'
@@ -687,7 +698,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceLabel({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.petSit,
+            service_id: dogWalkingTenant.serviceIds.petSit,
             language_id: languages.en.value,
             name: 'Pet sit',
             description: 'We will stay with your dog in your home',
@@ -695,20 +706,20 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceServiceOption({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.petSit,
+            service_id: dogWalkingTenant.serviceIds.petSit,
             service_option_id: dogWalkingTenant.serviceOptions.extra30Mins
         }),
         upsertServiceServiceOption({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.petSit,
+            service_id: dogWalkingTenant.serviceIds.petSit,
             service_option_id: dogWalkingTenant.serviceOptions.extra60Mins
         }),
         upsertServiceResourceRequirement({
             id: makeTestId(tenant_id, environment_id, 'pet_sit_requirement'),
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.petSit,
+            service_id: dogWalkingTenant.serviceIds.petSit,
             requirement_type: 'any_suitable',
             resource_type: dogWalkerResourceTypeId,
         }),
@@ -716,7 +727,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             id: makeTestId(tenant_id, environment_id, 'group_dog_walk_requirement'),
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.groupDogWalk,
+            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
             requirement_type: 'any_suitable',
             resource_type: dogWalkerResourceTypeId,
         }),
@@ -724,7 +735,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             id: makeTestId(tenant_id, environment_id, 'individual_dog_walk_requirement'),
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.individualDogWalk,
+            service_id: dogWalkingTenant.serviceIds.individualDogWalk,
             requirement_type: 'any_suitable',
             resource_type: dogWalkerResourceTypeId,
         }),
@@ -732,7 +743,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             id: makeTestId(tenant_id, environment_id, 'drop_in_visit_requirement'),
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.dropInVisit,
+            service_id: dogWalkingTenant.serviceIds.dropInVisit,
             requirement_type: 'any_suitable',
             resource_type: dogWalkerResourceTypeId,
         }),
@@ -740,52 +751,52 @@ function breezbookDogWalkUpserts(): Upsert[] {
         upsertServiceLocation({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.individualDogWalk,
+            service_id: dogWalkingTenant.serviceIds.individualDogWalk,
             location_id: makeTestId(tenant_id, environment_id, 'main')
         }),
         upsertServiceLocation({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.groupDogWalk,
+            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
             location_id: makeTestId(tenant_id, environment_id, 'main')
         }),
         upsertServiceLocation({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.dropInVisit,
+            service_id: dogWalkingTenant.serviceIds.dropInVisit,
             location_id: makeTestId(tenant_id, environment_id, 'main')
         }),
         upsertServiceLocation({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.petSit,
+            service_id: dogWalkingTenant.serviceIds.petSit,
             location_id: makeTestId(tenant_id, environment_id, 'main')
         }),
         upsertServiceForm({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.individualDogWalk,
+            service_id: dogWalkingTenant.serviceIds.individualDogWalk,
             form_id: makeTestId(tenant_id, environment_id, 'pet-details-form'),
             rank: 0
         }),
         upsertServiceForm({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.groupDogWalk,
+            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
             form_id: makeTestId(tenant_id, environment_id, 'pet-details-form'),
             rank: 0
         }),
         upsertServiceForm({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.dropInVisit,
+            service_id: dogWalkingTenant.serviceIds.dropInVisit,
             form_id: makeTestId(tenant_id, environment_id, 'pet-details-form'),
             rank: 0
         }),
         upsertServiceForm({
             tenant_id,
             environment_id,
-            service_id: dogWalkingTenant.services.petSit,
+            service_id: dogWalkingTenant.serviceIds.petSit,
             form_id: makeTestId(tenant_id, environment_id, 'pet-details-form'),
             rank: 0
         }),

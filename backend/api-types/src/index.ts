@@ -1,7 +1,9 @@
 import {
     Form,
     FormId,
+    IsoDate,
     JsonSchemaFormLabels,
+    mandatory,
     resourceId,
     ResourceId,
     resourceRequirementId,
@@ -82,6 +84,13 @@ export interface AvailabilityResponse {
     slots: Slots;
     serviceSummary: ServiceSummary;
     addOns: AddOnSummary[];
+}
+
+export const availabilityResponseFns = {
+
+    slotsForDate(availabilityWithTwoExtras: AvailabilityResponse, date: IsoDate): Availability[] {
+        return mandatory(availabilityWithTwoExtras.slots[date.value], `No slots for date ${date.value}`);
+    }
 }
 
 export function emptyAvailabilityResponse(serviceSummary: ServiceSummary, addOns: AddOnSummary[]): AvailabilityResponse {

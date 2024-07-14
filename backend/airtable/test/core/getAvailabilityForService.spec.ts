@@ -1,12 +1,26 @@
-import {expect, test} from 'vitest';
-import {Booking, booking, carwash, customerId} from '@breezbook/packages-core';
+import {beforeEach, describe, expect, test} from 'vitest';
+import {
+    Booking,
+    booking,
+    carwash,
+    customerId,
+    Service,
+    serviceFns,
+    ServiceOption,
+    serviceOptionFns
+} from '@breezbook/packages-core';
 import {everythingForCarWashTenantWithDynamicPricing} from '../helper.js';
 import {getAvailabilityForService} from "../../src/core/getAvailabilityForService.js";
-import {isoDate, mandatory, serviceOptionRequest} from "@breezbook/packages-types";
+import {isoDate, mandatory, serviceId, serviceOptionId, serviceOptionRequest} from "@breezbook/packages-types";
 import {PrismockClient} from "prismock";
 import {dogWalkingTenant, loadDogWalkingTenant} from "../../src/dx/loadDogWalkingTenant.js";
-import {getEverythingForAvailability} from "../../src/express/getEverythingForAvailability.js";
+import {
+    EverythingForAvailability,
+    getEverythingForAvailability
+} from "../../src/express/getEverythingForAvailability.js";
 import {serviceAvailabilityRequest} from "../../src/express/availability/getServiceAvailabilityForLocation.js";
+import {PrismaClient} from "@prisma/client";
+import {AvailabilityResponse, availabilityResponseFns} from "@breezbook/backend-api-types";
 
 
 const today = isoDate();
@@ -52,20 +66,53 @@ test('pricing can be dynamic', () => {
     expect(availability.slots[today.value]?.[0]?.priceWithNoDecimalPlaces).toBe(1400);
 });
 
-test("service options that extend the service's duration are reflected in availability", async () => {
-    const prismock = new PrismockClient();
-    await loadDogWalkingTenant(prismock);
-    const everythingForAvailability = await getEverythingForAvailability(prismock, dogWalkingTenant.tenantEnv, today, today);
-    const individualDogWalk = mandatory(everythingForAvailability.businessConfiguration.services.find(s => s.id.value === dogWalkingTenant.services.individualDogWalk), 'individual dog walk not found');
-    const extra60Mins = mandatory(everythingForAvailability.businessConfiguration.serviceOptions.find(so => so.id.value === dogWalkingTenant.serviceOptions.extra60Mins), 'extra 60 mins not found');
+describe("given a service with service options", () => {
+    let prismock: PrismaClient;
+    let everythingForAvailability: EverythingForAvailability;
+    let individualDogWalk: Service;
+    let extra60Mins: ServiceOption;
+    let extra30Mins: ServiceOption;
 
-    const availabilityWithoutOptions = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, today, today));
-    expect(availabilityWithoutOptions).toBeDefined();
-    expect(availabilityWithoutOptions.slots[today.value]).toBeDefined();
-    expect(availabilityWithoutOptions.slots[today.value]).toHaveLength(17);
+    beforeEach(async () => {
+        prismock = new PrismockClient();
+        await loadDogWalkingTenant(prismock);
+        everythingForAvailability = await getEverythingForAvailability(prismock, dogWalkingTenant.tenantEnv, today, today);
+        individualDogWalk = serviceFns.findService(everythingForAvailability.businessConfiguration.services, serviceId(dogWalkingTenant.serviceIds.individualDogWalk));
+        extra60Mins = serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, serviceOptionId(dogWalkingTenant.serviceOptions.extra60Mins));
+        extra30Mins = serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, serviceOptionId(dogWalkingTenant.serviceOptions.extra30Mins));
+    })
 
-    const availabilityWithExtra60Mins = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, today, today, [], [serviceOptionRequest(extra60Mins.id)]));
-    expect(availabilityWithExtra60Mins).toBeDefined();
-    expect(availabilityWithExtra60Mins.slots[today.value]).toBeDefined();
-    expect(availabilityWithExtra60Mins.slots[today.value]).toHaveLength(15);
-})
+
+    test("service options that extend the service's duration are reflected in availability", async () => {
+        const availabilityWithoutOptions = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, today, today));
+        expect(availabilityWithoutOptions).toBeDefined();
+        expect(availabilityWithoutOptions.slots[today.value]).toBeDefined();
+        expect(availabilityWithoutOptions.slots[today.value]).toHaveLength(17);
+
+        const availabilityWithExtra60Mins = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, today, today, [], [serviceOptionRequest(extra60Mins.id)]));
+        expect(availabilityWithExtra60Mins).toBeDefined();
+        expect(availabilityWithExtra60Mins.slots[today.value]).toBeDefined();
+        expect(availabilityWithExtra60Mins.slots[today.value]).toHaveLength(15);
+    })
+
+    test("price breakdown shows service price and option prices", () => {
+        const availabilityWithTwoExtras = getAvailabilityForService(everythingForAvailability,
+            serviceAvailabilityRequest(individualDogWalk.id, today, today, [], [
+                serviceOptionRequest(extra30Mins.id),
+                serviceOptionRequest(extra60Mins.id, 2)])) as AvailabilityResponse;
+        const slotsToday = availabilityResponseFns.slotsForDate(availabilityWithTwoExtras, today);
+        const firstSlot = mandatory(slotsToday[0], "No slots for today");
+        expect(firstSlot.priceBreakdown.servicePrice).toBe(dogWalkingTenant.servicePrices.individualDogWalk);
+        expect(firstSlot.priceBreakdown.pricedOptions).toHaveLength(2);
+
+        expect(firstSlot.priceBreakdown.pricedOptions[0].serviceOptionId).toBe(extra30Mins.id.value);
+        expect(firstSlot.priceBreakdown.pricedOptions[0].unitPrice).toBe(dogWalkingTenant.serviceOptionPrices.extra30Mins);
+        expect(firstSlot.priceBreakdown.pricedOptions[0].quantity).toBe(1);
+        expect(firstSlot.priceBreakdown.pricedOptions[0].price).toBe(dogWalkingTenant.serviceOptionPrices.extra30Mins);
+
+        expect(firstSlot.priceBreakdown.pricedOptions[1].serviceOptionId).toBe(extra60Mins.id.value);
+        expect(firstSlot.priceBreakdown.pricedOptions[1].unitPrice).toBe(dogWalkingTenant.serviceOptionPrices.extra60Mins);
+        expect(firstSlot.priceBreakdown.pricedOptions[1].quantity).toBe(2);
+        expect(firstSlot.priceBreakdown.pricedOptions[1].price).toBe(dogWalkingTenant.serviceOptionPrices.extra60Mins * 2);
+    });
+});
