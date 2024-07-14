@@ -19,7 +19,7 @@ const initialAvailability = [resourceDayAvailability(van1, [availabilityBlock(da
 test("no business hours removes all resource availability", () => {
     const adjustedAvailability = fitAvailability(initialAvailability, []);
     expect(adjustedAvailability).toHaveLength(1);
-    expect(adjustedAvailability[0].availability).toHaveLength(0);
+    expect(adjustedAvailability?.[0]?.availability).toHaveLength(0);
 })
 
 test("business hours that span resource availability", () => {
@@ -34,12 +34,12 @@ test("business hours that start after resource availability", () => {
     const businessHours = [dayAndTimePeriod(may23, timePeriod(nineThirty, tenAm))];
     const adjustedAvailability = fitAvailability(initialAvailability, businessHours);
     expect(adjustedAvailability).toHaveLength(1);
-    expect(adjustedAvailability[0].availability[0].when).toEqual(dayAndTimePeriod(may23, timePeriod(nineThirty, tenAm)));
+    expect(adjustedAvailability?.[0]?.availability[0]?.when).toEqual(dayAndTimePeriod(may23, timePeriod(nineThirty, tenAm)));
 })
 
 test("business hours that start before resource availability", () => {
     const businessHours = [dayAndTimePeriod(may23, timePeriod(eightAm, nineThirty))];
     const adjustedAvailability = fitAvailability(initialAvailability, businessHours);
     expect(adjustedAvailability).toHaveLength(1);
-    expect(adjustedAvailability[0].availability[0].when).toEqual(dayAndTimePeriod(may23, timePeriod(nineAm, nineThirty)));
+    expect(adjustedAvailability?.[0]?.availability[0]?.when).toEqual(dayAndTimePeriod(may23, timePeriod(nineAm, nineThirty)));
 })

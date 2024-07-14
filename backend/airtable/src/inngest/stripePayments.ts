@@ -26,7 +26,7 @@ export const onPaymentIntentSucceeded = inngest.createFunction(
 
 export async function handlePaymentIntentSucceeded(prisma: PrismaClient, step: InngestStep, logger: Logger, webhookId: string) {
     const webhook = await step.run('findWebhook', async () => {
-        return await prisma.received_webhooks.findUnique({where: {id: webhookId}});
+        return prisma.received_webhooks.findUnique({where: {id: webhookId}});
     })
     if (!webhook) {
         logger.error(`Webhook '${webhookId}' not found`);

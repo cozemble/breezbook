@@ -181,7 +181,7 @@ function toResourceableBooking(booking: Booking, resources: Resource[]): resourc
 }
 
 function startTimeForResponse(availabilityOutcome: Available, startTimes: StartTime[] | null) {
-    if (startTimes && startTimes.length > 0 && startTimes[0]._type === 'timeslot.spec') {
+    if (startTimes && startTimes.length > 0 && startTimes?.[0]?._type === 'timeslot.spec') {
         const timeSlots = startTimes as TimeslotSpec[];
         return mandatory(
             timeSlots.find(ts => time24Fns.equals(ts.slot.from, availabilityOutcome.booking.booking.timeslot.from.time)),
