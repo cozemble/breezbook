@@ -17,7 +17,6 @@ export * from './secrets.js';
 export * from './pricingTypes.js';
 export * from './orderTypes.js';
 
-
 export interface TimeSlotAvailability {
     _type: 'time.slot.availability';
     timeslotId: string;
@@ -26,6 +25,14 @@ export interface TimeSlotAvailability {
     label: string;
     priceWithNoDecimalPlaces: number;
     priceCurrency: string;
+    // priceBreakdown: {
+    //     servicePrice: number
+    //     pricedOptions: {
+    //         serviceOptionId: string
+    //         quantity: number
+    //         price: number
+    //     }[]
+    // }
 }
 
 export function timeSlotAvailability(

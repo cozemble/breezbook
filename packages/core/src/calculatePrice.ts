@@ -34,7 +34,7 @@
  * 7. Channel-Based Pricing: Different prices for different booking channels, such as online versus in-person.
  */
 import {price, Price} from './types.js';
-import {AvailableSlot, availableSlotFns, ServiceRequest} from "./availability.js";
+import {AvailableSlot, availableSlotFns} from "./availability.js";
 import {
     ParameterisedPricingFactor,
     price as pricingPrice,
@@ -57,13 +57,15 @@ import {
 
 export interface PricedServiceOption {
     serviceOptionId: ServiceOptionId;
+    unitPrice: Price
     quantity: number;
     price: Price;
 }
 
-export function pricedServiceOption(serviceOptionId: ServiceOptionId, quantity: number, price: Price): PricedServiceOption {
+export function pricedServiceOption(serviceOptionId: ServiceOptionId, unitPrice: Price, quantity: number, price: Price): PricedServiceOption {
     return {
         serviceOptionId,
+        unitPrice,
         quantity,
         price
     };
@@ -168,7 +170,10 @@ export function calculatePrice(slot: AvailableSlot, pricingRules: PricingRule[])
     const pricingContext = getPricingContext(slot)
 
     const servicePrice = pricingEngine.calculatePrice(pricingPrice(slot.serviceRequest.service.price.amount.value), factorsForSlot(requiredFactors, slot), pricingContext);
-    const pricedOptions = slot.serviceRequest.options.map(so => pricedServiceOption(so.option.id, so.quantity, so.option.price));
+    const pricedOptions = slot.serviceRequest.options.map(so => {
+        const total = price(so.option.price.amount.value * so.quantity, so.option.price.currency);
+        return pricedServiceOption(so.option.id, so.option.price, so.quantity, total);
+    });
     const total = [servicePrice.finalPrice.amountInMinorUnits, ...pricedOptions.map(po => po.price.amount.value)].reduce((acc, curr) => acc + curr, 0)
     const breakdown = priceBreakdown(price(servicePrice.finalPrice.amountInMinorUnits, slot.serviceRequest.service.price.currency), pricedOptions, price(total, slot.serviceRequest.service.price.currency));
     return pricedSlot(slot, breakdown, servicePrice.adjustments);
