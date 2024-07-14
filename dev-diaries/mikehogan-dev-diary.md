@@ -2439,3 +2439,15 @@ A small layer of functions will make from `api` types to their corresponding dom
 
 There are other approaches to this issue, including just ignoring it.  I wonder which approach wins the day.  At least I'll
 try this on for size and see how it feels.
+
+## update on the above
+I wrote this before trying it out.  Funny how you assume things.  Turns our you can't build a namespace up from several
+files.  If I want to re-export symbols from another file, I have to nest them in the namespace.  Not doing that.
+So a simpler option, but one that requires using convention rather than the type system, is to just import api types
+in this way:
+
+```typescript
+import * as api from '@breezbook/api-types';
+
+const x = something() as api.ServiceRequest;
+```
