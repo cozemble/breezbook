@@ -35,16 +35,7 @@
  */
 import {price, Price} from './types.js';
 import {AvailableSlot, availableSlotFns} from "./availability.js";
-import {
-    ParameterisedPricingFactor,
-    price as pricingPrice,
-    PriceAdjustment,
-    PricingEngine,
-    PricingFactor,
-    PricingFactorName,
-    PricingFactorSpec,
-    PricingRule
-} from "@breezbook/packages-pricing";
+import * as pricing from "@breezbook/packages-pricing";
 import {
     isoDateFns,
     minuteFns,
@@ -90,10 +81,10 @@ export interface PricedSlot {
     slot: AvailableSlot;
     price: Price;
     breakdown: PriceBreakdown;
-    adjustments: PriceAdjustment[];
+    adjustments: pricing.PriceAdjustment[];
 }
 
-export function pricedSlot(slot: AvailableSlot, breakdown: PriceBreakdown, adjustments: PriceAdjustment[] = []): PricedSlot {
+export function pricedSlot(slot: AvailableSlot, breakdown: PriceBreakdown, adjustments: pricing.PriceAdjustment[] = []): PricedSlot {
     return {
         _type: 'priced.slot',
         slot,
@@ -103,7 +94,7 @@ export function pricedSlot(slot: AvailableSlot, breakdown: PriceBreakdown, adjus
     };
 }
 
-function getSimplePricingFactor(f: PricingFactorName, slot: AvailableSlot) {
+function getSimplePricingFactor(f: pricing.PricingFactorName, slot: AvailableSlot) {
     switch (f.name) {
         case 'daysUntilBooking':
             return {name: 'daysUntilBooking', value: isoDateFns.daysUntil(slot.serviceRequest.date)};
@@ -129,7 +120,7 @@ export interface HourCountParams {
     endingTime: TwentyFourHourClockTime;
 }
 
-function getParameterisedPricingFactor(f: ParameterisedPricingFactor, slot: AvailableSlot): PricingFactor {
+function getParameterisedPricingFactor(f: pricing.ParameterisedPricingFactor, slot: AvailableSlot): pricing.PricingFactor {
     if (f.type === 'hourCount') {
         const params = f.parameters as HourCountParams;
         const reportingPeriod = timePeriod(params.startingTime, params.endingTime);
@@ -144,7 +135,7 @@ function getParameterisedPricingFactor(f: ParameterisedPricingFactor, slot: Avai
     throw new Error(`Unknown required factor ${JSON.stringify(f)}`);
 }
 
-function factorsForSlot(requiredFactors: PricingFactorSpec[], slot: AvailableSlot): PricingFactor[] {
+function factorsForSlot(requiredFactors: pricing.PricingFactorSpec[], slot: AvailableSlot): pricing.PricingFactor[] {
     return requiredFactors.map(f => {
         if (f._type === "factor.name") {
             return getSimplePricingFactor(f, slot);
@@ -163,18 +154,19 @@ function getPricingContext(slot: AvailableSlot): PricingContext {
     }
 }
 
-export function calculatePrice(slot: AvailableSlot, pricingRules: PricingRule[]): PricedSlot {
-    const pricingEngine = new PricingEngine();
+export function calculatePrice(slot: AvailableSlot, pricingRules: pricing.PricingRule[]): PricedSlot {
+    const pricingEngine = new pricing.PricingEngine();
     pricingRules.forEach(r => pricingEngine.addRule(r));
     const requiredFactors = Array.from(new Set(pricingRules.flatMap(r => r.requiredFactors)));
     const pricingContext = getPricingContext(slot)
+    const currency = slot.serviceRequest.service.price.currency
 
-    const servicePrice = pricingEngine.calculatePrice(pricingPrice(slot.serviceRequest.service.price.amount.value), factorsForSlot(requiredFactors, slot), pricingContext);
+    const servicePrice = pricingEngine.calculatePrice(pricing.price(slot.serviceRequest.service.price.amount.value), factorsForSlot(requiredFactors, slot), pricingContext);
     const pricedOptions = slot.serviceRequest.options.map(so => {
-        const total = price(so.option.price.amount.value * so.quantity, so.option.price.currency);
+        const total = price(so.option.price.amount.value * so.quantity, currency);
         return pricedServiceOption(so.option.id, so.option.price, so.quantity, total);
     });
     const total = [servicePrice.finalPrice.amountInMinorUnits, ...pricedOptions.map(po => po.price.amount.value)].reduce((acc, curr) => acc + curr, 0)
-    const breakdown = priceBreakdown(slot.serviceRequest.service.price, pricedOptions, price(total, slot.serviceRequest.service.price.currency));
+    const breakdown = priceBreakdown(price(servicePrice.finalPrice.amountInMinorUnits, currency), pricedOptions, price(total, slot.serviceRequest.service.price.currency));
     return pricedSlot(slot, breakdown, servicePrice.adjustments);
 }

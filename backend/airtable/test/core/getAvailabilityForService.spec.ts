@@ -72,11 +72,12 @@ describe("given a service with service options", () => {
     let individualDogWalk: Service;
     let extra60Mins: ServiceOption;
     let extra30Mins: ServiceOption;
+    const saturday = isoDate("2024-07-13");
 
     beforeEach(async () => {
         prismock = new PrismockClient();
         await loadDogWalkingTenant(prismock);
-        everythingForAvailability = await getEverythingForAvailability(prismock, dogWalkingTenant.tenantEnv, today, today);
+        everythingForAvailability = await getEverythingForAvailability(prismock, dogWalkingTenant.tenantEnv, saturday, saturday);
         individualDogWalk = serviceFns.findService(everythingForAvailability.businessConfiguration.services, serviceId(dogWalkingTenant.serviceIds.individualDogWalk));
         extra60Mins = serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, serviceOptionId(dogWalkingTenant.serviceOptions.extra60Mins));
         extra30Mins = serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, serviceOptionId(dogWalkingTenant.serviceOptions.extra30Mins));
@@ -84,25 +85,25 @@ describe("given a service with service options", () => {
 
 
     test("service options that extend the service's duration are reflected in availability", async () => {
-        const availabilityWithoutOptions = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, today, today));
+        const availabilityWithoutOptions = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday));
         expect(availabilityWithoutOptions).toBeDefined();
-        expect(availabilityWithoutOptions.slots[today.value]).toBeDefined();
-        expect(availabilityWithoutOptions.slots[today.value]).toHaveLength(17);
+        expect(availabilityWithoutOptions.slots[saturday.value]).toBeDefined();
+        expect(availabilityWithoutOptions.slots[saturday.value]).toHaveLength(17);
 
-        const availabilityWithExtra60Mins = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, today, today, [], [serviceOptionRequest(extra60Mins.id)]));
+        const availabilityWithExtra60Mins = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday, [], [serviceOptionRequest(extra60Mins.id)]));
         expect(availabilityWithExtra60Mins).toBeDefined();
-        expect(availabilityWithExtra60Mins.slots[today.value]).toBeDefined();
-        expect(availabilityWithExtra60Mins.slots[today.value]).toHaveLength(15);
+        expect(availabilityWithExtra60Mins.slots[saturday.value]).toBeDefined();
+        expect(availabilityWithExtra60Mins.slots[saturday.value]).toHaveLength(15);
     })
 
     test("price breakdown shows service price and option prices", () => {
         const availabilityWithTwoExtras = getAvailabilityForService(everythingForAvailability,
-            serviceAvailabilityRequest(individualDogWalk.id, today, today, [], [
+            serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday, [], [
                 serviceOptionRequest(extra30Mins.id),
                 serviceOptionRequest(extra60Mins.id, 2)])) as AvailabilityResponse;
-        const slotsToday = availabilityResponseFns.slotsForDate(availabilityWithTwoExtras, today);
-        const firstSlot = mandatory(slotsToday[0], "No slots for today");
-        expect(firstSlot.priceBreakdown.servicePrice).toBe(dogWalkingTenant.servicePrices.individualDogWalk);
+        const slotsToday = availabilityResponseFns.slotsForDate(availabilityWithTwoExtras, saturday);
+        const firstSlot = mandatory(slotsToday[0], "No slots for " + saturday.value);
+        expect(firstSlot.priceBreakdown.servicePrice).toBe(dogWalkingTenant.servicePrices.individualDogWalk + 200);
         expect(firstSlot.priceBreakdown.pricedOptions).toHaveLength(2);
 
         expect(firstSlot.priceBreakdown.pricedOptions[0].serviceOptionId).toBe(extra30Mins.id.value);
