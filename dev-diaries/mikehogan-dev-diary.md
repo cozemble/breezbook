@@ -2385,3 +2385,57 @@ I think the best way to get there is to to test drive the changes into the `pric
 
 I'm also starting to think that services and service options will eventually need to have pricing rules associated directly
 to them, rather than just having global pricing rules.  Am not sure tho, lets see how it plays out.
+
+# Sun 14 Jul 2024
+Small thought on a type names in differing contexts.
+
+In an endpoint, I might have this type:
+
+```typescript
+
+interface ServiceRequest {
+    serviceId: string;
+    startTime: string;
+    endTime: string
+    partySize: number;
+    specificRequirements?: {
+        [key: string]: string; // key is the requirement key, value is the requirement value
+    };
+}
+```
+
+But in my domain logic I want the same shape, except with full objects, for example:
+
+```typescript
+
+interface Requirement {
+    key: string;
+    resource:Resource;
+}
+
+interface ServiceRequest {
+    service: Service;
+    startTime: Date;
+    endTime: Date
+    partySize: number;
+    specificRequirements?: Requirement[];
+}
+```
+
+An issue with this is that in both cases, I think `ServiceRequest` is a good name. Which means some kind of disambiguation
+is required.  I have played around with the idea of calling the first one `ServiceRequestInput` or `ServiceRequestParams`
+or `ServiceRequestDTO` or `ServiceRequestSpec`. 
+
+Where I am leaning now, and about the try, is to use Typescript namespaces to disambiguate the types.  I plan to make
+a namespace called `api` and put all the types that are used in endpoints in there.  I will export the namespace only,
+so then my effective name space is `api.ServiceRequest` and `ServiceRequest`.
+
+`api` types will consist mostly of primitive types, because they represent JSON posts and responses.  And although right
+now they are plain Typescript interfaces, a step am likely to take soon is to turn them into `Zod` types, thereby granting
+them validation capabilities.  So the `api` types become tightly validated primitive types - basically JSON schema types,
+but with the benefit of being first class Typescript types.
+
+A small layer of functions will make from `api` types to their corresponding domain types, and vice versa.
+
+There are other approaches to this issue, including just ignoring it.  I wonder which approach wins the day.  At least I'll
+try this on for size and see how it feels.
