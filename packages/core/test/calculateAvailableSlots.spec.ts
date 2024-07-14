@@ -20,6 +20,7 @@ import {
     service,
     serviceFns,
     serviceOption,
+    serviceOptionAndQuantity,
     ServiceRequest,
     serviceRequest,
     startTimeFns,
@@ -55,7 +56,7 @@ const nineAm = time24("09:00")
 const fivePm = time24("17:00")
 
 describe("given a chatbot service that requires no resources, and is available monday to friday 9am to 5pm", () => {
-    const theService = service( [], minutes(60), price(3500, currencies.GBP), [], [])
+    const theService = service([], minutes(60), price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -137,7 +138,7 @@ describe("given a chatbot service that requires no resources, and is available m
 
 describe("given a carwash service that requires one of several interchangeable washers for each service, and is available monday to friday 9am to 5pm", () => {
     const carwasher = resourceType("carWasher")
-    const theService = service( [anySuitableResource(carwasher)], minutes(45), price(3500, currencies.GBP), [], [])
+    const theService = service([anySuitableResource(carwasher)], minutes(45), price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -188,7 +189,7 @@ describe("given a mobile carwash service that requires one of several interchang
     const van = resourceType("Van")
     const morningSlot = timeslotSpec(nineAm, time24("12:00"), "morning slot");
     const afternoonSlot = timeslotSpec(time24("13:00"), time24("16:00"), "afternoon slot");
-    const theService = serviceFns.setStartTimes(service( [anySuitableResource(van)], minutes(120), price(3500, currencies.GBP), [], []), [morningSlot, afternoonSlot])
+    const theService = serviceFns.setStartTimes(service([anySuitableResource(van)], minutes(120), price(3500, currencies.GBP), [], []), [morningSlot, afternoonSlot])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -245,7 +246,7 @@ describe("given a gym that offers personal training with specific trainers, and 
     const ptMete = resource(personalTrainer, [])
     const bothPtsAvailable = [resourceDayAvailability(ptMike, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]), resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))])]
     const requiresPtMike = specificResource(ptMike)
-    const theService = service( [requiresPtMike], minutes(55), price(3500, currencies.GBP), [], [])
+    const theService = service([requiresPtMike], minutes(55), price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -309,7 +310,7 @@ describe("given a medical centre and an appointment type that requires two docto
     const lead = resourceRequirementId('lead');
     const assistant = resourceRequirementId('assistant');
     const anyDoctorAsLead = anySuitableResource(doctor, resourceAllocationRules.any, lead)
-    const theService = service( [anyDoctorAsLead, anySuitableResource(doctor, resourceAllocationRules.unique, assistant), anySuitableResource(examinationRoom)], minutes(60), price(3500, currencies.GBP), [], [])
+    const theService = service([anyDoctorAsLead, anySuitableResource(doctor, resourceAllocationRules.unique, assistant), anySuitableResource(examinationRoom)], minutes(60), price(3500, currencies.GBP), [], [])
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -339,7 +340,7 @@ describe("given a medical centre and an appointment type that requires two docto
 
     test("both doctors can be specified explictly", () => {
         const mutatedConfig = setAvailability(config, [doctorMikeAvailability, doctorMeteAvailability, roomAAvailability, roomBAvailability])
-        const mutatedService = serviceFns.replaceRequirement(serviceFns.replaceRequirement(theService, anySuitableResource(doctor, resourceAllocationRules.any, lead), specificResource(doctorMike, lead)), anySuitableResource(doctor,resourceAllocationRules.any, assistant), specificResource(doctorMete, assistant))
+        const mutatedService = serviceFns.replaceRequirement(serviceFns.replaceRequirement(theService, anySuitableResource(doctor, resourceAllocationRules.any, lead), specificResource(doctorMike, lead)), anySuitableResource(doctor, resourceAllocationRules.any, assistant), specificResource(doctorMete, assistant))
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(mutatedService, date)))
         const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         const leadDoctorIds = Array.from(new Set(available.map((a) => a.resourceAllocation.find((r) => r.requirement.id === lead)?.resource.id.value)))
@@ -367,7 +368,7 @@ describe("given a gym that offers personal training requiring a specific trainer
         resourceDayAvailability(ptMete, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(roomA, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
-    const theService = service( [anySuitableResource(personalTrainer), anySuitableResource(gymRoom)], minutes(55), price(3500, currencies.GBP), [], []);
+    const theService = service([anySuitableResource(personalTrainer), anySuitableResource(gymRoom)], minutes(55), price(3500, currencies.GBP), [], []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -499,7 +500,7 @@ describe("given a hair salon that offers configurable services, and is available
     const colouring = serviceOption(price(1500, currencies.GBP), false, duration(minutes(20)), [anySuitableResource(colouringMachine)], []);
     const cutting = serviceOption(price(2000, currencies.GBP), false, duration(minutes(30)), [anySuitableResource(someSharedResource)], []);
     const curling = serviceOption(price(2500, currencies.GBP), false, duration(minutes(40)), [anySuitableResource(someSharedResource)], []);
-    const hairStylingService = serviceFns.addOptions(service( [anySuitableResource(hairStylist)], minutes(30), price(3500, currencies.GBP), [], []), []);
+    const hairStylingService = serviceFns.addOptions(service([anySuitableResource(hairStylist)], minutes(30), price(3500, currencies.GBP), [], []), []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -524,7 +525,7 @@ describe("given a hair salon that offers configurable services, and is available
     test("adding a service option that lengthens the service, reduces the number of available slots", () => {
         const sharedResourceAvailable = resourceDayAvailability(sharedResource1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]);
         const mutatedConfig = setAvailability(config, [...stylistsAvailable, sharedResourceAvailable]);
-        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date, [curling])));
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date, [serviceOptionAndQuantity(curling, 1)])));
         const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00"), time24("11:00"), time24("12:00"), time24("13:00"), time24("14:00"), time24("15:00")]);
     });
@@ -532,7 +533,7 @@ describe("given a hair salon that offers configurable services, and is available
     test("adding a service option that requires a resource, drops availabilty when the resource is not available", () => {
         const colouringMachineAvailableNineToEleven = resourceDayAvailability(colouringMachine1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, time24("11:00"))))]);
         const mutatedConfig = setAvailability(config, [...stylistsAvailable, colouringMachineAvailableNineToEleven]);
-        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date, [colouring])));
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date, [serviceOptionAndQuantity(colouring,1)])));
         const times = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(times).toEqual([time24("09:00"), time24("10:00")]);
     });
@@ -540,7 +541,7 @@ describe("given a hair salon that offers configurable services, and is available
     test("service option resource requirements are reduced to the min required", () => {
         const sharedResourceAvailableNineToTwelve = resourceDayAvailability(sharedResource1, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, time24("12:00"))))]);
         const mutatedConfig = setAvailability(config, [...stylistsAvailable, sharedResourceAvailableNineToTwelve]);
-        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date, [curling, cutting])));
+        const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [], serviceRequest(hairStylingService, date, [serviceOptionAndQuantity(curling,1), serviceOptionAndQuantity(cutting,1)])));
         const startTimes = available.map((a) => startTimeFns.getStartTime(a.startTime));
         expect(startTimes).toEqual([time24("09:00"), time24("10:00")]);
     })
@@ -559,7 +560,7 @@ describe("given a yoga studio with two instructors and two rooms", () => {
         resourceDayAvailability(mikeInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(meteInstructor, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
-    const theService = service( [specificResource(smallRoom), specificResource(mikeInstructor)], minutes(60), price(3500, currencies.GBP), [], [], capacity(10));
+    const theService = service([specificResource(smallRoom), specificResource(mikeInstructor)], minutes(60), price(3500, currencies.GBP), [], [], capacity(10));
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -611,7 +612,7 @@ describe("given a yoga studio with two instructors and two rooms", () => {
 })
 
 describe("given a chatbot service that has capacity", () => {
-    const theService = service( [], minutes(60), price(3500, currencies.GBP), [], [], capacity(5))
+    const theService = service([], minutes(60), price(3500, currencies.GBP), [], [], capacity(5))
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],

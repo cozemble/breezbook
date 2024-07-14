@@ -24,6 +24,11 @@ import {
 } from '@breezbook/packages-core';
 import {getAvailabilityForService} from '../getAvailabilityForService.js';
 import {validateCouponCode} from '../../express/addOrderValidations.js';
+import {
+    requirementOverride,
+    serviceAvailabilityRequest
+} from "../../express/availability/getServiceAvailabilityForLocation.js";
+import {serviceOptionRequest} from "@breezbook/packages-types";
 
 export const pricingErrorCodes = {
     pricingError: 'pricing.error'
@@ -31,7 +36,10 @@ export const pricingErrorCodes = {
 
 function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: EverythingForAvailability): PricedBasketLine[] | ErrorResponse {
     const lines = unpricedLines.map((line) => {
-        const availability = getAvailabilityForService(everythingForTenant, line.serviceId, line.options,line.date, line.date);
+        const request = serviceAvailabilityRequest(line.serviceId, line.date, line.date,
+            line.resourceRequirementOverrides.map(a => requirementOverride(a.requirementId, a.resourceId)),
+            line.options.map((a) => serviceOptionRequest(a.serviceOptionId, a.quantity)))
+        const availability = getAvailabilityForService(everythingForTenant, request);
         if (availability._type === 'error.response') {
             return availability;
         }

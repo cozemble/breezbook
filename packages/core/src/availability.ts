@@ -63,23 +63,18 @@ export const startTimeFns = {
 
 export interface AvailableSlot {
     _type: 'available.slot'
-    service: Service
-    date: IsoDate
+    serviceRequest: ServiceRequest
     startTime: StartTime
     resourceAllocation: ResourceAllocation[]
     possibleCapacity: Capacity
     consumedCapacity: Capacity
 }
 
-export function availableSlot(service: Service, date: IsoDate, startTime: StartTime, resourceAllocation: ResourceAllocation[], possibleCapacity: Capacity,
+export function availableSlot(serviceRequest: ServiceRequest, startTime: StartTime, resourceAllocation: ResourceAllocation[], possibleCapacity: Capacity,
                               consumedCapacity: Capacity): AvailableSlot {
-    // if (resourceAllocation.length !== service.resourceRequirements.length) {
-    //     throw new Error(`Resource allocation count mismatch for service '${service.id.value}' - expected ${service.resourceRequirements.length} got ${resourceAllocation.length}`)
-    // }
     return {
         _type: "available.slot",
-        service,
-        date,
+        serviceRequest,
         startTime,
         resourceAllocation,
         possibleCapacity,
@@ -90,10 +85,10 @@ export function availableSlot(service: Service, date: IsoDate, startTime: StartT
 export const availableSlotFns = {
 
     duration(slot: AvailableSlot): Minutes {
-        return time24Fns.duration(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.service.duration)).value
+        return time24Fns.duration(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.serviceRequest.service.duration)).value
     },
     servicePeriod(slot: AvailableSlot): TimePeriod {
-        return timePeriod(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.service.duration))
+        return timePeriod(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.serviceRequest.service.duration))
     }
 }
 
@@ -126,14 +121,23 @@ export function availabilityConfiguration(availability: BusinessAvailability, re
     }
 }
 
+export interface ServiceOptionAndQuantity {
+    option: ServiceOption
+    quantity: number
+}
+
+export function serviceOptionAndQuantity(option: ServiceOption, quantity: number): ServiceOptionAndQuantity {
+    return {option, quantity}
+}
+
 export interface ServiceRequest {
     _type: 'service.request'
     date: IsoDate;
     service: Service;
-    options: ServiceOption[]
+    options: ServiceOptionAndQuantity[]
 }
 
-export function serviceRequest(service: Service, date: IsoDate, options: ServiceOption[] = []): ServiceRequest {
+export function serviceRequest(service: Service, date: IsoDate, options: ServiceOptionAndQuantity[] = []): ServiceRequest {
     return {
         _type: "service.request",
         date,
@@ -150,7 +154,7 @@ function toPeriod(date: IsoDate, possibleStartTime: StartTime, serviceDuration: 
 }
 
 function toService(serviceRequest: ServiceRequest): resourcing.Service {
-    const totalRequirements = [...serviceRequest.service.resourceRequirements, ...serviceRequest.options.flatMap(o => o.resourceRequirements)]
+    const totalRequirements = [...serviceRequest.service.resourceRequirements, ...serviceRequest.options.flatMap(o => o.option.resourceRequirements)]
     const requirements = serviceRequest.service.capacity.value > 1 ? resourceRequirements(totalRequirements, serviceRequest.service.capacity) : resourceRequirements(totalRequirements)
     return resourcing.service(requirements, serviceRequest.service.id)
 }
@@ -181,7 +185,7 @@ function startTimeForResponse(availabilityOutcome: Available, startTimes: StartT
         const timeSlots = startTimes as TimeslotSpec[];
         return mandatory(
             timeSlots.find(ts => time24Fns.equals(ts.slot.from, availabilityOutcome.booking.booking.timeslot.from.time)),
-            `No start time found for timeslot ${availabilityOutcome.booking.booking.timeslot.from.time.value} in ${timeSlots.map(ts => ts.slot.from.value)}`);
+            `No start time found for timeslot ${availabilityOutcome.booking.booking.timeslot.from.time.value} in ${timeSlots.map(ts => ts.slot.from.value).join(",")}`);
 
     }
     return exactTimeAvailability(availabilityOutcome.booking.booking.timeslot.from.time);
@@ -205,7 +209,7 @@ export const availability = {
         const service = toService(serviceRequest)
         const mappedBookings = bookings.map(b => toResourceableBooking(b, mappedResources))
         const bookingSpec = resourcing.bookingSpec(service)
-        const duration = [serviceRequest.service.duration, ...serviceRequest.options.map(o => o.duration.value)].reduce((acc, d) => minuteFns.sum(acc, d), minutes(0))
+        const duration = [serviceRequest.service.duration, ...serviceRequest.options.map(o => o.option.duration.value)].reduce((acc, d) => minuteFns.sum(acc, d), minutes(0))
         const possibleStartTimes = serviceRequest.service.startTimes ?? calcPossibleStartTimes(config.startTimeSpec, businessAvailabilityForDay, duration).map(exactTimeAvailability);
         const requestedSlots = possibleStartTimes.map(st => toPeriod(serviceRequest.date, st, duration)).map(p => timeslot(dateAndTime(p.day, p.period.from), dateAndTime(p.day, p.period.to)))
         const availabilityOutcomes = listAvailability(mappedResources, mappedBookings, bookingSpec, requestedSlots)
@@ -213,8 +217,7 @@ export const availability = {
         for (const availabilityOutcome of availabilityOutcomes) {
             if (availabilityOutcome._type === 'available') {
                 result.push(availableSlot(
-                    serviceRequest.service,
-                    date,
+                    serviceRequest,
                     startTimeForResponse(availabilityOutcome, serviceRequest.service.startTimes),
                     availabilityOutcome.booking.resourceCommitments.map(r => resourceAllocation(r.requirement, r.resource)),
                     availabilityOutcome.potentialCapacity,

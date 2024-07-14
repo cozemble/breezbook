@@ -510,6 +510,16 @@ export const serviceFns = {
     },
 }
 
+export const serviceOptionFns = {
+    findServiceOption(options: ServiceOption[], serviceOptionId: ServiceOptionId): ServiceOption {
+        const found = options.find(o => o.id.value === serviceOptionId.value);
+        if (!found) {
+            throw new Error(`No service option found with id ${serviceOptionId.value}`);
+        }
+        return found;
+    }
+}
+
 export function service(
     resourceRequirements: ResourceRequirement[],
     duration: Minutes,

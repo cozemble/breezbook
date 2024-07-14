@@ -17,7 +17,9 @@ import {
     Service,
     Service as DomainService,
     serviceFns,
-    ServiceOption,
+    serviceOptionAndQuantity,
+    ServiceOptionAndQuantity,
+    serviceOptionFns,
     serviceRequest,
     startTimeFns,
     success,
@@ -30,15 +32,8 @@ import {
     TimeSlotAvailability,
     timeSlotAvailability
 } from '@breezbook/backend-api-types';
-import {
-    Form,
-    IsoDate,
-    isoDateFns,
-    ServiceId,
-    ServiceOptionId,
-    ServiceOptionRequest,
-    values
-} from "@breezbook/packages-types";
+import {Form, IsoDate, isoDateFns, values} from "@breezbook/packages-types";
+import {ServiceAvailabilityRequest} from "../express/availability/getServiceAvailabilityForLocation.js";
 
 function toTimeSlotAvailability(slot: AvailableSlot, price: Price): TimeSlotAvailability {
     const startTime24 = startTimeFns.getStartTime(slot.startTime)
@@ -55,12 +50,12 @@ function toTimeSlotAvailability(slot: AvailableSlot, price: Price): TimeSlotAvai
 function toAvailabilityResponse(priced: PricedSlot[], service: Service, addOns: AddOn[], forms: Form[]): AvailabilityResponse {
     return priced.reduce(
         (acc, curr) => {
-            const slotsForDate = acc.slots[curr.slot.date.value] ?? [];
+            const slotsForDate = acc.slots[curr.slot.serviceRequest.date.value] ?? [];
             const currTimeslot = toTimeSlotAvailability(curr.slot, curr.price);
             if (!slotsForDate.some((a) => a.label === currTimeslot.label)) {
                 slotsForDate.push(currTimeslot);
             }
-            acc.slots[curr.slot.date.value] = slotsForDate;
+            acc.slots[curr.slot.serviceRequest.date.value] = slotsForDate;
             return acc;
         },
         emptyAvailabilityResponse(
@@ -76,11 +71,9 @@ export const getAvailabilityForServiceErrorCodes = {
 
 export function getAvailabilityForService(
     everythingForAvailability: EverythingForAvailability,
-    serviceId: ServiceId,
-    serviceOptionRequests: ServiceOptionRequest[],
-    fromDate: IsoDate,
-    toDate: IsoDate
+    request: ServiceAvailabilityRequest
 ): AvailabilityResponse | ErrorResponse {
+    const {serviceId, fromDate, toDate, serviceOptionRequests} = request;
     const config = availabilityConfiguration(
         everythingForAvailability.businessConfiguration.availability,
         everythingForAvailability.businessConfiguration.resourceAvailability,
@@ -90,7 +83,8 @@ export function getAvailabilityForService(
     if (!service) {
         return errorResponse(getAvailabilityForServiceErrorCodes.serviceUnavailable, `Service with id ${serviceId.value} not found`);
     }
-    const serviceOptions = serviceOptionRequests.map((id) => mandatory(everythingForAvailability.businessConfiguration.serviceOptions.find((so) => so.id.value === id.serviceOptionId.value), `Service option with id ${id.serviceOptionId.value} not found`));
+    const serviceOptions = serviceOptionRequests.map((id) =>
+        serviceOptionAndQuantity(serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, id.serviceOptionId), id.quantity));
     const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, serviceOptions, fromDate, toDate)
     const priced = availability.map((a) => calculatePrice(a, everythingForAvailability.pricingRules))
     return toAvailabilityResponse(
@@ -100,7 +94,7 @@ export function getAvailabilityForService(
         everythingForAvailability.businessConfiguration.forms);
 }
 
-function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, serviceOptions: ServiceOption[], fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
+function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, serviceOptions: ServiceOptionAndQuantity[], fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
     const dates = isoDateFns.listDays(fromDate, toDate);
     const eachDate = dates.map(date => {
         const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(service, date, serviceOptions));

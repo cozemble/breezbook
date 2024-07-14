@@ -14,7 +14,7 @@ import {
 } from "../../infra/endpoint.js";
 import {byLocation} from "../../availability/byLocation.js";
 import {getAvailabilityForService} from "../../core/getAvailabilityForService.js";
-import {failure, Failure, serviceFns, ServiceRequest, success,} from "@breezbook/packages-core";
+import {failure, Failure, serviceFns, success,} from "@breezbook/packages-core";
 import {
     addOnId,
     byId,
@@ -25,7 +25,8 @@ import {
     ResourceId,
     resourceRequirementId,
     ResourceRequirementId,
-    ServiceId, serviceOptionId, ServiceOptionId, serviceOptionRequest, ServiceOptionRequest,
+    ServiceId,
+    ServiceOptionRequest,
     TenantEnvironmentLocation
 } from "@breezbook/packages-types";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
@@ -42,12 +43,26 @@ interface RequirementOverride {
     resourceId: ResourceId;
 }
 
+export function requirementOverride(requirementId: string, aResourceId: string): RequirementOverride {
+    return {requirementId: resourceRequirementId(requirementId), resourceId: resourceId(aResourceId)}
+}
+
 export interface ServiceAvailabilityRequest {
     serviceId: ServiceId;
     fromDate: IsoDate;
     toDate: IsoDate;
     requirementOverrides: RequirementOverride[]
     serviceOptionRequests: ServiceOptionRequest[]
+}
+
+export function serviceAvailabilityRequest(serviceId: ServiceId, fromDate: IsoDate, toDate: IsoDate, requirementOverrides: RequirementOverride[] = [], serviceOptionRequests: ServiceOptionRequest[] = []): ServiceAvailabilityRequest {
+    return {
+        serviceId,
+        fromDate,
+        toDate,
+        requirementOverrides,
+        serviceOptionRequests
+    };
 }
 
 function requirementOverridesParam(): ParamExtractor<RequirementOverride[]> {
@@ -155,7 +170,7 @@ async function getServiceAvailabilityForLocation(deps: EndpointDependencies, ten
         `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} with service option ids '${serviceOptionIds.join(",")}' from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
     );
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
-    let availabilityOutcome = getAvailabilityForService(everythingForTenant, request.serviceId, request.serviceOptionRequests,request.fromDate, request.toDate);
+    let availabilityOutcome = getAvailabilityForService(everythingForTenant, request);
     if (availabilityOutcome._type === 'error.response') {
         return [httpResponseOutcome(responseOf(400, JSON.stringify(availabilityOutcome.errorMessage), ['Content-Type', 'application/json']))];
     }

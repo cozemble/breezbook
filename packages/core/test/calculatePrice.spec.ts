@@ -6,7 +6,9 @@ import {
     carwash,
     currencies,
     price,
-    resourceAllocation
+    resourceAllocation,
+    serviceRequest,
+    timeslotSpec
 } from "../src/index.js";
 import {
     add,
@@ -17,23 +19,15 @@ import {
     pricingFactorName,
     PricingRule
 } from "@breezbook/packages-pricing";
-import {
-    capacity,
-    exactTimeAvailability,
-    IsoDate,
-    isoDate,
-    isoDateFns,
-    time24,
-    time24Fns
-} from '@breezbook/packages-types';
+import {capacity, IsoDate, isoDate, isoDateFns, time24, time24Fns} from '@breezbook/packages-types';
 
 const today = isoDate();
 const tomorrow = isoDateFns.addDays(today, 1);
 const twoDaysFromNow = isoDateFns.addDays(today, 2);
 const GBP = currencies.GBP
 
-test("base rate when there are no pricing adjustments", () => {
-    const pricedSlot = calculatePrice(carWash(today), []);
+test("base rate when there are no pricing rules", () => {
+    const pricedSlot = calculatePrice( carWash(today), []);
     expect(pricedSlot.price).toEqual(carwash.smallCarWash.price);
     expect(pricedSlot.adjustments).toHaveLength(0);
 })
@@ -126,11 +120,11 @@ test("can add £1 per hour for the evening hours of a booking", () => {
         applyAllOrFirst: 'all'
     };
 
-    const morningBooking = carWash(today, carwash.van1, '09:00', '11:00');
-    const eveningBooking = carWash(today, carwash.van1, '17:00', '19:00');
-    const nightBooking = carWash(today, carwash.van1, '22:00', '23:00');
-    const halfHourNightBooking = carWash(today, carwash.van1, '22:00', '22:30');
-    const fullEveningBooking = carWash(today, carwash.van1, '18:00', '24:00');
+    const morningBooking = carWash(today, carwash.van1, time24('09:00'), time24('11:00'));
+    const eveningBooking = carWash(today, carwash.van1, time24('17:00'), time24('19:00'));
+    const nightBooking = carWash(today, carwash.van1, time24('22:00'), time24('23:00'));
+    const halfHourNightBooking = carWash(today, carwash.van1, time24('22:00'), time24('22:30'));
+    const fullEveningBooking = carWash(today, carwash.van1, time24('18:00'), time24('24:00'));
 
     const morningPrice = calculatePrice(morningBooking, [addMoreForEvening]);
     expect(morningPrice.price).toEqual(price(1000, GBP));
@@ -178,12 +172,14 @@ test("can make price amendments on the usage of a particular resource", () => {
     expect(pricedForVan2.adjustments).toHaveLength(1);
 });
 
-function carWash(date: IsoDate, van = carwash.van1, startTime = '09:00', endTime = '11:00'): AvailableSlot {
-    const diff = time24Fns.duration(time24(startTime), time24(endTime));
+function carWash(date: IsoDate, van = carwash.van1, startTime = time24('09:00'), endTime = time24('11:00')): AvailableSlot {
+    const diff = time24Fns.duration(startTime, endTime);
+    const timeslot = timeslotSpec(startTime, endTime, `${startTime.value} - ${endTime.value}`)
+    const mutatedService = {...carwash.smallCarWash, duration: diff.value, startTimes: [timeslot]};
+    const theServiceRequest = serviceRequest(mutatedService, date);
     return availableSlot(
-        {...carwash.smallCarWash, duration: diff.value},
-        date,
-        exactTimeAvailability(time24(startTime)),
+        theServiceRequest,
+        timeslot,
         [resourceAllocation(carwash.resourceRequirements.anySuitableVan, van)],
         capacity(1),
         capacity(0)

@@ -34,7 +34,7 @@
  * 7. Channel-Based Pricing: Different prices for different booking channels, such as online versus in-person.
  */
 import {price, Price} from './types.js';
-import {AvailableSlot, availableSlotFns} from "./availability.js";
+import {AvailableSlot, availableSlotFns, ServiceRequest} from "./availability.js";
 import {
     ParameterisedPricingFactor,
     price as pricingPrice,
@@ -45,20 +45,58 @@ import {
     PricingFactorSpec,
     PricingRule
 } from "@breezbook/packages-pricing";
-import {isoDateFns, minuteFns, timePeriod, timePeriodFns, TwentyFourHourClockTime} from "@breezbook/packages-types";
+import {
+    isoDateFns,
+    minuteFns,
+    ServiceOptionId,
+    timePeriod,
+    timePeriodFns,
+    TwentyFourHourClockTime
+} from "@breezbook/packages-types";
+
+
+export interface PricedServiceOption {
+    serviceOptionId: ServiceOptionId;
+    quantity: number;
+    price: Price;
+}
+
+export function pricedServiceOption(serviceOptionId: ServiceOptionId, quantity: number, price: Price): PricedServiceOption {
+    return {
+        serviceOptionId,
+        quantity,
+        price
+    };
+}
+
+export interface PriceBreakdown {
+    servicePrice: Price;
+    pricedOptions: PricedServiceOption[];
+    total: Price;
+}
+
+export function priceBreakdown(servicePrice: Price, pricedOptions: PricedServiceOption[], total: Price): PriceBreakdown {
+    return {
+        servicePrice,
+        pricedOptions,
+        total
+    };
+}
 
 export interface PricedSlot {
     _type: 'priced.slot';
     slot: AvailableSlot;
     price: Price;
+    breakdown: PriceBreakdown;
     adjustments: PriceAdjustment[];
 }
 
-export function pricedSlot(slot: AvailableSlot, initialPrice: Price, adjustments: PriceAdjustment[] = []): PricedSlot {
+export function pricedSlot(slot: AvailableSlot, breakdown: PriceBreakdown, adjustments: PriceAdjustment[] = []): PricedSlot {
     return {
         _type: 'priced.slot',
         slot,
-        price: initialPrice,
+        price: breakdown.total,
+        breakdown,
         adjustments
     };
 }
@@ -66,11 +104,11 @@ export function pricedSlot(slot: AvailableSlot, initialPrice: Price, adjustments
 function getSimplePricingFactor(f: PricingFactorName, slot: AvailableSlot) {
     switch (f.name) {
         case 'daysUntilBooking':
-            return {name: 'daysUntilBooking', value: isoDateFns.daysUntil(slot.date)};
+            return {name: 'daysUntilBooking', value: isoDateFns.daysUntil(slot.serviceRequest.date)};
         case 'dayOfWeek':
-            return {name: 'dayOfWeek', value: isoDateFns.dayOfWeek(slot.date)};
+            return {name: 'dayOfWeek', value: isoDateFns.dayOfWeek(slot.serviceRequest.date)};
         case 'bookingDate':
-            return {name: 'bookingDate', value: slot.date.value};
+            return {name: 'bookingDate', value: slot.serviceRequest.date.value};
         case 'resourceMetadata':
             return {
                 name: 'resourceMetadata',
@@ -95,7 +133,7 @@ function getParameterisedPricingFactor(f: ParameterisedPricingFactor, slot: Avai
         const reportingPeriod = timePeriod(params.startingTime, params.endingTime);
         const servicePeriod = availableSlotFns.servicePeriod(slot);
         const overlap = timePeriodFns.overlap(reportingPeriod, servicePeriod);
-        if(overlap === null) {
+        if (overlap === null) {
             return {name: f.name, value: 0}
         }
         const overlapDuration = timePeriodFns.toDuration(overlap);
@@ -129,6 +167,9 @@ export function calculatePrice(slot: AvailableSlot, pricingRules: PricingRule[])
     const requiredFactors = Array.from(new Set(pricingRules.flatMap(r => r.requiredFactors)));
     const pricingContext = getPricingContext(slot)
 
-    const pricingOutcome = pricingEngine.calculatePrice(pricingPrice(slot.service.price.amount.value), factorsForSlot(requiredFactors, slot), pricingContext);
-    return pricedSlot(slot, price(pricingOutcome.finalPrice.amountInMinorUnits, slot.service.price.currency), pricingOutcome.adjustments);
+    const servicePrice = pricingEngine.calculatePrice(pricingPrice(slot.serviceRequest.service.price.amount.value), factorsForSlot(requiredFactors, slot), pricingContext);
+    const pricedOptions = slot.serviceRequest.options.map(so => pricedServiceOption(so.option.id, so.quantity, so.option.price));
+    const total = [servicePrice.finalPrice.amountInMinorUnits, ...pricedOptions.map(po => po.price.amount.value)].reduce((acc, curr) => acc + curr, 0)
+    const breakdown = priceBreakdown(price(servicePrice.finalPrice.amountInMinorUnits, slot.serviceRequest.service.price.currency), pricedOptions, price(total, slot.serviceRequest.service.price.currency));
+    return pricedSlot(slot, breakdown, servicePrice.adjustments);
 }

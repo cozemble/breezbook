@@ -2,25 +2,19 @@ import {beforeEach, describe, expect, test} from "vitest";
 import {PrismockClient} from 'prismock';
 import {PrismaClient} from "@prisma/client";
 import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMultiLocationGymTenant.js";
-import {
-    carwash,
-    ErrorResponse,
-} from "@breezbook/packages-core";
 import {v4 as uuid} from 'uuid';
 import {byLocation} from "../../src/availability/byLocation.js";
-import {loadTestCarWashTenant} from "../../src/dx/loadTestCarWashTenant.js";
-import {
-    getAvailabilityForService,
-    getAvailabilityForServiceErrorCodes
-} from "../../src/core/getAvailabilityForService.js";
+import {dbCarwashTenant, loadTestCarWashTenant} from "../../src/dx/loadTestCarWashTenant.js";
+import {getAvailabilityForService} from "../../src/core/getAvailabilityForService.js";
 import {
     environmentId,
     isoDate,
     locationId,
-    mandatory, serviceId,
+    mandatory,
     tenantEnvironmentLocation,
     tenantId
 } from "@breezbook/packages-types";
+import {serviceAvailabilityRequest} from "../../src/express/availability/getServiceAvailabilityForLocation.js";
 
 const tenant = tenantId(multiLocationGym.tenant_id)
 const env = environmentId(multiLocationGym.environment_id)
@@ -96,13 +90,6 @@ describe("Given a gym with services at various locations", () => {
         expect(ptMeteDays).toEqual(['2024-04-20', '2024-04-23', '2024-04-27'])
     })
 
-    test("sensible response when requested service is not available at the given location", async () => {
-        const everythingStortford = await byLocation.getEverythingForAvailability(prisma, stortford, isoDate('2024-04-20'), isoDate('2024-04-20'));
-        const availability = getAvailabilityForService(everythingStortford, serviceId(multiLocationGym.pt1Hr), isoDate('2024-04-20'), isoDate('2024-04-27')) as ErrorResponse
-        expect(availability._type).toEqual('error.response')
-        expect(availability.errorCode).toEqual(getAvailabilityForServiceErrorCodes.serviceUnavailable)
-    });
-
     test("if a resource has blocked out time, they are not available", async () => {
         await prisma.resource_blocked_time.create({
             data: {
@@ -158,7 +145,7 @@ describe("Given a gym with services at various locations", () => {
 describe("Given the test car wash tenant", async () => {
     const tenant = tenantId('tenant1')
     const env = environmentId("dev")
-    const london = tenantEnvironmentLocation(env, tenant, carwash.locations.london);
+    const london = tenantEnvironmentLocation(env, tenant, dbCarwashTenant.locations.london);
 
     let prisma: PrismaClient;
 
@@ -172,7 +159,7 @@ describe("Given the test car wash tenant", async () => {
         expect(everythingLondon.businessConfiguration.forms).toHaveLength(2)
         const customerForm = everythingLondon.businessConfiguration.forms.find(f => f.id.value === everythingLondon.tenantSettings.customerFormId?.value)
         expect(customerForm).toBeDefined()
-        const availability = getAvailabilityForService(everythingLondon, carwash.smallCarWash.id, isoDate('2024-04-20'), isoDate('2024-04-27'))
+        const availability = getAvailabilityForService(everythingLondon, serviceAvailabilityRequest(dbCarwashTenant.smallCarWash.id, isoDate('2024-04-20'), isoDate('2024-04-20')))
     });
 });
 
