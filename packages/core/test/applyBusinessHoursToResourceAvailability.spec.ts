@@ -1,7 +1,7 @@
 import {expect, test} from "vitest";
 import {fitAvailability} from "../src/applyBookingsToResourceAvailability.js";
 import {dayAndTimePeriod, isoDate, resourceType, time24, timePeriod} from "@breezbook/packages-types";
-import {configuration} from "../src/configuration/configuration.js";
+import {configuration} from "../src/index.js";
 import resourceDayAvailability = configuration.resourceDayAvailability;
 import availabilityBlock = configuration.availabilityBlock;
 import {resourcing} from "@breezbook/packages-resourcing";
