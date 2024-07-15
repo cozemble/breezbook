@@ -2,7 +2,13 @@
     import {createEventDispatcher, onMount} from "svelte";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import {isoDate, isoDateFns, serviceOptionId, serviceOptionRequest} from "@breezbook/packages-types";
-    import type {Availability, AvailabilityResponse, Service, ServiceOption} from "@breezbook/backend-api-types";
+    import {
+        api,
+        type Availability,
+        type AvailabilityResponse,
+        type Service,
+        type ServiceOption
+    } from "@breezbook/backend-api-types";
     import HorizontalDateAndTimePicker from "$lib/uxs/dog-walking/HorizontalDateAndTimePicker.svelte";
     import {availabilityResponseToItems} from "$lib/uxs/dog-walking/types";
 
@@ -24,10 +30,11 @@
 
     onMount(async () => {
         const dateRange = `fromDate=${today.value}&toDate=${dateInTheFuture.value}`
-        const serviceOptionRequests = serviceOptions.map(so => serviceOptionRequest(serviceOptionId(so.id)))
+        const serviceOptionRequests = serviceOptions.map(so => ({serviceOptionId: so.id, quantity: 1}))
+        const options = api.serviceAvailabilityOptions([], [], serviceOptionRequests)
         availableSlots = await fetchJson(backendUrl(`/api/dev/${tenantId}/${locationId}/service/${service.id}/availability?${dateRange}`), {
             method: "POST",
-            body: JSON.stringify({serviceOptionRequests})
+            body: JSON.stringify(options)
         })
     })
 
