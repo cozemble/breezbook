@@ -24,10 +24,6 @@
     <meta name="twitter:card" content="summary_large_image">
 </svelte:head>
 
-<pre>
-    {JSON.stringify(data, null, 2)}
-</pre>
-
 <div class="flex justify-center items-center min-h-screen bg-base-200">
     <div class="w-full max-w-md bg-base-100 shadow-xl rounded-lg p-8">
         <div class="flex justify-between items-center mb-4">
