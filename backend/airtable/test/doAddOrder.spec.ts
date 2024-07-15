@@ -117,7 +117,7 @@ test('an order intending full payment on checkout should reserve the booking', (
 
 test("an order stores resource requirements against bookings", () => {
     const order = setDate(orderForService(smallCarWash, london, carwash.nineToOne.slot.from), fiveDaysFromNow);
-    const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing([],fiveDaysFromNow), order);
+    const outcome = doAddOrder(everythingForCarWashTenantWithDynamicPricing([], fiveDaysFromNow), order);
     if (!outcome || outcome._type !== 'success') {
         throw new Error('Expected success, got ' + JSON.stringify(outcome));
     }
@@ -150,7 +150,7 @@ test('the event log for the order creation should be stored', () => {
 
 test('an order with a coupon must correctly state the discount', () => {
     const basket = hydratedBasket(
-        [hydratedBasketLine(smallCarWash, london, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])],
+        [hydratedBasketLine(smallCarWash, london, [], [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])],
         carwash.coupons.twentyPercentOffCoupon,
         price(10000000000, currency('GBP')),
         priceFns.multiply(carwash.smallCarWash.price, 0.8)
@@ -164,7 +164,7 @@ test('an order with a coupon must correctly state the discount', () => {
 
 test('an order with a coupon code should apply the discount', () => {
     const basket = hydratedBasket(
-        [hydratedBasketLine(smallCarWash, london, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])],
+        [hydratedBasketLine(smallCarWash, london, [], [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])],
         carwash.coupons.twentyPercentOffCoupon,
         priceFns.multiply(carwash.smallCarWash.price, 0.2),
         priceFns.multiply(carwash.smallCarWash.price, 0.8)
@@ -195,8 +195,8 @@ test('the customer and service forms should be persisted', () => {
 test("can handle a basket with more than one line", () => {
     const basket = hydratedBasket(
         [
-            hydratedBasketLine(smallCarWash, london, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
-            hydratedBasketLine(smallCarWash, london, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
+            hydratedBasketLine(smallCarWash, london, [], [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
+            hydratedBasketLine(smallCarWash, london, [], [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
         ],
     );
     const order = everythingToCreateOrder(basket, goodCustomer, fullPaymentOnCheckout())
@@ -209,8 +209,8 @@ test("can handle a basket with more than one line", () => {
 test("can handle a basket with more than one line on different days", () => {
     const basket = hydratedBasket(
         [
-            hydratedBasketLine(smallCarWash, london, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
-            hydratedBasketLine(smallCarWash, london, [], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
+            hydratedBasketLine(smallCarWash, london, [], [],carwash.smallCarWash.price, carwash.smallCarWash.price, fiveDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData]),
+            hydratedBasketLine(smallCarWash, london, [],[], carwash.smallCarWash.price, carwash.smallCarWash.price, fourDaysFromNow, carwash.nineToOne.slot.from, [goodServiceFormData])
         ],
     );
     const order = everythingToCreateOrder(basket, goodCustomer, fullPaymentOnCheckout())

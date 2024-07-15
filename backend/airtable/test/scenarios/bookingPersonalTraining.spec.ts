@@ -15,7 +15,7 @@ import {
     Service,
     Tenant,
     unpricedBasket,
-    unpricedBasketLine
+    unpricedBasketLine, api
 } from "@breezbook/backend-api-types";
 import {
     getServiceAvailabilityForLocationEndpoint
@@ -37,6 +37,8 @@ import {
     serviceId, tenantEnvironment,
     tenantId, time24
 } from "@breezbook/packages-types";
+import serviceAvailabilityOptions = api.serviceAvailabilityOptions;
+import ServiceAvailabilityOptions = api.ServiceAvailabilityOptions;
 
 const env = environmentId(multiLocationGym.environment_id);
 const tenant = tenantId(multiLocationGym.tenant_id);
@@ -73,12 +75,9 @@ async function getReferenceData(deps: EndpointDependencies): Promise<{
     return {personalTrainingService, personalTrainerRequirement, ptMike, ptMete};
 }
 
-async function bookLastSlotOnDay(deps: EndpointDependencies, requirementOverrides: {
-    resourceId: string;
-    requirementId: string
-}[], personalTrainingService: Service, personalTrainerRequirement: ResourceRequirementSpec, preferredPt: ResourceSummary, day: IsoDate): Promise<OrderCreatedResponse> {
+async function bookLastSlotOnDay(deps: EndpointDependencies, availabilityOptions: ServiceAvailabilityOptions, personalTrainingService: Service, personalTrainerRequirement: ResourceRequirementSpec, preferredPt: ResourceSummary, day: IsoDate): Promise<OrderCreatedResponse> {
     const onDay = `?fromDate=${day.value}&toDate=${day.value}`
-    const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onDay, {requirementOverrides}), params)))
+    const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onDay, availabilityOptions), params)))
     const availableSlots = availabilityResponse.slots?.[friday.value] ?? []
     const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot for Mike on Friday`)
     const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(lastSlot.startTime24hr), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, preferredPt.id)])])
@@ -100,17 +99,18 @@ describe("given the test gym tenant", () => {
 
     test("endpoints support an end to end booking flow", async () => {
         const {personalTrainingService, personalTrainerRequirement, ptMike} = await getReferenceData(deps);
-        const requirementOverrides = [{
-            requirementId: personalTrainerRequirement.id.value,
-            resourceId: ptMike.id
-        }]
+        const availabilityOptions = serviceAvailabilityOptions([], [{
+                requirementId: personalTrainerRequirement.id.value,
+                resourceId: ptMike.id
+            }]
+            , [])
         // Mike is not in Harlow on Saturday
         const onSaturday = `?fromDate=${saturday.value}&toDate=${saturday.value}`
-        const mikesAvailabilityOnSaturday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onSaturday, {requirementOverrides}), params)))
+        const mikesAvailabilityOnSaturday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onSaturday, availabilityOptions), params)))
         expect(mikesAvailabilityOnSaturday.slots[saturday.value]).toBeUndefined()
 
         const onFriday = `?fromDate=${friday.value}&toDate=${friday.value}`
-        const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, {requirementOverrides}), params)))
+        const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, availabilityOptions), params)))
         expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
         const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0], `No slots found for Mike on Friday`)
         expect(firstSlot.priceWithNoDecimalPlaces).toBe(personalTrainingService.priceWithNoDecimalPlaces)
@@ -134,29 +134,32 @@ describe("given the test gym tenant", () => {
         expect(requirement.resource_id).toBe(ptMike.id)
 
         // resource should now be consumed
-        const mikeOnFridayAgain = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, {requirementOverrides}), params)))
+        const mikeOnFridayAgain = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, availabilityOptions), params)))
         expect(mikeOnFridayAgain.slots[friday.value]).toHaveLength(15)
     });
 
     test("can book the same personal trainer back to back", async () => {
         const {personalTrainingService, personalTrainerRequirement, ptMike} = await getReferenceData(deps);
-        const requirementOverrides = [{
-            requirementId: personalTrainerRequirement.id.value,
-            resourceId: ptMike.id
-        }]
-        await bookLastSlotOnDay(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike, friday);
-        await bookLastSlotOnDay(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike, friday);
-        await bookLastSlotOnDay(deps, requirementOverrides, personalTrainingService, personalTrainerRequirement, ptMike, friday);
+        const availabilityOptions = serviceAvailabilityOptions([], [{
+                requirementId: personalTrainerRequirement.id.value,
+                resourceId: ptMike.id
+            }]
+            , [])
+
+        await bookLastSlotOnDay(deps, availabilityOptions, personalTrainingService, personalTrainerRequirement, ptMike, friday);
+        await bookLastSlotOnDay(deps, availabilityOptions, personalTrainingService, personalTrainerRequirement, ptMike, friday);
+        await bookLastSlotOnDay(deps, availabilityOptions, personalTrainingService, personalTrainerRequirement, ptMike, friday);
     });
 
     test("Mete is more expensive than Mike because Mete is tagged as elite", async () => {
         const {personalTrainingService, personalTrainerRequirement, ptMete} = await getReferenceData(deps);
-        const requirementOverrides = [{
-            requirementId: personalTrainerRequirement.id.value,
-            resourceId: ptMete.id
-        }]
+        const availabilityOptions = serviceAvailabilityOptions([], [{
+                requirementId: personalTrainerRequirement.id.value,
+                resourceId: ptMete.id
+            }]
+            , [])
         const onTuesday = `?fromDate=${tuesday.value}&toDate=${tuesday.value}`
-        const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onTuesday, {requirementOverrides}), params)))
+        const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onTuesday, availabilityOptions), params)))
         expect(availabilityResponse.slots?.[tuesday.value]).toHaveLength(17)
         const availableSlots = availabilityResponse.slots?.[tuesday.value] ?? []
         const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot available`)

@@ -1,8 +1,8 @@
 import {EverythingForAvailability} from '../express/getEverythingForAvailability.js';
 import {
     AddOn,
-    AddOn as DomainAddOn,
-    addOnFns,
+    AddOn as DomainAddOn, addOnAndQuantity, AddOnAndQuantity,
+    addOnFns, AddOnOrder,
     availability,
     availabilityConfiguration,
     AvailabilityConfiguration,
@@ -43,6 +43,12 @@ function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
         total: priced.breakdown.total.amount.value,
         currency: priced.breakdown.total.currency.value,
         servicePrice: priced.breakdown.servicePrice.amount.value,
+        pricedAddOns: priced.breakdown.pricedAddOns.map(po => ({
+            addOnId: po.addOnId.value,
+            unitPrice: po.price.amount.value,
+            quantity: po.quantity,
+            price: po.price.amount.value
+        })),
         pricedOptions: priced.breakdown.pricedOptions.map(po => ({
             serviceOptionId: po.serviceOptionId.value,
             unitPrice: po.unitPrice.amount.value,
@@ -88,7 +94,7 @@ export function getAvailabilityForService(
     everythingForAvailability: EverythingForAvailability,
     request: ServiceAvailabilityRequest
 ): AvailabilityResponse | ErrorResponse {
-    const {serviceId, fromDate, toDate, serviceOptionRequests} = request;
+    const {serviceId, fromDate, toDate, serviceOptionRequests, addOns} = request;
     const config = availabilityConfiguration(
         everythingForAvailability.businessConfiguration.availability,
         everythingForAvailability.businessConfiguration.resourceAvailability,
@@ -100,9 +106,10 @@ export function getAvailabilityForService(
     }
     const serviceOptions = serviceOptionRequests.map((id) =>
         serviceOptionAndQuantity(serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, id.serviceOptionId), id.quantity));
-    const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, serviceOptions, fromDate, toDate)
+    const mappedAddOns  = addOns.map((id) => addOnAndQuantity(addOnFns.findById(everythingForAvailability.businessConfiguration.addOns, id.addOnId), id.quantity));
+    const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, mappedAddOns,serviceOptions, fromDate, toDate)
     const priced = availability.map((a) => {
-        const price =  calculatePrice(a, everythingForAvailability.pricingRules);
+        const price = calculatePrice(a, everythingForAvailability.pricingRules);
         return price
     })
     return toAvailabilityResponse(
@@ -112,10 +119,10 @@ export function getAvailabilityForService(
         everythingForAvailability.businessConfiguration.forms);
 }
 
-function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, serviceOptions: ServiceOptionAndQuantity[], fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
+function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, addOns: AddOnAndQuantity[], serviceOptions: ServiceOptionAndQuantity[], fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
     const dates = isoDateFns.listDays(fromDate, toDate);
     const eachDate = dates.map(date => {
-        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(service, date, serviceOptions));
+        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(service, date, addOns, serviceOptions));
         if (outcome._type === 'error.response' && outcome.errorCode === availability.errorCodes.noAvailabilityForDay) {
             return success([])
         }

@@ -14,18 +14,17 @@ import {
 } from "../../infra/endpoint.js";
 import {byLocation} from "../../availability/byLocation.js";
 import {getAvailabilityForService} from "../../core/getAvailabilityForService.js";
-import {failure, Failure, serviceFns, success,} from "@breezbook/packages-core";
+import {addOnOrder, AddOnOrder, failure, Failure, serviceFns, success,} from "@breezbook/packages-core";
 import {
     addOnId,
     byId,
     IsoDate,
     languages,
-    mandatory,
     resourceId,
     ResourceId,
     resourceRequirementId,
     ResourceRequirementId,
-    ServiceId,
+    ServiceId, serviceOptionId,
     ServiceOptionRequest,
     TenantEnvironmentLocation
 } from "@breezbook/packages-types";
@@ -35,8 +34,9 @@ import {HttpResponse} from "@breezbook/packages-http/dist/contract.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 import {resourcing} from "@breezbook/packages-resourcing";
 import {getLabelsForTenant, Labels, labelsFns} from "../../core/labels/labels.js";
-import {AddOnSummary, AvailabilityResponse} from "@breezbook/backend-api-types";
+import {AddOnSummary, api, AvailabilityResponse} from "@breezbook/backend-api-types";
 import specificResource = resourcing.specificResource;
+import serviceAvailabilityOptions = api.serviceAvailabilityOptions;
 
 interface RequirementOverride {
     requirementId: ResourceRequirementId;
@@ -53,70 +53,54 @@ export interface ServiceAvailabilityRequest {
     toDate: IsoDate;
     requirementOverrides: RequirementOverride[]
     serviceOptionRequests: ServiceOptionRequest[]
+    addOns: AddOnOrder[]
 }
 
-export function serviceAvailabilityRequest(serviceId: ServiceId, fromDate: IsoDate, toDate: IsoDate, requirementOverrides: RequirementOverride[] = [], serviceOptionRequests: ServiceOptionRequest[] = []): ServiceAvailabilityRequest {
+export function serviceAvailabilityRequest(serviceId: ServiceId, fromDate: IsoDate, toDate: IsoDate, addOns: AddOnOrder[] = [], requirementOverrides: RequirementOverride[] = [], serviceOptionRequests: ServiceOptionRequest[] = []): ServiceAvailabilityRequest {
     return {
         serviceId,
         fromDate,
         toDate,
         requirementOverrides,
-        serviceOptionRequests
+        serviceOptionRequests,
+        addOns
     };
 }
 
-function requirementOverridesParam(): ParamExtractor<RequirementOverride[]> {
+function serviceAvailabilityOptionParam(): ParamExtractor<api.ServiceAvailabilityOptions> {
     return (req: RequestContext) => {
-        const bodyJson = req.request.body as any ?? {}
-        const requirementOverrides = bodyJson.requirementOverrides;
-        if (!requirementOverrides) {
-            return success([]);
+        const bodyJson = req.request.body as any
+        if(Object.keys(bodyJson).length === 0) {
+            return success(serviceAvailabilityOptions([], [], []));
         }
-        try {
-            if (!Array.isArray(requirementOverrides)) {
-                return failure(responseOf(400, `requirementOverrides must be an array`));
-            }
-            return success(requirementOverrides.map((r: any) => ({
-                requirementId: resourceRequirementId(mandatory(r.requirementId, 'requirementId')),
-                resourceId: resourceId(mandatory(r.resourceId, 'resourceId'))
-            })));
-        } catch (e) {
-            return failure(responseOf(400, `requirementOverrides must be a JSON array`));
+        if (!api.isServiceAvailabilityOptions(bodyJson)) {
+            return failure(responseOf(400, `body is not a serviceOptionRequests type`));
         }
-    };
-}
-
-function serviceOptionIdsParam(): ParamExtractor<ServiceOptionRequest[]> {
-    return (req: RequestContext) => {
-        const bodyJson = req.request.body as any ?? {}
-        const serviceOptionRequests = bodyJson.serviceOptionRequests as ServiceOptionRequest[]
-        if (!serviceOptionRequests) {
-            return success([]);
-        }
-        try {
-            if (!Array.isArray(serviceOptionRequests)) {
-                return failure(responseOf(400, `serviceOptionRequests must be an array`));
-            }
-            return success(serviceOptionRequests);
-        } catch (e) {
-            return failure(responseOf(400, `serviceOptionRequests must be a JSON array`));
-        }
+        return success(bodyJson);
     };
 }
 
 export function serviceAvailabilityRequestParam(): ParamExtractor<ServiceAvailabilityRequest> {
     return (req: RequestContext) => {
-        const params = [serviceIdParam()(req), date(query('fromDate'))(req), date(query('toDate'))(req), requirementOverridesParam()(req), serviceOptionIdsParam()(req)];
+        const params = [serviceIdParam()(req), date(query('fromDate'))(req), date(query('toDate'))(req), serviceAvailabilityOptionParam()(req)];
         const firstFailure = params.find(p => p._type === 'failure');
         if (firstFailure) {
             return firstFailure as Failure<HttpResponse>;
         }
+        const serviceOptionRequests = params[3].value as api.ServiceAvailabilityOptions;
         return success({
             serviceId: params[0].value,
             fromDate: params[1].value,
             toDate: params[2].value,
-            requirementOverrides: params[3].value,
-            serviceOptionRequests: params[4].value
+            requirementOverrides: serviceOptionRequests.requirementOverrides.map(ro => ({
+                requirementId: resourceRequirementId(ro.requirementId),
+                resourceId: resourceId(ro.resourceId)
+            })),
+            serviceOptionRequests: serviceOptionRequests.serviceOptionRequests.map(sor => ({
+                serviceOptionId: serviceOptionId(sor.serviceOptionId),
+                quantity: sor.quantity
+            })),
+            addOns: serviceOptionRequests.addOns.map(ao => addOnOrder(addOnId(ao.addOnId), ao.quantity))
         } as ServiceAvailabilityRequest);
     };
 }

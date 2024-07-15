@@ -6,11 +6,11 @@ import {
     Coupon,
     Customer,
     customerId,
-    PaymentIntent,
+    PaymentIntent, price,
     Price,
     priceFns,
     Service,
-    serviceFns,
+    serviceFns, ServiceOption, serviceOptionFns,
 } from '@breezbook/packages-core';
 import {EverythingForAvailability, getEverythingForAvailability} from './getEverythingForAvailability.js';
 import {
@@ -51,11 +51,12 @@ import {
 import {RequestContext} from "../infra/http/expressHttp4t.js";
 import {responseOf} from '@breezbook/packages-http/dist/responses.js';
 import {
+    addOnId,
     byId,
     IsoDate,
     isoDateFns,
     LocationId,
-    resourceId,
+    resourceId, serviceOptionId, serviceOptionRequest, ServiceOptionRequest,
     TenantEnvironment,
     TwentyFourHourClockTime
 } from "@breezbook/packages-types";
@@ -138,10 +139,17 @@ export interface HydratedAddOn {
     price: Price;
 }
 
+export interface HydratedServiceOption {
+    option: ServiceOption;
+    quantity: number;
+    price: Price;
+}
+
 export interface HydratedBasketLine {
     service: Service;
     locationId: LocationId;
     addOns: HydratedAddOn[];
+    options: HydratedServiceOption[];
     servicePrice: Price;
     total: Price;
     date: IsoDate;
@@ -168,10 +176,11 @@ export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, dis
     };
 }
 
-export function hydratedBasketLine(service: Service, locationId: LocationId, addOns: HydratedAddOn[], servicePrice: Price, total: Price, date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[]): HydratedBasketLine {
+export function hydratedBasketLine(service: Service, locationId: LocationId, options: HydratedServiceOption[], addOns: HydratedAddOn[], servicePrice: Price, total: Price, date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[]): HydratedBasketLine {
     return {
         service,
         locationId,
+        options,
         addOns,
         servicePrice,
         total,
@@ -204,7 +213,7 @@ export const hydratedBasketFns = {
     },
 
     toUnpricedBasketLine(line: HydratedBasketLine): UnpricedBasketLine {
-        return unpricedBasketLine(line.service.id, line.locationId, line.addOns.map((a) => hydratedBasketFns.toAddOnOrder(a)), line.date, line.startTime, line.serviceFormData, [])
+        return unpricedBasketLine(line.service.id, line.locationId, line.addOns.map((a) => hydratedBasketFns.toAddOnOrder(a)), line.date, line.startTime, line.serviceFormData, [], line.options.map((o) => hydratedBasketFns.toServiceOptionRequest(o)));
     },
 
     toAddOnOrder(addOn: HydratedAddOn): AddOnOrder {
@@ -212,6 +221,9 @@ export const hydratedBasketFns = {
             addOnId: addOn.addOn.id,
             quantity: addOn.quantity,
         };
+    },
+    toServiceOptionRequest(o: HydratedServiceOption): ServiceOptionRequest {
+        return serviceOptionRequest(o.option.id, o.quantity);
     }
 }
 
@@ -235,6 +247,7 @@ export interface EverythingToCreateOrderReferenceData {
     services: Service[];
     resources: Resource[];
     addOns: AddOn[];
+    options: ServiceOption[]
     coupons: Coupon[];
 }
 
@@ -248,16 +261,24 @@ export function makeEverythingToCreateOrder(everything: EverythingToCreateOrderR
                 return {
                     service,
                     locationId: line.locationId,
-                    addOns: line.addOnIds.map((a) => {
-                        const addOn = addOnFns.findById(everything.addOns, a.addOnId);
+                    addOns: line.priceBreakdown.pricedAddOns.map((a) => {
+                        const addOn = addOnFns.findById(everything.addOns, addOnId(a.addOnId));
                         return {
                             addOn,
                             quantity: a.quantity,
-                            price: a.price
+                            price: price(a.price, service.price.currency)
                         };
                     }),
-                    servicePrice: line.servicePrice,
-                    total: line.total,
+                    options: line.priceBreakdown.pricedOptions.map((o) => {
+                        const option = serviceOptionFns.findServiceOption(everything.options, serviceOptionId(o.serviceOptionId));
+                        return {
+                            option,
+                            quantity: o.quantity,
+                            price: price(o.price, service.price.currency)
+                        };
+                    }),
+                    servicePrice: price(line.priceBreakdown.servicePrice, service.price.currency),
+                    total: price(line.priceBreakdown.total, service.price.currency),
                     date: line.date,
                     startTime: line.startTime,
                     serviceFormData: line.serviceFormData,
@@ -277,7 +298,8 @@ export function toReferenceData(everythingForAvailability: EverythingForAvailabi
         services: everythingForAvailability.businessConfiguration.services,
         resources: everythingForAvailability.businessConfiguration.resources,
         addOns: everythingForAvailability.businessConfiguration.addOns,
-        coupons: everythingForAvailability.coupons
+        coupons: everythingForAvailability.coupons,
+        options: everythingForAvailability.businessConfiguration.serviceOptions
     }
 }
 
@@ -310,7 +332,7 @@ async function handleAddOrder(deps: EndpointDependencies, tenantEnvironment: Ten
         return doAddOrder(everythingForAvailability, everythingToCreateOrder);
     });
     if (outcome._type === 'error.response') {
-        return [httpResponseOutcome(responseOf(400, JSON.stringify(outcome),['Content-Type', 'application/json']))]
+        return [httpResponseOutcome(responseOf(400, JSON.stringify(outcome), ['Content-Type', 'application/json']))]
     }
     const {mutations, orderCreatedResponse} = outcome;
     return [
@@ -319,6 +341,6 @@ async function handleAddOrder(deps: EndpointDependencies, tenantEnvironment: Ten
             name: announceChangesToAirtable.deferredChangeAnnouncement,
             data: {tenantId: tenantEnvironment.tenantId.value, environmentId: tenantEnvironment.environmentId.value}
         }),
-        httpResponseOutcome(responseOf(200, JSON.stringify(orderCreatedResponse),['Content-Type', 'application/json']))
+        httpResponseOutcome(responseOf(200, JSON.stringify(orderCreatedResponse), ['Content-Type', 'application/json']))
     ];
 }

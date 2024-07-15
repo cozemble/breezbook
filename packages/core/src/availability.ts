@@ -1,4 +1,4 @@
-import {Booking, BusinessAvailability, Service, ServiceOption, StartTimeSpec, TimeslotSpec,} from "./types.js";
+import {AddOn, Booking, BusinessAvailability, Service, ServiceOption, StartTimeSpec, TimeslotSpec,} from "./types.js";
 import {errorResponse, ErrorResponse, mandatory, success, Success} from "./utils.js";
 import {
     Capacity,
@@ -130,18 +130,29 @@ export function serviceOptionAndQuantity(option: ServiceOption, quantity: number
     return {option, quantity}
 }
 
+export interface AddOnAndQuantity {
+    addOn: AddOn
+    quantity: number
+}
+
+export function addOnAndQuantity(addOn: AddOn, quantity: number): AddOnAndQuantity {
+    return {addOn, quantity}
+}
+
 export interface ServiceRequest {
     _type: 'service.request'
     date: IsoDate;
     service: Service;
     options: ServiceOptionAndQuantity[]
+    addOns: AddOnAndQuantity[]
 }
 
-export function serviceRequest(service: Service, date: IsoDate, options: ServiceOptionAndQuantity[] = []): ServiceRequest {
+export function serviceRequest(service: Service, date: IsoDate, addOns: AddOnAndQuantity[] = [], options: ServiceOptionAndQuantity[] = []): ServiceRequest {
     return {
         _type: "service.request",
         date,
         service,
+        addOns,
         options
     }
 }

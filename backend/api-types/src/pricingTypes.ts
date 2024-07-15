@@ -1,4 +1,4 @@
-import {AddOnOrder, Price} from '@breezbook/packages-core';
+import {AddOnOrder, Price, PricedAddOn} from '@breezbook/packages-core';
 import {ResourceRequirementOverride} from "./resourceTypes.js";
 import {
     AddOnId,
@@ -11,6 +11,8 @@ import {
     ServiceOptionRequest,
     TwentyFourHourClockTime
 } from "@breezbook/packages-types";
+import {PricedServiceOption} from "@breezbook/packages-core/dist/calculatePrice.js";
+import {PriceBreakdown} from "./index.js";
 
 
 export interface UnpricedBasketLine {
@@ -55,19 +57,11 @@ export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationI
     };
 }
 
-export interface PricedAddOn {
-    addOnId: AddOnId;
-    quantity: number;
-    price: Price;
-}
-
 export interface PricedBasketLine {
     _type: 'priced.basket.line';
     serviceId: ServiceId;
     locationId: LocationId;
-    addOnIds: PricedAddOn[];
-    servicePrice: Price;
-    total: Price;
+    priceBreakdown: PriceBreakdown;
     date: IsoDate;
     startTime: TwentyFourHourClockTime;
     serviceFormData: unknown[];
@@ -92,15 +86,13 @@ export function pricedBasket(lines: PricedBasketLine[], total: Price, couponCode
     };
 }
 
-export function pricedBasketLine(locationId: LocationId, serviceIdValue: ServiceId, addOnIds: PricedAddOn[], servicePrice: Price, total: Price, date: IsoDate,
+export function pricedBasketLine(locationId: LocationId, serviceIdValue: ServiceId, priceBreakdown: PriceBreakdown, date: IsoDate,
                                  startTime: TwentyFourHourClockTime, serviceFormData: unknown[], resourceRequirementOverrides: ResourceRequirementOverride[]): PricedBasketLine {
     return {
         _type: 'priced.basket.line',
         locationId,
         serviceId: serviceIdValue,
-        addOnIds,
-        total,
-        servicePrice,
+        priceBreakdown,
         date,
         startTime,
         serviceFormData,
@@ -108,13 +100,6 @@ export function pricedBasketLine(locationId: LocationId, serviceIdValue: Service
     };
 }
 
-export function pricedAddOn(addOnId: AddOnId, quantity: number, price: Price): PricedAddOn {
-    return {
-        addOnId,
-        quantity,
-        price
-    };
-}
 
 export const unpricedBasketFns = {
     getDates(unpricedBasket: UnpricedBasket): { fromDate: IsoDate; toDate: IsoDate } {

@@ -18,7 +18,7 @@ import {
 import {Mutation, Mutations, mutations as mutationsConstructor} from '../mutation/mutations.js';
 import {DbPaymentMethod} from "../prisma/dbtypes.js";
 import {EverythingToCreateOrder, HydratedBasketLine} from "./onAddOrderExpress.js";
-import {FormId, orderId, TenantEnvironment, timePeriodFns} from "@breezbook/packages-types";
+import {FormId, mandatory, orderId, TenantEnvironment, timePeriodFns} from "@breezbook/packages-types";
 import {resourcing} from "@breezbook/packages-resourcing";
 import ResourceRequirement = resourcing.ResourceRequirement;
 
@@ -207,7 +207,7 @@ function processOrderLines(
             );
         }
         for (let serviceFormIndex = 0; serviceFormIndex < service.serviceFormIds.length; serviceFormIndex++) {
-            mutations.push(upsertServiceFormValues(tenantEnvironment, service.serviceFormIds[serviceFormIndex], line.serviceFormData[serviceFormIndex], bookingId));
+            mutations.push(upsertServiceFormValues(tenantEnvironment, mandatory(service.serviceFormIds[serviceFormIndex], `No service form id`), line.serviceFormData[serviceFormIndex], bookingId));
         }
     }
     return {mutations, bookingIds, reservationIds, orderLineIds};

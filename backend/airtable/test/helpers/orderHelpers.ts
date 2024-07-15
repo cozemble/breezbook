@@ -10,7 +10,7 @@ import {IsoDate, LocationId, TwentyFourHourClockTime} from "@breezbook/packages-
 
 export function orderForService(service: Service, location: LocationId, startTime: TwentyFourHourClockTime): EverythingToCreateOrder {
     const basket = hydratedBasket([
-        hydratedBasketLine(service, location, [], service.price, service.price, today, startTime, [goodServiceFormData])
+        hydratedBasketLine(service, location, [], [],service.price, service.price, today, startTime, [goodServiceFormData])
     ])
     return everythingToCreateOrder(basket, goodCustomer, fullPaymentOnCheckout())
 }

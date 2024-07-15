@@ -33,10 +33,11 @@
  *
  * 7. Channel-Based Pricing: Different prices for different booking channels, such as online versus in-person.
  */
-import {price, Price} from './types.js';
+import {price, Price, priceFns} from './types.js';
 import {AvailableSlot, availableSlotFns} from "./availability.js";
 import * as pricing from "@breezbook/packages-pricing";
 import {
+    AddOnId,
     isoDateFns,
     minuteFns,
     ServiceOptionId,
@@ -62,15 +63,35 @@ export function pricedServiceOption(serviceOptionId: ServiceOptionId, unitPrice:
     };
 }
 
+export interface PricedAddOn {
+    addOnId: AddOnId;
+    unitPrice: Price;
+    quantity: number;
+    price: Price;
+}
+
+export function pricedAddOn(addOnId: AddOnId, unitPrice: Price, quantity: number, price: Price): PricedAddOn {
+    return {
+        addOnId,
+        unitPrice,
+        quantity,
+        price
+    };
+}
+
+
 export interface PriceBreakdown {
     servicePrice: Price;
+    pricedAddOns: PricedAddOn[];
     pricedOptions: PricedServiceOption[];
     total: Price;
 }
 
-export function priceBreakdown(servicePrice: Price, pricedOptions: PricedServiceOption[], total: Price): PriceBreakdown {
+export function priceBreakdown(servicePrice: Price, pricedAddOns: PricedAddOn[], pricedOptions: PricedServiceOption[], givenTotal: Price | null = null): PriceBreakdown {
+    const total = givenTotal ?? priceFns.add(...[servicePrice, ...pricedAddOns.map(po => po.price), ...pricedOptions.map(po => po.price)]);
     return {
         servicePrice,
+        pricedAddOns,
         pricedOptions,
         total
     };
@@ -166,7 +187,11 @@ export function calculatePrice(slot: AvailableSlot, pricingRules: pricing.Pricin
         const total = price(so.option.price.amount.value * so.quantity, currency);
         return pricedServiceOption(so.option.id, so.option.price, so.quantity, total);
     });
-    const total = [servicePrice.finalPrice.amountInMinorUnits, ...pricedOptions.map(po => po.price.amount.value)].reduce((acc, curr) => acc + curr, 0)
-    const breakdown = priceBreakdown(price(servicePrice.finalPrice.amountInMinorUnits, currency), pricedOptions, price(total, slot.serviceRequest.service.price.currency));
+    const pricedAddOns = slot.serviceRequest.addOns.map(a => pricedAddOn(a.addOn.id, price(a.addOn.price.amount.value, currency), a.quantity, price(a.addOn.price.amount.value * a.quantity, currency)));
+    const total = [
+        servicePrice.finalPrice.amountInMinorUnits,
+        ...pricedAddOns.map(po => po.price.amount.value),
+        ...pricedOptions.map(po => po.price.amount.value)].reduce((acc, curr) => acc + curr, 0)
+    const breakdown = priceBreakdown(price(servicePrice.finalPrice.amountInMinorUnits, currency), pricedAddOns, pricedOptions, price(total, slot.serviceRequest.service.price.currency));
     return pricedSlot(slot, breakdown, servicePrice.adjustments);
 }

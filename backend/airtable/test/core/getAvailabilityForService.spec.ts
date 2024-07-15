@@ -85,12 +85,12 @@ describe("given a service with service options", () => {
 
 
     test("service options that extend the service's duration are reflected in availability", async () => {
-        const availabilityWithoutOptions = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday));
+        const availabilityWithoutOptions = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday, [])) as AvailabilityResponse;
         expect(availabilityWithoutOptions).toBeDefined();
         expect(availabilityWithoutOptions.slots[saturday.value]).toBeDefined();
         expect(availabilityWithoutOptions.slots[saturday.value]).toHaveLength(17);
 
-        const availabilityWithExtra60Mins = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday, [], [serviceOptionRequest(extra60Mins.id)]));
+        const availabilityWithExtra60Mins = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday, [],[], [serviceOptionRequest(extra60Mins.id)])) as AvailabilityResponse;
         expect(availabilityWithExtra60Mins).toBeDefined();
         expect(availabilityWithExtra60Mins.slots[saturday.value]).toBeDefined();
         expect(availabilityWithExtra60Mins.slots[saturday.value]).toHaveLength(15);
@@ -98,7 +98,7 @@ describe("given a service with service options", () => {
 
     test("price breakdown shows service price and option prices", () => {
         const availabilityWithTwoExtras = getAvailabilityForService(everythingForAvailability,
-            serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday, [], [
+            serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday, [],[], [
                 serviceOptionRequest(extra30Mins.id),
                 serviceOptionRequest(extra60Mins.id, 2)])) as AvailabilityResponse;
         const slotsToday = availabilityResponseFns.slotsForDate(availabilityWithTwoExtras, saturday);

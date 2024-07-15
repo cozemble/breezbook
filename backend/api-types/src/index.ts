@@ -1,4 +1,5 @@
 import {
+    AddOnId,
     Form,
     FormId,
     IsoDate,
@@ -9,11 +10,11 @@ import {
     resourceRequirementId,
     ResourceRequirementId,
     resourceType,
-    ResourceType
+    ResourceType, ServiceId, ServiceOptionId, ServiceOptionRequest
 } from '@breezbook/packages-types';
 import {BookingIsInThePast} from '@breezbook/packages-core/dist/cancellation.js';
 import {v4 as uuidv4} from 'uuid';
-import {AddOnLabels} from "@breezbook/packages-core";
+import {AddOnLabels, AddOnOrder} from "@breezbook/packages-core";
 
 export * from './secrets.js';
 export * from './pricingTypes.js';
@@ -23,12 +24,28 @@ export interface PriceBreakdown {
     total: number
     currency: string
     servicePrice: number
+    pricedAddOns: {
+        addOnId: string
+        unitPrice: number
+        quantity: number
+        price: number
+    }[]
     pricedOptions: {
         serviceOptionId: string
         unitPrice: number
         quantity: number
         price: number
     }[]
+}
+
+export function priceBreakdown(
+    total: number,
+    currency: string,
+    servicePrice: number,
+    pricedAddOns: { addOnId: string, unitPrice: number, quantity: number, price: number }[],
+    pricedOptions: { serviceOptionId: string, unitPrice: number, quantity: number, price: number }[]
+): PriceBreakdown {
+    return {total, currency, servicePrice, pricedAddOns, pricedOptions};
 }
 
 export interface TimeSlotAvailability {
@@ -239,3 +256,42 @@ export interface Tenant {
 export * from './waitlistRegistration.js'
 
 export * from './resourceTypes.js'
+
+export * from './domainToApi.js'
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace api {
+    interface RequirementOverride {
+        requirementId: string;
+        resourceId: string;
+    }
+
+    interface ServiceOptionRequest {
+        serviceOptionId: string;
+        quantity: number;
+    }
+
+    interface AddOnOrder {
+        addOnId: string;
+        quantity: number;
+    }
+
+    export interface ServiceAvailabilityOptions {
+        requirementOverrides: RequirementOverride[]
+        serviceOptionRequests: ServiceOptionRequest[]
+        addOns: AddOnOrder[]
+    }
+
+    export function isServiceAvailabilityOptions(obj: any): obj is ServiceAvailabilityOptions {
+        return 'requirementOverrides' in obj && 'serviceOptionRequests' in obj && 'addOns' in obj;
+    }
+
+    export function serviceAvailabilityOptions(addOns: AddOnOrder[] = [], requirementOverrides: RequirementOverride[] = [], serviceOptionRequests: ServiceOptionRequest[] = []): ServiceAvailabilityOptions {
+        return {
+            requirementOverrides,
+            serviceOptionRequests,
+            addOns
+        };
+    }
+
+}

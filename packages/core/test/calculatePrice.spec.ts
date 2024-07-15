@@ -176,7 +176,7 @@ function carWash(date: IsoDate, van = carwash.van1, startTime = time24('09:00'),
     const diff = time24Fns.duration(startTime, endTime);
     const timeslot = timeslotSpec(startTime, endTime, `${startTime.value} - ${endTime.value}`)
     const mutatedService = {...carwash.smallCarWash, duration: diff.value, startTimes: [timeslot]};
-    const theServiceRequest = serviceRequest(mutatedService, date);
+    const theServiceRequest = serviceRequest(mutatedService, date,[],[]);
     return availableSlot(
         theServiceRequest,
         timeslot,
