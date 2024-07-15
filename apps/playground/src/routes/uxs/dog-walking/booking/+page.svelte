@@ -5,7 +5,6 @@
     import {
         type Availability,
         type FormAndLabels,
-        type PriceBreakdown,
         type Service,
         type ServiceLocation,
         type ServiceOption,
@@ -22,6 +21,10 @@
     import FillCustomerDetails from "$lib/uxs/dog-walking/FillCustomerDetails.svelte";
     import TakePayment from "$lib/uxs/dog-walking/TakePayment.svelte";
     import ThemeSwitcher from "$lib/ui/ThemeSwitcher.svelte";
+    import {goto} from '$app/navigation';
+    import { page } from '$app/stores';
+
+
 
     let tenant: Tenant | null = null;
     let services: Service[] = []
@@ -32,8 +35,6 @@
         serviceOptions: ServiceOption[];
         serviceLocation: ServiceLocation | null
         selectedSlot: Availability | null
-        // date: string | null;
-        // time: string;
         serviceFormData: Record<string, any>[];
         petName: string;
         address: string;
@@ -59,17 +60,6 @@
         }
     }
 
-    // function calculatePrice(bookingData: BookingData): number {
-    //     if (!bookingData.service) return 0;
-    //     let total = bookingData.service.priceWithNoDecimalPlaces;
-    //     bookingData.serviceOptions.forEach(option => {
-    //         total += option.priceWithNoDecimalPlaces;
-    //     });
-    //     return total;
-    // }
-    //
-    // $: currentPrice = calculatePrice(bookingData);
-
     function scrollToTop() {
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
@@ -81,9 +71,7 @@
     }
 
     function bookAnotherService() {
-        step = 1;
-        bookingData = initialBookingData();
-        scrollToTop();
+        goto("..")
     }
 
     function prevStep() {
