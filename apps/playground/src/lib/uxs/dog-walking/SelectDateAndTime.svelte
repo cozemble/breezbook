@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher, onMount} from "svelte";
     import {backendUrl, fetchJson} from "$lib/helpers";
-    import {isoDate, isoDateFns, serviceOptionId, serviceOptionRequest} from "@breezbook/packages-types";
+    import {isoDate, isoDateFns} from "@breezbook/packages-types";
     import {
         api,
         type Availability,
