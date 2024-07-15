@@ -9,7 +9,7 @@ export type AvailabilityItem = {
 export function availabilityResponseToItems(dates: IsoDate[], response: AvailabilityResponse): AvailabilityItem[] {
     return dates.map(d => {
         const slots = response.slots[d.value];
-        if(!slots) {
+        if (!slots) {
             return {date: d.value, times: []};
         }
         return {date: d.value, times: slots.map(s => s.label)};
@@ -30,4 +30,12 @@ export interface JSONSchema {
     };
     required?: string[];
     additionalProperties: boolean;
+}
+
+export function formatPrice(price: number, currency: string): string {
+    const formatted = new Intl.NumberFormat('en-US', {style: 'currency', currency: currency}).format(price / 100);
+    if (formatted.endsWith('.00')) {
+        return formatted.slice(0, -3);
+    }
+    return formatted;
 }

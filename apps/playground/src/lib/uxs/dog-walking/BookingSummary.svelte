@@ -1,17 +1,11 @@
 <script lang="ts">
     import type {Availability, PriceBreakdown, Service, ServiceOption} from "@breezbook/backend-api-types";
-    import {availability} from "@breezbook/packages-core";
+    import {formatPrice} from "./types.js";
 
     export let service: Service | null = null;
     export let serviceOptions: ServiceOption[] = [];
     export let slot: Availability | null = null;
-    // export let date: string | null = null;
-    // export let time: string | null = null;
-    // export let priceBreakdown: PriceBreakdown | null = null;
 
-    function formatPrice(price: number, currency: string): string {
-        return new Intl.NumberFormat('en-US', {style: 'currency', currency: currency}).format(price / 100);
-    }
 
     function formatDateWithDayOfWeek(dateString: string): string {
         const date = new Date(dateString);

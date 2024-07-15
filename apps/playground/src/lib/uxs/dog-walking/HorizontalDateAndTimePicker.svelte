@@ -7,6 +7,7 @@
     export let availability: AvailabilityItem[] = [];
     export let selectedDate: string | null = null;
     export let selectedTime: string | null = null;
+    export let labelsForDay: Record<string, string>
     const dispatch = createEventDispatcher();
 
     let scrollContainer: HTMLElement;
@@ -65,6 +66,9 @@
                         disabled={!isDateAvailable(dateString)}>
                     <span class="text-sm font-semibold">{new Date(dateString).getDate()}</span>
                     <span class="text-xs">{formatDate(dateString)}</span>
+                    {#if labelsForDay[dateString]}
+                        <span class="text-xs mt-1 text-primary">{labelsForDay[dateString]}</span>
+                    {/if}
                 </button>
             {/each}
         </div>

@@ -10,7 +10,7 @@
         type ServiceOption
     } from "@breezbook/backend-api-types";
     import HorizontalDateAndTimePicker from "$lib/uxs/dog-walking/HorizontalDateAndTimePicker.svelte";
-    import {availabilityResponseToItems} from "$lib/uxs/dog-walking/types";
+    import {availabilityResponseToItems, formatPrice} from "$lib/uxs/dog-walking/types";
 
     export let tenantId: string
     export let service: Service
@@ -23,6 +23,8 @@
     const dateInTheFuture = isoDateFns.addDays(today, 14)
     let availableSlots: AvailabilityResponse
     const dateRange = isoDateFns.listDays(today, dateInTheFuture)
+    let labelsForDay = {} as Record<string, string>
+
 
     export let onComplete: (slot: Availability) => void
     const dispatch = createEventDispatcher()
@@ -36,6 +38,11 @@
         availableSlots = await fetchJson(backendUrl(`/api/dev/${tenantId}/${locationId}/service/${service.id}/availability?${dateRange}`), {
             method: "POST",
             body: JSON.stringify(options)
+        })
+        Object.keys(availableSlots.slots).map(date => {
+            const available = availableSlots.slots[date] ?? [] as Availability[]
+            const minPriceForDay = Math.min(...available.map(a => a.priceBreakdown.total))
+            labelsForDay[date] = `${formatPrice(minPriceForDay, service.priceCurrency)}`
         })
     })
 
@@ -64,6 +71,7 @@
 
 {#if availableSlots}
     <HorizontalDateAndTimePicker availability={availabilityResponseToItems(dateRange, availableSlots)}
+                                 {labelsForDay}
                                  bind:selectedDate={selectedDate}
                                  bind:selectedTime={selectedTime}
                                  on:timeSelected={onTimeSelected}/>
