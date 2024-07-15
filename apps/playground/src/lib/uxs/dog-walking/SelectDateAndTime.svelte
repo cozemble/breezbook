@@ -16,8 +16,9 @@
     export let service: Service
     export let serviceOptions: ServiceOption[]
     export let locationId: string
-    export let selectedDate: string | null = null
-    export let selectedTime: string | null = null
+    export let selectedSlot: Availability | null = null
+    let selectedDate = selectedSlot?.date ?? null
+    let selectedTime = selectedSlot?.startTime24hr ?? null
     const today = isoDate()
     const dateInTheFuture = isoDateFns.addDays(today, 14)
     let availableSlots: AvailabilityResponse

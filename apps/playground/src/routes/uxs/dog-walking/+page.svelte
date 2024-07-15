@@ -187,7 +187,7 @@
         nextStep()
     }
 
-    function onSlotSelected(event:CustomEvent<Availability>) {
+    function onSlotSelected(event: CustomEvent<Availability>) {
         const selectedSlot = event.detail
         bookingData = {...bookingData, selectedSlot}
     }
@@ -264,8 +264,7 @@
                                            locationId={bookingData.serviceLocation.locationId}
                                            tenantId={tenant.id}
                                            serviceOptions={bookingData.serviceOptions}
-                                           selectedDate={bookingData?.selectedSlot?.date ?? null}
-                                           selectedTime={bookingData?.selectedSlot?.startTime24hr ?? null}
+                                           selectedSlot={bookingData.selectedSlot}
                                            on:slotSelected={onSlotSelected}
                                            onComplete={nextStep}/>
                         <button class="btn btn-outline mt-4" on:click={prevStep}>Back</button>
