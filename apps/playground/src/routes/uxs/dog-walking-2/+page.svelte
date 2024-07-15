@@ -2,12 +2,14 @@
     import { Dog } from 'lucide-svelte';
     import ThemeSwitcher from "$lib/ui/ThemeSwitcher.svelte";
     import { goto } from '$app/navigation';
+    import { page } from '$app/stores';
     import type { PageData } from './$types';
 
     export let data: PageData;
 
     function startBooking() {
-        goto('/booking');
+        const currentPath = $page.url.pathname;
+        goto(`${currentPath}/booking`);
     }
 </script>
 
