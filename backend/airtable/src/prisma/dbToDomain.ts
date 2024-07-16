@@ -25,7 +25,7 @@ import {
     service,
     Service as DomainService,
     Service,
-    serviceFns,
+    serviceFns, ServiceImpact,
     serviceOption,
     ServiceOption,
     tenantSettings,
@@ -84,7 +84,7 @@ export function toDomainServiceOption(so: DbServiceOptionFormsAndResources, reso
         duration(minutes(so.duration_minutes)),
         mappedResourceRequirements,
         formIds,
-        so.consumes_service_capacity,
+        so.service_impacts as unknown as ServiceImpact[],
         serviceOptionId(so.id));
 }
 

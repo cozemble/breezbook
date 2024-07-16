@@ -48,6 +48,7 @@ import {
     pricingFactorName,
     PricingRule
 } from "@breezbook/packages-pricing";
+import {consumesServiceCapacity} from "@breezbook/packages-core";
 
 const tenant_id = 'breezbook-dog-walks';
 const environment_id = 'dev';
@@ -184,7 +185,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             price_currency: 'GBP',
             requires_quantity: false,
             duration_minutes: 30,
-            consumes_service_capacity: false
+            service_impacts: [],
         }),
         upsertServiceOption({
             id: dogWalkingTenant.serviceOptions.extra60Mins,
@@ -194,7 +195,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             price_currency: 'GBP',
             requires_quantity: false,
             duration_minutes: 60,
-            consumes_service_capacity: false
+            service_impacts: [],
         }),
         upsertServiceOption({
             id: dogWalkingTenant.serviceOptions.extraDog,
@@ -204,7 +205,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             price_currency: 'GBP',
             requires_quantity: false,
             duration_minutes: 0,
-            consumes_service_capacity: true
+            service_impacts: [consumesServiceCapacity("quantity")] as any,
         }),
         upsertServiceOptionImage({
             tenant_id,

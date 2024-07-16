@@ -481,12 +481,19 @@ export interface Service {
     capacity: Capacity;
 }
 
-export interface ServiceLabels {
-    name: string;
-    description: string;
-    serviceId: ServiceId
-    languageId: LanguageId
+export interface ConsumesServiceCapacity {
+    _type: 'consumes.service.capacity';
+    consumptionType: 'one-unit' | 'quantity';
 }
+
+export function consumesServiceCapacity(consumptionType: 'one-unit' | 'quantity'): ConsumesServiceCapacity {
+    return {
+        _type: 'consumes.service.capacity',
+        consumptionType
+    };
+}
+
+export type ServiceImpact = ConsumesServiceCapacity;
 
 export interface ServiceOption {
     _type: 'service.option';
@@ -496,7 +503,14 @@ export interface ServiceOption {
     duration: Duration;
     resourceRequirements: ResourceRequirement[];
     forms: FormId[]
-    consumesServiceCapacity: boolean;
+    serviceImpacts: ServiceImpact[];
+}
+
+export interface ServiceLabels {
+    name: string;
+    description: string;
+    serviceId: ServiceId
+    languageId: LanguageId
 }
 
 export const serviceFns = {
@@ -538,6 +552,19 @@ export const serviceOptionFns = {
             throw new Error(`No service option found with id ${serviceOptionId.value}`);
         }
         return found;
+    },
+    consumesServiceCapacity(serviceOption: ServiceOption): boolean {
+        return serviceOption.serviceImpacts.some((impact) => impact._type === 'consumes.service.capacity');
+    },
+    getConsumedServiceCapacity(serviceOption: ServiceOption, quantity: number): Capacity {
+        const found = serviceOption.serviceImpacts.find((impact) => impact._type === 'consumes.service.capacity');
+        if (!found) {
+            return capacity(0)
+        }
+        if (found.consumptionType === 'one-unit') {
+            return capacity(1);
+        }
+        return capacity(quantity)
     }
 }
 
@@ -578,7 +605,7 @@ export function serviceOption(
     duration: Duration,
     resourceRequirements: ResourceRequirement[],
     forms: FormId[],
-    consumesServiceCapacity = false,
+    serviceImpacts: ServiceImpact[] = [],
     id = serviceOptionId(uuidv4())
 ): ServiceOption {
     return {
@@ -589,7 +616,7 @@ export function serviceOption(
         duration,
         resourceRequirements,
         forms,
-        consumesServiceCapacity
+        serviceImpacts
     };
 }
 

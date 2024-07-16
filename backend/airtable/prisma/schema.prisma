@@ -879,7 +879,7 @@ model service_options {
   price                                Decimal                                @db.Decimal
   price_currency                       String
   requires_quantity                    Boolean
-  consumes_service_capacity            Boolean
+  service_impacts                      Json
   duration_minutes                     Int
   created_at                           DateTime                               @default(now()) @db.Timestamptz(6)
   updated_at                           DateTime                               @default(now()) @db.Timestamptz(6)

@@ -227,16 +227,16 @@ create table service_add_ons
 
 create table service_options
 (
-    id                        text primary key,
-    tenant_id                 text references tenants (tenant_id) not null,
-    environment_id            text                                not null,
-    price                     numeric                             not null,
-    price_currency            text                                not null,
-    requires_quantity         boolean                             not null,
-    consumes_service_capacity boolean                             not null,
-    duration_minutes          integer                             not null,
-    created_at                timestamp with time zone            not null default current_timestamp,
-    updated_at                timestamp with time zone            not null default current_timestamp
+    id                text primary key,
+    tenant_id         text references tenants (tenant_id) not null,
+    environment_id    text                                not null,
+    price             numeric                             not null,
+    price_currency    text                                not null,
+    requires_quantity boolean                             not null,
+    service_impacts   jsonb                               not null,
+    duration_minutes  integer                             not null,
+    created_at        timestamp with time zone            not null default current_timestamp,
+    updated_at        timestamp with time zone            not null default current_timestamp
 );
 
 create table service_option_labels
