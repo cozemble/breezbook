@@ -23,11 +23,9 @@
     import ThemeSwitcher from "$lib/ui/ThemeSwitcher.svelte";
     import { goto } from '$app/navigation';
     import { page } from '$app/stores';
-
-
+    import { formatPrice } from '$lib/uxs/dog-walking/types.js';
 
     let tenant: Tenant | null = null;
-    let services: Service[] = []
     let isLoading = true;
 
     type BookingData = {
@@ -36,9 +34,6 @@
         serviceLocation: ServiceLocation | null
         selectedSlot: Availability | null
         serviceFormData: Record<string, any>[];
-        petName: string;
-        address: string;
-        duration: number;
         customer: CoreCustomerDetails | null
     };
 
@@ -52,9 +47,6 @@
             serviceOptions: [],
             serviceLocation: null,
             serviceFormData: [],
-            petName: '',
-            address: '',
-            duration: 0,
             customer: null,
             selectedSlot: null
         }
@@ -85,7 +77,6 @@
         if (tenant) {
             bookingData = initialBookingData();
             bookingData.service = service;
-            bookingData.duration = service.durationMinutes;
             bookingData.serviceLocation = mandatory(tenant.serviceLocations.find(location => location.serviceId === service.id), `Service location not found`);
             updateFormValues()
         }
@@ -94,7 +85,6 @@
     onMount(async () => {
         try {
             tenant = await fetchJson<Tenant>(backendUrl(`/api/dev/tenants?slug=breezbook-dog-walks`), {method: "GET"});
-            services = tenant.services
             console.log({tenant});
         } catch (error) {
             console.error("Error loading tenant data:", error);
@@ -184,9 +174,6 @@
 
     $: formToFill = tenant ? formsToFill(tenant, bookingData)[formIndex] : null
 
-    function formatPrice(price: number, currency: string): string {
-        return new Intl.NumberFormat('en-US', {style: 'currency', currency: currency}).format(price / 100);
-    }
 </script>
 
 <div class="flex justify-center items-center min-h-screen bg-base-200">
@@ -222,7 +209,7 @@
                 <div class="flex flex-col">
                     <h3 class="text-2xl font-semibold mb-6 text-primary">Select Service</h3>
                     <div class="grid grid-cols-1  gap-6">
-                        {#each services as service (service.id)}
+                        {#each tenant.services as service (service.id)}
                             <ServiceCard
                                     service={service}
                                     selected={bookingData?.service?.id === service.id}
