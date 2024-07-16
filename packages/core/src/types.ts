@@ -496,22 +496,7 @@ export interface ServiceOption {
     duration: Duration;
     resourceRequirements: ResourceRequirement[];
     forms: FormId[]
-}
-
-export interface ServiceOptionLabels {
-    serviceOptionId: ServiceOptionId;
-    languageId: LanguageId;
-    name: string;
-    description: string;
-}
-
-export function serviceOptionLabels(serviceOptionId: ServiceOptionId, languageId: LanguageId, name: string, description: string): ServiceOptionLabels {
-    return {
-        serviceOptionId,
-        languageId,
-        name,
-        description
-    };
+    consumesServiceCapacity: boolean;
 }
 
 export const serviceFns = {
@@ -593,6 +578,7 @@ export function serviceOption(
     duration: Duration,
     resourceRequirements: ResourceRequirement[],
     forms: FormId[],
+    consumesServiceCapacity = false,
     id = serviceOptionId(uuidv4())
 ): ServiceOption {
     return {
@@ -602,7 +588,8 @@ export function serviceOption(
         requiresQuantity,
         duration,
         resourceRequirements,
-        forms
+        forms,
+        consumesServiceCapacity
     };
 }
 

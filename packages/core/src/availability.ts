@@ -1,7 +1,8 @@
 import {AddOn, Booking, BusinessAvailability, Service, ServiceOption, StartTimeSpec, TimeslotSpec,} from "./types.js";
 import {errorResponse, ErrorResponse, mandatory, success, Success} from "./utils.js";
 import {
-    Capacity,
+    capacity,
+    Capacity, capacityFns,
     dayAndTimePeriod,
     DayAndTimePeriod,
     exactTimeAvailability,
@@ -186,9 +187,10 @@ function toResourceableBooking(booking: Booking, resources: Resource[]): resourc
         const resource = mandatory(resources.find(res => res.id.value === r.resourceId.value), `No resource for id '${r.resourceId.value}'`)
         return resourcing.resourceCommitment(requirement, resource);
     })
+    const totalCapacity = capacityFns.sum(booking.bookedCapacity, ...booking.serviceOptions.filter(so => so.serviceOption.consumesServiceCapacity).map(so => capacity(so.quantity)))
     return resourcing.booking(
         timeslot(dateAndTime(booking.date, booking.period.from), dateAndTime(booking.date, booking.period.to)),
-        service, fixedResourceCommitments, booking.bookedCapacity, booking.id)
+        service, fixedResourceCommitments, totalCapacity, booking.id)
 }
 
 function startTimeForResponse(availabilityOutcome: Available, startTimes: StartTime[] | null) {

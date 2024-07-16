@@ -1,5 +1,6 @@
 import {beforeEach, describe, expect, test} from 'vitest';
 import {
+    bookedServiceOption,
     Booking,
     booking,
     carwash,
@@ -166,10 +167,17 @@ describe("given a service with service options", () => {
         expect(availabilityWithOneBooking.slots[saturday.value]).toHaveLength(1);
     })
 
+    test("attempting to book more capacity than the service allows is an error", () => {
+        // booking capacity on its own
+        // service option capacity on its own
+        // the sum of the two
+        // expect("status").toBe("done")
+    })
+
     test("service option quantity counts against slot capacity", () => {
-        const groupBooking1 = booking(customerId('customer#1'), groupDogWalk, saturday, timePeriod(time24("09:00"), time24("10:00")), [], [], capacity(5));
+        const groupBooking1 = booking(customerId('customer#1'), groupDogWalk, saturday, timePeriod(time24("09:00"), time24("10:00")), [], [bookedServiceOption(extraDog, 4)]);
         const withOneBooking = {...everythingForAvailability, bookings: [groupBooking1]};
-        const availabilityWithOneBooking = getAvailabilityForService(withOneBooking, serviceAvailabilityRequest(groupDogWalk.id, saturday, saturday, [], [], [serviceOptionRequest(extraDog.id)])) as AvailabilityResponse;
+        const availabilityWithOneBooking = getAvailabilityForService(withOneBooking, serviceAvailabilityRequest(groupDogWalk.id, saturday, saturday)) as AvailabilityResponse;
         expect(availabilityWithOneBooking).toBeDefined();
         expect(availabilityWithOneBooking.slots[saturday.value]).toBeDefined();
         expect(availabilityWithOneBooking.slots[saturday.value]).toHaveLength(1);

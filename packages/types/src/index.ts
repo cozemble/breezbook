@@ -443,6 +443,10 @@ export function capacity(value: number): Capacity {
     };
 }
 
+export const capacityFns = {
+    sum: (a: Capacity, ...others: Capacity[]) => capacity(a.value + others.reduce((acc, c) => acc + c.value, 0))
+}
+
 export function resourceId(value = uuidv4()): ResourceId {
     return {
         _type: 'resource.id',

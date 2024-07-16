@@ -266,7 +266,7 @@ describe("given a gym that offers personal training with specific trainers, and 
     })
 
     test("we lose availability when a booking takes the pt", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")), capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMike.id)])
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")), [], [],capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMike.id)])
 
         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
@@ -447,7 +447,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     });
 
     test("there is availability if we have some bookings, but capacity remains", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), capacity(5));
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [],[],capacity(5));
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
@@ -497,7 +497,7 @@ describe("given a hair salon that offers configurable services, and is available
         resourceDayAvailability(mikeStylist, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
         resourceDayAvailability(meteStylist, [availabilityBlock(dayAndTimePeriod(date, timePeriod(nineAm, fivePm)))]),
     ];
-    const colouring = serviceOption(price(1500, currencies.GBP), false, duration(minutes(20)), [anySuitableResource(colouringMachine)], []);
+    const colouring = serviceOption(price(1500, currencies.GBP), false, duration(minutes(20)), [anySuitableResource(colouringMachine)], [], );
     const cutting = serviceOption(price(2000, currencies.GBP), false, duration(minutes(30)), [anySuitableResource(someSharedResource)], []);
     const curling = serviceOption(price(2500, currencies.GBP), false, duration(minutes(40)), [anySuitableResource(someSharedResource)], []);
     const hairStylingService = serviceFns.addOptions(service([anySuitableResource(hairStylist)], minutes(30), price(3500, currencies.GBP), [], []), []);

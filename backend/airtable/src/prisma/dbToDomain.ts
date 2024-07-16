@@ -84,6 +84,7 @@ export function toDomainServiceOption(so: DbServiceOptionFormsAndResources, reso
         duration(minutes(so.duration_minutes)),
         mappedResourceRequirements,
         formIds,
+        so.consumes_service_capacity,
         serviceOptionId(so.id));
 }
 
