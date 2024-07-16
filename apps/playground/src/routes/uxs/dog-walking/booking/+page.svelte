@@ -21,7 +21,7 @@
     import FillCustomerDetails from "$lib/uxs/dog-walking/FillCustomerDetails.svelte";
     import TakePayment from "$lib/uxs/dog-walking/TakePayment.svelte";
     import ThemeSwitcher from "$lib/ui/ThemeSwitcher.svelte";
-    import {goto} from '$app/navigation';
+    import { goto } from '$app/navigation';
     import { page } from '$app/stores';
 
 
@@ -71,7 +71,9 @@
     }
 
     function bookAnotherService() {
-        goto("..")
+        const currentPath = $page.url.pathname;
+        const parentPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+        goto(parentPath)
     }
 
     function prevStep() {
