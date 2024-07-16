@@ -275,7 +275,7 @@ describe("given a gym that offers personal training with specific trainers, and 
     })
 
     test("we keep availability when a booking takes the a different pt", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")), capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMete.id)])
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("09:55")), [],[],capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMete.id)])
         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
 
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [theBooking], serviceRequest(theService, date)))
@@ -284,8 +284,8 @@ describe("given a gym that offers personal training with specific trainers, and 
     })
 
     test("we can have a personal trainer booked back to back", () => {
-        const firstBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("10:00")), capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMike.id)])
-        const secondBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMike.id)])
+        const firstBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("10:00")), [],[],capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMike.id)])
+        const secondBooking = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")),[],[], capacity(1), [fixedResourceAllocation(requiresPtMike.id, ptMike.id)])
 
         const mutatedConfig: AvailabilityConfiguration = {...config, resourceAvailability: bothPtsAvailable}
         const available = expectSlots(availability.calculateAvailableSlots(mutatedConfig, [firstBooking, secondBooking], serviceRequest(theService, date)))
@@ -458,7 +458,7 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     });
 
     test("there is no availability when we have bookings that use all the capacity", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), capacity(6));
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [],[],capacity(6));
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
@@ -469,9 +469,9 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     });
 
     test("capacity consumption is tracked across the aggregate of bookings", () => {
-        const fourDogs = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), capacity(4));
-        const oneDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), capacity(1));
-        const oneMoreDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), capacity(1));
+        const fourDogs = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [],[], capacity(4));
+        const oneDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm),  [],[],capacity(1));
+        const oneMoreDog = booking(customerId(), theService, date, timePeriod(nineAm, fivePm), [],[], capacity(1));
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
@@ -600,7 +600,7 @@ describe("given a yoga studio with two instructors and two rooms", () => {
     });
 
     test("we have no availability if the room is full", () => {
-        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("10:00")), capacity(10));
+        const theBooking = booking(customerId(), theService, date, timePeriod(nineAm, time24("10:00")),  [],[],capacity(10));
         const mutatedConfig: AvailabilityConfiguration = {
             ...config,
             resourceAvailability: requiredResources,
@@ -630,8 +630,8 @@ describe("given a chatbot service that has capacity", () => {
     })
 
     test("consumed capacity is calculated correctly when there are bookings", () => {
-        const booking1 = booking(customerId(), theService, date, timePeriod(time24("09:00"), time24("10:00")), capacity(2))
-        const booking2 = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")), capacity(3))
+        const booking1 = booking(customerId(), theService, date, timePeriod(time24("09:00"), time24("10:00")),  [],[],capacity(2))
+        const booking2 = booking(customerId(), theService, date, timePeriod(time24("10:00"), time24("11:00")),  [],[],capacity(3))
         const available = expectSlots(availability.calculateAvailableSlots(config, [booking1, booking2], serviceRequest(theService, date)))
 
         expect(available.find(a => startTimeFns.getStartTime(a.startTime).value === "09:00")?.consumedCapacity.value).toBe(2)

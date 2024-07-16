@@ -9,12 +9,14 @@ import {fourDaysFromNow, goodCustomer} from "../helper.js";
 import {resourcing} from "@breezbook/packages-resourcing";
 import AnySuitableResource = resourcing.AnySuitableResource;
 import SpecificResource = resourcing.SpecificResource;
+import {capacity} from "@breezbook/packages-types";
 
 function createOrder(overrides: api.ResourceRequirementOverride[]) {
     return api.pricedCreateOrderRequest(api.pricedBasket([
             api.pricedBasketLine(
                 carwash.locations.london,
                 carwash.smallCarWash.id,
+                capacity(1),
                 api.priceBreakdown(carwash.smallCarWash.price.amount.value,carwash.smallCarWash.price.currency.value,carwash.smallCarWash.price.amount.value,[], []),
                 fourDaysFromNow,
                 carwash.nineAm, [], overrides)], carwash.smallCarWash.price),

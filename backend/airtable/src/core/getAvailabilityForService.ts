@@ -13,7 +13,6 @@ import {
     ErrorResponse,
     PricedSlot,
     Service,
-    Service as DomainService,
     serviceFns,
     serviceOptionAndQuantity,
     ServiceOptionAndQuantity,
@@ -26,7 +25,6 @@ import {
     AvailabilityResponse,
     emptyAvailabilityResponse,
     PriceBreakdown,
-    ServiceSummary,
     TimeSlotAvailability,
     timeSlotAvailability
 } from '@breezbook/backend-api-types';
@@ -121,10 +119,4 @@ function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[
         throw new Error((firstError as ErrorResponse).errorMessage)
     }
     return eachDate.flatMap(d => d._type === 'success' ? d.value : [])
-}
-
-function getServiceSummary(service: DomainService): ServiceSummary {
-    return {
-        id: service.id.value,
-    };
 }

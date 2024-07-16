@@ -128,7 +128,9 @@ export const byLocation = {
                 ...dateWhereOpts,
             },
             include: {
-                booking_resource_requirements: true
+                booking_resource_requirements: true,
+                booking_service_options: true,
+                booking_add_ons: true
             }
         });
         const serviceOptions = await prisma.service_options.findMany({

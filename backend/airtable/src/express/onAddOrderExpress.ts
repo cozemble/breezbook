@@ -6,11 +6,14 @@ import {
     Coupon,
     Customer,
     customerId,
-    PaymentIntent, price,
+    PaymentIntent,
+    price,
     Price,
     priceFns,
     Service,
-    serviceFns, ServiceOption, serviceOptionFns,
+    serviceFns,
+    ServiceOption,
+    serviceOptionFns,
 } from '@breezbook/packages-core';
 import {EverythingForAvailability, getEverythingForAvailability} from './getEverythingForAvailability.js';
 import {
@@ -53,10 +56,14 @@ import {responseOf} from '@breezbook/packages-http/dist/responses.js';
 import {
     addOnId,
     byId,
+    Capacity,
     IsoDate,
     isoDateFns,
     LocationId,
-    resourceId, serviceOptionId, serviceOptionRequest, ServiceOptionRequest,
+    resourceId,
+    serviceOptionId,
+    serviceOptionRequest,
+    ServiceOptionRequest,
     TenantEnvironment,
     TwentyFourHourClockTime
 } from "@breezbook/packages-types";
@@ -147,6 +154,7 @@ export interface HydratedServiceOption {
 
 export interface HydratedBasketLine {
     service: Service;
+    capacity: Capacity
     locationId: LocationId;
     addOns: HydratedAddOn[];
     options: HydratedServiceOption[];
@@ -176,11 +184,12 @@ export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, dis
     };
 }
 
-export function hydratedBasketLine(service: Service, locationId: LocationId, options: HydratedServiceOption[], addOns: HydratedAddOn[], servicePrice: Price, total: Price, date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[]): HydratedBasketLine {
+export function hydratedBasketLine(service: Service, locationId: LocationId, capacity: Capacity, options: HydratedServiceOption[], addOns: HydratedAddOn[], servicePrice: Price, total: Price, date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[]): HydratedBasketLine {
     return {
         service,
         locationId,
         options,
+        capacity,
         addOns,
         servicePrice,
         total,
@@ -261,6 +270,7 @@ export function makeEverythingToCreateOrder(everything: EverythingToCreateOrderR
                 return {
                     service,
                     locationId: line.locationId,
+                    capacity: line.capacity,
                     addOns: line.priceBreakdown.pricedAddOns.map((a) => {
                         const addOn = addOnFns.findById(everything.addOns, addOnId(a.addOnId));
                         return {

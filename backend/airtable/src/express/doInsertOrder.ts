@@ -185,7 +185,8 @@ function processOrderLines(
             date: line.date.value,
             start_time_24hr: servicePeriod.from.value,
             end_time_24hr: servicePeriod.to.value,
-            order_line_id: createOrderLineMutation.data.id
+            order_line_id: createOrderLineMutation.data.id,
+            booked_capacity: line.capacity.value
         });
         const bookingId = createBookingMutation.data.id;
         bookingIds.push(bookingId);

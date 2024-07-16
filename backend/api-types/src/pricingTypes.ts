@@ -1,7 +1,8 @@
-import {AddOnOrder, Price, PricedAddOn} from '@breezbook/packages-core';
+import {AddOnOrder, Price} from '@breezbook/packages-core';
 import {ResourceRequirementOverride} from "./resourceTypes.js";
 import {
-    AddOnId,
+    capacity,
+    Capacity,
     CouponCode,
     IsoDate,
     locationId,
@@ -11,13 +12,13 @@ import {
     ServiceOptionRequest,
     TwentyFourHourClockTime
 } from "@breezbook/packages-types";
-import {PricedServiceOption} from "@breezbook/packages-core/dist/calculatePrice.js";
 import {PriceBreakdown} from "./index.js";
 
 
 export interface UnpricedBasketLine {
     _type: 'unpriced.basket.line';
     serviceId: ServiceId;
+    capacity: Capacity
     options: ServiceOptionRequest[]
     locationId: LocationId;
     addOnIds: AddOnOrder[];
@@ -41,7 +42,7 @@ export function unpricedBasket(lines: UnpricedBasketLine[], couponCode?: CouponC
     };
 }
 
-export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[], resourceRequirementOverrides: ResourceRequirementOverride[] = [], options: ServiceOptionRequest[] = []): UnpricedBasketLine {
+export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationIdValue: LocationId | string, addOnIds: AddOnOrder[], date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[], resourceRequirementOverrides: ResourceRequirementOverride[] = [], options: ServiceOptionRequest[] = [], theCapacity = capacity(1)): UnpricedBasketLine {
     const theServiceId = typeof serviceIdValue === 'string' ? serviceId(serviceIdValue) : serviceIdValue;
     const theLocationId = typeof locationIdValue === 'string' ? locationId(locationIdValue) : locationIdValue;
     return {
@@ -53,7 +54,8 @@ export function unpricedBasketLine(serviceIdValue: ServiceId | string, locationI
         date,
         startTime,
         serviceFormData,
-        resourceRequirementOverrides
+        resourceRequirementOverrides,
+        capacity: theCapacity
     };
 }
 
@@ -61,6 +63,7 @@ export interface PricedBasketLine {
     _type: 'priced.basket.line';
     serviceId: ServiceId;
     locationId: LocationId;
+    capacity: Capacity;
     priceBreakdown: PriceBreakdown;
     date: IsoDate;
     startTime: TwentyFourHourClockTime;
@@ -86,12 +89,13 @@ export function pricedBasket(lines: PricedBasketLine[], total: Price, couponCode
     };
 }
 
-export function pricedBasketLine(locationId: LocationId, serviceIdValue: ServiceId, priceBreakdown: PriceBreakdown, date: IsoDate,
+export function pricedBasketLine(locationId: LocationId, serviceIdValue: ServiceId, capacity:Capacity,priceBreakdown: PriceBreakdown, date: IsoDate,
                                  startTime: TwentyFourHourClockTime, serviceFormData: unknown[], resourceRequirementOverrides: ResourceRequirementOverride[]): PricedBasketLine {
     return {
         _type: 'priced.basket.line',
         locationId,
         serviceId: serviceIdValue,
+        capacity,
         priceBreakdown,
         date,
         startTime,

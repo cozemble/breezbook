@@ -49,6 +49,7 @@ import {externalApiPaths} from "../src/express/expressApp.js";
 import {multiLocationGym} from "../src/dx/loadMultiLocationGymTenant.js";
 import {EverythingToCreateOrderReferenceData, toReferenceData} from "../src/express/onAddOrderExpress.js";
 import {
+    capacity,
     environmentId,
     IsoDate,
     isoDate,
@@ -115,6 +116,7 @@ describe('Given a migrated database', () => {
             pricedBasketLine(
                 dbCarwashTenant.locations.london,
                 dbCarwashTenant.smallCarWash.id,
+                capacity(1),
                 domainToApi.priceBreakdown(
                     priceBreakdown(
                         dbCarwashTenant.smallCarWash.price, [
@@ -124,7 +126,7 @@ describe('Given a migrated database', () => {
                 dbCarwashTenant.nineToOne.slot.from,
                 [goodServiceFormData],
                 []),
-            pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [pricedAddOn(dbCarwashTenant.wax.id, dbCarwashTenant.wax.price, 1, dbCarwashTenant.wax.price), pricedAddOn(dbCarwashTenant.polish.id, dbCarwashTenant.polish.price, 1, dbCarwashTenant.polish.price)], [])), fiveDaysFromNow, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])
+            pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, capacity(1),domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [pricedAddOn(dbCarwashTenant.wax.id, dbCarwashTenant.wax.price, 1, dbCarwashTenant.wax.price), pricedAddOn(dbCarwashTenant.polish.id, dbCarwashTenant.polish.price, 1, dbCarwashTenant.polish.price)], [])), fiveDaysFromNow, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])
         ], priceFns.add(dbCarwashTenant.smallCarWash.price, dbCarwashTenant.wax.price, dbCarwashTenant.mediumCarWash.price, dbCarwashTenant.wax.price, dbCarwashTenant.polish.price))
 
         const fetched = await postOrder(
@@ -360,7 +362,7 @@ async function dbCarwashTenantReferenceData(): Promise<EverythingToCreateOrderRe
 }
 
 async function createBooking(date: IsoDate): Promise<string> {
-    const theBasket = pricedBasket([pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [], [])), date, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])], dbCarwashTenant.mediumCarWash.price)
+    const theBasket = pricedBasket([pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, capacity(1),domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [], [])), date, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])], dbCarwashTenant.mediumCarWash.price)
     const createOrderResponse = await insertOrder(
         tenantEnv,
         pricedCreateOrderRequest(

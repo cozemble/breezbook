@@ -29,7 +29,9 @@ import {
     DbAddOn,
     DbBlockedTime,
     DbBooking,
+    DbBookingAddOn,
     DbBookingResourceRequirement,
+    DbBookingServiceOption,
     DbBusinessHours,
     DbCoupon,
     DbForm,
@@ -159,9 +161,12 @@ export function makeResourceAvailability(
     }, [] as ResourceDayAvailability[]);
 }
 
-export type DbBookingAndResourceRequirements = DbBooking & {
-    booking_resource_requirements: DbBookingResourceRequirement[]
-};
+export type DbBookingAndResourceRequirements = DbBooking &
+    {
+        booking_resource_requirements: DbBookingResourceRequirement[],
+        booking_add_ons: DbBookingAddOn[],
+        booking_service_options: DbBookingServiceOption[]
+    };
 
 export type DbServiceOptionFormsAndResources = (DbServiceOption & {
     service_option_forms: DbServiceOptionForm[]
@@ -214,7 +219,9 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
             ...dateWhereOpts
         },
         include: {
-            booking_resource_requirements: true
+            booking_resource_requirements: true,
+            booking_add_ons: true,
+            booking_service_options: true
         }
     })
     const serviceOptions = await prisma.service_options.findMany({
@@ -271,7 +278,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
 
     const mappedResourceAvailability = makeResourceAvailability(mappedResources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates)
     const services = availabilityData.services.map((s) => {
-        return toDomainService(s, availabilityData.serviceAddOns,mappedResourceTypes,availabilityData.serviceForms, mappedTimeSlots, availabilityData.serviceResourceRequirements, mappedResources);
+        return toDomainService(s, availabilityData.serviceAddOns, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots, availabilityData.serviceResourceRequirements, mappedResources);
     })
     const serviceOptions = availabilityData.serviceOptions.map((so) => toDomainServiceOption(so, mappedResourceTypes, mappedResources))
 

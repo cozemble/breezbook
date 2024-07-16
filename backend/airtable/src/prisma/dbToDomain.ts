@@ -119,7 +119,7 @@ export function toDomainBooking(b: DbBookingAndResourceRequirements, services: S
         }
         return []
     });
-    const domainBooking = booking(customerId(b.customer_id), service, isoDate(b.date), timePeriod(time24(b.start_time_24hr), time24(b.end_time_24hr)), capacity(1), fixedResourceAllocations);
+    const domainBooking = booking(customerId(b.customer_id), service, isoDate(b.date), timePeriod(time24(b.start_time_24hr), time24(b.end_time_24hr)), [], [], capacity(b.booked_capacity), fixedResourceAllocations);
     if (b.status === 'cancelled') {
         return bookingFns.cancel(domainBooking);
     }

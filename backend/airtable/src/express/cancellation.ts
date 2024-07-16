@@ -39,7 +39,9 @@ function findBookingById(bookingId: BookingId): DbResourceFinder<DbBookingAndRes
                 tenant_id: tenantEnvironment.tenantId.value
             },
             include: {
-                booking_resource_requirements: true
+                booking_resource_requirements: true,
+                booking_service_options: true,
+                booking_add_ons: true
             }
         });
     };

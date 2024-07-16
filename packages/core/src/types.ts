@@ -35,7 +35,9 @@ import {
     ResourceId,
     ResourceRequirementId,
     ServiceId,
-    serviceId, serviceOptionId, ServiceOptionId,
+    serviceId,
+    serviceOptionId,
+    ServiceOptionId,
     timePeriod,
     TimePeriod,
     Timezone,
@@ -151,6 +153,36 @@ export interface Booking {
     status: 'confirmed' | 'cancelled';
     fixedResourceAllocation: FixedResourceAllocation[]
     formData?: unknown;
+    addOns: BookedAddOn[];
+    serviceOptions: BookedServiceOption[];
+}
+
+export interface BookedAddOn {
+    _type: 'booked.add.on';
+    addOn: AddOn;
+    quantity: number;
+}
+
+export interface BookedServiceOption {
+    _type: 'booked.service.option';
+    serviceOption: ServiceOption;
+    quantity: number;
+}
+
+export function bookedAddOn(addOn: AddOn, quantity = 1): BookedAddOn {
+    return {
+        _type: 'booked.add.on',
+        addOn,
+        quantity
+    };
+}
+
+export function bookedServiceOption(serviceOption: ServiceOption, quantity = 1): BookedServiceOption {
+    return {
+        _type: 'booked.service.option',
+        serviceOption,
+        quantity
+    };
 }
 
 function allFixedAllocationsAreKnown(requirements: ResourceRequirement[], fixedResourceAllocation: FixedResourceAllocation[]): boolean {
@@ -162,6 +194,8 @@ export function booking(
     service: Service,
     date: IsoDate,
     period: TimePeriod,
+    addOns: BookedAddOn[] = [],
+    serviceOptions: BookedServiceOption[] = [],
     bookedCapacity = capacity(1),
     fixedResourceAllocation: FixedResourceAllocation[] = [],
     id = bookingId(uuidv4())
@@ -174,6 +208,8 @@ export function booking(
         customerId,
         date,
         period,
+        addOns,
+        serviceOptions,
         status: "confirmed",
         service,
         bookedCapacity,

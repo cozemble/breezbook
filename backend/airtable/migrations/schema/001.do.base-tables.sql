@@ -487,6 +487,7 @@ create table bookings
     date            text                                not null,
     start_time_24hr text                                not null,
     end_time_24hr   text                                not null,
+    booked_capacity integer                             not null,
     created_at      timestamp with time zone            not null default current_timestamp,
     updated_at      timestamp with time zone            not null default current_timestamp
 );
