@@ -2,13 +2,15 @@ import type { ErrorObject as AjvErrorObject } from 'ajv';
 import { writable, get, type Writable } from 'svelte/store';
 import Ajv from 'ajv';
 import _ from 'lodash';
-import type { AvailabilityResponse } from '@breezbook/backend-api-types';
+import type {AvailabilityResponse, Tenant} from '@breezbook/backend-api-types';
 
 import { jsonSchemaUtils, ajvUtils } from '$lib/common/utils';
+import tenantStore from "$lib/stores/tenant";
+import type {FormId} from "@breezbook/packages-types";
 
 /** Setup stores to manage details */
 export default function createDetailsStore(
-	availabilityResponseStore: Writable<AvailabilityResponse | null>
+	availabilityResponseStore: Writable<AvailabilityResponse | null>, tenant:Tenant
 ) {
 	const schema = writable<JSONSchema>(undefined);
 	const value = writable<Service.Details>({}); // TODO proper typing
@@ -25,8 +27,11 @@ export default function createDetailsStore(
 			loading.set(true);
 			return;
 		}
+		const service = tenant.services.find((service) => service.id === res.serviceId);
+		const serviceFormIds = service?.forms ?? [] as FormId[]
+		const serviceForms = tenant.forms.filter((form) => serviceFormIds.some((id) => id.value === form.form.id.value)).map(f => f.form);
 
-		const sche = res.serviceSummary.forms[0].schema as JSONSchema;
+		const sche = serviceForms[0].schema as JSONSchema;
 		schema.set(sche);
 		loading.set(false);
 	});

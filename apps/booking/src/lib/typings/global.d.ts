@@ -3,25 +3,25 @@ declare type Nullable<T> = T | null;
 
 declare type GenericStatus = 'success' | 'error' | 'warning' | 'info' | 'default';
 
-declare interface Tenant {
-	id: string;
-	slug: string;
-	name: string;
-	heading: string;
-	description: string;
-	heroImage: string;
-	// status: string;
-	// createdAt: string;
-	// updatedAt: string;
-	theme?: Theme;
-	locations: TenantLocation[];
-}
-
-declare interface TenantLocation {
-	id: string;
-	slug: string;
-	name: string;
-}
+// declare interface Tenant {
+// 	id: string;
+// 	slug: string;
+// 	name: string;
+// 	heading: string;
+// 	description: string;
+// 	heroImage: string;
+// 	// status: string;
+// 	// createdAt: string;
+// 	// updatedAt: string;
+// 	theme?: Theme;
+// 	locations: TenantLocation[];
+// }
+//
+// declare interface TenantLocation {
+// 	id: string;
+// 	slug: string;
+// 	name: string;
+// }
 
 declare interface Theme {
 	font: {

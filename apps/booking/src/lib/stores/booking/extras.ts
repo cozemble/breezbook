@@ -1,11 +1,11 @@
 import { derived, writable, type Writable } from 'svelte/store';
-import type { AvailabilityResponse } from '@breezbook/backend-api-types';
+import {type AddOnSummary, type AvailabilityResponse, type Tenant} from '@breezbook/backend-api-types';
 
 /** Setup stores to manage extras
  * - fetch extras initially
  */
 export default function createExtrasStore(
-	availabilityResponseStore: Writable<AvailabilityResponse | null>
+	availabilityResponseStore: Writable<AvailabilityResponse | null>, tenant:Tenant
 ) {
 	const extras = writable<Service.Extra[]>([]);
 	const loading = writable(true);
@@ -15,8 +15,11 @@ export default function createExtrasStore(
 			loading.set(true);
 			return;
 		}
+		const service = tenant.services.find((service) => service.id === availabilityResponse.serviceId);
+		const addOns = service?.addOns ?? [] as AddOnSummary[]
 
-		const xtr = availabilityResponse.addOns.map(
+
+		const xtr = addOns.map(
 			(addOn): Service.Extra => ({
 				id: addOn.id,
 				name: addOn?.labels?.name || "Missing name",

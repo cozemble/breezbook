@@ -19,12 +19,12 @@ import {
     addOnId,
     byId,
     IsoDate,
-    languages,
     resourceId,
     ResourceId,
     resourceRequirementId,
     ResourceRequirementId,
-    ServiceId, serviceOptionId,
+    ServiceId,
+    serviceOptionId,
     ServiceOptionRequest,
     TenantEnvironmentLocation
 } from "@breezbook/packages-types";
@@ -33,8 +33,7 @@ import {EverythingForAvailability} from "../getEverythingForAvailability.js";
 import {HttpResponse} from "@breezbook/packages-http/dist/contract.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 import {resourcing} from "@breezbook/packages-resourcing";
-import {getLabelsForTenant, Labels, labelsFns} from "../../core/labels/labels.js";
-import {AddOnSummary, api, AvailabilityResponse} from "@breezbook/backend-api-types";
+import {api} from "@breezbook/backend-api-types";
 import specificResource = resourcing.specificResource;
 import serviceAvailabilityOptions = api.serviceAvailabilityOptions;
 
@@ -70,7 +69,7 @@ export function serviceAvailabilityRequest(serviceId: ServiceId, fromDate: IsoDa
 function serviceAvailabilityOptionParam(): ParamExtractor<api.ServiceAvailabilityOptions> {
     return (req: RequestContext) => {
         const bodyJson = req.request.body as any
-        if(Object.keys(bodyJson).length === 0) {
+        if (Object.keys(bodyJson).length === 0) {
             return success(serviceAvailabilityOptions([], [], []));
         }
         if (!api.isServiceAvailabilityOptions(bodyJson)) {
@@ -136,29 +135,15 @@ function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAv
     }
 }
 
-function applyAddOnLabels(a: AddOnSummary, labels: Labels): AddOnSummary {
-    const theLabel = labelsFns.findAddOnLabels(labels, addOnId(a.id));
-    return {...a, labels: theLabel}
-}
-
-function applyLabels(availabilityOutcome: AvailabilityResponse, labels: Labels): AvailabilityResponse {
-    return {
-        ...availabilityOutcome,
-        addOns: availabilityOutcome.addOns.map(a => applyAddOnLabels(a, labels)),
-    }
-}
-
 async function getServiceAvailabilityForLocation(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, request: ServiceAvailabilityRequest): Promise<EndpointOutcome[]> {
     const serviceOptionIds = request.serviceOptionRequests.map(sor => sor.serviceOptionId.value);
     console.log(
         `Getting availability for location ${tenantEnvLoc.locationId.value}, tenant ${tenantEnvLoc.tenantId.value} and service ${request.serviceId.value} with service option ids '${serviceOptionIds.join(",")}' from ${request.fromDate.value} to ${request.toDate.value} in environment ${tenantEnvLoc.environmentId.value}`
     );
     const everythingForTenant = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
-    let availabilityOutcome = getAvailabilityForService(everythingForTenant, request);
+    const availabilityOutcome = getAvailabilityForService(everythingForTenant, request);
     if (availabilityOutcome._type === 'error.response') {
         return [httpResponseOutcome(responseOf(400, JSON.stringify(availabilityOutcome.errorMessage), ['Content-Type', 'application/json']))];
     }
-    const labels = await getLabelsForTenant(deps.prisma, tenantEnvLoc, languages.en);
-    availabilityOutcome = applyLabels(availabilityOutcome, labels);
     return [httpResponseOutcome(responseOf(200, JSON.stringify(availabilityOutcome), ['Content-Type', 'application/json']))];
 }

@@ -50,8 +50,8 @@ function createBookingStore(service: Service) {
 	);
 
 	const timeStore = createTimeStore(availabilityResponse, fetchAvailability);
-	const extrasStore = createExtrasStore(availabilityResponse);
-	const detailsStore = createDetailsStore(availabilityResponse);
+	const extrasStore = createExtrasStore(availabilityResponse, tenant);
+	const detailsStore = createDetailsStore(availabilityResponse, tenant);
 
 	const total = derived([timeStore.value, extrasStore.value], ([$time, $extras]) => {
 		const timePrice = $time?.price || 0;

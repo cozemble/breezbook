@@ -35,16 +35,18 @@ export interface JourneyState {
 }
 
 export function initialJourneyState(tenant: Tenant, availabilityResponse: AvailabilityResponse, locationId: string, requirementOverrides: ResourceRequirementOverride[]): JourneyState {
+    const service = mandatory(tenant.services.find(s => s.id === availabilityResponse.serviceId), `Service with id ${availabilityResponse.serviceId} not found`)
+    const serviceForms = tenant.forms.filter(f => service.forms.some(sf => sf.value === f.form.id.value)).map(f => f.form)
     return {
         tenant,
         selectedSlot: null,
-        possibleAddOns: availabilityResponse.addOns,
+        possibleAddOns: service.addOns,
         selectedAddOns: null,
-        expectedForms: availabilityResponse.serviceSummary.forms,
+        expectedForms: serviceForms,
         filledForms: null,
         customerDetails: null,
         isPaid: false,
-        serviceId: availabilityResponse.serviceSummary.id,
+        serviceId: availabilityResponse.serviceId,
         locationId,
         requirementOverrides
     }

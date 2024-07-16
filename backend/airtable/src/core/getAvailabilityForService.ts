@@ -1,7 +1,5 @@
 import {EverythingForAvailability} from '../express/getEverythingForAvailability.js';
 import {
-    AddOn,
-    AddOn as DomainAddOn,
     addOnAndQuantity,
     AddOnAndQuantity,
     addOnFns,
@@ -13,7 +11,6 @@ import {
     calculatePrice,
     errorResponse,
     ErrorResponse,
-    mandatory,
     PricedSlot,
     Service,
     Service as DomainService,
@@ -26,7 +23,6 @@ import {
     success,
 } from '@breezbook/packages-core';
 import {
-    AddOnSummary,
     AvailabilityResponse,
     emptyAvailabilityResponse,
     PriceBreakdown,
@@ -34,7 +30,7 @@ import {
     TimeSlotAvailability,
     timeSlotAvailability
 } from '@breezbook/backend-api-types';
-import {Form, IsoDate, isoDateFns, values} from "@breezbook/packages-types";
+import {IsoDate, isoDateFns} from "@breezbook/packages-types";
 import {ServiceAvailabilityRequest} from "../express/availability/getServiceAvailabilityForLocation.js";
 
 function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
@@ -70,7 +66,7 @@ function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
     );
 }
 
-function toAvailabilityResponse(priced: PricedSlot[], service: Service, addOns: AddOn[], forms: Form[]): AvailabilityResponse {
+function toAvailabilityResponse(priced: PricedSlot[], service: Service): AvailabilityResponse {
     return priced.reduce(
         (acc, curr) => {
             const slotsForDate = acc.slots[curr.slot.serviceRequest.date.value] ?? [];
@@ -81,10 +77,7 @@ function toAvailabilityResponse(priced: PricedSlot[], service: Service, addOns: 
             acc.slots[curr.slot.serviceRequest.date.value] = slotsForDate;
             return acc;
         },
-        emptyAvailabilityResponse(
-            getServiceSummary(service, forms),
-            getAddOnSummaries(service, addOns)
-        )
+        emptyAvailabilityResponse(service.id.value)
     );
 }
 
@@ -108,14 +101,10 @@ export function getAvailabilityForService(
     }
     const serviceOptions = serviceOptionRequests.map((id) =>
         serviceOptionAndQuantity(serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, id.serviceOptionId), id.quantity));
-    const mappedAddOns  = addOns.map((id) => addOnAndQuantity(addOnFns.findById(everythingForAvailability.businessConfiguration.addOns, id.addOnId), id.quantity));
-    const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, mappedAddOns,serviceOptions, fromDate, toDate)
+    const mappedAddOns = addOns.map((id) => addOnAndQuantity(addOnFns.findById(everythingForAvailability.businessConfiguration.addOns, id.addOnId), id.quantity));
+    const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, mappedAddOns, serviceOptions, fromDate, toDate)
     const priced = availability.map((a) => calculatePrice(a, everythingForAvailability.pricingRules))
-    return toAvailabilityResponse(
-        priced,
-        service,
-        everythingForAvailability.businessConfiguration.addOns,
-        everythingForAvailability.businessConfiguration.forms);
+    return toAvailabilityResponse(priced, service);
 }
 
 function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, addOns: AddOnAndQuantity[], serviceOptions: ServiceOptionAndQuantity[], fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
@@ -134,28 +123,8 @@ function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[
     return eachDate.flatMap(d => d._type === 'success' ? d.value : [])
 }
 
-function getServiceSummary(service: DomainService, forms: Form[]): ServiceSummary {
+function getServiceSummary(service: DomainService): ServiceSummary {
     return {
         id: service.id.value,
-        durationMinutes: service.duration.value,
-        forms: service.serviceFormIds.map((id) =>
-            mandatory(
-                forms.find((f) => values.isEqual(f.id, id)),
-                `Form with id ${id.value} not found in available ${forms.map((f) => f.id.value)}`
-            )
-        )
     };
-}
-
-function getAddOnSummaries(service: DomainService, addOns: DomainAddOn[]): AddOnSummary[] {
-    const permittedAddOns = service.permittedAddOns.map((ao) => addOnFns.findById(addOns, ao))
-    return permittedAddOns.map((ao) => {
-        return ({
-            id: ao.id.value,
-            priceWithNoDecimalPlaces: ao.price.amount.value,
-            priceCurrency: ao.price.currency.value,
-            requiresQuantity: ao.requiresQuantity,
-            labels: null
-        });
-    });
 }

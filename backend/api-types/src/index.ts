@@ -88,8 +88,6 @@ export type Slots = Record<string, Availability[]>;
 
 export interface ServiceSummary {
     id: string;
-    durationMinutes: number;
-    forms: Form[];
 }
 
 export interface AddOnSummary {
@@ -103,8 +101,7 @@ export interface AddOnSummary {
 export interface AvailabilityResponse {
     _type: 'availability.response';
     slots: Slots;
-    serviceSummary: ServiceSummary;
-    addOns: AddOnSummary[];
+    serviceId: string;
 }
 
 export const availabilityResponseFns = {
@@ -114,8 +111,8 @@ export const availabilityResponseFns = {
     }
 }
 
-export function emptyAvailabilityResponse(serviceSummary: ServiceSummary, addOns: AddOnSummary[]): AvailabilityResponse {
-    return {_type: 'availability.response', serviceSummary, slots: {}, addOns};
+export function emptyAvailabilityResponse(serviceId: string): AvailabilityResponse {
+    return {_type: 'availability.response', serviceId, slots: {}};
 }
 
 export interface OrderCreatedResponse {
