@@ -16,7 +16,7 @@ import {
     DbRefundRule,
     DbResource,
     DbResourceType,
-    DbService,
+    DbService, DbServiceAddOn,
     DbServiceResourceRequirement,
     DbTimeSlot
 } from '../prisma/dbtypes.js';
@@ -78,6 +78,7 @@ export function doCancellationRequest(
     timeslots: DbTimeSlot[],
     resourceTypes: DbResourceType[],
     services: DbService[],
+    serviceAddOns: DbServiceAddOn[],
     theBooking: DbBookingAndResourceRequirements,
     serviceResourceRequirements: DbServiceResourceRequirement[],
     resources: DbResource[],
@@ -86,7 +87,7 @@ export function doCancellationRequest(
     const mappedResourceTypes = resourceTypes.map((rt) => resourceType(rt.id));
     const mappedResources = resources.map((r) => toDomainResource(r, mappedResourceTypes));
     const mappedTimeslots = timeslots.map(toDomainTimeslotSpec);
-    const mappedServices = services.map(s => toDomainService(s, mappedResourceTypes, [], mappedTimeslots, serviceResourceRequirements, mappedResources))
+    const mappedServices = services.map(s => toDomainService(s, serviceAddOns,mappedResourceTypes, [], mappedTimeslots, serviceResourceRequirements, mappedResources))
     const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));
     const refundJudgement = findRefundRule(toDomainBooking(theBooking, mappedServices), theRefundPolicy, clock);
     if (refundJudgement._type === 'refund.possible') {
@@ -112,8 +113,9 @@ export async function requestCancellationGrant(req: express.Request, res: expres
             const resourceTypes = await db.prisma.resource_types.findMany(whereTenantEnv);
             const resources = await db.prisma.resources.findMany(whereTenantEnv);
             const services = await db.prisma.services.findMany(whereTenantEnv);
+            const serviceAddOns = await db.prisma.service_add_ons.findMany(whereTenantEnv);
             const serviceResourceRequirements = await db.prisma.service_resource_requirements.findMany(whereTenantEnv);
-            const outcome = doCancellationRequest(refundRules, timeslots, resourceTypes, services, theBooking, serviceResourceRequirements, resources);
+            const outcome = doCancellationRequest(refundRules, timeslots, resourceTypes, services,serviceAddOns, theBooking, serviceResourceRequirements, resources);
             if (outcome._type === 'http.error') {
                 return res.status(outcome.status).send(outcome.message);
             }

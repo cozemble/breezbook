@@ -517,3 +517,64 @@ export function upsertServiceOptionImage(create: Prisma.service_option_imagesUnc
     return makeUpsert('service_option_images', entityId, create)
 }
 
+export type UpsertServiceAddOn = Upsert<Prisma.service_add_onsCreateArgs['data'], Prisma.service_add_onsUpdateArgs['data'], Prisma.service_add_onsUpdateArgs['where']>
+
+export function upsertServiceAddOn(create: Prisma.service_add_onsUncheckedCreateInput): UpsertServiceAddOn {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "service_id", mandatory(create.service_id, "service_id"),
+        "add_on_id", mandatory(create.add_on_id, "add_on_id")
+    )
+    return makeUpsert('service_add_ons', entityId, create)
+}
+
+export type UpsertOrderLineAddOn = Upsert<Prisma.order_line_add_onsCreateArgs['data'], Prisma.order_line_add_onsUpdateArgs['data'], Prisma.order_line_add_onsUpdateArgs['where']>
+
+export function upsertOrderLineAddOn(create: Prisma.order_line_add_onsUncheckedCreateInput): UpsertOrderLineAddOn {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "order_line_id", mandatory(create.order_line_id, "order_line_id"),
+        "add_on_id", mandatory(create.add_on_id, "add_on_id")
+    )
+    return makeUpsert('order_line_add_ons', entityId, create)
+}
+
+export type UpsertBookingLineAddOn = Upsert<Prisma.booking_add_onsCreateArgs['data'], Prisma.booking_add_onsUpdateArgs['data'], Prisma.booking_add_onsUpdateArgs['where']>
+
+export function upsertBookingLineAddOn(create: Prisma.booking_add_onsUncheckedCreateInput): UpsertBookingLineAddOn {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "booking_id", mandatory(create.booking_id, "booking_id"),
+        "add_on_id", mandatory(create.add_on_id, "add_on_id")
+    )
+    return makeUpsert('booking_add_ons', entityId, create)
+}
+
+export type UpsertOrderLineServiceOption = Upsert<Prisma.order_line_service_optionsCreateArgs['data'], Prisma.order_line_service_optionsUpdateArgs['data'], Prisma.order_line_service_optionsUpdateArgs['where']>
+
+export function upsertOrderLineServiceOption(create: Prisma.order_line_service_optionsUncheckedCreateInput): UpsertOrderLineServiceOption {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "order_line_id", mandatory(create.order_line_id, "order_line_id"),
+        "service_option_id", mandatory(create.service_option_id, "service_option_id")
+    )
+    return makeUpsert('order_line_service_options', entityId, create)
+}
+
+export type UpsertBookingServiceOption = Upsert<Prisma.booking_service_optionsCreateArgs['data'], Prisma.booking_service_optionsUpdateArgs['data'], Prisma.booking_service_optionsUpdateArgs['where']>
+
+export function upsertBookingServiceOption(create: Prisma.booking_service_optionsUncheckedCreateInput): UpsertBookingServiceOption {
+    const entityId = compositeKey(
+        "tenant_id", mandatory(create.tenant_id, "tenant_id"),
+        "environment_id", mandatory(create.environment_id, "environment_id"),
+        "booking_id", mandatory(create.booking_id, "booking_id"),
+        "service_option_id", mandatory(create.service_option_id, "service_option_id")
+    )
+    return makeUpsert('booking_service_options', entityId, create)
+}
+
+

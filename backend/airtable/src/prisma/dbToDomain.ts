@@ -4,6 +4,7 @@ import {
     DbPricingRule,
     DbResource,
     DbService,
+    DbServiceAddOn,
     DbServiceForm,
     DbServiceOptionResourceRequirement,
     DbServiceResourceRequirement,
@@ -51,7 +52,8 @@ import {
     resourceRequirementId,
     ResourceType,
     resourceTypeFns,
-    serviceId, serviceOptionId,
+    serviceId,
+    serviceOptionId,
     time24,
     timePeriod,
     timezone
@@ -85,9 +87,9 @@ export function toDomainServiceOption(so: DbServiceOptionFormsAndResources, reso
         serviceOptionId(so.id));
 }
 
-export function toDomainService(dbService: DbService, resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], timeslots: TimeslotSpec[], resourceRequirements: DbServiceResourceRequirement[], mappedResources: Resource[]): DomainService {
+export function toDomainService(dbService: DbService, addOns: DbServiceAddOn[], resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], timeslots: TimeslotSpec[], resourceRequirements: DbServiceResourceRequirement[], mappedResources: Resource[]): DomainService {
+    const permittedAddOns = addOns.filter((sa) => sa.service_id === dbService.id).map(s => addOnId(s.add_on_id))
     const mappedResourceRequirements = resourceRequirements.filter(rr => rr.service_id === dbService.id).map(rr => toDomainResourceRequirement(rr, resourceTypes, mappedResources));
-    const permittedAddOns = dbService.permitted_add_on_ids.map((id) => addOnId(id));
     const forms = dbServiceForms.filter((sf) => sf.service_id === dbService.id).map((sf) => formId(sf.form_id));
     const priceAmount = (typeof dbService.price === "object" && "toNumber" in dbService.price) ? dbService.price.toNumber() : dbService.price;
     let theService = service(

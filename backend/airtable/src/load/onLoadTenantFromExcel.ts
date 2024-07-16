@@ -16,7 +16,8 @@ import * as XLSX from 'xlsx';
 import {WorkBook} from 'xlsx';
 import {
     EnvironmentId,
-    JsonSchemaForm, jsonSchemaFormFns,
+    JsonSchemaForm,
+    jsonSchemaFormFns,
     languages,
     mandatory,
     tenantEnvironment,
@@ -29,7 +30,8 @@ import {
     upsertAddOn,
     upsertAddOnLabels,
     upsertBusinessHours,
-    upsertForm, upsertFormLabels,
+    upsertForm,
+    upsertFormLabels,
     upsertLocation,
     upsertPricingRule,
     upsertResource,
@@ -37,6 +39,7 @@ import {
     upsertResourceType,
     UpsertService,
     upsertService,
+    upsertServiceAddOn,
     upsertServiceForm,
     upsertServiceImage,
     upsertServiceLabel,
@@ -320,11 +323,16 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
             duration_minutes: 120,
             price: s.Price * 100,
             price_currency: "GBP",
-            permitted_add_on_ids: allAddOnIds,
             requires_time_slot: s["Requires Timeslot"] === "Y",
         })
         return [
             serviceUpsert,
+            ...allAddOnIds.map(addOnId => upsertServiceAddOn({
+                tenant_id,
+                environment_id,
+                service_id: serviceUpsert.create.data.id,
+                add_on_id: addOnId
+            })),
             upsertServiceLabel({
                 tenant_id,
                 environment_id,

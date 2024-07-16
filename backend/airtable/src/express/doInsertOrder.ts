@@ -10,10 +10,14 @@ import {
     createOrderLine,
     createReservation,
     makeId,
+    upsertBookingLineAddOn,
     upsertBookingServiceFormValues,
     UpsertBookingServiceFormValues,
+    upsertBookingServiceOption,
     upsertCustomer,
-    upsertCustomerFormValues
+    upsertCustomerFormValues,
+    upsertOrderLineAddOn,
+    upsertOrderLineServiceOption
 } from '../prisma/breezPrismaMutations.js';
 import {Mutation, Mutations, mutations as mutationsConstructor} from '../mutation/mutations.js';
 import {DbPaymentMethod} from "../prisma/dbtypes.js";
@@ -156,7 +160,6 @@ function processOrderLines(
     for (const line of lines) {
         const service = line.service;
         const servicePeriod = timePeriodFns.calcPeriod(line.startTime, service.duration);
-        // const orderLineId = uuidv4();
 
         const createOrderLineMutation = createOrderLine({
             tenant_id,
@@ -166,7 +169,6 @@ function processOrderLines(
             location_id: line.locationId.value,
             start_time_24hr: servicePeriod.from.value,
             end_time_24hr: servicePeriod.to.value,
-            add_on_ids: line.addOns.map((a) => a.addOn.id.value),
             date: line.date.value,
             total_price_in_minor_units: line.total.amount.value,
             total_price_currency: line.total.currency.value
@@ -178,7 +180,6 @@ function processOrderLines(
             tenant_id,
             service_id: service.id.value,
             location_id: line.locationId.value,
-            add_on_ids: line.addOns.map((a) => a.addOn.id.value),
             order_id: orderId,
             customer_id: customer.id.value,
             date: line.date.value,
@@ -192,6 +193,41 @@ function processOrderLines(
         line.service.resourceRequirements.forEach((requirement) => {
             mutations.push(toBookingResourceRequirementCreate(tenantEnvironment, requirement, bookingId));
         });
+        line.addOns
+            .flatMap(a => [
+                upsertOrderLineAddOn({
+                    tenant_id,
+                    environment_id,
+                    order_line_id: createOrderLineMutation.data.id,
+                    add_on_id: a.addOn.id.value,
+                    quantity: a.quantity
+                }),
+                upsertBookingLineAddOn({
+                    tenant_id,
+                    environment_id,
+                    booking_id: bookingId,
+                    add_on_id: a.addOn.id.value,
+                    quantity: a.quantity
+                })
+            ])
+            .forEach(m => mutations.push(m));
+        line.options.flatMap(o => [
+            upsertOrderLineServiceOption({
+                tenant_id,
+                environment_id,
+                order_line_id: createOrderLineMutation.data.id,
+                service_option_id: o.option.id.value,
+                quantity: o.quantity
+            }),
+            upsertBookingServiceOption({
+                tenant_id,
+                environment_id,
+                booking_id: bookingId,
+                service_option_id: o.option.id.value,
+                quantity: o.quantity
+            })
+        ]).forEach(m => mutations.push(m));
+
         if (shouldMakeReservations) {
             const createReservationMutation = createReservation({
                 environment_id,

@@ -122,6 +122,20 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
                     service_time_slots: true,
                     service_resource_requirements: true,
                     service_forms: true,
+                    service_add_ons: {
+                        include: {
+                            add_on: {
+                                include: {
+                                    add_on_labels: {
+                                        where: {
+                                            language_id
+                                        }
+                                    },
+                                    add_on_images: true,
+                                }
+                            }
+                        }
+                    },
                     service_service_options: {
                         include: {
                             service_options: {
@@ -197,6 +211,6 @@ async function getTenant(deps: EndpointDependencies, environmentId: EnvironmentI
     if (!tenant) {
         return [httpResponseOutcome(responseOf(404))];
     }
-    return [httpResponseOutcome(responseOf(200, JSON.stringify(toApiTenant(tenant)),['Content-Type', 'application/json']))]
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(toApiTenant(tenant)), ['Content-Type', 'application/json']))]
 
 }

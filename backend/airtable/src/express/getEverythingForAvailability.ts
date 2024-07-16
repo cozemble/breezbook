@@ -39,6 +39,7 @@ import {
     DbResourceBlockedTime,
     DbResourceType,
     DbService,
+    DbServiceAddOn,
     DbServiceForm,
     DbServiceOption,
     DbServiceOptionForm,
@@ -174,6 +175,7 @@ export interface AvailabilityData {
     resourceAvailability: DbResourceAvailability[];
     resourceOutage: DbResourceBlockedTime[];
     services: DbService[];
+    serviceAddOns: DbServiceAddOn[]
     serviceOptions: DbServiceOptionFormsAndResources[];
     serviceResourceRequirements: DbServiceResourceRequirement[]
     timeSlots: DbTimeSlot[];
@@ -198,6 +200,7 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
     const resourceAvailability = await findMany(prisma.resource_availability, {});
     const resourceOutage = await findMany(prisma.resource_blocked_time, dateWhereOpts);
     const services = await findMany(prisma.services, {});
+    const serviceAddOns = await findMany(prisma.service_add_ons, {});
     const serviceResourceRequirements = await findMany(prisma.service_resource_requirements, {});
     const timeSlots = await findMany(prisma.time_slots, {});
     const pricingRules = await findMany(prisma.pricing_rules, {});
@@ -234,6 +237,7 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
         resourceAvailability,
         resourceOutage,
         services,
+        serviceAddOns,
         serviceOptions,
         serviceResourceRequirements,
         timeSlots,
@@ -266,7 +270,9 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
     const mappedResources = availabilityData.resources.map((r) => toDomainResource(r, mappedResourceTypes));
 
     const mappedResourceAvailability = makeResourceAvailability(mappedResources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates)
-    const services = availabilityData.services.map((s) => toDomainService(s, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots, availabilityData.serviceResourceRequirements, mappedResources))
+    const services = availabilityData.services.map((s) => {
+        return toDomainService(s, availabilityData.serviceAddOns,mappedResourceTypes,availabilityData.serviceForms, mappedTimeSlots, availabilityData.serviceResourceRequirements, mappedResources);
+    })
     const serviceOptions = availabilityData.serviceOptions.map((so) => toDomainServiceOption(so, mappedResourceTypes, mappedResources))
 
     return everythingForAvailability(

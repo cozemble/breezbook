@@ -268,7 +268,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
             duration_minutes: 60,
             price: dogWalkingTenant.servicePrices.individualDogWalk,
             price_currency: 'GBP',
-            permitted_add_on_ids: [],
             requires_time_slot: false
         }),
         upsertServiceImage({
@@ -314,7 +313,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
             duration_minutes: 60,
             price: dogWalkingTenant.servicePrices.groupDogWalk,
             price_currency: 'GBP',
-            permitted_add_on_ids: [],
             requires_time_slot: true,
             capacity: 5
         }),
@@ -382,7 +380,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
             duration_minutes: 30,
             price: dogWalkingTenant.servicePrices.dropInVisit,
             price_currency: 'GBP',
-            permitted_add_on_ids: [],
             requires_time_slot: false
         }),
         upsertServiceImage({
@@ -417,7 +414,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
             duration_minutes: 120,
             price: dogWalkingTenant.servicePrices.petSit,
             price_currency: 'GBP',
-            permitted_add_on_ids: [],
             requires_time_slot: false
         }),
         upsertServiceImage({

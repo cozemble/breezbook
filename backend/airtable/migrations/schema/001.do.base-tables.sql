@@ -198,21 +198,31 @@ create table time_slots
 
 create table services
 (
-    id                   text primary key,
-    tenant_id            text references tenants (tenant_id) not null,
-    environment_id       text                                not null,
-    slug                 text                                not null,
-    duration_minutes     integer                             not null,
-    price                numeric                             not null,
-    price_currency       text                                not null,
-    permitted_add_on_ids text[]                              not null,
-    requires_time_slot   boolean                             not null,
-    capacity             integer                             not null default 1,
-    start_date           timestamp with time zone            not null default current_timestamp,
-    end_date             timestamp with time zone            null     default null,
-    created_at           timestamp with time zone            not null default current_timestamp,
-    updated_at           timestamp with time zone            not null default current_timestamp,
+    id                 text primary key,
+    tenant_id          text references tenants (tenant_id) not null,
+    environment_id     text                                not null,
+    slug               text                                not null,
+    duration_minutes   integer                             not null,
+    price              numeric                             not null,
+    price_currency     text                                not null,
+    requires_time_slot boolean                             not null,
+    capacity           integer                             not null default 1,
+    start_date         timestamp with time zone            not null default current_timestamp,
+    end_date           timestamp with time zone            null     default null,
+    created_at         timestamp with time zone            not null default current_timestamp,
+    updated_at         timestamp with time zone            not null default current_timestamp,
     unique (tenant_id, environment_id, slug)
+);
+
+create table service_add_ons
+(
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    service_id     text references services (id)       not null,
+    add_on_id      text references add_on (id)         not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    primary key (tenant_id, environment_id, service_id, add_on_id)
 );
 
 create table service_options
@@ -427,7 +437,6 @@ create table order_lines
     order_id                   text                                not null,
     service_id                 text references services (id)       not null,
     location_id                text references locations (id)      not null,
-    add_on_ids                 text[]                              not null default '{}',
     date                       text                                not null,
     start_time_24hr            varchar(10)                         not null,
     end_time_24hr              varchar(10)                         not null,
@@ -436,6 +445,30 @@ create table order_lines
     total_price_currency       text                                not null,
     created_at                 timestamp with time zone            not null default current_timestamp,
     updated_at                 timestamp with time zone            not null default current_timestamp
+);
+
+create table order_line_add_ons
+(
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    order_line_id  text references order_lines (id)    not null,
+    add_on_id      text references add_on (id)         not null,
+    quantity       integer                             not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    primary key (tenant_id, environment_id, order_line_id, add_on_id)
+);
+
+create table order_line_service_options
+(
+    tenant_id         text references tenants (tenant_id)  not null,
+    environment_id    text                                 not null,
+    order_line_id     text references order_lines (id)     not null,
+    service_option_id text references service_options (id) not null,
+    quantity          integer                              not null,
+    created_at        timestamp with time zone             not null default current_timestamp,
+    updated_at        timestamp with time zone             not null default current_timestamp,
+    primary key (tenant_id, environment_id, order_line_id, service_option_id)
 );
 
 create type booking_status as enum ('confirmed', 'cancelled');
@@ -449,7 +482,6 @@ create table bookings
     customer_id     text references customers (id)      not null,
     service_id      text references services (id)       not null,
     location_id     text references locations (id)      not null,
-    add_on_ids      text[]                              not null,
     order_id        text references orders (id)         not null,
     order_line_id   text references order_lines (id)    not null,
     date            text                                not null,
@@ -457,6 +489,30 @@ create table bookings
     end_time_24hr   text                                not null,
     created_at      timestamp with time zone            not null default current_timestamp,
     updated_at      timestamp with time zone            not null default current_timestamp
+);
+
+create table booking_add_ons
+(
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    booking_id     text references bookings (id)       not null,
+    add_on_id      text references add_on (id)         not null,
+    quantity       integer                             not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    primary key (tenant_id, environment_id, booking_id, add_on_id)
+);
+
+create table booking_service_options
+(
+    tenant_id         text references tenants (tenant_id)  not null,
+    environment_id    text                                 not null,
+    booking_id        text references bookings (id)        not null,
+    service_option_id text references service_options (id) not null,
+    quantity          integer                              not null,
+    created_at        timestamp with time zone             not null default current_timestamp,
+    updated_at        timestamp with time zone             not null default current_timestamp,
+    primary key (tenant_id, environment_id, booking_id, service_option_id)
 );
 
 create table booking_resource_requirements

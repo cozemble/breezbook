@@ -1,7 +1,11 @@
 import express from "express";
 import {
-    DbForm,
-    DbService, DbServiceForm,
+    DbAddOn,
+    DbAddOnImage,
+    DbAddOnLabel,
+    DbService,
+    DbServiceAddOn,
+    DbServiceForm,
     DbServiceImage,
     DbServiceLabel,
     DbServiceOption,
@@ -13,7 +17,7 @@ import {
     DbServiceTimeslot
 } from "../../prisma/dbtypes.js";
 import {anySuitableResourceSpec, Service, ServiceOption, specificResourceSpec} from "@breezbook/backend-api-types";
-import {mandatory} from "@breezbook/packages-core";
+import {addOnLabels, mandatory} from "@breezbook/packages-core";
 import {
     asHandler,
     EndpointDependencies,
@@ -25,7 +29,7 @@ import {
     tenantEnvironmentParam
 } from "../../infra/endpoint.js";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
-import {formId, LanguageId, TenantEnvironment} from "@breezbook/packages-types";
+import {addOnId, formId, languageId, LanguageId, TenantEnvironment} from "@breezbook/packages-types";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 
 export type RequiredServiceOptionData = DbServiceOption & {
@@ -33,6 +37,13 @@ export type RequiredServiceOptionData = DbServiceOption & {
     service_option_resource_requirements: DbServiceOptionResourceRequirement[];
     service_option_labels: DbServiceOptionLabel[];
     service_option_forms: DbServiceOptionForm[];
+}
+
+export type RequiredAddOnData = DbServiceAddOn & {
+    add_on: DbAddOn & {
+        add_on_images: DbAddOnImage[];
+        add_on_labels: DbAddOnLabel[];
+    }
 }
 
 export type RequiredServiceData = DbService & {
@@ -44,6 +55,7 @@ export type RequiredServiceData = DbService & {
     }[];
     service_time_slots: DbServiceTimeslot[];
     service_forms: DbServiceForm[];
+    service_add_ons: RequiredAddOnData[];
 };
 
 export function toApiServiceOption(so: RequiredServiceOptionData): ServiceOption {
@@ -80,6 +92,19 @@ export function toApiService(service: RequiredServiceData, serviceResourceRequir
     });
     const firstLanguage = mandatory(service.service_labels[0], `Service ${service.id} has no labels`)
     const serviceOptions = service.service_service_options.flatMap(ss => ss.service_options).map(toApiServiceOption)
+    const addOns = service.service_add_ons.map(a => {
+        const firstLabel = mandatory(a.add_on.add_on_labels[0], `Add-on ${a.add_on.id} has no labels`)
+        const labels = addOnLabels(firstLabel.name, firstLabel.description, addOnId(a.add_on.id), languageId(firstLabel.language_id))
+        const dbAddOn = a.add_on
+        const priceAmount = (typeof dbAddOn.price === "object" && "toNumber" in dbAddOn.price) ? dbAddOn.price.toNumber() : dbAddOn.price;
+        return ({
+            id: a.add_on.id,
+            priceWithNoDecimalPlaces: priceAmount,
+            priceCurrency: a.add_on.price_currency,
+            requiresQuantity: a.add_on.expect_quantity,
+            labels
+        });
+    })
     return {
         id: service.id,
         name: firstLanguage.name,
@@ -92,6 +117,7 @@ export function toApiService(service: RequiredServiceData, serviceResourceRequir
         image,
         resourceRequirements,
         serviceOptions,
+        addOns,
         forms: service.service_forms.map(f => formId(f.form_id))
     };
 }
@@ -129,6 +155,20 @@ async function getServices(deps: EndpointDependencies, tenantEnvironment: Tenant
                             service_option_images: true,
                             service_option_resource_requirements: true,
                             service_option_forms: true
+                        }
+                    }
+                }
+            },
+            service_add_ons: {
+                include: {
+                    add_on: {
+                        include: {
+                            add_on_labels: {
+                                where: {
+                                    language_id: languageId.value
+                                }
+                            },
+                            add_on_images: true,
                         }
                     }
                 }

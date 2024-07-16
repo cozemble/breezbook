@@ -9,18 +9,21 @@ datasource db {
 }
 
 model add_on {
-  id              String          @id
-  tenant_id       String
-  environment_id  String
-  price           Decimal         @db.Decimal
-  price_currency  String
-  expect_quantity Boolean
-  section         String?
-  created_at      DateTime        @default(now()) @db.Timestamptz(6)
-  updated_at      DateTime        @default(now()) @db.Timestamptz(6)
-  tenants         tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
-  add_on_images   add_on_images[]
-  add_on_labels   add_on_labels[]
+  id                 String               @id
+  tenant_id          String
+  environment_id     String
+  price              Decimal              @db.Decimal
+  price_currency     String
+  expect_quantity    Boolean
+  section            String?
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  tenants            tenants              @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  add_on_images      add_on_images[]
+  add_on_labels      add_on_labels[]
+  booking_add_ons    booking_add_ons[]
+  order_line_add_ons order_line_add_ons[]
+  service_add_ons    service_add_ons[]
 }
 
 model blocked_time {
@@ -86,7 +89,6 @@ model bookings {
   customer_id                   String
   service_id                    String
   location_id                   String
-  add_on_ids                    String[]
   order_id                      String
   order_line_id                 String
   date                          String
@@ -94,10 +96,12 @@ model bookings {
   end_time_24hr                 String
   created_at                    DateTime                        @default(now()) @db.Timestamptz(6)
   updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
+  booking_add_ons               booking_add_ons[]
   booking_events                booking_events[]
   booking_payments              booking_payments[]
   booking_resource_requirements booking_resource_requirements[]
   booking_service_form_values   booking_service_form_values[]
+  booking_service_options       booking_service_options[]
   customers                     customers                       @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   locations                     locations                       @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   orders                        orders                          @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -272,25 +276,26 @@ model oauth_tokens {
 }
 
 model order_lines {
-  id                         String     @id
+  id                         String                       @id
   tenant_id                  String
   environment_id             String
   order_id                   String
   service_id                 String
   location_id                String
-  add_on_ids                 String[]   @default([])
   date                       String
-  start_time_24hr            String     @db.VarChar(10)
-  end_time_24hr              String     @db.VarChar(10)
+  start_time_24hr            String                       @db.VarChar(10)
+  end_time_24hr              String                       @db.VarChar(10)
   service_form_data          Json?
   total_price_in_minor_units Int
   total_price_currency       String
-  created_at                 DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at                 DateTime   @default(now()) @db.Timestamptz(6)
+  created_at                 DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime                     @default(now()) @db.Timestamptz(6)
   bookings                   bookings[]
-  locations                  locations  @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services                   services   @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                    tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  order_line_add_ons         order_line_add_ons[]
+  order_line_service_options order_line_service_options[]
+  locations                  locations                    @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services                   services                     @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                    tenants                      @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model order_payments {
@@ -509,7 +514,6 @@ model services {
   duration_minutes              Int
   price                         Decimal                         @db.Decimal
   price_currency                String
-  permitted_add_on_ids          String[]
   requires_time_slot            Boolean
   capacity                      Int                             @default(1)
   start_date                    DateTime                        @default(now()) @db.Timestamptz(6)
@@ -518,6 +522,7 @@ model services {
   updated_at                    DateTime                        @default(now()) @db.Timestamptz(6)
   bookings                      bookings[]
   order_lines                   order_lines[]
+  service_add_ons               service_add_ons[]
   service_forms                 service_forms[]
   service_images                service_images[]
   service_labels                service_labels[]
@@ -596,10 +601,12 @@ model tenants {
   add_on_images                        add_on_images[]
   add_on_labels                        add_on_labels[]
   blocked_time                         blocked_time[]
+  booking_add_ons                      booking_add_ons[]
   booking_events                       booking_events[]
   booking_payments                     booking_payments[]
   booking_resource_requirements        booking_resource_requirements[]
   booking_service_form_values          booking_service_form_values[]
+  booking_service_options              booking_service_options[]
   bookings                             bookings[]
   business_hours                       business_hours[]
   cancellation_grants                  cancellation_grants[]
@@ -612,6 +619,8 @@ model tenants {
   locations                            locations[]
   mutation_events                      mutation_events[]
   oauth_tokens                         oauth_tokens[]
+  order_line_add_ons                   order_line_add_ons[]
+  order_line_service_options           order_line_service_options[]
   order_lines                          order_lines[]
   order_payments                       order_payments[]
   orders                               orders[]
@@ -626,6 +635,7 @@ model tenants {
   resource_markup_labels               resource_markup_labels[]
   resource_types                       resource_types[]
   resources                            resources[]
+  service_add_ons                      service_add_ons[]
   service_forms                        service_forms[]
   service_images                       service_images[]
   service_labels                       service_labels[]
@@ -871,6 +881,8 @@ model service_options {
   duration_minutes                     Int
   created_at                           DateTime                               @default(now()) @db.Timestamptz(6)
   updated_at                           DateTime                               @default(now()) @db.Timestamptz(6)
+  booking_service_options              booking_service_options[]
+  order_line_service_options           order_line_service_options[]
   service_option_forms                 service_option_forms[]
   service_option_images                service_option_images[]
   service_option_labels                service_option_labels[]
@@ -953,6 +965,80 @@ model service_option_resource_requirements {
   resource_types    resource_types?           @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
   service_options   service_options           @relation(fields: [service_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants           tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model service_add_ons {
+  tenant_id      String
+  environment_id String
+  service_id     String
+  add_on_id      String
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  add_on         add_on   @relation(fields: [add_on_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services       services @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, service_id, add_on_id])
+}
+
+model booking_add_ons {
+  tenant_id      String
+  environment_id String
+  booking_id     String
+  add_on_id      String
+  quantity       Int
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  add_on         add_on   @relation(fields: [add_on_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bookings       bookings @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, booking_id, add_on_id])
+}
+
+model booking_service_options {
+  tenant_id         String
+  environment_id    String
+  booking_id        String
+  service_option_id String
+  quantity          Int
+  created_at        DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime        @default(now()) @db.Timestamptz(6)
+  bookings          bookings        @relation(fields: [booking_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_options   service_options @relation(fields: [service_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants           tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, booking_id, service_option_id])
+}
+
+model order_line_add_ons {
+  tenant_id      String
+  environment_id String
+  order_line_id  String
+  add_on_id      String
+  quantity       Int
+  created_at     DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime    @default(now()) @db.Timestamptz(6)
+  add_on         add_on      @relation(fields: [add_on_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order_lines    order_lines @relation(fields: [order_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants     @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, order_line_id, add_on_id])
+}
+
+model order_line_service_options {
+  tenant_id         String
+  environment_id    String
+  order_line_id     String
+  service_option_id String
+  quantity          Int
+  created_at        DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime        @default(now()) @db.Timestamptz(6)
+  order_lines       order_lines     @relation(fields: [order_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_options   service_options @relation(fields: [service_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants           tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, order_line_id, service_option_id])
 }
 
 enum booking_event_type {

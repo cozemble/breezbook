@@ -218,6 +218,7 @@ export interface Service {
     image: string;
     resourceRequirements: ResourceRequirementSpec[]
     serviceOptions: ServiceOption[]
+    addOns: AddOnSummary[]
     forms: FormId[]
 }
 

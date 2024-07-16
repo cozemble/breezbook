@@ -103,7 +103,6 @@ const serviceUpserts = [
 		duration_minutes: 60,
 		price: 1500,
 		price_currency: 'GBP',
-		permitted_add_on_ids: [],
 		requires_time_slot: false
 	}),
 	upsertService({
@@ -114,7 +113,6 @@ const serviceUpserts = [
 		duration_minutes: 60,
 		price: 7000,
 		price_currency: 'GBP',
-		permitted_add_on_ids: [],
 		requires_time_slot: false
 	}),
 	upsertService({
@@ -125,7 +123,6 @@ const serviceUpserts = [
 		duration_minutes: 60,
 		price: 7900,
 		price_currency: 'GBP',
-		permitted_add_on_ids: [],
 		requires_time_slot: false
 	}),
 	upsertService({
@@ -136,7 +133,6 @@ const serviceUpserts = [
 		duration_minutes: 30,
 		price: 4900,
 		price_currency: 'GBP',
-		permitted_add_on_ids: [],
 		requires_time_slot: false
 	}),
 	upsertService({
@@ -147,7 +143,6 @@ const serviceUpserts = [
 		duration_minutes: 30,
 		price: 4900,
 		price_currency: 'GBP',
-		permitted_add_on_ids: [],
 		requires_time_slot: false
 	})
 ];

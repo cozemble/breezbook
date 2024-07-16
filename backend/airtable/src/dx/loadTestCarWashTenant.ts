@@ -32,6 +32,7 @@ import {
     upsertResourceAvailability,
     upsertResourceType,
     upsertService,
+    upsertServiceAddOn,
     upsertServiceForm,
     upsertServiceImage,
     upsertServiceLabel,
@@ -81,7 +82,6 @@ const addOnUpserts = addOns.map((addOn) => {
         expect_quantity: addOn.requiresQuantity,
     });
 })
-const addOnIds = addOnUpserts.map(u => u.create.data.id)
 const [wax, polish, cleanSeats, cleanCarpets] = addOnUpserts;
 
 const serviceUpserts = carwash.services.map((service) => {
@@ -94,7 +94,6 @@ const serviceUpserts = carwash.services.map((service) => {
         duration_minutes: service.duration.value,
         price: service.price.amount.value,
         price_currency: service.price.currency.value,
-        permitted_add_on_ids: addOnIds,
         requires_time_slot: true
     });
 })
@@ -269,6 +268,13 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
             description: l.description
         }))
     }))
+    await runUpserts(prisma, serviceUpserts.flatMap((serviceUpsert) =>
+        addOnUpserts.map(a => upsertServiceAddOn({
+            tenant_id,
+            environment_id,
+            service_id: serviceUpsert.create.data.id,
+            add_on_id: a.create.data.id,
+        }))));
     await runUpserts(prisma, serviceUpserts.map((serviceUpsert) => upsertServiceResourceRequirement({
         id: makeTestId(tenant_id, environment_id, `service-requirement-${serviceUpsert.create.data.id}`),
         service_id: serviceUpsert.create.data.id,

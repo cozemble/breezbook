@@ -141,6 +141,12 @@ export const byLocation = {
                 service_option_resource_requirements: true
             }
         });
+        const serviceAddOns = await prisma.service_add_ons.findMany({
+            where: {
+                tenant_id: location.tenantId.value,
+                environment_id: location.environmentId.value,
+            }
+        });
 
 
         return {
@@ -150,6 +156,7 @@ export const byLocation = {
             resourceAvailability,
             resourceOutage,
             services,
+            serviceAddOns,
             serviceOptions,
             serviceResourceRequirements,
             timeSlots,
