@@ -1,5 +1,4 @@
 import {
-    AddOnId,
     Form,
     FormId,
     IsoDate,
@@ -10,11 +9,11 @@ import {
     resourceRequirementId,
     ResourceRequirementId,
     resourceType,
-    ResourceType, ServiceId, ServiceOptionId, ServiceOptionRequest
+    ResourceType
 } from '@breezbook/packages-types';
 import {BookingIsInThePast} from '@breezbook/packages-core/dist/cancellation.js';
 import {v4 as uuidv4} from 'uuid';
-import {AddOnLabels, AddOnOrder} from "@breezbook/packages-core";
+import {AddOnLabels} from "@breezbook/packages-core";
 
 export * from './secrets.js';
 export * from './pricingTypes.js';

@@ -1,8 +1,10 @@
 import {EverythingForAvailability} from '../express/getEverythingForAvailability.js';
 import {
     AddOn,
-    AddOn as DomainAddOn, addOnAndQuantity, AddOnAndQuantity,
-    addOnFns, AddOnOrder,
+    AddOn as DomainAddOn,
+    addOnAndQuantity,
+    AddOnAndQuantity,
+    addOnFns,
     availability,
     availabilityConfiguration,
     AvailabilityConfiguration,
@@ -108,10 +110,7 @@ export function getAvailabilityForService(
         serviceOptionAndQuantity(serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, id.serviceOptionId), id.quantity));
     const mappedAddOns  = addOns.map((id) => addOnAndQuantity(addOnFns.findById(everythingForAvailability.businessConfiguration.addOns, id.addOnId), id.quantity));
     const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, mappedAddOns,serviceOptions, fromDate, toDate)
-    const priced = availability.map((a) => {
-        const price = calculatePrice(a, everythingForAvailability.pricingRules);
-        return price
-    })
+    const priced = availability.map((a) => calculatePrice(a, everythingForAvailability.pricingRules))
     return toAvailabilityResponse(
         priced,
         service,
