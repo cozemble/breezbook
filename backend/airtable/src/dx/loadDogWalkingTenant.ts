@@ -140,13 +140,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
                 start_time_24hr,
                 end_time_24hr
             })),
-        upsertTenantSettings({
-                tenant_id,
-                environment_id,
-                customer_form_id: null,
-                iana_timezone: 'Europe/London'
-            }
-        ),
         upsertForm({
             id: makeTestId(tenant_id, environment_id, 'pet-details-form'),
             tenant_id,
