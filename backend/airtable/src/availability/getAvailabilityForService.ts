@@ -64,7 +64,7 @@ function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
     );
 }
 
-function toAvailabilityResponse(priced: PricedSlot[], service: Service): AvailabilityResponse {
+export function toAvailabilityResponse(priced: PricedSlot[], service: Service): AvailabilityResponse {
     return priced.reduce(
         (acc, curr) => {
             const slotsForDate = acc.slots[curr.slot.serviceRequest.date.value] ?? [];

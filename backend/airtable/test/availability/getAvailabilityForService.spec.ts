@@ -11,7 +11,6 @@ import {
     serviceOptionFns
 } from '@breezbook/packages-core';
 import {everythingForCarWashTenantWithDynamicPricing} from '../helper.js';
-import {getAvailabilityForService} from "../../src/core/getAvailabilityForService.js";
 import {
     capacity,
     isoDate,
@@ -31,6 +30,7 @@ import {
 import {serviceAvailabilityRequest} from "../../src/express/availability/getServiceAvailabilityForLocation.js";
 import {PrismaClient} from "@prisma/client";
 import {AvailabilityResponse, availabilityResponseFns} from "@breezbook/backend-api-types";
+import {getAvailabilityForService} from "../../src/availability/getAvailabilityForService.js";
 
 
 const today = isoDate();

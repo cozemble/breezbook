@@ -16,18 +16,18 @@ import {
     errorResponseFns,
     isErrorResponse,
     mandatory,
-    price, pricedAddOn,
+    price,
     priceFns,
     success,
     Success
 } from '@breezbook/packages-core';
-import {getAvailabilityForService} from '../getAvailabilityForService.js';
 import {validateCouponCode} from '../../express/addOrderValidations.js';
 import {
     requirementOverride,
     serviceAvailabilityRequest
 } from "../../express/availability/getServiceAvailabilityForLocation.js";
 import {serviceOptionRequest} from "@breezbook/packages-types";
+import {getAvailabilityForService} from "../../availability/getAvailabilityForService.js";
 
 export const pricingErrorCodes = {
     pricingError: 'pricing.error'
@@ -52,7 +52,7 @@ function priceLine(unpricedLines: UnpricedBasketLine[], everythingForTenant: Eve
             const availableSlotIds = slotsForDate.map(a => a.timeslotId)
             throw new Error(`Slot '${line.startTime.value}' not found in availability for service '${line.serviceId.value}' on date '${line.date.value}', available slot ids are '${availableSlotIds.join(",")}'`);
         }
-        return pricedBasketLine(line.locationId, line.serviceId, line.capacity,availableSlot.priceBreakdown, line.date, line.startTime, line.serviceFormData, line.resourceRequirementOverrides);
+        return pricedBasketLine(line.locationId, line.serviceId, line.capacity, availableSlot.priceBreakdown, line.date, line.startTime, line.serviceFormData, line.resourceRequirementOverrides);
     });
     return errorResponseFns.arrayOrError(lines);
 }

@@ -13,7 +13,6 @@ import {
     tenantEnvironmentLocationParam
 } from "../../infra/endpoint.js";
 import {byLocation} from "../../availability/byLocation.js";
-import {getAvailabilityForService} from "../../core/getAvailabilityForService.js";
 import {addOnOrder, AddOnOrder, failure, Failure, serviceFns, success,} from "@breezbook/packages-core";
 import {
     addOnId,
@@ -36,6 +35,7 @@ import {resourcing} from "@breezbook/packages-resourcing";
 import {api} from "@breezbook/backend-api-types";
 import specificResource = resourcing.specificResource;
 import serviceAvailabilityOptions = api.serviceAvailabilityOptions;
+import {getAvailabilityForService} from "../../availability/getAvailabilityForService.js";
 
 interface RequirementOverride {
     requirementId: ResourceRequirementId;

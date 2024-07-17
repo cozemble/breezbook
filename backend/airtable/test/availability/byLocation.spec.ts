@@ -5,7 +5,6 @@ import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMul
 import {v4 as uuid} from 'uuid';
 import {byLocation} from "../../src/availability/byLocation.js";
 import {dbCarwashTenant, loadTestCarWashTenant} from "../../src/dx/loadTestCarWashTenant.js";
-import {getAvailabilityForService} from "../../src/core/getAvailabilityForService.js";
 import {
     environmentId,
     isoDate,
@@ -16,6 +15,8 @@ import {
 } from "@breezbook/packages-types";
 import {serviceAvailabilityRequest} from "../../src/express/availability/getServiceAvailabilityForLocation.js";
 import {AvailabilityResponse} from "@breezbook/backend-api-types";
+import { availability } from "@breezbook/packages-core";
+import {getAvailabilityForService} from "../../src/availability/getAvailabilityForService.js";
 
 const tenant = tenantId(multiLocationGym.tenant_id)
 const env = environmentId(multiLocationGym.environment_id)
@@ -116,26 +117,26 @@ describe("Given a gym with services at various locations", () => {
                 environment_id: multiLocationGym.environment_id,
                 service_id: multiLocationGym.pt1Hr,
                 location_id: multiLocationGym.locationHarlow,
-                add_on_ids: [],
                 order_id: "order1",
                 date: '2024-04-22',
                 start_time_24hr: "09:00",
                 end_time_24hr: "18:00",
                 customer_id: 'customer1',
-                order_line_id: 'orderLine1'
+                order_line_id: 'orderLine1',
+                booked_capacity: 1
             }, {
                 id: uuid(),
                 tenant_id: multiLocationGym.tenant_id,
                 environment_id: multiLocationGym.environment_id,
                 service_id: multiLocationGym.pt1Hr,
                 location_id: multiLocationGym.locationWare,
-                add_on_ids: [],
                 order_id: "order1",
                 date: '2024-04-22',
                 start_time_24hr: "09:00",
                 end_time_24hr: "18:00",
                 customer_id: 'customer1',
-                order_line_id: 'orderLine2'
+                order_line_id: 'orderLine2',
+                booked_capacity: 1
             }]
         });
         const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
