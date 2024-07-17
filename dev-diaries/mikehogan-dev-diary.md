@@ -2451,3 +2451,121 @@ import * as api from '@breezbook/api-types';
 
 const x = something() as api.ServiceRequest;
 ```
+
+# Wed 17 Jul 2024
+Am thinking about extending the pet sitting demo in the dog walking app to permit multi-day bookings.  This will stretch
+some in-built constraints, assumptions and blindspots out of the system.  I chatted with Claude about providing some 
+test scenarios for multi-day bookings with flexible timings, and it came back with a ton of good stuff.  Stashing here
+for reference.  Full chat here, including some code sketches: https://claude.ai/chat/0344ad52-9fab-4d20-ac30-b92b02b3d481
+
+```
+Certainly! I'll provide you with a comprehensive set of examples for multi-day flexible and non-flexible time options. ' +
+'These examples should cover a wide range of scenarios, suitable for creating an exhaustive test suite.
+
+1. Fixed Multi-Day Bookings (Non-Flexible):
+
+a) Standard Hotel Stay:
+   - Check-in: 3:00 PM on start date
+   - Check-out: 11:00 AM on end date
+   - Duration: Any number of nights
+
+b) Pet Boarding:
+   - Drop-off: 9:00 AM on start date
+   - Pick-up: 5:00 PM on end date
+   - Duration: Whole days only
+
+c) Summer Camp:
+   - Start: Monday 8:00 AM
+   - End: Friday 6:00 PM
+   - Duration: Always 5 days
+
+d) Conference Attendance:
+   - Start: 9:00 AM on day 1
+   - End: 5:00 PM on last day
+   - Duration: Predefined (e.g., 3 days)
+
+2. Flexible Multi-Day Bookings:
+
+a) Vacation Rental:
+   - Check-in: Anytime after 4:00 PM on start date
+   - Check-out: Anytime before 10:00 AM on end date
+   - Duration: Minimum 2 nights, no maximum
+
+b) Pet Sitting (at owner's home):
+   - Start: Customizable (e.g., 7:00 AM - 9:00 PM) on first day
+   - End: Customizable (e.g., 7:00 AM - 9:00 PM) on last day
+   - Duration: Any number of days/nights
+
+c) Equipment Rental:
+   - Pick-up: During business hours (9:00 AM - 6:00 PM) on start date
+   - Return: During business hours (9:00 AM - 6:00 PM) on end date
+   - Duration: Minimum 4 hours, maximum 30 days
+
+d) Co-working Space Rental:
+   - Start: Any time (24/7 access)
+   - End: Any time (24/7 access)
+   - Duration: Minimum 1 day, maximum 1 year
+
+e) House Cleaning Service (recurring):
+   - Start: Customizable (e.g., 8:00 AM - 5:00 PM)
+   - Frequency: Weekly, Bi-weekly, or Monthly
+   - Duration: Ongoing until canceled
+
+3. Mixed Flexibility:
+
+a) Wedding Venue Rental:
+   - Setup: Flexible start time day before (after 12:00 PM)
+   - Event: Fixed times (e.g., 2:00 PM - 12:00 AM on event day)
+   - Cleanup: Flexible end time day after (before 12:00 PM)
+   - Duration: Always 3 days, but with flexible start/end times
+
+b) Trade Show Booth:
+   - Setup: Day before event, flexible time (after 1:00 PM)
+   - Event: Fixed daily hours (e.g., 9:00 AM - 6:00 PM)
+   - Teardown: Last day of event, flexible time (before 11:59 PM)
+   - Duration: Variable (depending on event length)
+
+c) Photography Session Package:
+   - Multiple sessions over several days
+   - Each session: 2 hours, flexible start time (7:00 AM - 7:00 PM)
+   - Duration: 3 sessions within a 2-week period
+
+4. Complex Scenarios:
+
+a) Yacht Charter:
+   - Check-in: 3:00 PM on start date
+   - Check-out: 12:00 PM on end date
+   - Duration: Minimum 3 days, always in weekly increments
+   - Changeover only on Saturdays
+
+b) Academic Course:
+   - Regular classes: Fixed times (e.g., Mon/Wed/Fri 10:00 AM - 11:30 AM)
+   - Lab sessions: Flexible scheduling within predefined slots
+   - Duration: Entire semester (e.g., 15 weeks)
+
+c) Home Renovation Project:
+   - Start: Flexible within a week of chosen start date
+   - Working hours: 8:00 AM - 5:00 PM on weekdays only
+   - Duration: Estimated (e.g., 2-3 weeks) but flexible based on progress
+
+d) Corporate Retreat:
+   - Day 1: Arrival (flexible check-in after 2:00 PM)
+   - Day 2-3: Full days (fixed 8:00 AM - 9:00 PM schedule)
+   - Day 4: Departure (flexible check-out before 11:00 AM)
+   - Duration: Always 4 days, but with flexible start/end
+
+Test Suite Considerations:
+
+1. Test each type of booking (fixed, flexible, mixed, complex) separately.
+2. Verify correct handling of minimum and maximum durations.
+3. Test boundary conditions (e.g., booking exactly at start/end times).
+4. Ensure proper handling of different time zones.
+5. Verify that overlapping bookings are properly detected and prevented.
+6. Test recurring bookings for correct pattern adherence.
+7. Verify that pricing calculations correctly account for partial days, if applicable.
+8. Test modifications to existing bookings (extensions, early check-outs, etc.).
+9. Ensure that availability is correctly calculated for each scenario.
+10. Test integration with any calendar systems or external APIs.
+
+These examples and considerations should provide a comprehensive foundation for creating a robust test suite that covers a wide range of multi-day booking scenarios.
+```
