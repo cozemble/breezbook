@@ -85,11 +85,18 @@
                 </div>
                 <div class="grid grid-cols-3 gap-2" in:fade={{ duration: 300, delay: 200 }}>
                     {#each availabilityMap.get(selectedDate) || [] as time}
-                        <button class="btn py-1 {selectedTime === time.startTime24hr ? 'btn-secondary' : 'btn-outline'}"
-                                on:click={() => selectTime(time)}>
-                            <span class="text-xs text-nowrap"><b>{time.label}</b></span>
-                            <span class="text-xs text-nowrap">{time.timeLabel}</span>
-                        </button>
+                        {#if time.timeLabel.includes("---")}
+                            <button class="btn btn-sm {selectedTime === time.startTime24hr ? 'btn-secondary' : 'btn-outline'}"
+                                    on:click={() => selectTime(time)}>
+                                <span class="text-xs text-nowrap"><b>{time.startTime24hr}</b></span>
+                            </button>
+                        {:else}
+                            <button class="btn py-1 {selectedTime === time.startTime24hr ? 'btn-secondary' : 'btn-outline'}"
+                                    on:click={() => selectTime(time)}>
+                                <span class="text-xs text-nowrap"><b>{time.label}</b></span>
+                                <span class="text-xs text-nowrap">{time.timeLabel}</span>
+                            </button>
+                        {/if}
                     {/each}
                 </div>
             </div>
