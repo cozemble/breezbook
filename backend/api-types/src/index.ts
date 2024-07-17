@@ -105,7 +105,6 @@ export interface AvailabilityResponse {
 }
 
 export const availabilityResponseFns = {
-
     slotsForDate(availabilityWithTwoExtras: AvailabilityResponse, date: IsoDate): Availability[] {
         return mandatory(availabilityWithTwoExtras.slots[date.value], `No slots for date ${date.value}`);
     }

@@ -1,8 +1,8 @@
 <script lang="ts">
     import {Calendar, Clock} from 'lucide-svelte';
-    import {createEventDispatcher, onMount} from 'svelte';
+    import {afterUpdate, createEventDispatcher, onMount} from 'svelte';
     import {fade, fly} from 'svelte/transition';
-    import type {AvailabilityItem} from "$lib/uxs/dog-walking/types";
+    import type {AvailabilityItem, LabelAndTime} from "$lib/uxs/dog-walking/types";
 
     export let availability: AvailabilityItem[] = [];
     export let selectedDate: string | null = null;
@@ -33,9 +33,9 @@
     }
 
 
-    function selectTime(time: string) {
-        selectedTime = time;
-        dispatch('timeSelected', {date: selectedDate, time});
+    function selectTime(time: LabelAndTime) {
+        selectedTime = time.startTime24hr;
+        dispatch('timeSelected', {date: selectedDate, time: selectedTime});
     }
 
     onMount(() => {
@@ -45,6 +45,8 @@
             }
         }, 0);
     });
+
+    afterUpdate(() => console.log({availabilityMap}))
 </script>
 
 <div class="bg-base-200 p-4 rounded-lg">
@@ -56,7 +58,7 @@
         <div class="flex space-x-2">
             {#each sortedDates as dateString (dateString)}
                 <button
-                        class="flex flex-col items-center p-2 rounded-lg transition-colors duration-200
+                        class="flex flex-col items-center p-2 px-4 rounded-lg transition-colors duration-200
                            {selectedDate === dateString
                              ? 'bg-secondary text-secondary-content'
                              : isDateAvailable(dateString)
@@ -83,9 +85,10 @@
                 </div>
                 <div class="grid grid-cols-3 gap-2" in:fade={{ duration: 300, delay: 200 }}>
                     {#each availabilityMap.get(selectedDate) || [] as time}
-                        <button class="btn btn-sm {selectedTime === time ? 'btn-secondary' : 'btn-outline'}"
+                        <button class="btn py-1 {selectedTime === time.startTime24hr ? 'btn-secondary' : 'btn-outline'}"
                                 on:click={() => selectTime(time)}>
-                            {time}
+                            <span class="text-xs text-nowrap"><b>{time.label}</b></span>
+                            <span class="text-xs text-nowrap">{time.timeLabel}</span>
                         </button>
                     {/each}
                 </div>

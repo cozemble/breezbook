@@ -342,7 +342,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             tenant_id,
             environment_id,
             location_id: makeTestId(tenant_id, environment_id, 'main'),
-            description: 'Morning group dog walk',
+            description: 'Morning walk',
             start_time_24hr: '09:00',
             end_time_24hr: '10:00'
         }),
@@ -351,7 +351,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             tenant_id,
             environment_id,
             location_id: makeTestId(tenant_id, environment_id, 'main'),
-            description: 'Evening group dog walk',
+            description: 'Evening walk',
             start_time_24hr: '17:00',
             end_time_24hr: '18:00'
         }),

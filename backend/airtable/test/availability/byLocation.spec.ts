@@ -15,7 +15,6 @@ import {
 } from "@breezbook/packages-types";
 import {serviceAvailabilityRequest} from "../../src/express/availability/getServiceAvailabilityForLocation.js";
 import {AvailabilityResponse} from "@breezbook/backend-api-types";
-import { availability } from "@breezbook/packages-core";
 import {getAvailabilityForService} from "../../src/availability/getAvailabilityForService.js";
 
 const tenant = tenantId(multiLocationGym.tenant_id)
@@ -167,7 +166,7 @@ describe("Given the test car wash tenant", async () => {
         const slotsForDate = availability.slots['2024-04-20']
         expect(slotsForDate).toBeDefined()
         const firstSlot = mandatory(slotsForDate[0], 'first slot')
-        expect(firstSlot.label).toEqual('09:00')
+        expect(firstSlot.label).toEqual('09:00 to 13:00')
         expect(firstSlot.priceBreakdown.servicePrice).toEqual(1000)
 
     });

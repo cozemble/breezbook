@@ -1,9 +1,15 @@
 import type {AvailabilityResponse} from "@breezbook/backend-api-types";
 import type {IsoDate} from "@breezbook/packages-types";
 
+export type LabelAndTime = {
+    label: string;
+    timeLabel: string;
+    startTime24hr: string;
+};
+
 export type AvailabilityItem = {
     date: string;
-    times: string[];
+    times: LabelAndTime[];
 };
 
 export function availabilityResponseToItems(dates: IsoDate[], response: AvailabilityResponse): AvailabilityItem[] {
@@ -12,7 +18,14 @@ export function availabilityResponseToItems(dates: IsoDate[], response: Availabi
         if (!slots) {
             return {date: d.value, times: []};
         }
-        return {date: d.value, times: slots.map(s => s.label)};
+        return {
+            date: d.value,
+            times: slots.map(s => ({
+                label: s.label,
+                timeLabel: s.startTime24hr + ' - ' + s.endTime24hr,
+                startTime24hr: s.startTime24hr
+            }))
+        };
     })
 }
 
