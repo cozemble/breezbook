@@ -1,6 +1,6 @@
 import {DayAndTimePeriod, dayAndTimePeriodFns, isoDateFns} from "@breezbook/packages-types";
 import {configuration} from "./configuration/configuration.js";
-import ResourceDayAvailability = configuration.ResourceDayAvailability;
+import ResourceAvailability = configuration.ResourceAvailability;
 import AvailabilityBlock = configuration.AvailabilityBlock;
 import availabilityBlock = configuration.availabilityBlock;
 
@@ -18,7 +18,7 @@ function fitTime(block: AvailabilityBlock, fitTimes: DayAndTimePeriod[]): Availa
     return periods.map(p => availabilityBlock(p));
 }
 
-export function fitAvailability(resourceAvailability: ResourceDayAvailability[], fitTimes: DayAndTimePeriod[]): ResourceDayAvailability[] {
+export function fitAvailability(resourceAvailability: ResourceAvailability[], fitTimes: DayAndTimePeriod[]): ResourceAvailability[] {
     return resourceAvailability.map(ra => {
         return {
             ...ra,

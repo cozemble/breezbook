@@ -92,7 +92,8 @@ export function getAvailabilityForService(
         everythingForAvailability.businessConfiguration.availability,
         everythingForAvailability.businessConfiguration.resourceAvailability,
         everythingForAvailability.businessConfiguration.timeslots,
-        everythingForAvailability.businessConfiguration.startTimeSpec);
+        everythingForAvailability.businessConfiguration.startTimeSpec,
+        everythingForAvailability.businessConfiguration.serviceAvailability);
     const service = serviceFns.maybeFindService(everythingForAvailability.businessConfiguration.services, serviceId);
     if (!service) {
         return errorResponse(getAvailabilityForServiceErrorCodes.serviceUnavailable, `Service with id ${serviceId.value} not found`);

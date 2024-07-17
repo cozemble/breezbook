@@ -577,4 +577,11 @@ export function upsertBookingServiceOption(create: Prisma.booking_service_option
     return makeUpsert('booking_service_options', entityId, create)
 }
 
+export type UpsertServiceAvailability = Upsert<Prisma.service_availabilityCreateArgs['data'], Prisma.service_availabilityUpdateArgs['data'], Prisma.service_availabilityUpdateArgs['where']>
+
+export function upsertServiceAvailability(create: Prisma.service_availabilityUncheckedCreateInput): UpsertServiceAvailability {
+    const entityId = compositeKey("id", mandatory(create.id, "id"))
+    return makeUpsert('service_availability', entityId, create)
+}
+
 

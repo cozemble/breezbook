@@ -48,8 +48,8 @@ import {resourcing} from "@breezbook/packages-resourcing";
 import {configuration} from "./configuration/configuration.js";
 import ResourceRequirement = resourcing.ResourceRequirement;
 import Resource = resourcing.Resource;
-import ResourceDayAvailability = configuration.ResourceDayAvailability;
-
+import ResourceAvailability = configuration.ResourceAvailability;
+import ServiceAvailability = configuration.ServiceAvailability;
 
 export interface TenantSettings {
     _type: 'tenant.settings';
@@ -167,14 +167,6 @@ export interface BookedServiceOption {
     _type: 'booked.service.option';
     serviceOption: ServiceOption;
     quantity: number;
-}
-
-export function bookedAddOn(addOn: AddOn, quantity = 1): BookedAddOn {
-    return {
-        _type: 'booked.add.on',
-        addOn,
-        quantity
-    };
 }
 
 export function bookedServiceOption(serviceOption: ServiceOption, quantity = 1): BookedServiceOption {
@@ -623,7 +615,8 @@ export function serviceOption(
 export interface BusinessConfiguration {
     _type: 'business.configuration';
     availability: BusinessAvailability;
-    resourceAvailability: ResourceDayAvailability[];
+    resourceAvailability: ResourceAvailability[];
+    serviceAvailability: ServiceAvailability[]
     resources: Resource[];
     services: Service[];
     serviceOptions: ServiceOption[];
@@ -705,7 +698,8 @@ export const addOnFns = {
 export function businessConfiguration(
     availability: BusinessAvailability,
     resources: Resource[],
-    resourceAvailability: ResourceDayAvailability[],
+    resourceAvailability: ResourceAvailability[],
+    serviceAvailability: ServiceAvailability[],
     services: Service[],
     serviceOptions: ServiceOption[],
     addOns: AddOn[],
@@ -719,6 +713,7 @@ export function businessConfiguration(
         availability,
         resources,
         resourceAvailability,
+        serviceAvailability,
         services,
         serviceOptions,
         timeslots,

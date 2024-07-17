@@ -236,6 +236,7 @@ model locations {
   pricing_rules         pricing_rules[]
   refund_rules          refund_rules[]
   resource_availability resource_availability[]
+  service_availability  service_availability[]
   service_locations     service_locations[]
   time_slots            time_slots[]
 
@@ -524,6 +525,7 @@ model services {
   bookings                      bookings[]
   order_lines                   order_lines[]
   service_add_ons               service_add_ons[]
+  service_availability          service_availability[]
   service_forms                 service_forms[]
   service_images                service_images[]
   service_labels                service_labels[]
@@ -637,6 +639,7 @@ model tenants {
   resource_types                       resource_types[]
   resources                            resources[]
   service_add_ons                      service_add_ons[]
+  service_availability                 service_availability[]
   service_forms                        service_forms[]
   service_images                       service_images[]
   service_labels                       service_labels[]
@@ -1041,6 +1044,22 @@ model order_line_service_options {
   tenants           tenants         @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id, order_line_id, service_option_id])
+}
+
+model service_availability {
+  id              String     @id
+  tenant_id       String?
+  environment_id  String
+  service_id      String
+  location_id     String?
+  day_of_week     String     @db.VarChar(10)
+  start_time_24hr String     @db.VarChar(10)
+  end_time_24hr   String     @db.VarChar(10)
+  created_at      DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime   @default(now()) @db.Timestamptz(6)
+  locations       locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services        services   @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants         tenants?   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 enum booking_event_type {

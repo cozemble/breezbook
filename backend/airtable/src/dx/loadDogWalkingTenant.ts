@@ -9,6 +9,7 @@ import {
     upsertResourceAvailability,
     upsertResourceType,
     upsertService,
+    upsertServiceAvailability,
     upsertServiceForm,
     upsertServiceImage,
     upsertServiceLabel,
@@ -480,6 +481,36 @@ function breezbookDogWalkUpserts(): Upsert[] {
             requirement_type: 'any_suitable',
             resource_type: dogWalkerResourceTypeId,
         }),
+
+        ...daysOfWeek.flatMap(day => [
+            upsertServiceAvailability({
+                id: makeTestId(tenant_id, environment_id, `availability.${dogWalkingTenant.serviceIds.individualDogWalk}.${day}`),
+                tenant_id,
+                environment_id,
+                service_id: dogWalkingTenant.serviceIds.individualDogWalk,
+                day_of_week: day,
+                start_time_24hr: "11:00",
+                end_time_24hr: "16:00"
+            }),
+            upsertServiceAvailability({
+                id: makeTestId(tenant_id, environment_id, `availability.${dogWalkingTenant.serviceIds.dropInVisit}.${day}`),
+                tenant_id,
+                environment_id,
+                service_id: dogWalkingTenant.serviceIds.dropInVisit,
+                day_of_week: day,
+                start_time_24hr: "11:00",
+                end_time_24hr: "16:00"
+            }),
+            upsertServiceAvailability({
+                id: makeTestId(tenant_id, environment_id, `availability.${dogWalkingTenant.serviceIds.petSit}.${day}`),
+                tenant_id,
+                environment_id,
+                service_id: dogWalkingTenant.serviceIds.petSit,
+                day_of_week: day,
+                start_time_24hr: "11:00",
+                end_time_24hr: "16:00"
+            })
+        ]),
 
         upsertServiceLocation({
             tenant_id,

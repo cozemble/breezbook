@@ -21,7 +21,7 @@ import {EndpointOutcome} from "../src/infra/endpoint.js";
 import {jexlExpression, multiply, pricingFactorName, PricingRule} from "@breezbook/packages-pricing";
 import {couponCode, dayAndTimePeriod, duration,
     environmentId, IsoDate, isoDate, isoDateFns, minutes, tenantEnvironment, tenantId, timezone} from '@breezbook/packages-types';
-import resourceDayAvailability = configuration.resourceDayAvailability;
+import resourceDayAvailability = configuration.resourceAvailability;
 import availabilityBlock = configuration.availabilityBlock;
 
 export const today = isoDate();
@@ -92,6 +92,7 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
             businessAvailability(theBusinessAvailability),
             [carwash.van1, carwash.van2],
             theResourceAvailability,
+            [],
             [carwash.smallCarWash],
             [],
             carwash.addOns,

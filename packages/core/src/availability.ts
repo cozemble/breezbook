@@ -10,7 +10,6 @@ import {
 } from "./types.js";
 import {errorResponse, ErrorResponse, mandatory, success, Success} from "./utils.js";
 import {
-    capacity,
     Capacity,
     capacityFns,
     dayAndTimePeriod,
@@ -21,6 +20,7 @@ import {
     minuteFns,
     minutes,
     Minutes,
+    ServiceId,
     time24Fns,
     TimePeriod,
     timePeriod,
@@ -31,7 +31,8 @@ import {resourcing} from "@breezbook/packages-resourcing";
 import {configuration} from "./configuration/configuration.js";
 import ResourceRequirement = resourcing.ResourceRequirement;
 import Resource = resourcing.Resource;
-import ResourceDayAvailability = configuration.ResourceDayAvailability;
+import ResourceAvailability = configuration.ResourceAvailability;
+import ServiceAvailability = configuration.ServiceAvailability;
 import listAvailability = resourcing.listAvailability;
 import resource = resourcing.resource;
 import timeslot = resourcing.timeslot;
@@ -117,16 +118,18 @@ function calcPossibleStartTimes(startTimeSpec: StartTimeSpec, availabilityForDay
 export interface AvailabilityConfiguration {
     _type: 'availability.configuration'
     availability: BusinessAvailability;
-    resourceAvailability: ResourceDayAvailability[];
+    resourceAvailability: ResourceAvailability[];
+    serviceAvailability: ServiceAvailability[];
     timeslots: TimeslotSpec[];
     startTimeSpec: StartTimeSpec;
 }
 
-export function availabilityConfiguration(availability: BusinessAvailability, resourceAvailability: ResourceDayAvailability[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec): AvailabilityConfiguration {
+export function availabilityConfiguration(availability: BusinessAvailability, resourceAvailability: ResourceAvailability[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec, serviceAvailability: ServiceAvailability[] = []): AvailabilityConfiguration {
     return {
         _type: "availability.configuration",
         availability,
         resourceAvailability,
+        serviceAvailability,
         timeslots,
         startTimeSpec
     }
@@ -181,7 +184,7 @@ function toService(serviceRequest: ServiceRequest): resourcing.Service {
     return resourcing.service(requirements, serviceRequest.service.id)
 }
 
-function mapResourceAvailability(acc: Resource[], rda: ResourceDayAvailability): Resource[] {
+function mapResourceAvailability(acc: Resource[], rda: ResourceAvailability): Resource[] {
     const theResource = acc.find(r => r.id.value === rda.resource.id.value) ?? resource(rda.resource.type, [], rda.resource.metadata, rda.resource.id)
     const timeslots = rda.availability.map(a => timeslot(dateAndTime(a.when.day, a.when.period.from), dateAndTime(a.when.day, a.when.period.to)))
     const updatedResource: Resource = {...theResource, availability: [...theResource.availability, ...timeslots]}
@@ -214,6 +217,18 @@ function startTimeForResponse(availabilityOutcome: Available, startTimes: StartT
     return exactTimeAvailability(availabilityOutcome.booking.booking.timeslot.from.time);
 }
 
+function getDayAvailability(config: AvailabilityConfiguration, serviceId: ServiceId, date: IsoDate): DayAndTimePeriod[] {
+    const availabilityForThisService = config.serviceAvailability
+        .filter(s => s.serviceId.value === serviceId.value);
+    if (availabilityForThisService.length === 0) {
+        return config.availability.availability.filter(a => a.day.value === date.value)
+    }
+    return availabilityForThisService
+        .flatMap(s => s.availability)
+        .filter(a => a.when.day.value === date.value)
+        .map(a => a.when);
+}
+
 export const availability = {
     errorCodes: {
         noAvailabilityForDay: 'no.availability.for.day',
@@ -224,7 +239,7 @@ export const availability = {
                               bookings: Booking[],
                               serviceRequest: ServiceRequest): Success<AvailableSlot[]> | ErrorResponse => {
         const date = serviceRequest.date
-        const businessAvailabilityForDay = config.availability.availability.filter(a => a.day.value === date.value)
+        const businessAvailabilityForDay = getDayAvailability(config, serviceRequest.service.id, date);
         if (businessAvailabilityForDay.length === 0) {
             return errorResponse(availability.errorCodes.noAvailabilityForDay, `No availability for date '${date.value}'`)
         }

@@ -101,12 +101,12 @@ describe("given a service with service options", () => {
         const availabilityWithoutOptions = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday, [])) as AvailabilityResponse;
         expect(availabilityWithoutOptions).toBeDefined();
         expect(availabilityWithoutOptions.slots[saturday.value]).toBeDefined();
-        expect(availabilityWithoutOptions.slots[saturday.value]).toHaveLength(17);
+        expect(availabilityWithoutOptions.slots[saturday.value]).toHaveLength(9);
 
         const availabilityWithExtra60Mins = getAvailabilityForService(everythingForAvailability, serviceAvailabilityRequest(individualDogWalk.id, saturday, saturday, [], [], [serviceOptionRequest(extra60Mins.id)])) as AvailabilityResponse;
         expect(availabilityWithExtra60Mins).toBeDefined();
         expect(availabilityWithExtra60Mins.slots[saturday.value]).toBeDefined();
-        expect(availabilityWithExtra60Mins.slots[saturday.value]).toHaveLength(15);
+        expect(availabilityWithExtra60Mins.slots[saturday.value]).toHaveLength(7);
     })
 
     test("price breakdown shows service price and option prices", () => {

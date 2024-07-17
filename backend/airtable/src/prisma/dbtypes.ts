@@ -52,6 +52,7 @@ import {
     tenant_settings,
     tenants,
     time_slots,
+    service_availability
 } from '@prisma/client';
 import {TenantEnvironment} from '@breezbook/packages-types';
 
@@ -109,6 +110,7 @@ export type {
     booking_add_ons as DbBookingAddOn,
     booking_service_options as DbBookingServiceOption,
     add_on_labels as DbAddOnLabel,
+    service_availability as DbServiceAvailability
 };
 
 export interface TenantEnvironmentPair {

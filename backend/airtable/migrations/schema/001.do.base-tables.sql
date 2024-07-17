@@ -214,6 +214,21 @@ create table services
     unique (tenant_id, environment_id, slug)
 );
 
+create table service_availability
+(
+    id              text primary key,
+    tenant_id       text references tenants (tenant_id),
+    environment_id  text                          not null,
+    service_id      text references services (id) not null,
+    location_id     text references locations (id),
+    day_of_week     varchar(10)                   not null,
+    start_time_24hr varchar(10)                   not null,
+    end_time_24hr   varchar(10)                   not null,
+    created_at      timestamp with time zone      not null default current_timestamp,
+    updated_at      timestamp with time zone      not null default current_timestamp
+);
+
+
 create table service_add_ons
 (
     tenant_id      text references tenants (tenant_id) not null,

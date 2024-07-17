@@ -107,6 +107,7 @@ export const byLocation = {
         const blockedTime = await byLocation.findBlockedime(prisma, location, fromDate, toDate);
         const resources = await findMany(prisma.resources, {});
         const resourceAvailability = await byLocation.findResourceAvailability(prisma, location);
+        const serviceAvailability = await byLocation.findServiceAvailability(prisma, location);
         const resourceOutage = await findMany(prisma.resource_blocked_time, dateWhereOpts)
         const timeSlots = await byLocation.findTimeslots(prisma, location);
         const pricingRules = await findMany(prisma.pricing_rules, {});
@@ -158,6 +159,7 @@ export const byLocation = {
             resourceAvailability,
             resourceOutage,
             services,
+            serviceAvailability,
             serviceAddOns,
             serviceOptions,
             serviceResourceRequirements,
@@ -185,6 +187,20 @@ export const byLocation = {
     },
     async findTimeslots(prisma: PrismaClient, location: TenantEnvironmentLocation): Promise<DbTimeSlot[]> {
         return prisma.time_slots.findMany({
+            where: {
+                tenant_id: location.tenantId.value,
+                environment_id: location.environmentId.value,
+                OR: [
+                    {
+                        location_id: location.locationId.value
+                    }, {
+                        location_id: null
+                    }]
+            }
+        })
+    },
+    findServiceAvailability(prisma: PrismaClient, location: TenantEnvironmentLocation) {
+        return prisma.service_availability.findMany({
             where: {
                 tenant_id: location.tenantId.value,
                 environment_id: location.environmentId.value,

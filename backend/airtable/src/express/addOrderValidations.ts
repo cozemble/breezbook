@@ -109,7 +109,8 @@ export function validateAvailability(everythingForAvailability: EverythingForAva
         businessAvailability(everythingForAvailability.businessConfiguration.availability.availability),
         everythingForAvailability.businessConfiguration.resourceAvailability,
         everythingForAvailability.businessConfiguration.timeslots,
-        everythingForAvailability.businessConfiguration.startTimeSpec)
+        everythingForAvailability.businessConfiguration.startTimeSpec,
+        everythingForAvailability.businessConfiguration.serviceAvailability);
     const newBookings = everythingToCreateOrder.basket.lines.map(line => booking(everythingToCreateOrder.customer.id, line.service, line.date, timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, line.service.duration))));
     const availabilityOutcomes: resourcing.ResourceBookingResult[] = availability.checkAvailability(availabilityConfig, everythingForAvailability.bookings, newBookings);
     for (const [index, outcome] of availabilityOutcomes.entries()) {
