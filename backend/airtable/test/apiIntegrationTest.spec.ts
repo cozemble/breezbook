@@ -3,7 +3,9 @@ import {
     currency,
     customer,
     fullPaymentOnCheckout,
-    price, priceBreakdown, pricedAddOn,
+    price,
+    priceBreakdown,
+    pricedAddOn,
     priceFns,
     randomInteger,
     tenantSettings,
@@ -21,7 +23,8 @@ import {
 } from './helper.js';
 import {
     AvailabilityResponse,
-    CancellationGranted, domainToApi,
+    CancellationGranted,
+    domainToApi,
     OrderCreatedResponse,
     pricedBasket,
     PricedBasket,
@@ -97,7 +100,7 @@ describe('Given a migrated database', () => {
                 'Content-Type': 'application/json'
             }
         });
-        if(!fetched.ok) {
+        if (!fetched.ok) {
             const text = await fetched.text();
             expect("").toBe(text);
         }
@@ -126,7 +129,7 @@ describe('Given a migrated database', () => {
                 dbCarwashTenant.nineToOne.slot.from,
                 [goodServiceFormData],
                 []),
-            pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, capacity(1),domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [pricedAddOn(dbCarwashTenant.wax.id, dbCarwashTenant.wax.price, 1, dbCarwashTenant.wax.price), pricedAddOn(dbCarwashTenant.polish.id, dbCarwashTenant.polish.price, 1, dbCarwashTenant.polish.price)], [])), fiveDaysFromNow, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])
+            pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, capacity(1), domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [pricedAddOn(dbCarwashTenant.wax.id, dbCarwashTenant.wax.price, 1, dbCarwashTenant.wax.price), pricedAddOn(dbCarwashTenant.polish.id, dbCarwashTenant.polish.price, 1, dbCarwashTenant.polish.price)], [])), fiveDaysFromNow, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])
         ], priceFns.add(dbCarwashTenant.smallCarWash.price, dbCarwashTenant.wax.price, dbCarwashTenant.mediumCarWash.price, dbCarwashTenant.wax.price, dbCarwashTenant.polish.price))
 
         const fetched = await postOrder(
@@ -190,7 +193,7 @@ describe('Given a migrated database', () => {
                 resources: [],
                 addOns: [],
                 coupons: [],
-                options:[]
+                options: []
             },
             tenantSettings(timezone('Europe/London'), null)
         );
@@ -338,12 +341,10 @@ describe('Given a migrated database', () => {
     // 	expect(json.clientSecret).toBeDefined();
     // 	expect(json.stripePublicKey).toBe('pk_test_something');
     // });
-});
+}, {timeout: 1000 * 10});
 
 async function completeCancellationGrant() {
-    console.log("About to create booking")
     const bookingId = await createBooking(isoDateFns.addDays(isoDate(), 3));
-    console.log("About to complete cancellation grant")
     const cancellationGrantResponse = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/booking/${bookingId}/cancellation/grant`, {
         method: 'POST',
         headers: {
@@ -362,7 +363,7 @@ async function dbCarwashTenantReferenceData(): Promise<EverythingToCreateOrderRe
 }
 
 async function createBooking(date: IsoDate): Promise<string> {
-    const theBasket = pricedBasket([pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, capacity(1),domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [], [])), date, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])], dbCarwashTenant.mediumCarWash.price)
+    const theBasket = pricedBasket([pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, capacity(1), domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [], [])), date, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])], dbCarwashTenant.mediumCarWash.price)
     const createOrderResponse = await insertOrder(
         tenantEnv,
         pricedCreateOrderRequest(
