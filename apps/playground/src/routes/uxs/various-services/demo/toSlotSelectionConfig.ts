@@ -6,11 +6,12 @@ import {
     type PickDateConfig,
     type PickTimeConfig,
     type SlotSelectionConfig,
+    type Time,
     type Timeslot
 } from "./timeSelection2";
 import type {FixedCheckInAndOut, SchedulingOption, Service} from "./types";
 import {formatDate} from "$lib/ui/time-picker/types";
-import {type IsoDate, isoDate, isoDateFns} from "@breezbook/packages-types";
+import {type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbook/packages-types";
 
 
 function applySchedulingOptions(dayType: "start" | "end", date: IsoDate, schedulingOptions: SchedulingOption[]): DatePickConfig {
@@ -41,22 +42,44 @@ function getStartTimes(timeType: "start" | "end", startDays: DatePickConfig[], s
         if (schedulingOption._type === "timeslot-selection") {
             const result: PickTimeConfig = {
                 _type: 'pick-one',
-                options: startDays.filter(d => d.disabled === undefined).map(dateConfig => {
-                    const option: DayTimes = {
-                        date: dateConfig.date, times: schedulingOption.times.map(time => {
-                            const slot: Timeslot = {
-                                _type: "time-slot",
-                                start: time.slot.from,
-                                end: time.slot.to,
-                                label: time.description
+                options: startDays
+                    .filter(d => d.disabled === undefined)
+                    .map(dateConfig => {
+                        const option: DayTimes = {
+                            date: dateConfig.date, times: schedulingOption.times.map(time => {
+                                const slot: Timeslot = {
+                                    _type: "time-slot",
+                                    start: time.slot.from,
+                                    end: time.slot.to,
+                                    label: time.description
+                                }
+                                return slot
+                            })
+                        }
+                        return option
+                    })
+            }
+            return result
+        }
+        if (schedulingOption._type === "start-time-selection") {
+            const times = time24Fns.range(schedulingOption.startTime, schedulingOption.endTime, schedulingOption.period)
+            return {
+                _type: 'pick-one', options: startDays.filter(d => d.disabled === undefined).map(dateConfig => {
+                    const x: DayTimes = {
+                        date: dateConfig.date, times: times.map(time => {
+                            const slot: Time = {
+                                _type: "time",
+                                start: time,
                             }
                             return slot
                         })
                     }
-                    return option
+                    return x
                 })
             }
-            return result
+        }
+        if(schedulingOption._type === "flexible-duration") {
+
         }
     }
     throw new Error("No start times found")

@@ -410,6 +410,13 @@ const equipmentRental: Service = {
 
 const yacht = resourceType('yacht')
 
+/**
+ * Rework these scheduling options, based on lessons from the ui configuration
+ * - start time and end time configuration is mandatory
+ * - end date and end time is options
+ * - duration expression (days and time) is optional, and belongs in the end date and end time configuration
+ */
+
 const yachtCharter: Service = {
     id: serviceId('yacht-charter'),
     name: 'yacht charter',

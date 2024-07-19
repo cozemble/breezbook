@@ -27,7 +27,7 @@ export interface PickDateConfig {
     options: DatePickConfig[];
 }
 
-interface Time {
+export interface Time {
     _type: "time";
     start: TwentyFourHourClockTime;
     disabled?: Disabled;

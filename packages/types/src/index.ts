@@ -330,6 +330,15 @@ export const time24Fns = {
     },
     lt(start: TwentyFourHourClockTime, end: TwentyFourHourClockTime) {
         return start.value < end.value;
+    },
+    range(startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime, period: Minutes): TwentyFourHourClockTime[] {
+        const result = [];
+        let currentTime = startTime;
+        while (this.lt(currentTime, endTime)) {
+            result.push(currentTime);
+            currentTime = this.addMinutes(currentTime, period);
+        }
+        return result;
     }
 };
 

@@ -6,7 +6,7 @@
     import {toSlotSelectionConfig} from "./toSlotSelectionConfig";
 
     let currentMonth: Date = new Date();
-    let config: SlotSelectionConfig = toSlotSelectionConfig(currentMonth, allServicesMap.mobileCarwash);
+    let config: SlotSelectionConfig = toSlotSelectionConfig(currentMonth, allServicesMap.petBoardingForOneDayWithFlexibleTimes);
 
     let selectedStartDate: IsoDate | null = null;
     let selectedEndDate: IsoDate | null = null;
