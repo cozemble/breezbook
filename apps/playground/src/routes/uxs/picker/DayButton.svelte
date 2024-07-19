@@ -29,7 +29,6 @@
         }
         const clickedDate = new Date(month.getFullYear(), month.getMonth(), dayIndex);
         dispatch('clicked', clickedDate);
-        console.log('clicked', clickedDate);
     }
 </script>
 

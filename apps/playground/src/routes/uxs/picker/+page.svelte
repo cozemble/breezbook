@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {afterUpdate, onMount} from 'svelte';
+    import {onMount} from 'svelte';
     import {ChevronLeft, ChevronRight} from 'lucide-svelte';
     import DayButton from "./DayButton.svelte";
     import {type DateLabels, type DisabledDays, formatDate, type TimeLabels, type TimeString} from "./types";
@@ -57,7 +57,6 @@
         dateLabels = labels;
         timeLabels = timePrices;
         disabledDays = disabled;
-        console.log({disabledDays});
     }
 
     function daysInMonth(date: Date): number {
@@ -87,12 +86,10 @@
         if (!isDisabled) {
             selectedDate = date;
             selectedTime = null;
-        } else {
-            console.log('Date is disabled');
         }
     }
 
-    function handleTimeSelect(event:CustomEvent<TimeString>): void {
+    function handleTimeSelect(event: CustomEvent<TimeString>): void {
         selectedTime = event.detail
     }
 
@@ -111,13 +108,8 @@
     $: startingDay = startDay(currentMonth);
 
     function onDateSelected(event: CustomEvent<Date>) {
-        console.log({event});
         handleDateSelect(event.detail);
     }
-
-    afterUpdate(() => {
-        console.log({selectedDate, selectedTime});
-    });
 </script>
 
 
