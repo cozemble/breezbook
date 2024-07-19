@@ -8,13 +8,13 @@
     export let label: string | null = null;
     export let disabledDays: DisabledDays = {};
 
-    const date = new Date(month.getFullYear(), month.getMonth(), dayIndex);
-    const dateString = formatDate(date);
-    const isToday = date.toDateString() === new Date().toDateString();
+    $: date = new Date(month.getFullYear(), month.getMonth(), dayIndex);
+    $: dateString = formatDate(date);
+    $: isToday = dateString === formatDate(new Date());
     $: isDisabled = disabledDays[dateString] || false;
     const dispatch = createEventDispatcher();
 
-    function getClassName(isDisabled: boolean, selectedDate: Date | null): string {
+    function getClassName(isToday: boolean, isDisabled: boolean, selectedDate: Date | null): string {
         const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
         const commonStyles = 'btn w-full h-full border';
         if (isDisabled) return commonStyles + ' btn-disabled  border-neutral';
@@ -32,7 +32,7 @@
     }
 </script>
 
-<button on:click={onClick} class={getClassName(isDisabled,selectedDate)} class:isToday>
+<button on:click={onClick} class={getClassName(isToday,isDisabled,selectedDate)} class:isToday>
     <div class="flex flex-col items-center justify-center">
         <div>
             {#if isToday}
