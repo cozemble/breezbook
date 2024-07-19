@@ -6,6 +6,10 @@ export interface DateLabels {
     [key: IsoDateString]: PriceString;
 }
 
+export interface DateTimes {
+    [key: IsoDateString]: TimeString[];
+}
+
 export interface TimeLabels {
     [key: IsoDateString]: {
         [key: TimeString]: PriceString;
