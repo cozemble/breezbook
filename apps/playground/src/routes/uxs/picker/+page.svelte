@@ -27,7 +27,7 @@
         const labels: DateLabels = {};
         const timePrices: TimeLabels = {};
         const disabled: DisabledDays = {};
-        const theDateTimes:DateTimes = {};
+        const theDateTimes: DateTimes = {};
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -64,6 +64,8 @@
 
     function onMonthChanged(event: CustomEvent<Date>): void {
         currentMonth = event.detail;
+        selectedDate = null;
+        selectedTime = null;
         generateDateLabels();
     }
 

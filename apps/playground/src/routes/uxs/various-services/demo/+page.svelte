@@ -2,8 +2,11 @@
     import {Calendar, Clock} from 'lucide-svelte';
     import {allConfigs, type SlotSelectionConfig,} from "./timeSelection2";
     import type {IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {allServicesMap} from "./types";
+    import {toSlotSelectionConfig} from "./toSlotSelectionConfig";
 
-    let config: SlotSelectionConfig = allConfigs[0].config;
+    let currentMonth: Date = new Date();
+    let config: SlotSelectionConfig = toSlotSelectionConfig(currentMonth, allServicesMap.mobileCarwash);
 
     let selectedStartDate: IsoDate | null = null;
     let selectedEndDate: IsoDate | null = null;

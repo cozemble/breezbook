@@ -15,11 +15,16 @@ interface PriceLabel {
     label: string;
 }
 
-const justDisabled: Disabled = {disabled: true};
+export const justDisabled: Disabled = {disabled: true};
 
-interface PickDateConfig {
+export interface DatePickConfig {
+    date: IsoDate
+    disabled?: Disabled
+}
+
+export interface PickDateConfig {
     _type: 'pick-one';
-    options: { date: IsoDate, disabled?: Disabled }[];
+    options: DatePickConfig[];
 }
 
 interface Time {
@@ -30,7 +35,7 @@ interface Time {
     price?: PriceLabel;
 }
 
-interface Timeslot {
+export interface Timeslot {
     _type: "time-slot";
     start: TwentyFourHourClockTime;
     end: TwentyFourHourClockTime;
@@ -40,12 +45,12 @@ interface Timeslot {
     price?: PriceLabel;
 }
 
-interface DayTimes {
+export interface DayTimes {
     date: IsoDate;
     times: (Time | Timeslot)[];
 }
 
-interface PickTimeConfig {
+export interface PickTimeConfig {
     _type: 'pick-one';
     options: DayTimes[];
 }
@@ -65,7 +70,7 @@ interface EndTimeConfig {
     time: PickTimeConfig;
 }
 
-interface FixedTimeConfig {
+export interface FixedTimeConfig {
     _type: 'fixed-time';
     time: TwentyFourHourClockTime;
     timeLabel: string;

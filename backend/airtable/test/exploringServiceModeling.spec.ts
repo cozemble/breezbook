@@ -102,10 +102,11 @@ interface FlexibleCheckInAndOut {
     endTime: TwentyFourHourClockTime
     checkInLabel: string
     checkOutLabel: string
+    period: Minutes
 }
 
-function flexibleCheckInAndOut(startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime, checkInLabel: string, checkOutLabel: string): FlexibleCheckInAndOut {
-    return {_type: 'flexible-check-in-and-out', startTime, endTime, checkInLabel, checkOutLabel}
+function flexibleCheckInAndOut(startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime, checkInLabel: string, checkOutLabel: string, period = minutes(60)): FlexibleCheckInAndOut {
+    return {_type: 'flexible-check-in-and-out', startTime, endTime, checkInLabel, checkOutLabel, period}
 }
 
 interface FixedDayOfWeek {

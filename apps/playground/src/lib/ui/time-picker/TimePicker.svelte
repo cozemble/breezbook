@@ -1,6 +1,5 @@
 <script lang="ts">
     import {ChevronLeft, ChevronRight} from 'lucide-svelte';
-    import DayButton from "./DayButton.svelte";
     import {
         type DateLabels,
         type DateTimes,
@@ -11,6 +10,7 @@
     } from "./types";
     import TimeButton from "./TimeButton.svelte";
     import {createEventDispatcher} from "svelte";
+    import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
 
     export let currentMonth: Date = new Date();
     export let selectedDate: Date | null = null;
@@ -19,6 +19,7 @@
     export let dateTimes: DateTimes = {}
     export let timeLabels: TimeLabels = {};
     export let disabledDays: DisabledDays = {};
+
     const dispatch = createEventDispatcher();
     let timeFormat: '12h' | '24h' = '24h';
 
@@ -26,21 +27,16 @@
         timeFormat = format;
     }
 
-    function daysInMonth(date: Date): number {
-        return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-    }
-
-    function startDay(date: Date): number {
-        return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-    }
-
     function prevMonth(): void {
-        const newMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1);
-        dispatch('monthChanged', newMonth);
+        changeMonth(-1)
     }
 
     function nextMonth(): void {
-        const newMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+        changeMonth(1)
+    }
+
+    function changeMonth(delta: 1 | -1) {
+        const newMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + delta, 1);
         dispatch('monthChanged', newMonth);
     }
 
@@ -66,9 +62,6 @@
     $: dayTimeLabels = timeLabels[selectedDateString] || {};
 
     const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
-
-    $: totalDays = daysInMonth(currentMonth);
-    $: startingDay = startDay(currentMonth);
 
     function onDateSelected(event: CustomEvent<Date>) {
         handleDateSelect(event.detail);
@@ -98,17 +91,11 @@
         </div>
 
         <div class="grid grid-cols-7 gap-2 mb-4">
-            {#each Array.from({length: startingDay}, (_, i) => i) as i}
-                <div></div>
-            {/each}
-            {#each Array.from({length: totalDays}, (_, i) => i) as i}
-                <DayButton month={currentMonth}
-                           {selectedDate}
-                           dayIndex={i + 1}
-                           {disabledDays}
-                           label={dateLabels[formatDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i + 1))] || null}
-                           on:clicked={onDateSelected}/>
-            {/each}
+            <DaySelector {currentMonth}
+                         {selectedDate}
+                         {disabledDays}
+                         {dateLabels}
+                         on:clicked={onDateSelected}/>
         </div>
 
         {#if selectedDate}

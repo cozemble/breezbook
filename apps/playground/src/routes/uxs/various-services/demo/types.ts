@@ -30,7 +30,7 @@ import anySuitableResource = resourcing.anySuitableResource;
 // @ts-ignore
 import ResourceRequirement = resourcing.ResourceRequirement;
 
-interface MultipleDays {
+export interface MultipleDays {
     _type: 'multiple-days'
     minDays?: number
     maxDays?: number
@@ -44,7 +44,7 @@ function multipleDays(minDays: number, maxDays: number): MultipleDays {
     return {_type: 'multiple-days', minDays, maxDays}
 }
 
-interface FlexibleDuration {
+export interface FlexibleDuration {
     _type: 'flexible-duration'
     startTime: TwentyFourHourClockTime
     endTime: TwentyFourHourClockTime,
@@ -56,7 +56,7 @@ function flexibleDuration(startTime: TwentyFourHourClockTime, endTime: TwentyFou
     return {_type: 'flexible-duration', minDuration, maxDuration, startTime, endTime}
 }
 
-interface FixedCheckInAndOut {
+export interface FixedCheckInAndOut {
     _type: 'fixed-check-in-and-out'
     checkInTime: TwentyFourHourClockTime
     checkOutTime: TwentyFourHourClockTime
@@ -88,26 +88,17 @@ function startTimeSelection(startTime: TwentyFourHourClockTime, endTime: TwentyF
     return {_type: 'start-time-selection', startTime, endTime, period}
 }
 
-interface FixedDaysOfWeek {
-    _type: 'fixed-days-of-week'
-    startingDayOfWeek: string
-    endingDayOfWeek: string
-}
-
-function fixedDaysOfWeek(startingDayOfWeek: string, endingDayOfWeek: string): FixedDaysOfWeek {
-    return {_type: 'fixed-days-of-week', startingDayOfWeek, endingDayOfWeek}
-}
-
-interface FlexibleCheckInAndOut {
+export interface FlexibleCheckInAndOut {
     _type: 'flexible-check-in-and-out'
     startTime: TwentyFourHourClockTime
     endTime: TwentyFourHourClockTime
     checkInLabel: string
     checkOutLabel: string
+    period: Minutes
 }
 
-function flexibleCheckInAndOut(startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime, checkInLabel: string, checkOutLabel: string): FlexibleCheckInAndOut {
-    return {_type: 'flexible-check-in-and-out', startTime, endTime, checkInLabel, checkOutLabel}
+function flexibleCheckInAndOut(startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime, checkInLabel: string, checkOutLabel: string, period = minutes(60)): FlexibleCheckInAndOut {
+    return {_type: 'flexible-check-in-and-out', startTime, endTime, checkInLabel, checkOutLabel, period}
 }
 
 interface FixedDaysOfTheWeek {
@@ -137,9 +128,8 @@ function endDays(constraint: FixedDaysOfTheWeek): EndDays {
     return {_type: 'end-days', constraint}
 }
 
-type SchedulingOption =
+export type SchedulingOption =
     MultipleDays
-    | FixedDaysOfWeek
     | FlexibleDuration
     | FixedCheckInAndOut
     | FlexibleCheckInAndOut
@@ -387,7 +377,8 @@ const summerCamp: Service = {
     options: [],
     capacity: capacity(10),
     schedulingOptions: [
-        fixedDaysOfWeek('Monday', 'Friday'),
+        startDays(fixedDaysOfTheWeek('Monday')),
+        endDays(fixedDaysOfTheWeek('Friday')),
         fixedCheckInAndOut(
             time24("09:00"),
             time24("17:00"),

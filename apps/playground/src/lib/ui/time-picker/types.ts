@@ -34,3 +34,11 @@ export function convertTo12Hour(time24: TimeString): string {
     const amPm = parseInt(hour, 10) >= 12 ? 'PM' : 'AM';
     return `${hour12}:${minute} ${amPm}`;
 }
+
+export function daysInMonth(date: Date): number {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+}
+
+export function startDay(date: Date): number {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+}

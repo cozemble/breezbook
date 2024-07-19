@@ -231,6 +231,11 @@ export const isoDateFns = {
     isWeekend(date: IsoDate) {
         const dayOfWeek = this.dayOfWeek(date);
         return dayOfWeek === 'Saturday' || dayOfWeek === 'Sunday';
+    },
+    daysInMonth(startOfMonth: IsoDate): IsoDate[] {
+        const start = new Date(startOfMonth.value);
+        const end = new Date(dayjs(start).endOf('month').format('YYYY-MM-DD'));
+        return this.listDays(startOfMonth, isoDate(dayjs(end).format('YYYY-MM-DD')));
     }
 };
 
