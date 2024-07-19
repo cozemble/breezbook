@@ -1,16 +1,9 @@
 <script lang="ts">
     import {Calendar, Clock} from 'lucide-svelte';
-    import {
-        carwash,
-        equipmentRental,
-        hotelRoom,
-        oneDayPetBoarding,
-        type SlotSelectionConfig,
-        summerCamp,
-    } from "./timeSelection2";
+    import {allConfigs, type SlotSelectionConfig,} from "./timeSelection2";
     import type {IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-types";
 
-    export let config: SlotSelectionConfig = summerCamp;
+    let config: SlotSelectionConfig = allConfigs[0].config;
 
     let selectedStartDate: IsoDate | null = null;
     let selectedEndDate: IsoDate | null = null;
@@ -55,7 +48,7 @@
             if (config.endDate?._type === 'relative-end') {
                 const startDateObj = new Date(date.value);
                 startDateObj.setDate(startDateObj.getDate() + config.endDate.numDays);
-                selectedEndDate = { value: startDateObj.toISOString().split('T')[0] } as IsoDate;
+                selectedEndDate = {value: startDateObj.toISOString().split('T')[0]} as IsoDate;
             } else if (!config.endDate) {
                 // If there's no separate end date, use the start date
                 selectedEndDate = date;
@@ -88,11 +81,44 @@
             // Reset end time when start time changes
             selectedEndTime = null;
         }
-    }</script>
+    }
+
+    function onConfigChange(event: Event) {
+        const target = event.target as HTMLSelectElement;
+        const found = allConfigs.find(c => c.name === target.value);
+        if (found) {
+            config = found.config;
+        } else {
+            config = allConfigs[0].config;
+        }
+        selectedStartDate = null;
+        selectedEndDate = null;
+        selectedStartTime = null;
+        selectedEndTime = null;
+    }
+</script>
 
 <div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
     <div class="card-body p-4">
-        <h2 class="card-title text-lg mb-4">Booking Selection</h2>
+        <div class="form-control mb-4">
+            <label class="label">Select service type</label>
+            <select class="input-bordered input" on:change={onConfigChange}>
+                {#each allConfigs as c}
+                    <option value={c.name} selected={c.config === config}>{c.name}</option>
+                {/each}
+            </select>
+        </div>
+
+        <!--        <div class="form-control mb-4">-->
+        <!--            <label class="label">Configuration definition</label>-->
+        <!--            <pre>{JSON.stringify(definition, null, 2)}</pre>-->
+        <!--        </div>-->
+    </div>
+</div>
+
+<div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
+    <div class="card-body p-4">
+        <h2 class="card-title text-lg mb-4">Time slot selection</h2>
 
         <!-- Start Date Selection -->
         <div class="form-control mb-4">

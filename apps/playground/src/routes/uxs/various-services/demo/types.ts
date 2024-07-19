@@ -1,5 +1,4 @@
 import {
-    type AddOnId,
     capacity,
     type Capacity,
     type Duration,
@@ -18,7 +17,6 @@ import {
 } from "@breezbook/packages-types";
 import {resourcing} from "@breezbook/packages-resourcing";
 import {
-    addOn,
     consumesServiceCapacity,
     currencies,
     price,
@@ -36,6 +34,10 @@ interface MultipleDays {
     _type: 'multiple-days'
     minDays?: number
     maxDays?: number
+}
+
+function timeslot(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime, description: string): TimeslotSpec {
+    return timeslotSpec(from, to, description)
 }
 
 function multipleDays(minDays: number, maxDays: number): MultipleDays {
@@ -108,24 +110,43 @@ function flexibleCheckInAndOut(startTime: TwentyFourHourClockTime, endTime: Twen
     return {_type: 'flexible-check-in-and-out', startTime, endTime, checkInLabel, checkOutLabel}
 }
 
-interface FixedDayOfWeek {
-    _type: 'fixed-day-of-week'
-    dayOfWeek: string
+interface FixedDaysOfTheWeek {
+    _type: 'fixed-days-of-week'
+    daysOfTheWeek: string[]
 }
 
-function fixedDayOfWeek(dayOfWeek: string): FixedDayOfWeek {
-    return {_type: 'fixed-day-of-week', dayOfWeek}
+function fixedDaysOfTheWeek(...daysOfTheWeek: string[]): FixedDaysOfTheWeek {
+    return {_type: 'fixed-days-of-week', daysOfTheWeek}
+}
+
+interface StartDays {
+    _type: 'start-days'
+    constraint: FixedDaysOfTheWeek
+}
+
+interface EndDays {
+    _type: 'end-days'
+    constraint: FixedDaysOfTheWeek
+}
+
+function startDays(constraint: FixedDaysOfTheWeek): StartDays {
+    return {_type: 'start-days', constraint}
+}
+
+function endDays(constraint: FixedDaysOfTheWeek): EndDays {
+    return {_type: 'end-days', constraint}
 }
 
 type SchedulingOption =
     MultipleDays
     | FixedDaysOfWeek
-    | FixedDayOfWeek
     | FlexibleDuration
     | FixedCheckInAndOut
     | FlexibleCheckInAndOut
     | TimeslotSelection
     | StartTimeSelection
+    | StartDays
+    | EndDays
 
 export interface ServiceOption {
     _type: 'service.option';
@@ -174,15 +195,12 @@ export interface Service {
     duration: Minutes // Why is this so at odds with schedulingOptions?  What am I missing? minutes(0) when it does not apply
     resourceRequirements: ResourceRequirement[]
     price: Price;
-    permittedAddOns: AddOnId[];
-    serviceFormIds: FormId[];
     options: ServiceOption[];
     capacity: Capacity;
     schedulingOptions: SchedulingOption[]
 }
 
 const van = resourceType('van')
-const wax = addOn(price(500, currencies.GBP), false)
 
 const mobileCarwash: Service = {
     id: serviceId('mobile-carwash'),
@@ -191,8 +209,6 @@ const mobileCarwash: Service = {
     duration: minutes(60),
     resourceRequirements: [anySuitableResource(van)],
     price: price(10000, currencies.GBP),
-    permittedAddOns: [wax.id],
-    serviceFormIds: [formId('car-details-form')],
     options: [
         serviceOption(
             "Second car",
@@ -206,10 +222,10 @@ const mobileCarwash: Service = {
     capacity: capacity(1),
     schedulingOptions: [
         timeslotSelection([
-            timeslotSpec(time24("09:00"), time24("10:00"), "Morning slot"),
-            timeslotSpec(time24("10:00"), time24("11:00"), "Mid-morning slot"),
-            timeslotSpec(time24("13:00"), time24("14:00"), "Afternoon slot"),
-            timeslotSpec(time24("14:00"), time24("15:00"), "Mid-afternoon slot"),
+            timeslot(time24("09:00"), time24("10:00"), "Morning slot"),
+            timeslot(time24("10:00"), time24("11:00"), "Mid-morning slot"),
+            timeslot(time24("13:00"), time24("14:00"), "Afternoon slot"),
+            timeslot(time24("14:00"), time24("15:00"), "Mid-afternoon slot"),
         ])]
 }
 
@@ -222,8 +238,6 @@ const groupDogWalking: Service = {
     duration: minutes(60),
     resourceRequirements: [anySuitableResource(walker)],
     price: price(1000, currencies.GBP),
-    permittedAddOns: [],
-    serviceFormIds: [formId('dog-details-form')],
     options: [
         serviceOption(
             "Second dog",
@@ -238,8 +252,8 @@ const groupDogWalking: Service = {
     capacity: capacity(6),
     schedulingOptions: [
         timeslotSelection([
-            timeslotSpec(time24("09:00"), time24("10:00"), "Morning slot"),
-            timeslotSpec(time24("17:00"), time24("18:00"), "Evening slot"),
+            timeslot(time24("09:00"), time24("10:00"), "Morning slot"),
+            timeslot(time24("17:00"), time24("18:00"), "Evening slot"),
         ])
     ]
 }
@@ -251,8 +265,6 @@ const individualDogWalking: Service = {
     duration: minutes(60),
     resourceRequirements: [anySuitableResource(walker)],
     price: price(1500, currencies.GBP),
-    permittedAddOns: [],
-    serviceFormIds: [formId('dog-details-form')],
     options: [
         serviceOption(
             "Second dog",
@@ -265,7 +277,10 @@ const individualDogWalking: Service = {
     ],
     capacity: capacity(2),
     schedulingOptions: [
-        startTimeSelection(time24("09:00"), time24("17:00"), minutes(60))
+        startTimeSelection(
+            time24("09:00"),
+            time24("17:00"),
+            minutes(60))
     ]
 }
 
@@ -276,12 +291,14 @@ const petBoardingForOneDayWithFixedTimes: Service = {
     duration: minutes(0),
     resourceRequirements: [],
     price: price(2000, currencies.GBP),
-    permittedAddOns: [],
-    serviceFormIds: [formId('pet-details-form')],
     options: [],
     capacity: capacity(10),
     schedulingOptions: [
-        fixedCheckInAndOut(time24("09:00"), time24("17:00"), "Drop off", "Pick up")
+        fixedCheckInAndOut(
+            time24("09:00"),
+            time24("17:00"),
+            "Drop off",
+            "Pick up")
     ],
 }
 
@@ -292,29 +309,50 @@ const petBoardingForOneDayWithFlexibleTimes: Service = {
     duration: minutes(0),
     resourceRequirements: [],
     price: price(2000, currencies.GBP),
-    permittedAddOns: [],
-    serviceFormIds: [formId('pet-details-form')],
     options: [],
     capacity: capacity(10),
     schedulingOptions: [
-        flexibleDuration(time24("09:00"), time24("17:00"), duration(minutes(120)))
+        flexibleDuration(
+            time24("09:00"),
+            time24("17:00"),
+            duration(minutes(120)))
     ],
 }
 
-const petBoardingForManyDays: Service = {
+const petBoardingForManyDaysWithFixedTimes: Service = {
     id: serviceId('pet-boarding-for-many-days'),
     name: 'Pet boarding',
     description: 'We look after your pets while you are away',
     duration: minutes(0),
     resourceRequirements: [],
     price: price(2000, currencies.GBP),
-    permittedAddOns: [],
-    serviceFormIds: [formId('pet-details-form')],
     options: [],
     capacity: capacity(10),
     schedulingOptions: [
         multipleDays(1, 14),
-        fixedCheckInAndOut(time24("09:00"), time24("17:00"), "Drop off", "Pick up")
+        fixedCheckInAndOut(
+            time24("09:00"),
+            time24("17:00"),
+            "Drop off",
+            "Pick up")
+    ]
+}
+
+const petBoardingForManyDaysWithFlexibleTimes: Service = {
+    id: serviceId('pet-boarding-for-many-days-with-flexible-times'),
+    name: 'Pet boarding',
+    description: 'We look after your pets while you are away',
+    duration: minutes(0),
+    resourceRequirements: [],
+    price: price(2000, currencies.GBP),
+    options: [],
+    capacity: capacity(10),
+    schedulingOptions: [
+        multipleDays(1, 14),
+        flexibleDuration(
+            time24("09:00"),
+            time24("17:00"),
+            duration(minutes(120)))
     ]
 }
 
@@ -327,13 +365,15 @@ const hotelRoom: Service = {
     duration: minutes(0),
     resourceRequirements: [anySuitableResource(room)],
     price: price(10000, currencies.GBP),
-    permittedAddOns: [],
-    serviceFormIds: [],
     options: [],
     capacity: capacity(2),
     schedulingOptions: [
         multipleDays(1, 365),
-        fixedCheckInAndOut(time24("09:00"), time24("17:00"), "Check in", "Check out")
+        fixedCheckInAndOut(
+            time24("09:00"),
+            time24("17:00"),
+            "Check in",
+            "Check out")
     ]
 }
 
@@ -344,13 +384,15 @@ const summerCamp: Service = {
     duration: minutes(0),
     resourceRequirements: [],
     price: price(10000, currencies.GBP),
-    permittedAddOns: [],
-    serviceFormIds: [],
     options: [],
     capacity: capacity(10),
     schedulingOptions: [
         fixedDaysOfWeek('Monday', 'Friday'),
-        fixedCheckInAndOut(time24("09:00"), time24("17:00"), "Check in", "Check out")
+        fixedCheckInAndOut(
+            time24("09:00"),
+            time24("17:00"),
+            "Check in",
+            "Check out")
     ]
 }
 
@@ -363,13 +405,15 @@ const equipmentRental: Service = {
     duration: minutes(0),
     resourceRequirements: [anySuitableResource(equipment)],
     price: price(10000, currencies.GBP),
-    permittedAddOns: [],
-    serviceFormIds: [],
     options: [],
     capacity: capacity(1),
     schedulingOptions: [
         multipleDays(1, 30),
-        flexibleCheckInAndOut(time24("09:00"), time24("17:00"), "Pick up", "Drop off")
+        flexibleCheckInAndOut(
+            time24("09:00"),
+            time24("17:00"),
+            "Pick up",
+            "Drop off")
     ]
 }
 
@@ -382,14 +426,17 @@ const yachtCharter: Service = {
     duration: minutes(0),
     resourceRequirements: [anySuitableResource(yacht)],
     price: price(100000, currencies.GBP),
-    permittedAddOns: [],
-    serviceFormIds: [],
     options: [],
     capacity: capacity(10),
     schedulingOptions: [
-        multipleDays(7, 28),
-        fixedDayOfWeek('Saturday'),
-        fixedCheckInAndOut(time24("15:00"), time24("12:00"), "Pick up", "Drop off")
+        multipleDays(6, 24),
+        startDays(fixedDaysOfTheWeek('Saturday')),
+        endDays(fixedDaysOfTheWeek('Friday')),
+        fixedCheckInAndOut(
+            time24("15:00"),
+            time24("17:00"),
+            "Collect",
+            "Return")
     ]
 }
 
@@ -399,12 +446,26 @@ export const allServices = [
     individualDogWalking,
     petBoardingForOneDayWithFixedTimes,
     petBoardingForOneDayWithFlexibleTimes,
-    petBoardingForManyDays,
+    petBoardingForManyDaysWithFixedTimes,
     hotelRoom,
     summerCamp,
     equipmentRental,
     yachtCharter
 ]
+
+export const allServicesMap = {
+    mobileCarwash,
+    groupDogWalking,
+    individualDogWalking,
+    petBoardingForOneDayWithFixedTimes,
+    petBoardingForOneDayWithFlexibleTimes,
+    petBoardingForManyDaysWithFixedTimes,
+    petBoardingForManyDaysWithFlexibleTimes,
+    hotelRoom,
+    summerCamp,
+    equipmentRental,
+    yachtCharter
+}
 
 export interface TimeSelection {
     startDate: string

@@ -1,4 +1,5 @@
 import {type IsoDate, isoDate, time24, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+import {allServicesMap} from "./types";
 
 interface Disabled {
     disabled?: boolean;
@@ -382,3 +383,26 @@ export const summerCamp: SlotSelectionConfig = {
         numDays: 5
     }
 }
+
+export const allConfigs = [
+    {name: "Equipment Rental", config: equipmentRental, definition: allServicesMap.equipmentRental},
+    {name: "Carwash", config: carwash, definition: allServicesMap.mobileCarwash},
+    {
+        name: "One Day Pet Boarding",
+        config: oneDayPetBoarding,
+        definition: allServicesMap.petBoardingForOneDayWithFixedTimes
+    },
+    {
+        name: "Multi Day Pet Boarding (Fixed Drop Off and Pick Up)",
+        config: multiDayPetBoardingFixedDropOffAndPickUp,
+        definition: allServicesMap.petBoardingForManyDaysWithFixedTimes
+    },
+    {
+        name: "Multi Day Pet Boarding (Flexible Drop Off and Pick Up)",
+        config: multiDayPetBoardingFlexibleDropOffAndPickUp,
+        definition: allServicesMap.petBoardingForManyDaysWithFlexibleTimes
+    },
+    {name: "Hotel Room", config: hotelRoom, definition: allServicesMap.hotelRoom},
+    {name: "Summer Camp", config: summerCamp, definition: allServicesMap.summerCamp},
+
+]
