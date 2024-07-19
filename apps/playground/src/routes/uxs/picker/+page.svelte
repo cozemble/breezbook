@@ -181,7 +181,7 @@
         {/if}
 
         {#if selectedDate && selectedTime}
-            <div class="mt-6 p-4 bg-gray-700 rounded">
+            <div class="mt-6 p-4 bg-base-300 rounded-lg">
                 <h2 class="text-lg md:text-xl font-semibold mb-2">Selected Date and Time:</h2>
                 <p class="text-base md:text-lg">{selectedDate.toDateString()} at {selectedTime}</p>
                 <p class="text-base md:text-lg">
