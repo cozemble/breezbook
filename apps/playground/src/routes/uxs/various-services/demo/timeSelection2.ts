@@ -45,14 +45,26 @@ export interface Timeslot {
     price?: PriceLabel;
 }
 
+export function timeSlot(start: TwentyFourHourClockTime, end: TwentyFourHourClockTime, label: string): Timeslot {
+    return {_type: "time-slot", start, end, label}
+}
+
 export interface DayTimes {
     date: IsoDate;
     times: (Time | Timeslot)[];
 }
 
+export function dayTimes(date: IsoDate, times: (Time | Timeslot)[]): DayTimes {
+    return {date, times}
+}
+
 export interface PickTimeConfig {
     _type: 'pick-one';
     options: DayTimes[];
+}
+
+export function pickTimeConfig(options: DayTimes[]): PickTimeConfig {
+    return {_type: 'pick-one', options}
 }
 
 

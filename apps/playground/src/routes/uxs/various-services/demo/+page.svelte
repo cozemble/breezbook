@@ -1,12 +1,15 @@
 <script lang="ts">
     import {Calendar, Clock} from 'lucide-svelte';
-    import {allConfigs, type SlotSelectionConfig,} from "./timeSelection2";
-    import type {IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-types";
-    import {allServicesMap} from "./types";
+    import {allConfigs, type SlotSelectionConfig, type Time, type Timeslot,} from "./timeSelection2";
+    import {isoDate, type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {allServices} from "./types2";
     import {toSlotSelectionConfig} from "./toSlotSelectionConfig";
+    import SelectStartDate from "./SelectStartDate.svelte";
+    import {formatDate} from "$lib/ui/time-picker/types.js";
+    import SelectStartTime from "./SelectStartTime.svelte";
 
     let currentMonth: Date = new Date();
-    let config: SlotSelectionConfig = toSlotSelectionConfig(currentMonth, allServicesMap.petBoardingForOneDayWithFlexibleTimes);
+    let config: SlotSelectionConfig = toSlotSelectionConfig(currentMonth, allServices.mobileCarWash);
 
     let selectedStartDate: IsoDate | null = null;
     let selectedEndDate: IsoDate | null = null;
@@ -99,6 +102,14 @@
         selectedStartTime = null;
         selectedEndTime = null;
     }
+
+    function onStartDateSelected(event: CustomEvent<Date>) {
+        handleDateSelection(isoDate(formatDate(event.detail)), false);
+    }
+
+    function onStartTimeSelected(event: CustomEvent<Time | Timeslot>) {
+        handleTimeSelection(event.detail.start, false);
+    }
 </script>
 
 <div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
@@ -128,19 +139,8 @@
             <label class="label">
                 <span class="label-text font-semibold">Select Start Date</span>
             </label>
-            <div class="grid grid-cols-2 gap-2">
-                {#each config.startDate.options as option}
-                    <button
-                            class="btn btn-sm btn-outline {option.disabled?.disabled ? 'btn-disabled' : ''} {selectedStartDate?.value === option.date.value ? 'btn-active' : ''}"
-                            on:click={() => handleDateSelection(option.date, false)}
-                            disabled={option.disabled?.disabled}
-                            title={option.disabled?.reason}
-                    >
-                        <Calendar class="mr-1" size={14}/>
-                        {option.date.value}
-                    </button>
-                {/each}
-            </div>
+            <SelectStartDate {currentMonth} options={config.startDate.options} {selectedStartDate}
+                             on:clicked={onStartDateSelected}/>
         </div>
 
         <!-- Start Time Selection -->
@@ -155,26 +155,18 @@
                         <span>{config.startTime.time.value} - {config.startTime.timeLabel}</span>
                     </div>
                 {:else if config.startTime._type === 'pick-one'}
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-3 gap-2">
                         {#each availableStartTimes as time}
-                            <button
-                                    class="btn btn-sm btn-outline {time.disabled?.disabled ? 'btn-disabled' : ''} {selectedStartTime?.value === time.start.value ? 'btn-active' : ''}"
-                                    on:click={() => handleTimeSelection(time.start, false)}
-                                    disabled={time.disabled?.disabled}
-                                    title={time.disabled?.reason}
-                            >
-                                <div class="flex flex-col items-start text-xs">
-                                    <span class="flex items-center">
-                                        <Clock class="mr-1" size={12}/>
-                                        {time._type === 'time-slot' ? `${time.start.value} - ${time.end.value}` : time.start.value}
-                                    </span>
-                                    {#if time._type === 'time-slot'}
-                                        <span>{time.label}</span>
-                                    {/if}
-                                </div>
-                            </button>
+                            <SelectStartTime {time} selectedTime={selectedStartTime} on:clicked={onStartTimeSelected}/>
                         {/each}
+                        {#if availableStartTimes.length === 0}
+                            <div class="col-span-3 md:col-span-4 text-center text-xs opacity-70">
+                                No available times
+                            </div>
+                        {/if}
                     </div>
+
+
                 {/if}
             </div>
         {/if}

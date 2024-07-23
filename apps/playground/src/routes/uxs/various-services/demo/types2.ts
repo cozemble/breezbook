@@ -144,10 +144,10 @@ const mobileCarWash: Service = {
         duration: duration(minutes(120)),
         startTimes: {
             times: timeslotSelection([
-                timeslot(time24("09:00"), time24("11:00"), "Morning slot"),
-                timeslot(time24("11:00"), time24("13:00"), "Midday slot"),
-                timeslot(time24("13:00"), time24("15:00"), "Afternoon slot"),
-                timeslot(time24("15:00"), time24("17:00"), "Late afternoon slot")
+                timeslot(time24("09:00"), time24("11:00"), "Morning"),
+                timeslot(time24("11:00"), time24("13:00"), "Midday"),
+                timeslot(time24("13:00"), time24("15:00"), "Afternoon"),
+                timeslot(time24("15:00"), time24("17:00"), "Late afternoon")
             ])
         }
     }
@@ -331,3 +331,22 @@ const yachtCharter: Service = {
         }
     }
 }
+
+export const allServices = {
+    mobileCarWash,
+}
+
+// export const allServices = {
+//     mobileCarWash,
+//     groupDogWalk,
+//     individualDogWalkWithFixedTimeChoices,
+//     individualDogWalkWithToTheMinuteSelectableTime,
+//     petBoardingForOneDayWithFixedCheckInAndOut,
+//     petBoardingForOneDayWithSelectableCheckInAndOut,
+//     petBoardingForManyDaysWithFixedTimes,
+//     petBoardingForManyDaysWithSelectableTimes,
+//     hotelRoom,
+//     summerCamp,
+//     equipmentRental,
+//     yachtCharter
+// }

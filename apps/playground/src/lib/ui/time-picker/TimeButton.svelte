@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher} from 'svelte';
-    import type {TimeString} from './types'; // Import TimeString type if it's defined in a separate file
-    import {convertTo12Hour} from './types'; // Import your convertTo12Hour function if it's in a separate file
+    import type {TimeString} from './types';
+    import {convertTo12Hour} from './types';
 
     export let time: TimeString;
     export let selectedTime: TimeString | null;
