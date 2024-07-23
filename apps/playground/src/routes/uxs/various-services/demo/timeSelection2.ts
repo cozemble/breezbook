@@ -1,9 +1,12 @@
 import {type IsoDate, isoDate, time24, type TwentyFourHourClockTime} from "@breezbook/packages-types";
-import {allServicesMap} from "./types";
 
-interface Disabled {
+export interface Disabled {
     disabled?: boolean;
     reason?: string;
+}
+
+export function disabled(reason: string): Disabled {
+    return {disabled: true, reason}
 }
 
 interface Capacity {
@@ -22,9 +25,19 @@ export interface DatePickConfig {
     disabled?: Disabled
 }
 
+export function datePickConfig(date: IsoDate, disabled?: Disabled): DatePickConfig {
+    return {date, disabled}
+
+}
+
 export interface PickDateConfig {
     _type: 'pick-one';
     options: DatePickConfig[];
+}
+
+export function pickDateConfig(options: DatePickConfig[]): PickDateConfig {
+    return {_type: 'pick-one', options}
+
 }
 
 export interface Time {
@@ -33,6 +46,10 @@ export interface Time {
     disabled?: Disabled;
     capacity?: Capacity;
     price?: PriceLabel;
+}
+
+export function time(start: TwentyFourHourClockTime): Time {
+    return {_type: "time", start}
 }
 
 export interface Timeslot {
@@ -68,18 +85,26 @@ export function pickTimeConfig(options: DayTimes[]): PickTimeConfig {
 }
 
 
-interface EndDateConfig {
+export interface EndDateConfig {
     _type: 'end-date-config';
     minDays?: number;
     maxDays?: number;
     options: PickDateConfig;
 }
 
-interface EndTimeConfig {
+export function endDateConfig(options: PickDateConfig, minDays?: number, maxDays?: number): EndDateConfig {
+    return {minDays, maxDays, options, _type: 'end-date-config'}
+}
+
+export interface EndTimeConfig {
     _type: 'end-time';
     minDurationMinutes?: number;
     maxDurationMinutes?: number;
     time: PickTimeConfig;
+}
+
+export function endTimeConfig(time: PickTimeConfig, minDurationMinutes?: number, maxDurationMinutes?: number): EndTimeConfig {
+    return {minDurationMinutes, maxDurationMinutes, time, _type: 'end-time'}
 }
 
 export interface FixedTimeConfig {
@@ -88,9 +113,18 @@ export interface FixedTimeConfig {
     timeLabel: string;
 }
 
-interface RelativeEnd {
+export function fixedTimeConfig(time: TwentyFourHourClockTime, timeLabel: string): FixedTimeConfig {
+    return {_type: 'fixed-time', time, timeLabel}
+}
+
+export interface RelativeEnd {
     _type: 'relative-end';
     numDays: number;
+}
+
+export function relativeEnd(numDays: number): RelativeEnd {
+    return {_type: 'relative-end', numDays}
+
 }
 
 export interface SlotSelectionConfig {
@@ -400,26 +434,3 @@ export const summerCamp: SlotSelectionConfig = {
         numDays: 5
     }
 }
-
-export const allConfigs = [
-    {name: "Equipment Rental", config: equipmentRental, definition: allServicesMap.equipmentRental},
-    {name: "Carwash", config: carwash, definition: allServicesMap.mobileCarwash},
-    {
-        name: "One Day Pet Boarding",
-        config: oneDayPetBoarding,
-        definition: allServicesMap.petBoardingForOneDayWithFixedTimes
-    },
-    {
-        name: "Multi Day Pet Boarding (Fixed Drop Off and Pick Up)",
-        config: multiDayPetBoardingFixedDropOffAndPickUp,
-        definition: allServicesMap.petBoardingForManyDaysWithFixedTimes
-    },
-    {
-        name: "Multi Day Pet Boarding (Flexible Drop Off and Pick Up)",
-        config: multiDayPetBoardingFlexibleDropOffAndPickUp,
-        definition: allServicesMap.petBoardingForManyDaysWithFlexibleTimes
-    },
-    {name: "Hotel Room", config: hotelRoom, definition: allServicesMap.hotelRoom},
-    {name: "Summer Camp", config: summerCamp, definition: allServicesMap.summerCamp},
-
-]

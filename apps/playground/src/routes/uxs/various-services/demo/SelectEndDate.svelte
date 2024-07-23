@@ -7,13 +7,14 @@
 
     export let currentMonth: Date;
     export let options: DatePickConfig[]
-    export let selectedStartDate: IsoDate | null = null;
+    export let selectedEndDate: IsoDate | null = null;
 
-    $: selectedStartDateAsDate = selectedStartDate ? new Date(selectedStartDate.value) : null;
+    $: selectedEndDateAsDate = selectedEndDate ? new Date(selectedEndDate.value) : null;
     $: disabledDays = options.reduce((acc, {date, disabled}) => {
         acc[date.value] = !!disabled;
         return acc;
     }, {} as DisabledDays);
+
 
 </script>
 
@@ -24,5 +25,5 @@
 </div>
 
 <div class="grid grid-cols-7 gap-2 text-center mb-2">
-    <DaySelector {currentMonth} selectedDate={selectedStartDateAsDate} {disabledDays} on:clicked/>
+    <DaySelector {currentMonth} selectedDate={selectedEndDateAsDate} {disabledDays} on:clicked/>
 </div>

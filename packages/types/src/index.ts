@@ -172,7 +172,7 @@ export const isoDateFns = {
     addDays(date: IsoDate, days: number) {
         return isoDate(dayjs(date.value).add(days, 'day').format('YYYY-MM-DD'));
     },
-    dayOfWeek(date: IsoDate) {
+    dayOfWeek(date: IsoDate):DayOfWeek {
         return new Date(date.value).toLocaleDateString('en-GB', {weekday: 'long'}) as DayOfWeek;
     },
     indexOfDayOfWeek(date: IsoDate) {
@@ -236,7 +236,7 @@ export const isoDateFns = {
         const start = new Date(startOfMonth.value);
         const end = new Date(dayjs(start).endOf('month').format('YYYY-MM-DD'));
         return this.listDays(startOfMonth, isoDate(dayjs(end).format('YYYY-MM-DD')));
-    }
+    },
 };
 
 export interface ServiceId extends ValueType<string> {

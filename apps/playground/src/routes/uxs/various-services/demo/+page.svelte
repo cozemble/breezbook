@@ -1,15 +1,22 @@
 <script lang="ts">
-    import {Calendar, Clock} from 'lucide-svelte';
-    import {allConfigs, type SlotSelectionConfig, type Time, type Timeslot,} from "./timeSelection2";
+    import {Clock} from 'lucide-svelte';
+    import {type Time, type Timeslot} from "./timeSelection2";
     import {isoDate, type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
-    import {allServices} from "./types2";
+    import {allConfigs, type Service} from "./types2";
     import {toSlotSelectionConfig} from "./toSlotSelectionConfig";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {formatDate} from "$lib/ui/time-picker/types.js";
     import SelectStartTime from "./SelectStartTime.svelte";
+    import {afterUpdate} from "svelte";
+    import SelectEndDate from "./SelectEndDate.svelte";
 
     let currentMonth: Date = new Date();
-    let config: SlotSelectionConfig = toSlotSelectionConfig(currentMonth, allServices.mobileCarWash);
+    let service: Service = allConfigs[0].service;
+    $: config = toSlotSelectionConfig(currentMonth, service);
+
+    afterUpdate(() => {
+        console.log({config})
+    });
 
     let selectedStartDate: IsoDate | null = null;
     let selectedEndDate: IsoDate | null = null;
@@ -91,11 +98,9 @@
 
     function onConfigChange(event: Event) {
         const target = event.target as HTMLSelectElement;
-        const found = allConfigs.find(c => c.name === target.value);
+        const found = allConfigs.find(c => c.service.name === target.value);
         if (found) {
-            config = found.config;
-        } else {
-            config = allConfigs[0].config;
+            service = found.service;
         }
         selectedStartDate = null;
         selectedEndDate = null;
@@ -105,6 +110,10 @@
 
     function onStartDateSelected(event: CustomEvent<Date>) {
         handleDateSelection(isoDate(formatDate(event.detail)), false);
+    }
+
+    function onEndDateSelected(event: CustomEvent<Date>) {
+        handleDateSelection(isoDate(formatDate(event.detail)), true);
     }
 
     function onStartTimeSelected(event: CustomEvent<Time | Timeslot>) {
@@ -118,7 +127,7 @@
             <label class="label">Select service type</label>
             <select class="input-bordered input" on:change={onConfigChange}>
                 {#each allConfigs as c}
-                    <option value={c.name} selected={c.config === config}>{c.name}</option>
+                    <option value={c.service.name} selected={c.service === service}>{c.service.name}</option>
                 {/each}
             </select>
         </div>
@@ -132,7 +141,6 @@
 
 <div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
     <div class="card-body p-4">
-        <h2 class="card-title text-lg mb-4">Time slot selection</h2>
 
         <!-- Start Date Selection -->
         <div class="form-control mb-4">
@@ -146,15 +154,11 @@
         <!-- Start Time Selection -->
         {#if selectedStartDate}
             <div class="form-control mb-4">
-                <label class="label">
-                    <span class="label-text font-semibold">Select Start Time</span>
-                </label>
-                {#if config.startTime._type === 'fixed-time'}
-                    <div class="alert alert-info text-sm">
-                        <Clock class="mr-1" size={14}/>
-                        <span>{config.startTime.time.value} - {config.startTime.timeLabel}</span>
-                    </div>
-                {:else if config.startTime._type === 'pick-one'}
+                {#if config.startTime._type === 'pick-one'}
+                    <label class="label">
+                        <span class="label-text font-semibold">Select Start Time</span>
+                    </label>
+
                     <div class="grid grid-cols-3 gap-2">
                         {#each availableStartTimes as time}
                             <SelectStartTime {time} selectedTime={selectedStartTime} on:clicked={onStartTimeSelected}/>
@@ -165,8 +169,6 @@
                             </div>
                         {/if}
                     </div>
-
-
                 {/if}
             </div>
         {/if}
@@ -177,34 +179,19 @@
                 <label class="label">
                     <span class="label-text font-semibold">Select End Date</span>
                 </label>
-                <div class="grid grid-cols-2 gap-2">
-                    {#each endDateOptions as option}
-                        <button
-                                class="btn btn-sm btn-outline {option.disabled?.disabled ? 'btn-disabled' : ''} {selectedEndDate?.value === option.date.value ? 'btn-active' : ''}"
-                                on:click={() => handleDateSelection(option.date, true)}
-                                disabled={option.disabled?.disabled}
-                                title={option.disabled?.reason}
-                        >
-                            <Calendar class="mr-1" size={14}/>
-                            {option.date.value}
-                        </button>
-                    {/each}
-                </div>
+                <SelectEndDate {currentMonth} options={config.endDate.options.options} {selectedEndDate}
+                               on:clicked={onEndDateSelected}/>
             </div>
         {/if}
 
         <!-- End Time Selection (if applicable) -->
         {#if (selectedEndDate || (config.endDate?._type === 'relative-end' && selectedStartDate)) && config.endTime}
             <div class="form-control mb-4">
-                <label class="label">
-                    <span class="label-text font-semibold">Select End Time</span>
-                </label>
-                {#if config.endTime._type === 'fixed-time'}
-                    <div class="alert alert-info text-sm">
-                        <Clock class="mr-1" size={14}/>
-                        <span>{config.endTime.time.value} - {config.endTime.timeLabel}</span>
-                    </div>
-                {:else if config.endTime._type === 'end-time' && config.endTime.time._type === 'pick-one'}
+                {#if config.endTime._type === 'end-time' && config.endTime.time._type === 'pick-one'}
+                    <label class="label">
+                        <span class="label-text font-semibold">Select End Time</span>
+                    </label>
+
                     <div class="grid grid-cols-2 gap-2">
                         {#each availableEndTimes as time}
                             {@const duration = selectedStartTime ? calculateDurationInMinutes(selectedStartTime, time.start) : 0}
@@ -233,6 +220,30 @@
                 {/if}
             </div>
         {/if}
+
+        {#if config.startTime._type === 'fixed-time' }
+            {#if config.endTime?._type === 'fixed-time'}
+                {#if selectedStartDate && selectedEndDate}
+                    <div class="form-control mb-4">
+                        {#if config.startTime._type === 'fixed-time'}
+                            <div class="alert alert-info text-sm">
+                                <Clock class="mr-1" size={14}/>
+                                <span>{config.startTime.time.value} - {config.startTime.timeLabel}</span>
+                            </div>
+                        {/if}
+                    </div>
+                    <div class="form-control mb-4">
+                        {#if config.endTime._type === 'fixed-time'}
+                            <div class="alert alert-info text-sm">
+                                <Clock class="mr-1" size={14}/>
+                                <span>{config.endTime.time.value} - {config.endTime.timeLabel}</span>
+                            </div>
+                        {/if}
+                    </div>
+                {/if}
+            {/if}
+        {/if}
+
         <!-- Selected Values Display -->
         {#if selectedStartDate || selectedEndDate || selectedStartTime || selectedEndTime}
             <div class="divider my-2"></div>

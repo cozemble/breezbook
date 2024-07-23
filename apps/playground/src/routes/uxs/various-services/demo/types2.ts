@@ -122,7 +122,7 @@ export interface Service {
     schedulingOptions: SchedulingOptions
 }
 
-interface TimeslotSelection {
+export interface TimeslotSelection {
     _type: 'timeslot-selection'
     times: TimeslotSpec[]
 }
@@ -332,9 +332,9 @@ const yachtCharter: Service = {
     }
 }
 
-export const allServices = {
-    mobileCarWash,
-}
+// export const allServices = {
+//     mobileCarWash,
+// }
 
 // export const allServices = {
 //     mobileCarWash,
@@ -350,3 +350,13 @@ export const allServices = {
 //     equipmentRental,
 //     yachtCharter
 // }
+
+export const allConfigs = [
+    {service: mobileCarWash},
+    {service: groupDogWalk},
+    {service: individualDogWalkWithFixedTimeChoices},
+    {service: petBoardingForOneDayWithFixedCheckInAndOut},
+    {service: petBoardingForManyDaysWithFixedTimes},
+    {service: hotelRoom},
+    {service: summerCamp},
+]
