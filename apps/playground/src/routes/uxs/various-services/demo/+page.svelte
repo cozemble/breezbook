@@ -9,6 +9,7 @@
     import SelectStartTime from "./SelectStartTime.svelte";
     import {afterUpdate} from "svelte";
     import SelectEndDate from "./SelectEndDate.svelte";
+    import UserEnteredTime from "./UserEnteredTime.svelte";
 
     let currentMonth: Date = new Date();
     let service: Service = allConfigs[0].service;
@@ -119,6 +120,10 @@
     function onStartTimeSelected(event: CustomEvent<Time | Timeslot>) {
         handleTimeSelection(event.detail.start, false);
     }
+
+    function onEndTimeSelected(event: CustomEvent<Time | Timeslot>) {
+        handleTimeSelection(event.detail.start, true);
+    }
 </script>
 
 <div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
@@ -169,6 +174,11 @@
                             </div>
                         {/if}
                     </div>
+                {:else if config.startTime._type === "user-selected-time-config"}
+                    <div>
+                        <UserEnteredTime from={config.startTime.from} to={config.startTime.to}
+                                         selectedTime={selectedStartTime} on:timeSelected={onStartTimeSelected}/>
+                    </div>
                 {/if}
             </div>
         {/if}
@@ -187,36 +197,43 @@
         <!-- End Time Selection (if applicable) -->
         {#if (selectedEndDate || (config.endDate?._type === 'relative-end' && selectedStartDate)) && config.endTime}
             <div class="form-control mb-4">
-                {#if config.endTime._type === 'end-time' && config.endTime.time._type === 'pick-one'}
-                    <label class="label">
-                        <span class="label-text font-semibold">Select End Time</span>
-                    </label>
+                {#if config.endTime._type === 'end-time'}
+                    {#if config.endTime.time._type === 'pick-one'}
+                        <label class="label">
+                            <span class="label-text font-semibold">Select End Time</span>
+                        </label>
 
-                    <div class="grid grid-cols-2 gap-2">
-                        {#each availableEndTimes as time}
-                            {@const duration = selectedStartTime ? calculateDurationInMinutes(selectedStartTime, time.start) : 0}
-                            {@const isValidDuration = duration >= (config.endTime.minDurationMinutes ?? 0)}
-                            <button
-                                    class="btn btn-sm btn-outline {!isValidDuration || time.disabled?.disabled ? 'btn-disabled' : ''} {selectedEndTime?.value === time.start.value ? 'btn-active' : ''}"
-                                    on:click={() => handleTimeSelection(time.start, true)}
-                                    disabled={!isValidDuration || time.disabled?.disabled}
-                                    title={!isValidDuration ? `Minimum duration: ${config.endTime.minDurationMinutes} minutes` : time.disabled?.reason}
-                            >
-                                <div class="flex flex-col items-start text-xs">
+                        <div class="grid grid-cols-2 gap-2">
+                            {#each availableEndTimes as time}
+                                {@const duration = selectedStartTime ? calculateDurationInMinutes(selectedStartTime, time.start) : 0}
+                                {@const isValidDuration = duration >= (config.endTime.minDurationMinutes ?? 0)}
+                                <button
+                                        class="btn btn-sm btn-outline {!isValidDuration || time.disabled?.disabled ? 'btn-disabled' : ''} {selectedEndTime?.value === time.start.value ? 'btn-active' : ''}"
+                                        on:click={() => handleTimeSelection(time.start, true)}
+                                        disabled={!isValidDuration || time.disabled?.disabled}
+                                        title={!isValidDuration ? `Minimum duration: ${config.endTime.minDurationMinutes} minutes` : time.disabled?.reason}
+                                >
+                                    <div class="flex flex-col items-start text-xs">
                             <span class="flex items-center">
                                 <Clock class="mr-1" size={12}/>
                                 {time._type === 'time-slot' ? `${time.start.value} - ${time.end.value}` : time.start.value}
                             </span>
-                                    {#if time._type === 'time-slot'}
-                                        <span>{time.label}</span>
-                                    {/if}
-                                    {#if !isValidDuration}
-                                        <span class="text-red-500">Too short</span>
-                                    {/if}
-                                </div>
-                            </button>
-                        {/each}
-                    </div>
+                                        {#if time._type === 'time-slot'}
+                                            <span>{time.label}</span>
+                                        {/if}
+                                        {#if !isValidDuration}
+                                            <span class="text-red-500">Too short</span>
+                                        {/if}
+                                    </div>
+                                </button>
+                            {/each}
+                        </div>
+                    {:else if config.endTime.time._type === 'user-selected-time-config'}
+                        <div>
+                            <UserEnteredTime from={config.endTime.time.from} to={config.endTime.time.to}
+                                             selectedTime={selectedEndTime} on:timeSelected={onEndTimeSelected}/>
+                        </div>
+                    {/if}
                 {/if}
             </div>
         {/if}

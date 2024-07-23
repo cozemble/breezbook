@@ -20,7 +20,7 @@ export function period(duration: Minutes): Period {
 
 export interface PickTime {
     _type: 'pick-time'
-    options: TimeRange | AnyTimeBetween
+    options: TimeRange
 }
 
 export interface TimeRange {
@@ -45,7 +45,7 @@ export function timeRange(from: TwentyFourHourClockTime, to: TwentyFourHourClock
 
 }
 
-export function pickTime(options: TimeRange | AnyTimeBetween): PickTime {
+export function pickTime(options: TimeRange): PickTime {
     return {_type: 'pick-time', options}
 }
 
@@ -109,8 +109,8 @@ export function daysOfWeek(...days: string[]): DaysOfWeek {
 
 export interface SchedulingOptions {
     duration: Duration | DurationRange | DayRange | NumDays
-    startTimes: { times: TimeslotSelection | PickTime | FixedTime }
-    endTimes?: { times: PickTime | FixedTime }
+    startTimes: { times: TimeslotSelection | PickTime | FixedTime | AnyTimeBetween }
+    endTimes?: { times: PickTime | FixedTime | AnyTimeBetween }
     startDays?: { days: DaysOfWeek }
     endDays?: { days: DaysOfWeek }
 }
@@ -191,8 +191,7 @@ const individualDogWalkWithToTheMinuteSelectableTime: Service = {
     schedulingOptions: {
         duration: durationRange(minutes(30), minutes(120)),
         startTimes: {
-            times: pickTime(
-                anyTimeBetween(time24("09:00"), time24("17:00")))
+            times: anyTimeBetween(time24("09:00"), time24("17:00"))
         }
     }
 }
@@ -219,12 +218,10 @@ const petBoardingForOneDayWithSelectableCheckInAndOut: Service = {
     schedulingOptions: {
         duration: durationRange(minutes(240), minutes(480)),
         startTimes: {
-            times: pickTime(
-                anyTimeBetween(time24("09:00"), time24("17:00")))
+            times: anyTimeBetween(time24("09:00"), time24("17:00"))
         },
         endTimes: {
-            times: pickTime(
-                anyTimeBetween(time24("09:00"), time24("17:00")))
+            times: anyTimeBetween(time24("09:00"), time24("17:00"))
         }
     }
 }
@@ -251,12 +248,10 @@ const petBoardingForManyDaysWithSelectableTimes: Service = {
     schedulingOptions: {
         duration: dayRange(1, 7, minutes(180)),
         startTimes: {
-            times: pickTime(
-                anyTimeBetween(time24("09:00"), time24("17:00")))
+            times: anyTimeBetween(time24("09:00"), time24("17:00"))
         },
         endTimes: {
-            times: pickTime(
-                anyTimeBetween(time24("09:00"), time24("17:00")))
+            times: anyTimeBetween(time24("09:00"), time24("17:00"))
         }
     }
 }
@@ -301,12 +296,10 @@ const equipmentRental: Service = {
     schedulingOptions: {
         duration: dayRange(1, 7, minutes(240)),
         startTimes: {
-            times: pickTime(
-                anyTimeBetween(time24("09:00"), time24("17:00")))
+            times: anyTimeBetween(time24("09:00"), time24("17:00"))
         },
         endTimes: {
-            times: pickTime(
-                anyTimeBetween(time24("09:00"), time24("17:00")))
+            times: anyTimeBetween(time24("09:00"), time24("17:00"))
         }
     }
 }
@@ -359,4 +352,5 @@ export const allConfigs = [
     {service: petBoardingForManyDaysWithFixedTimes},
     {service: hotelRoom},
     {service: summerCamp},
+    {service: equipmentRental},
 ]

@@ -172,7 +172,7 @@ export const isoDateFns = {
     addDays(date: IsoDate, days: number) {
         return isoDate(dayjs(date.value).add(days, 'day').format('YYYY-MM-DD'));
     },
-    dayOfWeek(date: IsoDate):DayOfWeek {
+    dayOfWeek(date: IsoDate): DayOfWeek {
         return new Date(date.value).toLocaleDateString('en-GB', {weekday: 'long'}) as DayOfWeek;
     },
     indexOfDayOfWeek(date: IsoDate) {
@@ -339,6 +339,17 @@ export const time24Fns = {
             currentTime = this.addMinutes(currentTime, period);
         }
         return result;
+    },
+    getHour(t: TwentyFourHourClockTime): number {
+        return parseInt(t.value.split(':')[0]);
+    },
+    getMinutes(t: TwentyFourHourClockTime): number {
+        return parseInt(t.value.split(':')[1]);
+    },
+    fromHoursAndMinutes(hours: number, minutes: number): TwentyFourHourClockTime {
+        const paddedHours = hours.toString().padStart(2, '0');
+        const paddedMins = minutes.toString().padStart(2, '0');
+        return time24(`${paddedHours}:${paddedMins}`);
     }
 };
 

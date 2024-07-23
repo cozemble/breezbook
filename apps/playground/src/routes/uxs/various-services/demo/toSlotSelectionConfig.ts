@@ -19,7 +19,9 @@ import {
     type SlotSelectionConfig,
     time,
     type Time,
-    timeSlot
+    timeSlot,
+    userSelectedTimeConfig,
+    type UserSelectedTimeConfig
 } from "./timeSelection2";
 import type {
     AnyTimeBetween,
@@ -69,24 +71,23 @@ function timeRangeToTimes(timeRange: TimeRange): Time[] {
     return times
 }
 
-function anyTimeBetweenToTimes(anyTimeBetween: AnyTimeBetween): Time[] {
-    throw new Error("Not implemented")
+function anyTimeBetweenToTimes(anyTimeBetween: AnyTimeBetween): UserSelectedTimeConfig {
+    return userSelectedTimeConfig(anyTimeBetween.from, anyTimeBetween.to)
 }
 
-function toTimes(options: TimeRange | AnyTimeBetween): Time[] {
-    if (options._type === "time-range") {
-        return timeRangeToTimes(options)
+function getStartTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingOptions): PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig {
+    if (schedulingOptions.startTimes.times._type === "any-time-between") {
+        return userSelectedTimeConfig(schedulingOptions.startTimes.times.from, schedulingOptions.startTimes.times.to)
     }
-    return anyTimeBetweenToTimes(options)
-}
-
-function getStartTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingOptions): PickTimeConfig | FixedTimeConfig {
     return getTimes(schedulingOptions.startTimes.times, startDays)
 }
 
 function getEndTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingOptions): EndTimeConfig | FixedTimeConfig | undefined {
     if (!schedulingOptions.endTimes) {
         return undefined
+    }
+    if (schedulingOptions.endTimes.times._type === "any-time-between") {
+        return endTimeConfig(userSelectedTimeConfig(schedulingOptions.endTimes.times.from, schedulingOptions.endTimes.times.to))
     }
     const mapped = getTimes(schedulingOptions.endTimes.times, startDays)
     if (mapped._type === "fixed-time") {
@@ -95,13 +96,13 @@ function getEndTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingO
     return endTimeConfig(mapped)
 }
 
-function getTimes(times: TimeslotSelection | PickTime | FixedTime, startDays: DatePickConfig[]): PickTimeConfig | FixedTimeConfig {
+function getTimes(times: TimeslotSelection | PickTime | FixedTime, startDays: DatePickConfig[]): PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig {
     if (times._type === "timeslot-selection") {
         const slots = times.times.map(slot => timeSlot(slot.slot.from, slot.slot.to, slot.description))
         return pickTimeConfig(startDays.map(day => dayTimes(day.date, slots)))
     }
     if (times._type === "pick-time") {
-        const mappedTimes = toTimes(times.options)
+        const mappedTimes = timeRangeToTimes(times.options)
         return pickTimeConfig(startDays.map(day => dayTimes(day.date, mappedTimes)))
     }
     return fixedTimeConfig(times.time, times.description)
@@ -127,7 +128,7 @@ export function toSlotSelectionConfig(month: Date, service: Service): SlotSelect
     const startDays = daysInMonth.map(day => applySchedulingOptions("start", day, service.schedulingOptions))
     const enabledDays = startDays.filter(day => !day.disabled)
     const startDate: PickDateConfig = {_type: 'pick-one', options: startDays}
-    const startTime: PickTimeConfig | FixedTimeConfig = getStartTimes(enabledDays, service.schedulingOptions)
+    const startTime = getStartTimes(enabledDays, service.schedulingOptions)
     const endDate = getEndDateConfig(daysInMonth, service.schedulingOptions)
     const endTime = getEndTimes(enabledDays, service.schedulingOptions)
     return {startDate, startTime, endDate, endTime}

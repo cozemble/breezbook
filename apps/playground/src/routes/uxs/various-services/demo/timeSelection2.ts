@@ -66,12 +66,24 @@ export function timeSlot(start: TwentyFourHourClockTime, end: TwentyFourHourCloc
     return {_type: "time-slot", start, end, label}
 }
 
-export interface DayTimes {
-    date: IsoDate;
-    times: (Time | Timeslot)[];
+export interface UserSelectedTimeConfig {
+    _type: "user-selected-time-config";
+    from: TwentyFourHourClockTime;
+    to: TwentyFourHourClockTime;
 }
 
-export function dayTimes(date: IsoDate, times: (Time | Timeslot)[]): DayTimes {
+export function userSelectedTimeConfig(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime): UserSelectedTimeConfig {
+    return {_type: "user-selected-time-config", from, to}
+}
+
+export type TimeOptions = Time[] | Timeslot[]
+
+export interface DayTimes {
+    date: IsoDate;
+    times: TimeOptions
+}
+
+export function dayTimes(date: IsoDate, times: Time[] | Timeslot[]): DayTimes {
     return {date, times}
 }
 
@@ -83,7 +95,6 @@ export interface PickTimeConfig {
 export function pickTimeConfig(options: DayTimes[]): PickTimeConfig {
     return {_type: 'pick-one', options}
 }
-
 
 export interface EndDateConfig {
     _type: 'end-date-config';
@@ -100,10 +111,10 @@ export interface EndTimeConfig {
     _type: 'end-time';
     minDurationMinutes?: number;
     maxDurationMinutes?: number;
-    time: PickTimeConfig;
+    time: PickTimeConfig | UserSelectedTimeConfig;
 }
 
-export function endTimeConfig(time: PickTimeConfig, minDurationMinutes?: number, maxDurationMinutes?: number): EndTimeConfig {
+export function endTimeConfig(time: PickTimeConfig | UserSelectedTimeConfig, minDurationMinutes?: number, maxDurationMinutes?: number): EndTimeConfig {
     return {minDurationMinutes, maxDurationMinutes, time, _type: 'end-time'}
 }
 
@@ -129,7 +140,7 @@ export function relativeEnd(numDays: number): RelativeEnd {
 
 export interface SlotSelectionConfig {
     startDate: PickDateConfig;
-    startTime: PickTimeConfig | FixedTimeConfig;
+    startTime: PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig;
     endTime?: EndTimeConfig | FixedTimeConfig;
     endDate?: EndDateConfig | RelativeEnd
 }
