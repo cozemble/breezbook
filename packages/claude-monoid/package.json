@@ -1,0 +1,25 @@
+{
+  "name": "@breezbook/packages-claude-monoid",
+  "version": "1.0.0",
+  "description": "CLI tool to generate Svelte components using Claude AI",
+  "main": "dist/cli.js",
+  "types": "dist/cli.d.ts",
+  "bin": {
+    "generate-svelte": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "dev": "ts-node src/cli.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.24.3",
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}

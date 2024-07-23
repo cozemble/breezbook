@@ -7,9 +7,11 @@
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --threshold error --watch",
-    "test": "svelte-check --tsconfig ./tsconfig.json --threshold error"
+    "test": "svelte-check --tsconfig ./tsconfig.json --threshold error",
+    "generate-component": "npx generate-svelte"
   },
   "devDependencies": {
+    "@breezbook/packages-claude-monoid": "workspace:*",
     "@fontsource/fira-mono": "^4.5.10",
     "@neoconfetti/svelte": "^1.0.0",
     "@stripe/stripe-js": "^2.4.0",
