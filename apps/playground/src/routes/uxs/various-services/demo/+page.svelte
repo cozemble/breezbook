@@ -6,10 +6,10 @@
     import {toSlotSelectionConfig} from "./toSlotSelectionConfig";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {formatDate} from "$lib/ui/time-picker/types.js";
-    import SelectStartTime from "./SelectStartTime.svelte";
     import {afterUpdate} from "svelte";
     import SelectEndDate from "./SelectEndDate.svelte";
     import UserEnteredTime from "./UserEnteredTime.svelte";
+    import PickStartTime from "./PickStartTime.svelte";
 
     let currentMonth: Date = new Date();
     let service: Service = allConfigs[0].service;
@@ -24,20 +24,8 @@
     let selectedStartTime: TwentyFourHourClockTime | null = null;
     let selectedEndTime: TwentyFourHourClockTime | null = null;
 
-    $: availableStartTimes = selectedStartDate && config.startTime._type === 'pick-one'
-        ? config.startTime.options.find(option => option.date.value === selectedStartDate?.value)?.times || []
-        : [];
-
     $: availableEndTimes = selectedEndDate && config.endTime && config.endTime._type === 'end-time' && config.endTime.time._type === 'pick-one'
         ? config.endTime.time.options.find(option => option.date.value === selectedEndDate?.value)?.times || []
-        : [];
-
-    $: endDateOptions = config.endDate
-        ? 'options' in config.endDate
-            ? config.endDate.options.options
-            : config.endDate._type === 'relative-end'
-                ? [] // No selectable options for relative end
-                : []
         : [];
 
     function calculateDurationInMinutes(start: TwentyFourHourClockTime, end: TwentyFourHourClockTime): number {
@@ -160,21 +148,13 @@
         {#if selectedStartDate}
             <div class="form-control mb-4">
                 {#if config.startTime._type === 'pick-one'}
+                    <PickStartTime config={config.startTime} {selectedStartDate} {selectedStartTime}
+                                   on:clicked={onStartTimeSelected}/>
+                {:else if config.startTime._type === "user-selected-time-config"}
                     <label class="label">
-                        <span class="label-text font-semibold">Select Start Time</span>
+                        <span class="label-text font-semibold">Enter Start Time</span>
                     </label>
 
-                    <div class="grid grid-cols-3 gap-2">
-                        {#each availableStartTimes as time}
-                            <SelectStartTime {time} selectedTime={selectedStartTime} on:clicked={onStartTimeSelected}/>
-                        {/each}
-                        {#if availableStartTimes.length === 0}
-                            <div class="col-span-3 md:col-span-4 text-center text-xs opacity-70">
-                                No available times
-                            </div>
-                        {/if}
-                    </div>
-                {:else if config.startTime._type === "user-selected-time-config"}
                     <div>
                         <UserEnteredTime from={config.startTime.from} to={config.startTime.to}
                                          selectedTime={selectedStartTime} on:timeSelected={onStartTimeSelected}/>
@@ -229,6 +209,10 @@
                             {/each}
                         </div>
                     {:else if config.endTime.time._type === 'user-selected-time-config'}
+                        <label class="label">
+                            <span class="label-text font-semibold">Enter End Time</span>
+                        </label>
+
                         <div>
                             <UserEnteredTime from={config.endTime.time.from} to={config.endTime.time.to}
                                              selectedTime={selectedEndTime} on:timeSelected={onEndTimeSelected}/>

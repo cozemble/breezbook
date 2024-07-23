@@ -289,9 +289,9 @@ const summerCamp: Service = {
     }
 }
 
-const equipmentRental: Service = {
-    id: "equipment-rental",
-    name: "Equipment Rental",
+const equipmentRentalWithFlexibleTime: Service = {
+    id: "equipment-rental-with-flexible-time",
+    name: "Equipment Rental with flexible time",
     description: "Rent equipment",
     schedulingOptions: {
         duration: dayRange(1, 7, minutes(240)),
@@ -300,6 +300,29 @@ const equipmentRental: Service = {
         },
         endTimes: {
             times: anyTimeBetween(time24("09:00"), time24("17:00"))
+        }
+    }
+}
+
+const equipmentRentalWithControlledTimes: Service = {
+    id: "equipment-rental-with-controlled-times",
+    name: "Equipment Rental with controlled times",
+    description: "Rent equipment",
+    schedulingOptions: {
+        duration: dayRange(1, 7, minutes(240)),
+        startTimes: {
+            times: pickTime(
+                timeRange(
+                    time24("09:00"),
+                    time24("17:00"),
+                    period(minutes(60))))
+        },
+        endTimes: {
+            times: pickTime(
+                timeRange(
+                    time24("09:00"),
+                    time24("17:00"),
+                    period(minutes(60))))
         }
     }
 }
@@ -349,8 +372,10 @@ export const allConfigs = [
     {service: groupDogWalk},
     {service: individualDogWalkWithFixedTimeChoices},
     {service: petBoardingForOneDayWithFixedCheckInAndOut},
+    {service: petBoardingForOneDayWithSelectableCheckInAndOut},
     {service: petBoardingForManyDaysWithFixedTimes},
     {service: hotelRoom},
     {service: summerCamp},
-    {service: equipmentRental},
+    {service: equipmentRentalWithFlexibleTime},
+    {service: equipmentRentalWithControlledTimes},
 ]
