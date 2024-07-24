@@ -1,13 +1,5 @@
-import {
-    duration,
-    type Duration,
-    minutes,
-    type Minutes,
-    time24,
-    type TwentyFourHourClockTime
-} from "@breezbook/packages-types";
+import {minutes, type Minutes, time24, type TwentyFourHourClockTime, type ValueType} from "@breezbook/packages-types";
 import {timeslotSpec, type TimeslotSpec} from "@breezbook/packages-core";
-
 
 export interface Period {
     _type: 'period'
@@ -16,6 +8,35 @@ export interface Period {
 
 export function period(duration: Minutes): Period {
     return {_type: 'period', duration}
+}
+
+export interface Days extends ValueType<number> {
+    _type: 'days'
+}
+
+export function days(value: number): Days {
+    return {value, _type: 'days'}
+}
+
+export interface Hours extends ValueType<number> {
+    _type: 'hours'
+}
+
+export function hours(value: number): Hours {
+    return {value, _type: 'hours'}
+}
+
+export type DurationUnit = Minutes | Days | Hours
+
+export interface Duration extends ValueType<DurationUnit> {
+    _type: 'duration';
+}
+
+export function duration(value: DurationUnit): Duration {
+    return {
+        _type: 'duration',
+        value
+    };
 }
 
 export interface PickTime {
@@ -65,7 +86,7 @@ export interface DurationRange {
     maxDuration: Duration | null
 }
 
-export function durationRange(minDuration: Minutes, maxDuration?: Minutes): DurationRange {
+export function durationRange(minDuration: DurationUnit, maxDuration?: DurationUnit): DurationRange {
     return {
         _type: 'duration-range',
         minDuration: duration(minDuration),
@@ -78,15 +99,6 @@ export interface DayRange {
     minDays: number
     maxDays: number | null
     minDuration: Duration | null
-}
-
-export function dayRange(minDays: number, maxDays?: number, minDuration?: Minutes): DayRange {
-    return {
-        _type: 'day-range',
-        minDays,
-        maxDays: maxDays ?? null,
-        minDuration: minDuration ? duration(minDuration) : null
-    }
 }
 
 export interface NumDays {
@@ -141,7 +153,7 @@ const mobileCarWash: Service = {
     name: "Mobile Car Wash",
     description: "We come to you",
     schedulingOptions: {
-        duration: duration(minutes(120)),
+        duration: duration(hours(2)),
         startTimes: {
             times: timeslotSelection([
                 timeslot(time24("09:00"), time24("11:00"), "Morning"),
@@ -158,7 +170,7 @@ const groupDogWalk: Service = {
     name: "Group Dog Walk",
     description: "Socialize with other dogs",
     schedulingOptions: {
-        duration: duration(minutes(120)),
+        duration: duration(hours(2)),
         startTimes: {
             times: timeslotSelection([
                 timeslot(time24("09:00"), time24("10:00"), "Morning slot"),
@@ -201,7 +213,7 @@ const petBoardingForOneDayWithFixedCheckInAndOut: Service = {
     name: "Pet Boarding For One Day With Fixed Check-In And Out",
     description: "For one day",
     schedulingOptions: {
-        duration: duration(minutes(480)),
+        duration: duration(hours(8)),
         startTimes: {
             times: fixedTime(time24("09:00"), "Drop-off")
         },
@@ -216,7 +228,7 @@ const petBoardingForOneDayWithSelectableCheckInAndOut: Service = {
     name: "Pet Boarding For One Day With Selectable Check-In And Out",
     description: "For one day",
     schedulingOptions: {
-        duration: durationRange(minutes(240), minutes(480)),
+        duration: durationRange(hours(4), hours(8)),
         startTimes: {
             times: anyTimeBetween(time24("09:00"), time24("17:00"))
         },
@@ -231,7 +243,7 @@ const petBoardingForManyDaysWithFixedTimes: Service = {
     name: "Pet Boarding For Many Days With Fixed Times",
     description: "For many days",
     schedulingOptions: {
-        duration: dayRange(1, 7),
+        duration: durationRange(hours(240), days(7)),
         startTimes: {
             times: fixedTime(time24("09:00"), "Drop-off")
         },
@@ -246,7 +258,7 @@ const petBoardingForManyDaysWithSelectableTimes: Service = {
     name: "Pet Boarding For Many Days With Selectable Times",
     description: "For many days",
     schedulingOptions: {
-        duration: dayRange(1, 7, minutes(180)),
+        duration: durationRange(hours(3), days(7)),
         startTimes: {
             times: anyTimeBetween(time24("09:00"), time24("17:00"))
         },
@@ -261,7 +273,7 @@ const hotelRoom: Service = {
     name: "Hotel Room",
     description: "Stay overnight",
     schedulingOptions: {
-        duration: dayRange(1, 28),
+        duration: durationRange(days(1), days(28)),
         startTimes: {
             times: fixedTime(time24("14:00"), "Check-in")
         },
@@ -294,7 +306,7 @@ const equipmentRentalWithFlexibleTime: Service = {
     name: "Equipment Rental with flexible time",
     description: "Rent equipment",
     schedulingOptions: {
-        duration: dayRange(1, 7, minutes(240)),
+        duration: durationRange(hours(4), days(7)),
         startTimes: {
             times: anyTimeBetween(time24("09:00"), time24("17:00"))
         },
@@ -309,7 +321,7 @@ const equipmentRentalWithControlledTimes: Service = {
     name: "Equipment Rental with controlled times",
     description: "Rent equipment",
     schedulingOptions: {
-        duration: dayRange(0, 7, minutes(240)),
+        duration: durationRange(hours(4), days(7)),
         startTimes: {
             times: pickTime(
                 timeRange(
@@ -332,7 +344,7 @@ const yachtCharter: Service = {
     name: "Yacht Charter",
     description: "Charter a yacht",
     schedulingOptions: {
-        duration: dayRange(7, 28),
+        duration: durationRange(days(7), days(28)),
         startTimes: {
             times: fixedTime(time24("09:00"), "Departure")
         },

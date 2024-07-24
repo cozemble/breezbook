@@ -71,10 +71,6 @@ function timeRangeToTimes(timeRange: TimeRange): Time[] {
     return times
 }
 
-function anyTimeBetweenToTimes(anyTimeBetween: AnyTimeBetween): UserSelectedTimeConfig {
-    return userSelectedTimeConfig(anyTimeBetween.from, anyTimeBetween.to)
-}
-
 function getStartTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingOptions): PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig {
     if (schedulingOptions.startTimes.times._type === "any-time-between") {
         return userSelectedTimeConfig(schedulingOptions.startTimes.times.from, schedulingOptions.startTimes.times.to)
