@@ -1,9 +1,9 @@
 <script lang="ts">
     import {Clock} from 'lucide-svelte';
-    import {type Time, type Timeslot} from "./timeSelection2";
+    import {type Time, type Timeslot} from "./timeSelectionUiTypes";
     import {isoDate, type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import {allConfigs, type Service} from "./types2";
-    import {toSlotSelectionConfig} from "./toSlotSelectionConfig";
+    import {toUiTypes} from "./toUiTypes";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {formatDate} from "$lib/ui/time-picker/types.js";
     import {afterUpdate} from "svelte";
@@ -14,7 +14,7 @@
 
     let currentMonth: Date = new Date();
     let service: Service = allConfigs[0].service;
-    $: config = toSlotSelectionConfig(currentMonth, service);
+    $: config = toUiTypes(currentMonth, service);
 
     afterUpdate(() => {
         console.log({config})
@@ -66,18 +66,9 @@
 
     function handleTimeSelection(time: TwentyFourHourClockTime, isEndTime: boolean) {
         if (isEndTime) {
-            if (selectedStartTime && config.endTime?._type === 'end-time') {
-                const duration = calculateDurationInMinutes(selectedStartTime, time);
-                if (duration >= (config.endTime.minDurationMinutes ?? 0)) {
-                    selectedEndTime = time;
-                } else {
-                    // Optionally, show an error message to the user
-                    console.error(`Selected duration (${duration} minutes) is less than the minimum required (${config.endTime.minDurationMinutes} minutes)`);
-                }
-            }
+            selectedEndTime = time;
         } else {
             selectedStartTime = time;
-            // Reset end time when start time changes
             selectedEndTime = null;
         }
     }
@@ -166,7 +157,7 @@
                 <label class="label">
                     <span class="label-text font-semibold">Select End Date</span>
                 </label>
-                <SelectEndDate {currentMonth} options={config.endDate.options.options} {selectedEndDate}
+                <SelectEndDate {currentMonth} options={config.endDate.options} {selectedEndDate}
                                on:clicked={onEndDateSelected}/>
             </div>
         {/if}
@@ -174,26 +165,24 @@
         <!-- End Time Selection (if applicable) -->
         {#if selectedEndDate && selectedStartTime && selectedStartDate && config.endTime}
             <div class="form-control mb-4">
-                {#if config.endTime._type === 'end-time'}
-                    {#if config.endTime.time._type === 'pick-one'}
-                        <PickEndTime config={config.endTime.time}
-                                     {selectedStartTime}
-                                     {selectedStartDate}
-                                     {selectedEndDate}
-                                     {selectedEndTime}
-                                     minDurationMinutes={config.endTime.minDurationMinutes}
-                                     maxDurationMinutes={config.endTime.maxDurationMinutes}
-                                     on:clicked={onEndTimeSelected}/>
-                    {:else if config.endTime.time._type === 'user-selected-time-config'}
-                        <label class="label">
-                            <span class="label-text font-semibold">Enter End Time</span>
-                        </label>
+                {#if config.endTime._type === 'pick-one'}
+                    <PickEndTime config={config.endTime}
+                                 {selectedStartTime}
+                                 {selectedStartDate}
+                                 {selectedEndDate}
+                                 {selectedEndTime}
+                                 minDuration={config.minDuration}
+                                 maxDuration={config.maxDuration ?? null}
+                                 on:clicked={onEndTimeSelected}/>
+                {:else if config.endTime._type === 'user-selected-time-config'}
+                    <label class="label">
+                        <span class="label-text font-semibold">Enter End Time</span>
+                    </label>
 
-                        <div>
-                            <UserEnteredTime from={config.endTime.time.from} to={config.endTime.time.to}
-                                             selectedTime={selectedEndTime} on:timeSelected={onEndTimeSelected}/>
-                        </div>
-                    {/if}
+                    <div>
+                        <UserEnteredTime from={config.endTime.from} to={config.endTime.to}
+                                         selectedTime={selectedEndTime} on:timeSelected={onEndTimeSelected}/>
+                    </div>
                 {/if}
             </div>
         {/if}

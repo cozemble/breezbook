@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {PickTimeConfig} from "./timeSelection2";
+    import type {PickTimeConfig} from "./timeSelectionUiTypes";
     import type {IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-types";
     import SelectStartTime from "./SelectStartTime.svelte";
 

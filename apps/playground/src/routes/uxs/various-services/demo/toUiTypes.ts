@@ -4,10 +4,6 @@ import {
     dayTimes,
     disabled,
     type Disabled,
-    endDateConfig,
-    type EndDateConfig,
-    endTimeConfig,
-    type EndTimeConfig,
     fixedTimeConfig,
     type FixedTimeConfig,
     pickDateConfig,
@@ -22,15 +18,18 @@ import {
     timeSlot,
     userSelectedTimeConfig,
     type UserSelectedTimeConfig
-} from "./timeSelection2";
-import type {
-    AnyTimeBetween,
-    FixedTime,
-    PickTime,
-    SchedulingOptions,
-    Service,
-    TimeRange,
-    TimeslotSelection
+} from "./timeSelectionUiTypes";
+import {
+    days,
+    type Duration,
+    duration,
+    type DurationOption,
+    type FixedTime,
+    type PickTime,
+    type SchedulingOptions,
+    type Service,
+    type TimeRange,
+    type TimeslotSelection
 } from "./types2";
 import {formatDate} from "$lib/ui/time-picker/types";
 import {type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbook/packages-types";
@@ -78,18 +77,25 @@ function getStartTimes(startDays: DatePickConfig[], schedulingOptions: Schedulin
     return getTimes(schedulingOptions.startTimes.times, startDays)
 }
 
-function getEndTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingOptions): EndTimeConfig | FixedTimeConfig | undefined {
+function getDurations(option: DurationOption): { minDuration: Duration, maxDuration: Duration | null } {
+    if (option._type === "num-days") {
+        return {minDuration: duration(days(option.days)), maxDuration: duration(days(option.days))}
+    }
+    if (option._type === "duration") {
+        return {minDuration: option, maxDuration: option}
+    }
+    return {minDuration: option.minDuration, maxDuration: option.maxDuration}
+}
+
+function getEndTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingOptions): PickTimeConfig | UserSelectedTimeConfig | FixedTimeConfig | undefined {
     if (!schedulingOptions.endTimes) {
         return undefined
     }
+
     if (schedulingOptions.endTimes.times._type === "any-time-between") {
-        return endTimeConfig(userSelectedTimeConfig(schedulingOptions.endTimes.times.from, schedulingOptions.endTimes.times.to))
+        return userSelectedTimeConfig(schedulingOptions.endTimes.times.from, schedulingOptions.endTimes.times.to)
     }
-    const mapped = getTimes(schedulingOptions.endTimes.times, startDays)
-    if (mapped._type === "fixed-time") {
-        return mapped
-    }
-    return endTimeConfig(mapped)
+    return getTimes(schedulingOptions.endTimes.times, startDays)
 }
 
 function getTimes(times: TimeslotSelection | PickTime | FixedTime, startDays: DatePickConfig[]): PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig {
@@ -105,20 +111,21 @@ function getTimes(times: TimeslotSelection | PickTime | FixedTime, startDays: Da
 }
 
 
-function getEndDateConfig(days: IsoDate[], schedulingOptions: SchedulingOptions): EndDateConfig | RelativeEnd | undefined {
+function getEndDateConfig(days: IsoDate[], schedulingOptions: SchedulingOptions): PickDateConfig | RelativeEnd | undefined {
     if (schedulingOptions.endDays) {
-        return endDateConfig(pickDateConfig(days.map(day => applySchedulingOptions("end", day, schedulingOptions))))
+        return pickDateConfig(days.map(day => applySchedulingOptions("end", day, schedulingOptions)))
     }
     if (schedulingOptions.duration._type === "num-days") {
         return relativeEnd(schedulingOptions.duration.days)
     }
-    if (schedulingOptions.duration._type === "day-range") {
-        return endDateConfig(pickDateConfig(days.map(day => applySchedulingOptions("end", day, schedulingOptions))))
+    const {minDuration, maxDuration} = getDurations(schedulingOptions.duration)
+    if (minDuration.value._type === "days" || maxDuration?.value._type === "days") {
+        return pickDateConfig(days.map(day => datePickConfig(day, disabledIfPast(day))))
     }
     return undefined
 }
 
-export function toSlotSelectionConfig(month: Date, service: Service): SlotSelectionConfig {
+export function toUiTypes(month: Date, service: Service): SlotSelectionConfig {
     const startOfMonth = isoDate(formatDate(new Date(month.getFullYear(), month.getMonth(), 1)))
     const daysInMonth = isoDateFns.daysInMonth(startOfMonth)
     const startDays = daysInMonth.map(day => applySchedulingOptions("start", day, service.schedulingOptions))
@@ -127,5 +134,6 @@ export function toSlotSelectionConfig(month: Date, service: Service): SlotSelect
     const startTime = getStartTimes(enabledDays, service.schedulingOptions)
     const endDate = getEndDateConfig(daysInMonth, service.schedulingOptions)
     const endTime = getEndTimes(enabledDays, service.schedulingOptions)
-    return {startDate, startTime, endDate, endTime}
+    const {minDuration, maxDuration} = getDurations(service.schedulingOptions.duration)
+    return {startDate, startTime, endDate, endTime, maxDuration, minDuration}
 }

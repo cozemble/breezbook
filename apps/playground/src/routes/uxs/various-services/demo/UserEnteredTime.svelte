@@ -2,7 +2,7 @@
     import {time24, time24Fns, type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import UserEnteredTimeSelector from "$lib/ui/time-picker/UserEnteredTimeSelector.svelte";
     import {createEventDispatcher} from "svelte";
-    import {time} from "./timeSelection2";
+    import {time} from "./timeSelectionUiTypes";
 
     export let from: TwentyFourHourClockTime;
     export let to: TwentyFourHourClockTime;

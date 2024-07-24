@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {DatePickConfig} from "./timeSelection2";
+    import type {DatePickConfig} from "./timeSelectionUiTypes";
     import type {IsoDate} from "@breezbook/packages-types";
     import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
     import {daysOfWeek} from "./uIConstants";

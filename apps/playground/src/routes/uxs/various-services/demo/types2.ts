@@ -39,6 +39,19 @@ export function duration(value: DurationUnit): Duration {
     };
 }
 
+export const durationFns = {
+    toMinutes: (duration: Duration): Minutes => {
+        switch (duration.value._type) {
+            case 'minutes':
+                return duration.value
+            case 'hours':
+                return minutes(duration.value.value * 60)
+            case 'days':
+                return minutes(duration.value.value * 60 * 24)
+        }
+    }
+}
+
 export interface PickTime {
     _type: 'pick-time'
     options: TimeRange
@@ -94,13 +107,6 @@ export function durationRange(minDuration: DurationUnit, maxDuration?: DurationU
     }
 }
 
-export interface DayRange {
-    _type: 'day-range'
-    minDays: number
-    maxDays: number | null
-    minDuration: Duration | null
-}
-
 export interface NumDays {
     _type: 'num-days'
     days: number
@@ -119,8 +125,10 @@ export function daysOfWeek(...days: string[]): DaysOfWeek {
     return {_type: 'days-of-week', days}
 }
 
+export type DurationOption = Duration | DurationRange | NumDays
+
 export interface SchedulingOptions {
-    duration: Duration | DurationRange | DayRange | NumDays
+    duration: DurationOption
     startTimes: { times: TimeslotSelection | PickTime | FixedTime | AnyTimeBetween }
     endTimes?: { times: PickTime | FixedTime | AnyTimeBetween }
     startDays?: { days: DaysOfWeek }

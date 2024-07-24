@@ -1,17 +1,20 @@
 <script lang="ts">
-    import type {PickTimeConfig, Time, Timeslot} from "./timeSelection2";
+    import type {PickTimeConfig, Time, Timeslot} from "./timeSelectionUiTypes";
     import {dayAndTime, dayAndTimeFns, type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import {createEventDispatcher} from "svelte";
     import SelectEndTime from "./SelectEndTime.svelte";
+    import {type Duration, durationFns} from "./types2";
 
     export let config: PickTimeConfig
     export let selectedStartTime: TwentyFourHourClockTime
     export let selectedStartDate: IsoDate
     export let selectedEndDate: IsoDate
     export let selectedEndTime: TwentyFourHourClockTime | null
-    export let minDurationMinutes: number = 0
-    export let maxDurationMinutes: number = -1
+    export let minDuration: Duration
+    export let maxDuration: Duration | null = null
     const dispatch = createEventDispatcher();
+    const minDurationMinutes = durationFns.toMinutes(minDuration).value
+    const maxDurationMinutes = maxDuration ? durationFns.toMinutes(maxDuration).value : -1
 
     $: possibleStartTimes = config.options.find(option => option.date.value === selectedEndDate.value)?.times || []
     $: availableEndTimes = possibleStartTimes.filter(t => supportsDuration(t))
@@ -24,11 +27,10 @@
         return duration >= minDurationMinutes && (maxDurationMinutes === -1 || duration <= maxDurationMinutes)
     }
 
-    function calculateDurationInMinutes(time:TwentyFourHourClockTime): number {
+    function calculateDurationInMinutes(time: TwentyFourHourClockTime): number {
         const start = dayAndTime(selectedStartDate, selectedStartTime)
         const end = dayAndTime(selectedEndDate, time)
         const result = dayAndTimeFns.minutesBetween(start, end).value
-        console.log({start,  result, minDurationMinutes})
         return result
     }
 
@@ -47,6 +49,3 @@
     {/each}
 </div>
 
-<pre>
-    {JSON.stringify(availableEndTimes, null, 2)}
-</pre>
