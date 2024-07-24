@@ -31,7 +31,7 @@ import {
     type TimeRange,
     type TimeslotSelection
 } from "./types2";
-import {formatDate} from "$lib/ui/time-picker/types";
+import {type DisabledDays, formatDate} from "$lib/ui/time-picker/types";
 import {type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbook/packages-types";
 
 
@@ -111,29 +111,55 @@ function getTimes(times: TimeslotSelection | PickTime | FixedTime, startDays: Da
 }
 
 
-function getEndDateConfig(days: IsoDate[], schedulingOptions: SchedulingOptions): PickDateConfig | RelativeEnd | undefined {
+function getEndDateConfig(schedulingOptions: SchedulingOptions): PickDateConfig | RelativeEnd | undefined {
     if (schedulingOptions.endDays) {
-        return pickDateConfig(days.map(day => applySchedulingOptions("end", day, schedulingOptions)))
+        return pickDateConfig()
     }
     if (schedulingOptions.duration._type === "num-days") {
         return relativeEnd(schedulingOptions.duration.days)
     }
     const {minDuration, maxDuration} = getDurations(schedulingOptions.duration)
     if (minDuration.value._type === "days" || maxDuration?.value._type === "days") {
-        return pickDateConfig(days.map(day => datePickConfig(day, disabledIfPast(day))))
+        return pickDateConfig()
     }
     return undefined
 }
 
-export function toUiTypes(month: Date, service: Service): SlotSelectionConfig {
-    const startOfMonth = isoDate(formatDate(new Date(month.getFullYear(), month.getMonth(), 1)))
+export function toUiModel(startMonth: Date, service: Service): SlotSelectionConfig {
+    const startOfMonth = isoDate(formatDate(new Date(startMonth.getFullYear(), startMonth.getMonth(), 1)))
     const daysInMonth = isoDateFns.daysInMonth(startOfMonth)
     const startDays = daysInMonth.map(day => applySchedulingOptions("start", day, service.schedulingOptions))
     const enabledDays = startDays.filter(day => !day.disabled)
-    const startDate: PickDateConfig = {_type: 'pick-one', options: startDays}
+    const startDate = pickDateConfig()
     const startTime = getStartTimes(enabledDays, service.schedulingOptions)
-    const endDate = getEndDateConfig(daysInMonth, service.schedulingOptions)
+    const endDate = getEndDateConfig(service.schedulingOptions)
     const endTime = getEndTimes(enabledDays, service.schedulingOptions)
     const {minDuration, maxDuration} = getDurations(service.schedulingOptions.duration)
     return {startDate, startTime, endDate, endTime, maxDuration, minDuration}
+}
+
+export function disabledDaysInMonth(month: Date): DisabledDays {
+    const startOfMonth = isoDate(formatDate(new Date(month.getFullYear(), month.getMonth(), 1)))
+    const daysInMonth = isoDateFns.daysInMonth(startOfMonth)
+    const disabledDays = daysInMonth.map(day => disabledIfPast(day))
+    return daysInMonth.reduce((acc, day, index) => {
+        acc[day.value] = !!disabledDays[index]
+        return acc
+    }, {} as DisabledDays)
+}
+
+export function disabledEndDaysInMonth(selectedStartDate: IsoDate, month: Date): DisabledDays {
+    const startOfMonth = isoDate(formatDate(new Date(month.getFullYear(), month.getMonth(), 1)))
+    const daysInMonth = isoDateFns.daysInMonth(startOfMonth)
+    const disabledDays = daysInMonth.map(day => {
+        if (day.value < selectedStartDate.value) {
+            return disabled("End date must be after start date")
+        }
+        return undefined
+    })
+    return daysInMonth.reduce((acc, day, index) => {
+        acc[day.value] = !!disabledDays[index]
+        return acc
+    }, {} as DisabledDays)
+
 }

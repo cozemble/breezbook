@@ -1,5 +1,5 @@
-import {type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
-import type {Duration} from "./types2";
+import {isoDate, type IsoDate, time24, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+import {days, duration, type Duration, hours} from "./types2";
 
 export interface Disabled {
     disabled?: boolean;
@@ -32,12 +32,12 @@ export function datePickConfig(date: IsoDate, disabled?: Disabled): DatePickConf
 }
 
 export interface PickDateConfig {
-    _type: 'pick-one';
-    options: DatePickConfig[];
+    _type: 'pick-date-config';
+    // options: DatePickConfig[];
 }
 
-export function pickDateConfig(options: DatePickConfig[]): PickDateConfig {
-    return {_type: 'pick-one', options}
+export function pickDateConfig(): PickDateConfig {
+    return {_type: 'pick-date-config'}
 
 }
 
@@ -89,35 +89,13 @@ export function dayTimes(date: IsoDate, times: Time[] | Timeslot[]): DayTimes {
 }
 
 export interface PickTimeConfig {
-    _type: 'pick-one';
+    _type: 'pick-time-config';
     options: DayTimes[];
 }
 
 export function pickTimeConfig(options: DayTimes[]): PickTimeConfig {
-    return {_type: 'pick-one', options}
+    return {_type: 'pick-time-config', options}
 }
-
-// export interface EndDateConfig {
-//     _type: 'end-date-config';
-//     minDays?: number;
-//     maxDays?: number;
-//     options: PickDateConfig;
-// }
-//
-// export function endDateConfig(options: PickDateConfig, minDays?: number, maxDays?: number): EndDateConfig {
-//     return {minDays, maxDays, options, _type: 'end-date-config'}
-// }
-
-// export interface EndTimeConfig {
-//     _type: 'end-time';
-//     minDuration?: Duration;
-//     maxDuration?: Duration;
-//     time: PickTimeConfig | UserSelectedTimeConfig;
-// }
-//
-// export function endTimeConfig(time: PickTimeConfig | UserSelectedTimeConfig, minDuration?: Duration, maxDuration?: Duration): EndTimeConfig {
-//     return {minDuration, maxDuration, time, _type: 'end-time'}
-// }
 
 export interface FixedTimeConfig {
     _type: 'fixed-time';
@@ -141,8 +119,289 @@ export function relativeEnd(numDays: number): RelativeEnd {
 export interface SlotSelectionConfig {
     startDate: PickDateConfig;
     startTime: PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig;
-    minDuration: Duration;
+    minDuration: Duration | null;
     endTime?: PickTimeConfig | UserSelectedTimeConfig | FixedTimeConfig;
     endDate?: PickDateConfig | RelativeEnd;
-    maxDuration: Duration|null;
+    maxDuration: Duration | null;
 }
+
+
+export const equipmentRental: SlotSelectionConfig = {
+    startDate: {
+        _type: "pick-date-config"
+    },
+    startTime: {
+        _type: "pick-time-config", options: [
+            {
+                date: isoDate('2023-06-01'), times: [
+                    {_type: "time", start: time24('08:00')},
+                    {_type: "time", start: time24('10:00'), disabled: justDisabled},
+                    {_type: "time", start: time24('12:00')},
+                ]
+            },
+            {
+                date: isoDate('2023-06-02'), times: [
+                    {_type: "time", start: time24('08:00')},
+                    {_type: "time", start: time24('10:00')},
+                    {_type: "time", start: time24('12:00')},
+                ]
+            },
+            {
+                date: isoDate('2023-06-04'), times: [
+                    {_type: "time", start: time24('08:00')},
+                    {_type: "time", start: time24('10:00')},
+                    {_type: "time", start: time24('12:00')},
+                ]
+            }
+        ]
+    },
+    endTime: {
+        _type: "pick-time-config", options: [
+            {
+                date: isoDate('2023-06-01'), times: [
+                    {_type: "time", start: time24('08:00')},
+                    {_type: "time", start: time24('09:00')},
+                    {_type: "time", start: time24('10:00')},
+                    {_type: "time", start: time24('11:00')},
+                    {_type: "time", start: time24('12:00')},
+                    {_type: "time", start: time24('13:00')},
+                    {_type: "time", start: time24('14:00')},
+                    {_type: "time", start: time24('15:00')},
+                    {_type: "time", start: time24('16:00')},
+                    {_type: "time", start: time24('17:00')},
+                ]
+            },
+            {
+                date: isoDate('2023-06-02'), times: [
+                    {_type: "time", start: time24('08:00')},
+                    {_type: "time", start: time24('10:00')},
+                    {_type: "time", start: time24('12:00')},
+                ]
+            },
+            {
+                date: isoDate('2023-06-04'), times: [
+                    {_type: "time", start: time24('08:00')},
+                    {_type: "time", start: time24('10:00')},
+                    {_type: "time", start: time24('12:00')},
+                ]
+            }
+        ]
+    },
+    endDate: {
+        _type: "pick-date-config"
+    },
+    minDuration: duration(hours(2)),
+    maxDuration: duration(days(7))
+}
+
+// export const carwash: SlotSelectionConfig = {
+//     startDate: {
+//         _type: "pick-date-config", options: [
+//             {date: isoDate('2023-06-01')},
+//             {date: isoDate('2023-06-02')},
+//             {date: isoDate('2023-06-03'), disabled: justDisabled},
+//             {date: isoDate('2023-06-04')},
+//         ]
+//     },
+//     startTime: {
+//         _type: "pick-time-config", options: [
+//             {
+//                 date: isoDate('2023-06-01'), times: [
+//                     {_type: "time-slot", start: time24('08:00'), end: time24('10:00'), label: 'Morning'},
+//                     {
+//                         _type: "time-slot",
+//                         start: time24('10:00'),
+//                         end: time24('12:00'),
+//                         label: 'Late Morning',
+//                         disabled: justDisabled
+//                     },
+//                     {_type: "time-slot", start: time24('12:00'), end: time24('14:00'), label: 'Afternoon'},
+//                 ]
+//             },
+//             {
+//                 date: isoDate('2023-06-02'), times: [
+//                     {_type: "time-slot", start: time24('08:00'), end: time24('10:00'), label: 'Morning'},
+//                     {_type: "time-slot", start: time24('10:00'), end: time24('12:00'), label: 'Late Morning'},
+//                     {_type: "time-slot", start: time24('12:00'), end: time24('14:00'), label: 'Afternoon'},
+//                 ]
+//             },
+//             {
+//                 date: isoDate('2023-06-04'), times: [
+//                     {_type: "time-slot", start: time24('08:00'), end: time24('10:00'), label: 'Morning'},
+//                     {_type: "time-slot", start: time24('10:00'), end: time24('12:00'), label: 'Late Morning'},
+//                     {_type: "time-slot", start: time24('12:00'), end: time24('14:00'), label: 'Afternoon'},
+//                 ]
+//             },
+//         ]
+//     },
+//     maxDuration: null,
+//     minDuration: null
+// }
+//
+// export const oneDayPetBoarding: SlotSelectionConfig = {
+//     startDate: {
+//         _type: "pick-date-config", options: [
+//             {date: isoDate('2023-06-01')},
+//             {date: isoDate('2023-06-02')},
+//             {date: isoDate('2023-06-03'), disabled: justDisabled},
+//             {date: isoDate('2023-06-04')},
+//         ]
+//     },
+//     startTime: {
+//         _type: "fixed-time", time: time24('09:00'), timeLabel: 'Drop off'
+//     },
+//     endTime: {
+//         _type: "fixed-time", time: time24('17:00'), timeLabel: 'Pick up'
+//     },
+//     maxDuration: null,
+//     minDuration: null
+// }
+//
+// const multiDayPetBoardingFixedDropOffAndPickUp: SlotSelectionConfig = {
+//     startDate: {
+//         _type: "pick-date-config", options: [
+//             {date: isoDate('2023-06-01')},
+//             {date: isoDate('2023-06-02')},
+//             {date: isoDate('2023-06-03'), disabled: justDisabled},
+//             {date: isoDate('2023-06-04')},
+//         ]
+//     },
+//     startTime: {
+//         _type: "fixed-time", time: time24('09:00'), timeLabel: 'Drop off'
+//     },
+//     endTime: {
+//         _type: "fixed-time", time: time24('17:00'), timeLabel: 'Pick up'
+//     },
+//     minDuration: duration(days(1)),
+//     maxDuration: duration(days(14)),
+//     endDate: {
+//         _type: "pick-date-config", options: [
+//             {date: isoDate('2023-06-01')},
+//             {date: isoDate('2023-06-02')},
+//             {date: isoDate('2023-06-03'), disabled: justDisabled},
+//             {date: isoDate('2023-06-04')},
+//         ]
+//     }
+// }
+//
+// const multiDayPetBoardingFlexibleDropOffAndPickUp: SlotSelectionConfig = {
+//     startDate: {
+//         _type: "pick-date-config", options: [
+//             {date: isoDate('2023-06-01')},
+//             {date: isoDate('2023-06-02')},
+//             {date: isoDate('2023-06-03'), disabled: justDisabled},
+//             {date: isoDate('2023-06-04')},
+//         ]
+//     },
+//     startTime: {
+//         _type: "pick-time-config", options: [
+//             {
+//                 date: isoDate('2023-06-01'), times: [
+//                     {_type: "time", start: time24('08:00')},
+//                     {_type: "time", start: time24('10:00')},
+//                     {_type: "time", start: time24('12:00')},
+//                 ]
+//             },
+//             {
+//                 date: isoDate('2023-06-02'), times: [
+//                     {_type: "time", start: time24('08:00')},
+//                     {_type: "time", start: time24('10:00')},
+//                     {_type: "time", start: time24('12:00')},
+//                 ]
+//             },
+//             {
+//                 date: isoDate('2023-06-04'), times: [
+//                     {_type: "time", start: time24('08:00')},
+//                     {_type: "time", start: time24('10:00')},
+//                     {_type: "time", start: time24('12:00')},
+//                 ]
+//             }
+//         ]
+//     },
+//     minDuration: duration(hours(2)),
+//     maxDuration: null,
+//     endDate: {
+//         _type: "pick-date-config", options: [
+//             {date: isoDate('2023-06-01')},
+//             {date: isoDate('2023-06-02')},
+//             {date: isoDate('2023-06-03'), disabled: justDisabled},
+//             {date: isoDate('2023-06-04')},
+//         ]
+//     },
+//     endTime: {
+//         _type: "pick-time-config", options: [
+//             {
+//                 date: isoDate('2023-06-01'), times: [
+//                     {_type: "time", start: time24('08:00')},
+//                     {_type: "time", start: time24('10:00')},
+//                     {_type: "time", start: time24('12:00')},
+//                 ]
+//             },
+//             {
+//                 date: isoDate('2023-06-02'), times: [
+//                     {_type: "time", start: time24('08:00')},
+//                     {_type: "time", start: time24('10:00')},
+//                     {_type: "time", start: time24('12:00')},
+//                 ]
+//             },
+//             {
+//                 date: isoDate('2023-06-04'), times: [
+//                     {_type: "time", start: time24('08:00')},
+//                     {_type: "time", start: time24('10:00')},
+//                     {_type: "time", start: time24('12:00')},
+//                 ]
+//             }
+//         ]
+//     }
+// }
+//
+// export const hotelRoom: SlotSelectionConfig = {
+//     startDate: {
+//         _type: "pick-date-config", options: [
+//             {date: isoDate('2023-06-01')},
+//             {date: isoDate('2023-06-02')},
+//             {date: isoDate('2023-06-03'), disabled: justDisabled},
+//             {date: isoDate('2023-06-04')},
+//         ]
+//     },
+//     minDuration: duration(days(1)),
+//     maxDuration: duration(days(14)),
+//     endDate: {
+//         _type: "pick-date-config", options: [
+//             {date: isoDate('2023-06-01')},
+//             {date: isoDate('2023-06-02')},
+//             {date: isoDate('2023-06-03'), disabled: justDisabled},
+//             {date: isoDate('2023-06-04')},
+//         ]
+//     }
+//     ,
+//     startTime: {
+//         _type: "fixed-time", time: time24('15:00'), timeLabel: 'Check-in'
+//     },
+//     endTime: {
+//         _type: "fixed-time", time: time24('11:00'), timeLabel: 'Check-out'
+//     }
+// }
+//
+// export const summerCamp: SlotSelectionConfig = {
+//     startDate: {
+//         _type: "pick-date-config", options: [
+//             {date: isoDate('2023-06-01')}, // starting each week
+//             {date: isoDate('2023-06-08')},
+//             {date: isoDate('2023-06-15'), disabled: justDisabled},
+//             {date: isoDate('2023-06-22')},
+//         ]
+//     },
+//     startTime: {
+//         _type: "fixed-time", time: time24('09:00'), timeLabel: 'Drop off'
+//     },
+//     endTime: {
+//         _type: "fixed-time", time: time24('17:00'), timeLabel: 'Pick up'
+//     },
+//     endDate: {
+//         _type: "relative-end",
+//         numDays: 5
+//     },
+//     maxDuration: null,
+//     minDuration: null
+// }

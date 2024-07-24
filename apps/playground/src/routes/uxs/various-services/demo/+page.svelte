@@ -1,9 +1,8 @@
 <script lang="ts">
     import {Clock} from 'lucide-svelte';
     import {type Time, type Timeslot} from "./timeSelectionUiTypes";
-    import {isoDate, type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
-    import {allConfigs, type Service} from "./types2";
-    import {toUiTypes} from "./toUiTypes";
+    import {isoDate, type IsoDate, minutes, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {allConfigs, duration, type Service} from "./types2";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {formatDate} from "$lib/ui/time-picker/types.js";
     import {afterUpdate} from "svelte";
@@ -11,13 +10,15 @@
     import UserEnteredTime from "./UserEnteredTime.svelte";
     import PickStartTime from "./PickStartTime.svelte";
     import PickEndTime from "./PickEndTime.svelte";
+    import {toUiModel} from "./toUiModel";
 
-    let currentMonth: Date = new Date();
+    let calendarStartMonth: Date = new Date();
+    let calendarEndMonth: Date = new Date();
     let service: Service = allConfigs[0].service;
-    $: config = toUiTypes(currentMonth, service);
+    $: uiModel = toUiModel(calendarStartMonth,service);
 
     afterUpdate(() => {
-        console.log({config})
+        console.log({uiModel})
     });
 
     let selectedStartDate: IsoDate | null = null;
@@ -25,30 +26,24 @@
     let selectedStartTime: TwentyFourHourClockTime | null = null;
     let selectedEndTime: TwentyFourHourClockTime | null = null;
 
-    function calculateDurationInMinutes(start: TwentyFourHourClockTime, end: TwentyFourHourClockTime): number {
-        const [startHours, startMinutes] = start.value.split(':').map(Number);
-        const [endHours, endMinutes] = end.value.split(':').map(Number);
-        return (endHours * 60 + endMinutes) - (startHours * 60 + startMinutes);
-    }
-
     function handleDateSelection(date: IsoDate, isEndDate: boolean) {
         if (isEndDate) {
             selectedEndDate = date;
         } else {
             selectedStartDate = date;
             // Auto-select fixed start time if available
-            if (config.startTime._type === 'fixed-time') {
-                selectedStartTime = config.startTime.time;
+            if (uiModel.startTime._type === 'fixed-time') {
+                selectedStartTime = uiModel.startTime.time;
             } else {
                 selectedStartTime = null;
             }
 
             // Handle end date and time selection
-            if (config.endDate?._type === 'relative-end') {
+            if (uiModel.endDate?._type === 'relative-end') {
                 const startDateObj = new Date(date.value);
-                startDateObj.setDate(startDateObj.getDate() + config.endDate.numDays);
+                startDateObj.setDate(startDateObj.getDate() + uiModel.endDate.numDays);
                 selectedEndDate = {value: startDateObj.toISOString().split('T')[0]} as IsoDate;
-            } else if (!config.endDate) {
+            } else if (!uiModel.endDate) {
                 // If there's no separate end date, use the start date
                 selectedEndDate = date;
             } else {
@@ -56,8 +51,8 @@
             }
 
             // Auto-select fixed end time if available
-            if (config.endTime?._type === 'fixed-time') {
-                selectedEndTime = config.endTime.time;
+            if (uiModel.endTime?._type === 'fixed-time') {
+                selectedEndTime = uiModel.endTime.time;
             } else {
                 selectedEndTime = null;
             }
@@ -100,6 +95,20 @@
     function onEndTimeSelected(event: CustomEvent<Time | Timeslot>) {
         handleTimeSelection(event.detail.start, true);
     }
+
+    function changeStartMonth(delta: number) {
+        calendarStartMonth = new Date(calendarStartMonth.getFullYear(), calendarStartMonth.getMonth() + delta, 1);
+        selectedStartDate = null;
+        selectedEndDate = null;
+        selectedStartTime = null;
+        selectedEndTime = null;
+    }
+
+    function changeEndMonth(delta: number) {
+        calendarEndMonth = new Date(calendarEndMonth.getFullYear(), calendarEndMonth.getMonth() + delta, 1);
+        selectedEndDate = null;
+        selectedEndTime = null;
+    }
 </script>
 
 <div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
@@ -128,81 +137,92 @@
             <label class="label">
                 <span class="label-text font-semibold">Select Start Date</span>
             </label>
-            <SelectStartDate {currentMonth} options={config.startDate.options} {selectedStartDate}
+            <SelectStartDate currentMonth={calendarStartMonth}
+                             {selectedStartDate}
+                             on:prevMonth={() => changeStartMonth(-1)}
+                             on:nextMonth={() => changeStartMonth(1)}
                              on:clicked={onStartDateSelected}/>
         </div>
 
         <!-- Start Time Selection -->
         {#if selectedStartDate}
             <div class="form-control mb-4">
-                {#if config.startTime._type === 'pick-one'}
-                    <PickStartTime config={config.startTime} {selectedStartDate} {selectedStartTime}
+                {#if uiModel.startTime._type === 'pick-time-config'}
+                    <PickStartTime config={uiModel.startTime}
+                                   {selectedStartDate}
+                                   {selectedStartTime}
                                    on:clicked={onStartTimeSelected}/>
-                {:else if config.startTime._type === "user-selected-time-config"}
+                {:else if uiModel.startTime._type === "user-selected-time-config"}
                     <label class="label">
                         <span class="label-text font-semibold">Enter Start Time</span>
                     </label>
 
                     <div>
-                        <UserEnteredTime from={config.startTime.from} to={config.startTime.to}
-                                         selectedTime={selectedStartTime} on:timeSelected={onStartTimeSelected}/>
+                        <UserEnteredTime from={uiModel.startTime.from}
+                                         to={uiModel.startTime.to}
+                                         selectedTime={selectedStartTime}
+                                         on:timeSelected={onStartTimeSelected}/>
                     </div>
                 {/if}
             </div>
         {/if}
 
         <!-- End Date Selection (if applicable) -->
-        {#if selectedStartTime && config.endDate && config.endDate._type !== 'relative-end'}
+        {#if selectedStartTime && selectedStartDate && uiModel.endDate && uiModel.endDate._type !== 'relative-end'}
             <div class="form-control mb-4">
                 <label class="label">
                     <span class="label-text font-semibold">Select End Date</span>
                 </label>
-                <SelectEndDate {currentMonth} options={config.endDate.options} {selectedEndDate}
+                <SelectEndDate currentMonth={calendarEndMonth}
+                               {selectedEndDate}
+                               {selectedStartDate}
+                               on:prevMonth={() => changeEndMonth(-1)}
+                               on:nextMonth={() => changeEndMonth(1)}
                                on:clicked={onEndDateSelected}/>
             </div>
         {/if}
 
         <!-- End Time Selection (if applicable) -->
-        {#if selectedEndDate && selectedStartTime && selectedStartDate && config.endTime}
+        {#if selectedEndDate && selectedStartTime && selectedStartDate && uiModel.endTime}
             <div class="form-control mb-4">
-                {#if config.endTime._type === 'pick-one'}
-                    <PickEndTime config={config.endTime}
+                {#if uiModel.endTime._type === 'pick-time-config'}
+                    <PickEndTime config={uiModel.endTime}
                                  {selectedStartTime}
                                  {selectedStartDate}
                                  {selectedEndDate}
                                  {selectedEndTime}
-                                 minDuration={config.minDuration}
-                                 maxDuration={config.maxDuration ?? null}
+                                 minDuration={uiModel.minDuration ?? duration(minutes(0))}
+                                 maxDuration={uiModel.maxDuration ?? null}
                                  on:clicked={onEndTimeSelected}/>
-                {:else if config.endTime._type === 'user-selected-time-config'}
+                {:else if uiModel.endTime._type === 'user-selected-time-config'}
                     <label class="label">
                         <span class="label-text font-semibold">Enter End Time</span>
                     </label>
 
                     <div>
-                        <UserEnteredTime from={config.endTime.from} to={config.endTime.to}
+                        <UserEnteredTime from={uiModel.endTime.from} to={uiModel.endTime.to}
                                          selectedTime={selectedEndTime} on:timeSelected={onEndTimeSelected}/>
                     </div>
                 {/if}
             </div>
         {/if}
 
-        {#if config.startTime._type === 'fixed-time' }
-            {#if config.endTime?._type === 'fixed-time'}
+        {#if uiModel.startTime._type === 'fixed-time' }
+            {#if uiModel.endTime?._type === 'fixed-time'}
                 {#if selectedStartDate && selectedEndDate}
                     <div class="form-control mb-4">
-                        {#if config.startTime._type === 'fixed-time'}
+                        {#if uiModel.startTime._type === 'fixed-time'}
                             <div class="alert alert-info text-sm">
                                 <Clock class="mr-1" size={14}/>
-                                <span>{config.startTime.time.value} - {config.startTime.timeLabel}</span>
+                                <span>{uiModel.startTime.time.value} - {uiModel.startTime.timeLabel}</span>
                             </div>
                         {/if}
                     </div>
                     <div class="form-control mb-4">
-                        {#if config.endTime._type === 'fixed-time'}
+                        {#if uiModel.endTime._type === 'fixed-time'}
                             <div class="alert alert-info text-sm">
                                 <Clock class="mr-1" size={14}/>
-                                <span>{config.endTime.time.value} - {config.endTime.timeLabel}</span>
+                                <span>{uiModel.endTime.time.value} - {uiModel.endTime.timeLabel}</span>
                             </div>
                         {/if}
                     </div>

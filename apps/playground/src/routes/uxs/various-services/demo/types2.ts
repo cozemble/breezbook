@@ -354,10 +354,10 @@ const yachtCharter: Service = {
     schedulingOptions: {
         duration: durationRange(days(7), days(28)),
         startTimes: {
-            times: fixedTime(time24("09:00"), "Departure")
+            times: fixedTime(time24("15:00"), "Collect")
         },
         endTimes: {
-            times: fixedTime(time24("17:00"), "Return")
+            times: fixedTime(time24("12:00"), "Return")
         },
         startDays: {
             days: daysOfWeek("Saturday")
@@ -398,4 +398,5 @@ export const allConfigs = [
     {service: summerCamp},
     {service: equipmentRentalWithFlexibleTime},
     {service: equipmentRentalWithControlledTimes},
+    {service: yachtCharter}
 ]

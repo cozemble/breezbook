@@ -1,21 +1,19 @@
 <script lang="ts">
-    import type {DatePickConfig} from "./timeSelectionUiTypes";
     import type {IsoDate} from "@breezbook/packages-types";
     import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
     import {daysOfWeek} from "./uIConstants";
-    import type {DisabledDays} from "$lib/ui/time-picker/types";
+    import {disabledDaysInMonth} from "./toUiModel";
+    import MonthSelector from "./MonthSelector.svelte";
 
     export let currentMonth: Date;
-    export let options: DatePickConfig[]
     export let selectedStartDate: IsoDate | null = null;
 
     $: selectedStartDateAsDate = selectedStartDate ? new Date(selectedStartDate.value) : null;
-    $: disabledDays = options.reduce((acc, {date, disabled}) => {
-        acc[date.value] = !!disabled;
-        return acc;
-    }, {} as DisabledDays);
+    $: disabledDays = disabledDaysInMonth(currentMonth);
 
 </script>
+
+<MonthSelector {currentMonth} on:prevMonth on:nextMonth/>
 
 <div class="grid grid-cols-7 gap-2 text-center mb-2">
     {#each daysOfWeek as day}
