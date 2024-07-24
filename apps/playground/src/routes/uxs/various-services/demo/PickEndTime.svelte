@@ -3,7 +3,8 @@
     import {dayAndTime, dayAndTimeFns, type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import {createEventDispatcher} from "svelte";
     import SelectEndTime from "./SelectEndTime.svelte";
-    import {type Duration, durationFns} from "./types2";
+    import {type Duration, durationFns, type SchedulingOptions} from "./types2";
+    import {getPossibleEndTimes} from "./toUiModel";
 
     export let config: PickTimeConfig
     export let selectedStartTime: TwentyFourHourClockTime
@@ -12,11 +13,13 @@
     export let selectedEndTime: TwentyFourHourClockTime | null
     export let minDuration: Duration
     export let maxDuration: Duration | null = null
+    export let schedulingOptions: SchedulingOptions
     const dispatch = createEventDispatcher();
     const minDurationMinutes = durationFns.toMinutes(minDuration).value
     const maxDurationMinutes = maxDuration ? durationFns.toMinutes(maxDuration).value : -1
 
-    $: possibleStartTimes = config.options.find(option => option.date.value === selectedEndDate.value)?.times || []
+    $: possibleStartTimes = getPossibleEndTimes(selectedEndDate, schedulingOptions)
+
     $: availableEndTimes = possibleStartTimes.filter(t => supportsDuration(t))
 
     function supportsDuration(t: Time | Timeslot): boolean {

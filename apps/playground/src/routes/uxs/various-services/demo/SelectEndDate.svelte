@@ -4,13 +4,15 @@
     import {daysOfWeek} from "./uIConstants";
     import {disabledEndDaysInMonth} from "./toUiModel";
     import MonthSelector from "./MonthSelector.svelte";
+    import type {SchedulingOptions} from "./types2";
 
     export let currentMonth: Date;
     export let selectedStartDate: IsoDate
     export let selectedEndDate: IsoDate | null = null;
+    export let schedulingOptions: SchedulingOptions
 
     $: selectedEndDateAsDate = selectedEndDate ? new Date(selectedEndDate.value) : null;
-    $: disabledDays = disabledEndDaysInMonth(selectedStartDate, currentMonth);
+    $: disabledDays = disabledEndDaysInMonth(selectedStartDate, currentMonth, schedulingOptions);
 
 </script>
 

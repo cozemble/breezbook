@@ -2,13 +2,15 @@
     import type {PickTimeConfig} from "./timeSelectionUiTypes";
     import type {IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-types";
     import SelectStartTime from "./SelectStartTime.svelte";
+    import type {SchedulingOptions} from "./types2";
+    import {getPossibleStartTimes} from "./toUiModel";
 
-    export let selectedStartDate: IsoDate | null = null;
+    export let selectedStartDate: IsoDate
     export let config: PickTimeConfig
     export let selectedStartTime: TwentyFourHourClockTime | null
+    export let schedulingOptions: SchedulingOptions
 
-    $: availableStartTimes = config.options.find(option => option.date.value === selectedStartDate?.value)?.times || []
-
+    $: availableStartTimes = getPossibleStartTimes(selectedStartDate, schedulingOptions)
 </script>
 
 

@@ -2,7 +2,7 @@
     import {Clock} from 'lucide-svelte';
     import {type Time, type Timeslot} from "./timeSelectionUiTypes";
     import {isoDate, type IsoDate, minutes, type TwentyFourHourClockTime} from "@breezbook/packages-types";
-    import {allConfigs, duration, type Service} from "./types2";
+    import {allConfigs, duration} from "./types2";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {formatDate} from "$lib/ui/time-picker/types.js";
     import {afterUpdate} from "svelte";
@@ -14,8 +14,8 @@
 
     let calendarStartMonth: Date = new Date();
     let calendarEndMonth: Date = new Date();
-    let service: Service = allConfigs[0].service;
-    $: uiModel = toUiModel(calendarStartMonth,service);
+    let service = allConfigs[0].service;
+    $: uiModel = toUiModel(service);
 
     afterUpdate(() => {
         console.log({uiModel})
@@ -138,6 +138,7 @@
                 <span class="label-text font-semibold">Select Start Date</span>
             </label>
             <SelectStartDate currentMonth={calendarStartMonth}
+                             schedulingOptions={service.schedulingOptions}
                              {selectedStartDate}
                              on:prevMonth={() => changeStartMonth(-1)}
                              on:nextMonth={() => changeStartMonth(1)}
@@ -151,6 +152,7 @@
                     <PickStartTime config={uiModel.startTime}
                                    {selectedStartDate}
                                    {selectedStartTime}
+                                   schedulingOptions={service.schedulingOptions}
                                    on:clicked={onStartTimeSelected}/>
                 {:else if uiModel.startTime._type === "user-selected-time-config"}
                     <label class="label">
@@ -176,6 +178,7 @@
                 <SelectEndDate currentMonth={calendarEndMonth}
                                {selectedEndDate}
                                {selectedStartDate}
+                               schedulingOptions={service.schedulingOptions}
                                on:prevMonth={() => changeEndMonth(-1)}
                                on:nextMonth={() => changeEndMonth(1)}
                                on:clicked={onEndDateSelected}/>
@@ -191,6 +194,7 @@
                                  {selectedStartDate}
                                  {selectedEndDate}
                                  {selectedEndTime}
+                                 schedulingOptions={service.schedulingOptions}
                                  minDuration={uiModel.minDuration ?? duration(minutes(0))}
                                  maxDuration={uiModel.maxDuration ?? null}
                                  on:clicked={onEndTimeSelected}/>

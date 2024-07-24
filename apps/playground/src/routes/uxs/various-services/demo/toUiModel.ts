@@ -1,7 +1,4 @@
 import {
-    datePickConfig,
-    type DatePickConfig,
-    dayTimes,
     disabled,
     type Disabled,
     fixedTimeConfig,
@@ -15,9 +12,10 @@ import {
     type SlotSelectionConfig,
     time,
     type Time,
-    timeSlot,
+    type Timeslot,
     userSelectedTimeConfig,
-    type UserSelectedTimeConfig
+    type UserSelectedTimeConfig,
+    timeSlot
 } from "./timeSelectionUiTypes";
 import {
     days,
@@ -32,7 +30,7 @@ import {
     type TimeslotSelection
 } from "./types2";
 import {type DisabledDays, formatDate} from "$lib/ui/time-picker/types";
-import {type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbook/packages-types";
+import {daysOfWeek, type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbook/packages-types";
 
 
 function disabledIfPast(date: IsoDate): Disabled | undefined {
@@ -51,13 +49,13 @@ function disabledIfExcluded(date: IsoDate, permittedDaysOfWeek: string[]): Disab
 
 }
 
-function applySchedulingOptions(dayType: "start" | "end", date: IsoDate, schedulingOptions: SchedulingOptions): DatePickConfig {
-    const dateRules = dayType === "start" ? schedulingOptions.startDays : schedulingOptions.endDays
-    if (!dateRules) {
-        return datePickConfig(date, disabledIfPast(date))
-    }
-    return datePickConfig(date, disabledIfPast(date) ?? disabledIfExcluded(date, dateRules.days.days))
-}
+// function applySchedulingOptions(dayType: "start" | "end", date: IsoDate, schedulingOptions: SchedulingOptions): DatePickConfig {
+//     const dateRules = dayType === "start" ? schedulingOptions.startDays : schedulingOptions.endDays
+//     if (!dateRules) {
+//         return datePickConfig(date, disabledIfPast(date))
+//     }
+//     return datePickConfig(date, disabledIfPast(date) ?? disabledIfExcluded(date, dateRules.days.days))
+// }
 
 function timeRangeToTimes(timeRange: TimeRange): Time[] {
     const times = [] as Time[]
@@ -70,11 +68,11 @@ function timeRangeToTimes(timeRange: TimeRange): Time[] {
     return times
 }
 
-function getStartTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingOptions): PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig {
+function getStartTimes(schedulingOptions: SchedulingOptions): PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig {
     if (schedulingOptions.startTimes.times._type === "any-time-between") {
         return userSelectedTimeConfig(schedulingOptions.startTimes.times.from, schedulingOptions.startTimes.times.to)
     }
-    return getTimes(schedulingOptions.startTimes.times, startDays)
+    return getTimes(schedulingOptions.startTimes.times)
 }
 
 function getDurations(option: DurationOption): { minDuration: Duration, maxDuration: Duration | null } {
@@ -87,7 +85,7 @@ function getDurations(option: DurationOption): { minDuration: Duration, maxDurat
     return {minDuration: option.minDuration, maxDuration: option.maxDuration}
 }
 
-function getEndTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingOptions): PickTimeConfig | UserSelectedTimeConfig | FixedTimeConfig | undefined {
+function getEndTimes(schedulingOptions: SchedulingOptions): PickTimeConfig | UserSelectedTimeConfig | FixedTimeConfig | undefined {
     if (!schedulingOptions.endTimes) {
         return undefined
     }
@@ -95,17 +93,15 @@ function getEndTimes(startDays: DatePickConfig[], schedulingOptions: SchedulingO
     if (schedulingOptions.endTimes.times._type === "any-time-between") {
         return userSelectedTimeConfig(schedulingOptions.endTimes.times.from, schedulingOptions.endTimes.times.to)
     }
-    return getTimes(schedulingOptions.endTimes.times, startDays)
+    return getTimes(schedulingOptions.endTimes.times)
 }
 
-function getTimes(times: TimeslotSelection | PickTime | FixedTime, startDays: DatePickConfig[]): PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig {
+function getTimes(times: TimeslotSelection | PickTime | FixedTime): PickTimeConfig | FixedTimeConfig | UserSelectedTimeConfig {
     if (times._type === "timeslot-selection") {
-        const slots = times.times.map(slot => timeSlot(slot.slot.from, slot.slot.to, slot.description))
-        return pickTimeConfig(startDays.map(day => dayTimes(day.date, slots)))
+        return pickTimeConfig()
     }
     if (times._type === "pick-time") {
-        const mappedTimes = timeRangeToTimes(times.options)
-        return pickTimeConfig(startDays.map(day => dayTimes(day.date, mappedTimes)))
+        return pickTimeConfig()
     }
     return fixedTimeConfig(times.time, times.description)
 }
@@ -125,41 +121,60 @@ function getEndDateConfig(schedulingOptions: SchedulingOptions): PickDateConfig 
     return undefined
 }
 
-export function toUiModel(startMonth: Date, service: Service): SlotSelectionConfig {
-    const startOfMonth = isoDate(formatDate(new Date(startMonth.getFullYear(), startMonth.getMonth(), 1)))
-    const daysInMonth = isoDateFns.daysInMonth(startOfMonth)
-    const startDays = daysInMonth.map(day => applySchedulingOptions("start", day, service.schedulingOptions))
-    const enabledDays = startDays.filter(day => !day.disabled)
+export function toUiModel(service: Service): SlotSelectionConfig {
     const startDate = pickDateConfig()
-    const startTime = getStartTimes(enabledDays, service.schedulingOptions)
+    const startTime = getStartTimes(service.schedulingOptions)
     const endDate = getEndDateConfig(service.schedulingOptions)
-    const endTime = getEndTimes(enabledDays, service.schedulingOptions)
+    const endTime = getEndTimes(service.schedulingOptions)
     const {minDuration, maxDuration} = getDurations(service.schedulingOptions.duration)
     return {startDate, startTime, endDate, endTime, maxDuration, minDuration}
 }
 
-export function disabledDaysInMonth(month: Date): DisabledDays {
+export function disabledStartDays(month: Date, schedulingOptions: SchedulingOptions): DisabledDays {
     const startOfMonth = isoDate(formatDate(new Date(month.getFullYear(), month.getMonth(), 1)))
     const daysInMonth = isoDateFns.daysInMonth(startOfMonth)
-    const disabledDays = daysInMonth.map(day => disabledIfPast(day))
+    const disabledDays = daysInMonth.map(day =>
+        disabledIfPast(day)
+        ?? disabledIfExcluded(day, schedulingOptions.startDays?.days?.days ?? daysOfWeek))
     return daysInMonth.reduce((acc, day, index) => {
         acc[day.value] = !!disabledDays[index]
         return acc
     }, {} as DisabledDays)
 }
 
-export function disabledEndDaysInMonth(selectedStartDate: IsoDate, month: Date): DisabledDays {
+function disabledIfEarlierThan(selectedStartDate: IsoDate, date: IsoDate): Disabled | undefined {
+    if (date.value < selectedStartDate.value) {
+        return disabled("Date is earlier than start date")
+    }
+    return undefined;
+}
+
+export function disabledEndDaysInMonth(selectedStartDate: IsoDate, month: Date, schedulingOptions: SchedulingOptions): DisabledDays {
     const startOfMonth = isoDate(formatDate(new Date(month.getFullYear(), month.getMonth(), 1)))
     const daysInMonth = isoDateFns.daysInMonth(startOfMonth)
-    const disabledDays = daysInMonth.map(day => {
-        if (day.value < selectedStartDate.value) {
-            return disabled("End date must be after start date")
-        }
-        return undefined
-    })
+    const disabledDays = daysInMonth.map(day =>
+        disabledIfPast(day)
+        ?? disabledIfEarlierThan(selectedStartDate, day)
+        ?? disabledIfExcluded(day, schedulingOptions.endDays?.days?.days ?? daysOfWeek))
     return daysInMonth.reduce((acc, day, index) => {
         acc[day.value] = !!disabledDays[index]
         return acc
     }, {} as DisabledDays)
+}
 
+export function getPossibleStartTimes(selectedStartDate: IsoDate, schedulingOptions: SchedulingOptions): Time[] | Timeslot[] {
+    if (schedulingOptions.startTimes.times._type === "timeslot-selection") {
+        return schedulingOptions.startTimes.times.times.map(t => timeSlot(t.slot.from, t.slot.to, t.description))
+    }
+    if(schedulingOptions.startTimes.times._type === "pick-time") {
+        return timeRangeToTimes(schedulingOptions.startTimes.times.options)
+    }
+    throw new Error("Unsupported start times")
+}
+
+export function getPossibleEndTimes(selectedEndDate: IsoDate,  schedulingOptions: SchedulingOptions): Time[] | Timeslot[] {
+    if (schedulingOptions.endTimes?.times._type === "pick-time") {
+        return timeRangeToTimes(schedulingOptions.endTimes.times.options)
+    }
+    throw new Error("Unsupported end times")
 }

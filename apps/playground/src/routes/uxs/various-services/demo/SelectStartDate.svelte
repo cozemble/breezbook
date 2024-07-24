@@ -2,14 +2,16 @@
     import type {IsoDate} from "@breezbook/packages-types";
     import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
     import {daysOfWeek} from "./uIConstants";
-    import {disabledDaysInMonth} from "./toUiModel";
+    import {disabledStartDays} from "./toUiModel";
     import MonthSelector from "./MonthSelector.svelte";
+    import type {SchedulingOptions} from "./types2";
 
     export let currentMonth: Date;
     export let selectedStartDate: IsoDate | null = null;
+    export let schedulingOptions: SchedulingOptions
 
     $: selectedStartDateAsDate = selectedStartDate ? new Date(selectedStartDate.value) : null;
-    $: disabledDays = disabledDaysInMonth(currentMonth);
+    $: disabledDays = disabledStartDays(currentMonth, schedulingOptions);
 
 </script>
 

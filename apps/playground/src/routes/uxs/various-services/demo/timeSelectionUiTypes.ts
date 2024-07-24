@@ -1,4 +1,4 @@
-import {isoDate, type IsoDate, time24, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+import {type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
 import {days, duration, type Duration, hours} from "./types2";
 
 export interface Disabled {
@@ -21,19 +21,8 @@ interface PriceLabel {
 
 export const justDisabled: Disabled = {disabled: true};
 
-export interface DatePickConfig {
-    date: IsoDate
-    disabled?: Disabled
-}
-
-export function datePickConfig(date: IsoDate, disabled?: Disabled): DatePickConfig {
-    return {date, disabled}
-
-}
-
 export interface PickDateConfig {
     _type: 'pick-date-config';
-    // options: DatePickConfig[];
 }
 
 export function pickDateConfig(): PickDateConfig {
@@ -90,11 +79,11 @@ export function dayTimes(date: IsoDate, times: Time[] | Timeslot[]): DayTimes {
 
 export interface PickTimeConfig {
     _type: 'pick-time-config';
-    options: DayTimes[];
+    // options: DayTimes[];
 }
 
-export function pickTimeConfig(options: DayTimes[]): PickTimeConfig {
-    return {_type: 'pick-time-config', options}
+export function pickTimeConfig(): PickTimeConfig {
+    return {_type: 'pick-time-config'}
 }
 
 export interface FixedTimeConfig {
@@ -131,61 +120,10 @@ export const equipmentRental: SlotSelectionConfig = {
         _type: "pick-date-config"
     },
     startTime: {
-        _type: "pick-time-config", options: [
-            {
-                date: isoDate('2023-06-01'), times: [
-                    {_type: "time", start: time24('08:00')},
-                    {_type: "time", start: time24('10:00'), disabled: justDisabled},
-                    {_type: "time", start: time24('12:00')},
-                ]
-            },
-            {
-                date: isoDate('2023-06-02'), times: [
-                    {_type: "time", start: time24('08:00')},
-                    {_type: "time", start: time24('10:00')},
-                    {_type: "time", start: time24('12:00')},
-                ]
-            },
-            {
-                date: isoDate('2023-06-04'), times: [
-                    {_type: "time", start: time24('08:00')},
-                    {_type: "time", start: time24('10:00')},
-                    {_type: "time", start: time24('12:00')},
-                ]
-            }
-        ]
+        _type: "pick-time-config"
     },
     endTime: {
-        _type: "pick-time-config", options: [
-            {
-                date: isoDate('2023-06-01'), times: [
-                    {_type: "time", start: time24('08:00')},
-                    {_type: "time", start: time24('09:00')},
-                    {_type: "time", start: time24('10:00')},
-                    {_type: "time", start: time24('11:00')},
-                    {_type: "time", start: time24('12:00')},
-                    {_type: "time", start: time24('13:00')},
-                    {_type: "time", start: time24('14:00')},
-                    {_type: "time", start: time24('15:00')},
-                    {_type: "time", start: time24('16:00')},
-                    {_type: "time", start: time24('17:00')},
-                ]
-            },
-            {
-                date: isoDate('2023-06-02'), times: [
-                    {_type: "time", start: time24('08:00')},
-                    {_type: "time", start: time24('10:00')},
-                    {_type: "time", start: time24('12:00')},
-                ]
-            },
-            {
-                date: isoDate('2023-06-04'), times: [
-                    {_type: "time", start: time24('08:00')},
-                    {_type: "time", start: time24('10:00')},
-                    {_type: "time", start: time24('12:00')},
-                ]
-            }
-        ]
+        _type: "pick-time-config"
     },
     endDate: {
         _type: "pick-date-config"
