@@ -309,7 +309,7 @@ const equipmentRentalWithControlledTimes: Service = {
     name: "Equipment Rental with controlled times",
     description: "Rent equipment",
     schedulingOptions: {
-        duration: dayRange(1, 7, minutes(240)),
+        duration: dayRange(0, 7, minutes(240)),
         startTimes: {
             times: pickTime(
                 timeRange(

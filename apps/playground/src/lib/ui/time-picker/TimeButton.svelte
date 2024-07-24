@@ -6,7 +6,7 @@
     export let time: TimeString;
     export let selectedTime: TimeString | null;
     export let timeFormat: '12h' | '24h';
-    export let timeLabel: string | null;
+    export let timeLabel: string | null = null;
 
     const dispatch = createEventDispatcher();
 

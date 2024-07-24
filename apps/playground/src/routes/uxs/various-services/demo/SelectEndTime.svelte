@@ -10,7 +10,6 @@
     const dispatch = createEventDispatcher();
 
     $: timeString = time._type === 'time-slot' ? `${time.start.value} - ${time.end.value}` : time.start.value
-    $: timeLabel = time._type === 'time-slot' ? time.label : null
     $: selectedTimeString = selectedTime && timeString.startsWith(selectedTime.value) ? timeString : null
 
     function onClicked() {
@@ -21,5 +20,4 @@
 <TimeButton time={timeString}
             selectedTime={selectedTimeString}
             {timeFormat}
-            {timeLabel}
             on:clicked={onClicked}/>

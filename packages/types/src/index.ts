@@ -239,6 +239,34 @@ export const isoDateFns = {
     },
 };
 
+export interface DayAndTime {
+    _type: 'day.and.time';
+    day: IsoDate;
+    time: TwentyFourHourClockTime;
+}
+
+export function dayAndTime(day: IsoDate, time: TwentyFourHourClockTime): DayAndTime {
+    return {
+        _type: 'day.and.time',
+        day,
+        time
+    };
+}
+
+export const dayAndTimeFns = {
+    minutesBetween(a: DayAndTime, b: DayAndTime): Minutes {
+        const aDate = new Date(`${a.day.value}T${a.time.value}`);
+        const bDate = new Date(`${b.day.value}T${b.time.value}`);
+        const diff = bDate.getTime() - aDate.getTime();
+        return minutes(diff / 1000 / 60);
+    },
+    gt: (a: DayAndTime, b: DayAndTime) => {
+        const aDate = new Date(`${a.day.value}T${a.time.value}`);
+        const bDate = new Date(`${b.day.value}T${b.time.value}`);
+        return aDate.getTime() > bDate.getTime();
+    }
+};
+
 export interface ServiceId extends ValueType<string> {
     _type: 'service.id';
 }

@@ -10,6 +10,7 @@
     import SelectEndDate from "./SelectEndDate.svelte";
     import UserEnteredTime from "./UserEnteredTime.svelte";
     import PickStartTime from "./PickStartTime.svelte";
+    import PickEndTime from "./PickEndTime.svelte";
 
     let currentMonth: Date = new Date();
     let service: Service = allConfigs[0].service;
@@ -23,10 +24,6 @@
     let selectedEndDate: IsoDate | null = null;
     let selectedStartTime: TwentyFourHourClockTime | null = null;
     let selectedEndTime: TwentyFourHourClockTime | null = null;
-
-    $: availableEndTimes = selectedEndDate && config.endTime && config.endTime._type === 'end-time' && config.endTime.time._type === 'pick-one'
-        ? config.endTime.time.options.find(option => option.date.value === selectedEndDate?.value)?.times || []
-        : [];
 
     function calculateDurationInMinutes(start: TwentyFourHourClockTime, end: TwentyFourHourClockTime): number {
         const [startHours, startMinutes] = start.value.split(':').map(Number);
@@ -175,39 +172,18 @@
         {/if}
 
         <!-- End Time Selection (if applicable) -->
-        {#if (selectedEndDate || (config.endDate?._type === 'relative-end' && selectedStartDate)) && config.endTime}
+        {#if selectedEndDate && selectedStartTime && selectedStartDate && config.endTime}
             <div class="form-control mb-4">
                 {#if config.endTime._type === 'end-time'}
                     {#if config.endTime.time._type === 'pick-one'}
-                        <label class="label">
-                            <span class="label-text font-semibold">Select End Time</span>
-                        </label>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            {#each availableEndTimes as time}
-                                {@const duration = selectedStartTime ? calculateDurationInMinutes(selectedStartTime, time.start) : 0}
-                                {@const isValidDuration = duration >= (config.endTime.minDurationMinutes ?? 0)}
-                                <button
-                                        class="btn btn-sm btn-outline {!isValidDuration || time.disabled?.disabled ? 'btn-disabled' : ''} {selectedEndTime?.value === time.start.value ? 'btn-active' : ''}"
-                                        on:click={() => handleTimeSelection(time.start, true)}
-                                        disabled={!isValidDuration || time.disabled?.disabled}
-                                        title={!isValidDuration ? `Minimum duration: ${config.endTime.minDurationMinutes} minutes` : time.disabled?.reason}
-                                >
-                                    <div class="flex flex-col items-start text-xs">
-                            <span class="flex items-center">
-                                <Clock class="mr-1" size={12}/>
-                                {time._type === 'time-slot' ? `${time.start.value} - ${time.end.value}` : time.start.value}
-                            </span>
-                                        {#if time._type === 'time-slot'}
-                                            <span>{time.label}</span>
-                                        {/if}
-                                        {#if !isValidDuration}
-                                            <span class="text-red-500">Too short</span>
-                                        {/if}
-                                    </div>
-                                </button>
-                            {/each}
-                        </div>
+                        <PickEndTime config={config.endTime.time}
+                                     {selectedStartTime}
+                                     {selectedStartDate}
+                                     {selectedEndDate}
+                                     {selectedEndTime}
+                                     minDurationMinutes={config.endTime.minDurationMinutes}
+                                     maxDurationMinutes={config.endTime.maxDurationMinutes}
+                                     on:clicked={onEndTimeSelected}/>
                     {:else if config.endTime.time._type === 'user-selected-time-config'}
                         <label class="label">
                             <span class="label-text font-semibold">Enter End Time</span>
