@@ -1,0 +1,83 @@
+<script lang="ts">
+    import {
+        allConfigs,
+        type AnyTimeBetween, type DurationOption,
+        type FixedDurationConfig,
+        type PickTime,
+        type VariableDurationConfig
+    } from "./types3";
+    import {afterUpdate} from "svelte";
+    import SingleDaySchedule from "./SingleDaySchedule.svelte";
+    import MultiDaySchedule from "./MultiDaySchedule.svelte";
+
+    let service = allConfigs[0].service;
+
+    afterUpdate(() => console.log({service}));
+
+    function onConfigChange(event: Event) {
+        const target = event.target as HTMLSelectElement;
+        const found = allConfigs.find(c => c.service.name === target.value);
+        if (found) {
+            service = found.service;
+        }
+    }
+
+    function flattenTimes(times: FixedDurationConfig | VariableDurationConfig): FixedDurationConfig | PickTime | AnyTimeBetween {
+        if (times._type === 'variable-duration-config') {
+            return times.times;
+        }
+        return times;
+    }
+
+    function maybeDuration(times: FixedDurationConfig | VariableDurationConfig): DurationOption | null {
+        if (times._type === 'variable-duration-config') {
+            return times.duration;
+        }
+        return null;
+    }
+
+</script>
+
+<div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
+    <div class="card-body p-4">
+        <div class="form-control mb-4">
+            <label class="label">Select service type</label>
+            <select class="input-bordered input" on:change={onConfigChange}>
+                {#each allConfigs as c}
+                    <option value={c.service.name} selected={c.service === service}>{c.service.name}</option>
+                {/each}
+            </select>
+        </div>
+
+        <!--        <div class="form-control mb-4">-->
+        <!--            <label class="label">Configuration definition</label>-->
+        <!--            <pre>{JSON.stringify(definition, null, 2)}</pre>-->
+        <!--        </div>-->
+    </div>
+</div>
+
+{#key service.id}
+    {#if service.scheduleConfig._type === "single-day-scheduling"}
+        <SingleDaySchedule dayConstraints={service.scheduleConfig.startDay ?? []}
+                           duration={maybeDuration(service.scheduleConfig.times)}
+                           times={flattenTimes(service.scheduleConfig.times)}/>
+    {:else}
+        <MultiDaySchedule config={service.scheduleConfig}/>
+    {/if}
+{/key}
+
+<div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
+    <div class="card-body p-4">
+
+        <!-- Start Date Selection -->
+
+        <!-- Start Time Selection -->
+
+        <!-- End Date Selection (if applicable) -->
+
+        <!-- End Time Selection (if applicable) -->
+
+
+        <!-- Selected Values Display -->
+    </div>
+</div>

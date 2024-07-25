@@ -291,15 +291,63 @@ export function time24(value: string, timezone?: Timezone): TwentyFourHourClockT
     };
 }
 
-export interface Duration extends ValueType<Minutes> {
+export interface Days extends ValueType<number> {
+    _type: 'days'
+}
+
+export function days(value: number): Days {
+    return {value, _type: 'days'}
+}
+
+export interface Hours extends ValueType<number> {
+    _type: 'hours'
+}
+
+export function hours(value: number): Hours {
+    return {value, _type: 'hours'}
+}
+
+
+export type DurationUnit = Minutes | Days | Hours
+
+export interface Duration extends ValueType<DurationUnit> {
     _type: 'duration';
 }
 
-export function duration(value: Minutes): Duration {
+export function duration(value: DurationUnit): Duration {
     return {
         _type: 'duration',
         value
     };
+}
+
+export const durationFns = {
+    toMinutes: (duration: Duration): Minutes => {
+        switch (duration.value._type) {
+            case 'minutes':
+                return duration.value
+            case 'hours':
+                return minutes(duration.value.value * 60)
+            case 'days':
+                return minutes(duration.value.value * 60 * 24)
+        }
+    },
+    matchUnits(d: Duration, exemplar: Duration): Duration {
+        if(exemplar.value._type === d.value._type) {
+            return d;
+        }
+        const asMinutes = durationFns.toMinutes(d);
+        if(exemplar.value._type === 'minutes') {
+            return duration(asMinutes);
+        }
+        if(exemplar.value._type === 'hours') {
+            return duration(hours(asMinutes.value / 60));
+        }
+        if(exemplar.value._type === 'days') {
+            return duration(days(asMinutes.value / 60 / 24));
+        }
+        throw new Error(`Unknown duration unit ${JSON.stringify(exemplar.value)}`);
+    }
 }
 
 export const time24Fns = {
@@ -609,7 +657,7 @@ export const timePeriodFns = {
         const result: TwentyFourHourClockTime[] = []
         while (currentTime.value < period.to.value) {
             result.push(currentTime);
-            currentTime = time24Fns.addMinutes(currentTime, duration.value)
+            currentTime = time24Fns.addMinutes(currentTime, durationFns.toMinutes(duration))
         }
         return result
     },
@@ -620,7 +668,7 @@ export const timePeriodFns = {
         return period.to.value === period2.from.value;
     },
     calcPeriod(from: TwentyFourHourClockTime, duration: Duration | Minutes): TimePeriod {
-        const durationMinutes = duration._type === 'duration' ? duration.value : duration;
+        const durationMinutes = duration._type === 'duration' ? durationFns.toMinutes(duration) : duration;
         return timePeriod(from, time24Fns.addMinutes(from, durationMinutes));
     },
     overlap(a: TimePeriod, b: TimePeriod): TimePeriod | null {

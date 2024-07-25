@@ -13,7 +13,7 @@ import {
     Capacity,
     capacityFns,
     dayAndTimePeriod,
-    DayAndTimePeriod,
+    DayAndTimePeriod, durationFns,
     exactTimeAvailability,
     ExactTimeAvailability,
     IsoDate,
@@ -97,7 +97,7 @@ export function availableSlot(serviceRequest: ServiceRequest, startTime: StartTi
 export const availableSlotFns = {
 
     duration(slot: AvailableSlot): Minutes {
-        return time24Fns.duration(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.serviceRequest.service.duration)).value
+        return durationFns.toMinutes(time24Fns.duration(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.serviceRequest.service.duration)))
     },
     servicePeriod(slot: AvailableSlot): TimePeriod {
         return timePeriod(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.serviceRequest.service.duration))
@@ -247,7 +247,7 @@ export const availability = {
         const service = toService(serviceRequest)
         const mappedBookings = bookings.map(b => toResourceableBooking(b, mappedResources))
         const bookingSpec = resourcing.bookingSpec(service)
-        const duration = [serviceRequest.service.duration, ...serviceRequest.options.map(o => o.option.duration.value)].reduce((acc, d) => minuteFns.sum(acc, d), minutes(0))
+        const duration = [serviceRequest.service.duration, ...serviceRequest.options.map(o => durationFns.toMinutes(o.option.duration))].reduce((acc, d) => minuteFns.sum(acc, d), minutes(0))
         const possibleStartTimes = serviceRequest.service.startTimes ?? calcPossibleStartTimes(config.startTimeSpec, businessAvailabilityForDay, duration).map(exactTimeAvailability);
         const requestedSlots = possibleStartTimes.map(st => toPeriod(serviceRequest.date, st, duration)).map(p => timeslot(dateAndTime(p.day, p.period.from), dateAndTime(p.day, p.period.to)))
         const availabilityOutcomes = listAvailability(mappedResources, mappedBookings, bookingSpec, requestedSlots)

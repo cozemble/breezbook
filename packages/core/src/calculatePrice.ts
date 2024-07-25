@@ -38,6 +38,7 @@ import {AvailableSlot, availableSlotFns} from "./availability.js";
 import * as pricing from "@breezbook/packages-pricing";
 import {
     AddOnId,
+    durationFns,
     isoDateFns,
     minuteFns,
     ServiceOptionId,
@@ -151,7 +152,7 @@ function getParameterisedPricingFactor(f: pricing.ParameterisedPricingFactor, sl
             return {name: f.name, value: 0}
         }
         const overlapDuration = timePeriodFns.toDuration(overlap);
-        return {name: f.name, value: minuteFns.toHours(overlapDuration.value)}
+        return {name: f.name, value: minuteFns.toHours(durationFns.toMinutes(overlapDuration))}
     }
     throw new Error(`Unknown required factor ${JSON.stringify(f)}`);
 }

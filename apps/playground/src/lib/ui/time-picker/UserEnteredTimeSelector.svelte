@@ -20,7 +20,7 @@
 </script>
 
 <div class="flex gap-4">
-    <select class="select select-bordered" bind:value={hour}>
+    <select class="select select-bordered  w-full" bind:value={hour}>
         {#if mode === '24h'}
             {#each hours24 as h}
                 <option value={h}>{h.toString().padStart(2, '0')}</option>
@@ -31,7 +31,7 @@
             {/each}
         {/if}
     </select>
-    <select class="select select-bordered" bind:value={minute}>
+    <select class="select select-bordered  w-full" bind:value={minute}>
         {#each minutes as m}
             <option value={m}>{m.toString().padStart(2, '0')}</option>
         {/each}

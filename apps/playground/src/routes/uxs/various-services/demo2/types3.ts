@@ -1,4 +1,15 @@
-import {minutes, type Minutes, time24, type TwentyFourHourClockTime, type ValueType} from "@breezbook/packages-types";
+import {
+    days,
+    type Days,
+    duration,
+    type Duration,
+    type DurationUnit,
+    hours,
+    minutes,
+    type Minutes,
+    time24,
+    type TwentyFourHourClockTime
+} from "@breezbook/packages-types";
 import {timeslotSpec, type TimeslotSpec} from "@breezbook/packages-core";
 
 export interface Period {
@@ -10,34 +21,6 @@ export function period(duration: Minutes): Period {
     return {_type: 'period', duration}
 }
 
-export interface Days extends ValueType<number> {
-    _type: 'days'
-}
-
-export function days(value: number): Days {
-    return {value, _type: 'days'}
-}
-
-export interface Hours extends ValueType<number> {
-    _type: 'hours'
-}
-
-export function hours(value: number): Hours {
-    return {value, _type: 'hours'}
-}
-
-export type DurationUnit = Minutes | Days | Hours
-
-export interface Duration extends ValueType<DurationUnit> {
-    _type: 'duration';
-}
-
-export function duration(value: DurationUnit): Duration {
-    return {
-        _type: 'duration',
-        value
-    };
-}
 
 export interface TimeRange {
     _type: 'time-range'
@@ -88,7 +71,7 @@ export interface Service {
     id: string
     name: string
     description: string
-    schedulingOptions: SingleDayScheduling | MultiDayScheduling
+    scheduleConfig: ScheduleConfig
 }
 
 export interface TimeslotSelection {
@@ -127,10 +110,12 @@ export function fixedTime(start: TwentyFourHourClockTime, startLabel: string, en
 
 export type FixedDurationConfig = TimeslotSelection | FixedTime
 
+export type DurationOption = Duration | DurationRange
+
 export interface VariableDurationConfig {
     _type: 'variable-duration-config'
     times: PickTime | AnyTimeBetween
-    duration: Duration | DurationRange
+    duration: DurationOption
 }
 
 export function variableDurationConfig(duration: Duration | DurationRange, times: PickTime | AnyTimeBetween): VariableDurationConfig {
@@ -146,6 +131,8 @@ export interface SingleDayScheduling {
     times: FixedDurationConfig | VariableDurationConfig
     startDay?: DayConstraint[]
 }
+
+export type ScheduleConfig = SingleDayScheduling | MultiDayScheduling
 
 export function singleDayScheduling(times: FixedDurationConfig | VariableDurationConfig, startDay?: DayConstraint[]): SingleDayScheduling {
     return {
@@ -207,7 +194,7 @@ const mobileCarWash: Service = {
     id: "mobile-car-wash",
     name: "Mobile Car Wash",
     description: "We come to you",
-    schedulingOptions:
+    scheduleConfig:
         singleDayScheduling(
             timeslotSelection(
                 [
@@ -221,7 +208,7 @@ const groupDogWalk: Service = {
     id: "group-dog-walk",
     name: "Group Dog Walk",
     description: "Socialize with other dogs",
-    schedulingOptions:
+    scheduleConfig:
         singleDayScheduling(
             timeslotSelection(
                 [
@@ -233,7 +220,7 @@ const individualDogWalkWithFixedTimeChoices: Service = {
     id: "individual-dog-walk",
     name: "Individual Dog Walk",
     description: "One-on-one attention",
-    schedulingOptions:
+    scheduleConfig:
         singleDayScheduling(
             variableDurationConfig(
                 duration(minutes(60)),
@@ -248,7 +235,7 @@ const individualDogWalkWithToTheMinuteSelectableTime: Service = {
     id: "individual-dog-walk-with-selectable-time-range",
     name: "Individual Dog Walk with Selectable Time Range",
     description: "One-on-one attention",
-    schedulingOptions:
+    scheduleConfig:
         singleDayScheduling(
             variableDurationConfig(
                 durationRange(minutes(30), minutes(120)),
@@ -259,7 +246,7 @@ const petBoardingForOneDayWithFixedCheckInAndOut: Service = {
     id: "pet-boarding-for-one-day-with-fixed-check-in-and-out",
     name: "Pet Boarding For One Day With Fixed Check-In And Out",
     description: "For one day",
-    schedulingOptions:
+    scheduleConfig:
         singleDayScheduling(
             fixedTime(
                 time24("09:00"), "Drop-off",
@@ -270,7 +257,7 @@ const petBoardingForOneDayWithSelectableCheckInAndOut: Service = {
     id: "pet-boarding-for-one-day-with-selectable-check-in-and-out",
     name: "Pet Boarding For One Day With Selectable Check-In And Out",
     description: "For one day",
-    schedulingOptions:
+    scheduleConfig:
         singleDayScheduling(
             variableDurationConfig(
                 durationRange(hours(4), hours(8)),
@@ -281,7 +268,7 @@ const petBoardingForManyDaysWithFixedTimes: Service = {
     id: "pet-boarding-for-many-days-with-fixed-times",
     name: "Pet Boarding For Many Days With Fixed Times",
     description: "For many days",
-    schedulingOptions:
+    scheduleConfig:
         multiDayScheduling(
             variableLength(days(1), days(7)),
             fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up"))
@@ -291,7 +278,7 @@ const petBoardingForManyDaysWithSelectableTimes: Service = {
     id: "pet-boarding-for-many-days-with-selectable-times",
     name: "Pet Boarding For Many Days With Selectable Times",
     description: "For many days",
-    schedulingOptions: multiDayScheduling(
+    scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(7)),
         anyTimeBetween(time24("09:00"), time24("17:00")))
 }
@@ -300,7 +287,7 @@ const hotelRoom: Service = {
     id: "hotel-room",
     name: "Hotel Room",
     description: "Stay overnight",
-    schedulingOptions: multiDayScheduling(
+    scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(365)),
         fixedTime(time24("14:00"), "Check-in", time24("11:00"), "Check-out"))
 }
@@ -309,7 +296,7 @@ const summerCamp: Service = {
     id: "summer-camp",
     name: "Summer Camp",
     description: "For kids",
-    schedulingOptions: multiDayScheduling(
+    scheduleConfig: multiDayScheduling(
         fixedLength(days(5)),
         fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up"))
 }
@@ -318,7 +305,7 @@ const equipmentRentalWithFlexibleTime: Service = {
     id: "equipment-rental-with-flexible-time",
     name: "Equipment Rental with flexible time",
     description: "Rent equipment",
-    schedulingOptions: multiDayScheduling(
+    scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(7)),
         anyTimeBetween(time24("09:00"), time24("17:00")))
 }
@@ -327,7 +314,7 @@ const equipmentRentalWithControlledTimes: Service = {
     id: "equipment-rental-with-controlled-times",
     name: "Equipment Rental with controlled times",
     description: "Rent equipment",
-    schedulingOptions: multiDayScheduling(
+    scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(7)),
         pickTime(timeRange(time24("09:00"), time24("17:00"), period(minutes(60)))))
 }
@@ -336,7 +323,7 @@ const yachtCharter: Service = {
     id: "yacht-charter",
     name: "Yacht Charter",
     description: "Charter a yacht",
-    schedulingOptions: multiDayScheduling(
+    scheduleConfig: multiDayScheduling(
         variableLength(days(7), days(28)),
         fixedTime(time24("15:00"), "Collect", time24("12:00"), "Return"),
         [daysOfWeek("Saturday")],

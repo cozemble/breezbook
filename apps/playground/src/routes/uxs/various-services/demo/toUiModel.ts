@@ -49,14 +49,6 @@ function disabledIfExcluded(date: IsoDate, permittedDaysOfWeek: string[]): Disab
 
 }
 
-// function applySchedulingOptions(dayType: "start" | "end", date: IsoDate, schedulingOptions: SchedulingOptions): DatePickConfig {
-//     const dateRules = dayType === "start" ? schedulingOptions.startDays : schedulingOptions.endDays
-//     if (!dateRules) {
-//         return datePickConfig(date, disabledIfPast(date))
-//     }
-//     return datePickConfig(date, disabledIfPast(date) ?? disabledIfExcluded(date, dateRules.days.days))
-// }
-
 function timeRangeToTimes(timeRange: TimeRange): Time[] {
     const times = [] as Time[]
     let current = timeRange.from
