@@ -2569,3 +2569,25 @@ Test Suite Considerations:
 
 These examples and considerations should provide a comprehensive foundation for creating a robust test suite that covers a wide range of multi-day booking scenarios.
 ```
+
+# Wed 24 Jul 2024
+Having to state the duration of a service that is based on timeslots is really annoying me:
+
+```typescript
+const mobileCarWash: Service = {
+    id: "mobile-car-wash",
+    name: "Mobile Car Wash",
+    description: "We come to you",
+    schedulingOptions: {
+        duration: duration(hours(2)),
+        startTimes: {
+            times: timeslotSelection([
+                timeslot(time24("09:00"), time24("11:00"), "Morning"),
+                timeslot(time24("11:00"), time24("13:00"), "Midday"),
+                timeslot(time24("13:00"), time24("15:00"), "Afternoon"),
+                timeslot(time24("15:00"), time24("17:00"), "Late afternoon")
+            ])
+        }
+    }
+}
+```

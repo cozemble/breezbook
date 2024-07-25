@@ -155,6 +155,48 @@ function timeslot(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime, de
     return timeslotSpec(from, to, description)
 }
 
+export interface PickTimeConfig {
+    _type: 'pick-time-config'
+    timeRange: TimeRange
+    duration: Duration
+}
+
+export function pickTimeConfig(timeRange: TimeRange, duration: Duration): PickTimeConfig {
+    return {_type: 'pick-time-config', timeRange, duration}
+}
+
+export interface FixedTimeConfig {
+    _type: 'fixed-time-config'
+    start: TwentyFourHourClockTime
+    end: TwentyFourHourClockTime
+    startLabel: string
+    endLabel: string
+}
+
+export function fixedTimeConfig(start: TwentyFourHourClockTime, startLabel: string, end: TwentyFourHourClockTime, endLabel: string): FixedTimeConfig {
+    return {_type: 'fixed-time-config', start, startLabel, end, endLabel}
+}
+
+export interface AnyTimeBetweenConfig {
+    _type: 'any-time-between-config'
+    from: TwentyFourHourClockTime
+    to: TwentyFourHourClockTime
+}
+
+export interface FixedDurationConfig {
+    _type: 'fixed-duration-config'
+    times: TimeslotSelection | PickTimeConfig | FixedTimeConfig | AnyTimeBetween
+}
+
+export interface VariableDurationConfig {
+    _type: 'variable-duration-config'
+    times: PickTimeConfig  | AnyTimeBetween
+}
+
+export interface SingleDayScheduling {
+    _type: 'single-day-scheduling'
+    times: FixedDurationConfig | VariableDurationConfig
+}
 
 const mobileCarWash: Service = {
     id: "mobile-car-wash",
@@ -367,25 +409,6 @@ const yachtCharter: Service = {
         }
     }
 }
-
-// export const allServices = {
-//     mobileCarWash,
-// }
-
-// export const allServices = {
-//     mobileCarWash,
-//     groupDogWalk,
-//     individualDogWalkWithFixedTimeChoices,
-//     individualDogWalkWithToTheMinuteSelectableTime,
-//     petBoardingForOneDayWithFixedCheckInAndOut,
-//     petBoardingForOneDayWithSelectableCheckInAndOut,
-//     petBoardingForManyDaysWithFixedTimes,
-//     petBoardingForManyDaysWithSelectableTimes,
-//     hotelRoom,
-//     summerCamp,
-//     equipmentRental,
-//     yachtCharter
-// }
 
 export const allConfigs = [
     {service: mobileCarWash},
