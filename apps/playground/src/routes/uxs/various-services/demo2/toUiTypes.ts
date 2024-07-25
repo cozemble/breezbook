@@ -64,6 +64,10 @@ export function getPossibleStartTimes(startDate: IsoDate, times: TimeslotSelecti
     }
 }
 
+export function getPossibleEndTimes(endDate:IsoDate, times:  PickTime): Time[] {
+    return timeRangeToTimes(times.timeRange)
+}
+
 function disabledIfBeforeDate(date: IsoDate, selectedStartDate: IsoDate): Disabled | undefined {
     if (date.value < selectedStartDate.value) {
         return disabled("Date is before start date")

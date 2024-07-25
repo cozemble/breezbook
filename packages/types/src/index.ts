@@ -202,7 +202,7 @@ export const isoDateFns = {
         }
         return dates.reduce((min, date) => (this.lte(date, min) ? date : min), mandatory(dates[0], `No dates to compare`));
     },
-    toJavascriptDate(date: IsoDate, time: TwentyFourHourClockTime) {
+    toJavascriptDate(date: IsoDate, time: TwentyFourHourClockTime = time24('00:00')) {
         const [year, month, day] = date.value.split('-').map((s) => parseInt(s, 10));
         if (!year || !month || !day) {
             throw new Error(`Invalid date format ${date.value}. Expected YYYY-MM-DD`);

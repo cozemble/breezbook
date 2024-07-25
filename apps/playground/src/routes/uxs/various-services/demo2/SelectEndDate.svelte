@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {IsoDate} from "@breezbook/packages-types";
+    import {type IsoDate, isoDateFns} from "@breezbook/packages-types";
     import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
     import {daysOfWeek} from "./uIConstants";
     import MonthSelector from "./MonthSelector.svelte";
@@ -10,7 +10,7 @@
     export let selectedEndDate: IsoDate | null
     export let dayConstraints: DayConstraint[]
     export let length: DayLength
-    let currentMonth: Date = new Date();
+    let currentMonth: Date = new Date(selectedStartDate.value);
 
     $: selectedEndDateAsDate = selectedEndDate ? new Date(selectedEndDate.value) : null;
     $: disabledDays = disabledEndDays(currentMonth, selectedStartDate, length,dayConstraints);
