@@ -1,6 +1,14 @@
 import {type DisabledDays, formatDate} from "$lib/ui/time-picker/types";
 import {type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbook/packages-types";
-import type {DayConstraint, PickTime, TimeRange, TimeslotSelection} from "./types3";
+import type {
+    DayConstraint,
+    DayLength,
+    FixedLength,
+    PickTime,
+    TimeRange,
+    TimeslotSelection,
+    VariableLength
+} from "./types3";
 import {disabled, type Disabled} from "../demo/timeSelectionUiTypes";
 import {type SelectableTimeOption, time, type Time, timeslot} from "./uiTypes";
 
@@ -54,4 +62,44 @@ export function getPossibleStartTimes(startDate: IsoDate, times: TimeslotSelecti
     } else {
         return timeRangeToTimes(times.timeRange)
     }
+}
+
+function disabledIfBeforeDate(date: IsoDate, selectedStartDate: IsoDate): Disabled | undefined {
+    if (date.value < selectedStartDate.value) {
+        return disabled("Date is before start date")
+    }
+    return undefined
+}
+
+function disabledIfBreaksRangeLength(date: IsoDate, selectedStartDate: IsoDate, length: VariableLength): Disabled | undefined {
+    const daysBetween = isoDateFns.daysBetween(selectedStartDate,date)
+    if (daysBetween + 1 < length.minDays.value) {
+        return disabled("Date is too soon")
+    }
+    if(length.maxDays && daysBetween + 1 > length.maxDays.value) {
+        return disabled("Date is too far in the future")
+    }
+    return undefined
+}
+
+function disabledIfBreaksLength(date: IsoDate, selectedStartDate: IsoDate, length: DayLength): Disabled | undefined {
+    if (length._type === "variable-length") {
+        return disabledIfBreaksRangeLength(date, selectedStartDate, length)
+    }
+    return undefined
+}
+
+export function disabledEndDays(currentMonth: Date, selectedStartDate: IsoDate, length: DayLength, dayConstraints: DayConstraint[]): DisabledDays {
+    const startOfMonth = isoDate(formatDate(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1)))
+    const daysInMonth = isoDateFns.daysInMonth(startOfMonth)
+    const disabledDays = daysInMonth.map(day =>
+        disabledIfPast(day)
+        ?? disabledIfConstrained(day, dayConstraints)
+        ?? disabledIfBeforeDate(day, selectedStartDate)
+        ?? disabledIfBreaksLength(day, selectedStartDate, length))
+    return daysInMonth.reduce((acc, day, index) => {
+        acc[day.value] = !!disabledDays[index]
+        return acc
+    }, {} as DisabledDays)
+
 }

@@ -237,6 +237,9 @@ export const isoDateFns = {
         const end = new Date(dayjs(start).endOf('month').format('YYYY-MM-DD'));
         return this.listDays(startOfMonth, isoDate(dayjs(end).format('YYYY-MM-DD')));
     },
+    daysBetween(a: IsoDate, b: IsoDate): number {
+        return dayjs(b.value).diff(a.value, 'days');
+    }
 };
 
 export interface DayAndTime {
@@ -333,17 +336,17 @@ export const durationFns = {
         }
     },
     matchUnits(d: Duration, exemplar: Duration): Duration {
-        if(exemplar.value._type === d.value._type) {
+        if (exemplar.value._type === d.value._type) {
             return d;
         }
         const asMinutes = durationFns.toMinutes(d);
-        if(exemplar.value._type === 'minutes') {
+        if (exemplar.value._type === 'minutes') {
             return duration(asMinutes);
         }
-        if(exemplar.value._type === 'hours') {
+        if (exemplar.value._type === 'hours') {
             return duration(hours(asMinutes.value / 60));
         }
-        if(exemplar.value._type === 'days') {
+        if (exemplar.value._type === 'days') {
             return duration(days(asMinutes.value / 60 / 24));
         }
         throw new Error(`Unknown duration unit ${JSON.stringify(exemplar.value)}`);

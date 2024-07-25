@@ -66,6 +66,7 @@
     {:else}
         <MultiDaySchedule startDayConstraints={service.scheduleConfig.startDay ?? []}
                           endDayConstraints={service.scheduleConfig.endDay ?? []}
+                          length={service.scheduleConfig.length}
                           startTimes={service.scheduleConfig.startTimes}/>
     {/if}
 {/key}
