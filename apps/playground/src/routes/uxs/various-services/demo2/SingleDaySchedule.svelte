@@ -4,8 +4,9 @@
         DayConstraint,
         DurationOption,
         DurationRange,
-        FixedDurationConfig,
-        PickTime
+        FixedTime,
+        PickTime,
+        TimeslotSelection
     } from "./types3";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {writable} from "svelte/store";
@@ -15,19 +16,13 @@
     import PickStartTime from "./PickStartTime.svelte";
     import UserEnteredTime from "./UserEnteredTime.svelte";
     import {Clock} from "lucide-svelte";
-    import {afterUpdate} from "svelte";
     import type {Duration} from "../demo/types2";
     import PrintDuration from "./PrintDuration.svelte";
 
     export let dayConstraints: DayConstraint[]
-    export let times: FixedDurationConfig | PickTime | AnyTimeBetween
+    export let times: TimeslotSelection | FixedTime | PickTime | AnyTimeBetween
     export let duration: DurationOption | null = null
     export let state = writable({selectedDay: null, selectedTime: null} as SingleDaySelection)
-    let calendarStartMonth = new Date();
-
-    function changeStartMonth(months: number) {
-        calendarStartMonth = new Date(calendarStartMonth.getFullYear(), calendarStartMonth.getMonth() + months, 1);
-    }
 
     function onStartDateSelected(event: CustomEvent<Date>) {
         const selectedDay = isoDate(formatDate(event.detail))
@@ -60,8 +55,8 @@
         throw new Error(`Unexpected time type: ${time._type}`)
     }
 
-    function onStartTimeSelected(event: CustomEvent<SelectableTimeOption>) {
-        state.update(s => ({...s, selectedTime: event.detail}))
+    function onStartTimeSelected(selectedTime: SelectableTimeOption) {
+        state.update(s => ({...s, selectedTime}))
     }
 
     function getActualDuration(duration: DurationRange, selectedTime: Timeslot): Duration {
@@ -69,7 +64,6 @@
     }
 
     function validateDuration(duration: DurationOption | null, selectedTime: TimeOption | null): DurationReport | null {
-        console.log({duration, selectedTime})
         if (duration === null || selectedTime === null || duration._type === 'duration' || selectedTime._type === 'time' || selectedTime._type === 'fixed-time') {
             return null
         }
@@ -94,27 +88,15 @@
     }
 
     $: durationReport = validateDuration(duration, $state.selectedTime)
-
-    afterUpdate(() => {
-        console.log({durationReport})
-    })
 </script>
 
 <div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
     <div class="card-body p-4">
 
         <!-- Start Date Selection -->
-        <div class="form-control mb-4">
-            <label class="label">
-                <span class="label-text font-semibold">Select Start Date</span>
-            </label>
-            <SelectStartDate currentMonth={calendarStartMonth}
-                             {dayConstraints}
-                             selectedStartDate={$state.selectedDay}
-                             on:prevMonth={() => changeStartMonth(-1)}
-                             on:nextMonth={() => changeStartMonth(1)}
-                             on:clicked={onStartDateSelected}/>
-        </div>
+        <SelectStartDate {dayConstraints}
+                         selectedStartDate={$state.selectedDay}
+                         on:clicked={onStartDateSelected}/>
 
         <!-- Start Time Selection -->
         {#if $state.selectedDay}
@@ -123,12 +105,12 @@
                     <PickStartTime {times}
                                    selectedStartDate={$state.selectedDay}
                                    selectedStartTime={pickTimeCast($state.selectedTime)}
-                                   on:clicked={onStartTimeSelected}/>
+                                   {onStartTimeSelected}/>
                 {:else if times._type === "any-time-between" && duration}
                     <UserEnteredTime from={times.from} to={times.to}
                                      selectedTime={userSelectedTimeCast($state.selectedTime)}
                                      duration={duration}
-                                     on:timeSelected={onStartTimeSelected}/>
+                                     {onStartTimeSelected} />
                 {/if}
             </div>
         {/if}

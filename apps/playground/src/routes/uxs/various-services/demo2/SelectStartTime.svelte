@@ -1,5 +1,4 @@
 <script lang="ts">
-    // import type {Time, Timeslot} from "./timeSelectionUiTypes";
     import {createEventDispatcher} from "svelte";
     import type {SelectableTimeOption} from "./uiTypes";
     import TimeButton from "$lib/ui/time-picker/TimeButton.svelte";

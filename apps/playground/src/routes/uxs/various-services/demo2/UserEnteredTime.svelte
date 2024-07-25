@@ -9,6 +9,7 @@
     export let to: TwentyFourHourClockTime;
     export let selectedTime: SelectableTimeOption | null = null;
     export let duration: DurationOption
+    export let onStartTimeSelected: (time: SelectableTimeOption) => void
 
     function castAsTime(time: SelectableTimeOption | null): Time | null {
         if (time === null) {
@@ -29,10 +30,14 @@
         }
         throw new Error(`Unexpected time type: ${time._type}`)
     }
+
+    function onTimeSelected(event: CustomEvent<SelectableTimeOption>) {
+        onStartTimeSelected(event.detail)
+    }
 </script>
 
 {#if duration._type === "duration"}
-    <UserEnteredStartTime {from} {to} selectedTime={castAsTime(selectedTime)} on:timeSelected/>
+    <UserEnteredStartTime {from} {to} selectedTime={castAsTime(selectedTime)} on:timeSelected={onTimeSelected}/>
 {:else}
-    <UserEnteredStartTimeslot {from} {to} selectedTime={castAsTimeslot(selectedTime)} on:timeSelected/>
+    <UserEnteredStartTimeslot {from} {to} selectedTime={castAsTimeslot(selectedTime)} on:timeSelected={onTimeSelected}/>
 {/if}

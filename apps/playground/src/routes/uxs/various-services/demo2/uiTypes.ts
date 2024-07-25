@@ -6,10 +6,13 @@ export interface Time {
     start: TwentyFourHourClockTime;
 }
 
-export interface Timeslot {
-    _type: "time-slot";
+export interface StartAndEndTime {
     start: TwentyFourHourClockTime;
     end: TwentyFourHourClockTime;
+}
+
+export interface Timeslot extends StartAndEndTime {
+    _type: "time-slot";
     label: string;
     disabled: boolean
 }
@@ -40,9 +43,26 @@ export interface SingleDaySelection {
     selectedTime: TimeOption | null
 }
 
+export interface MultiDayTime {
+    _type: "multi-day-time"
+    startTime: Time | null
+    endTime: Time | null
+}
+
 export interface MultiDaySelection {
-    start: SingleDaySelection
-    end: SingleDaySelection
+    startDate: IsoDate | null
+    endDate: IsoDate | null
+    selectedStartTime: FixedTime | Time | null
+    selectedEndTime: Time | null
+}
+
+export function initialMultiDaySelection(): MultiDaySelection {
+    return {
+        startDate: null,
+        endDate: null,
+        selectedStartTime: null,
+        selectedEndTime: null
+    }
 }
 
 export interface DurationReport {

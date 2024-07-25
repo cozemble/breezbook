@@ -5,6 +5,8 @@ import {
     type Duration,
     type DurationUnit,
     hours,
+    type IsoDate,
+    isoDateFns,
     minutes,
     type Minutes,
     time24,
@@ -108,8 +110,6 @@ export function fixedTime(start: TwentyFourHourClockTime, startLabel: string, en
     return {_type: 'fixed-time', start, startLabel, end, endLabel}
 }
 
-export type FixedDurationConfig = TimeslotSelection | FixedTime
-
 export type DurationOption = Duration | DurationRange
 
 export interface VariableDurationConfig {
@@ -126,21 +126,83 @@ export function variableDurationConfig(duration: Duration | DurationRange, times
     }
 }
 
+export interface TimeOptions<T> {
+    _type: 'time-options'
+    usual: T;
+    seasonal?: {
+        [season: string]: T;
+    };
+    weekday?: T;
+    weekend?: T;
+    special?: {
+        [dateString: string]: T;
+    };
+}
+
+export const timeOptionsFns = {
+    forDate<T>(options: TimeOptions<T>, date: IsoDate): T {
+        if (options.special && options.special[date.value]) {
+            return options.special[date.value]
+        }
+        if (options.weekend && isoDateFns.isWeekend(date)) {
+            return options.weekend
+        }
+        if (options.weekday && !isoDateFns.isWeekend(date)) {
+            return options.weekday
+        }
+        return options.usual
+    }
+}
+
+export type TimeOptionsParams<T> = Omit<TimeOptions<T>, "usual" | "_type">
+
+export function startTimes<T>(usual: T, params: TimeOptionsParams<T> = {}): TimeOptions<T> {
+    return {
+        _type: 'time-options',
+        usual,
+        ...params
+    }
+}
+
+export type MultiDayStartTimeOptions = TimeOptions<FixedTime | PickTime | AnyTimeBetween>
+export type MultiDayEndTimeOptions = TimeOptions<PickTime | AnyTimeBetween>
+
 export interface SingleDayScheduling {
     _type: 'single-day-scheduling'
-    times: FixedDurationConfig | VariableDurationConfig
+    times: TimeslotSelection | FixedTime | VariableDurationConfig
     startDay?: DayConstraint[]
+}
+
+export interface MultiDayScheduling {
+    _type: 'multi-day-scheduling'
+    length: DayLength
+    startTimes: MultiDayStartTimeOptions
+    endTimes?: MultiDayEndTimeOptions
+    startDay?: DayConstraint[]
+    endDay?: DayConstraint[]
 }
 
 export type ScheduleConfig = SingleDayScheduling | MultiDayScheduling
 
-export function singleDayScheduling(times: FixedDurationConfig | VariableDurationConfig, startDay?: DayConstraint[]): SingleDayScheduling {
+export function singleDayScheduling(times: TimeslotSelection | FixedTime | VariableDurationConfig, startDay?: DayConstraint[]): SingleDayScheduling {
     return {
         _type: 'single-day-scheduling',
         times,
         startDay
     }
 }
+
+export function multiDayScheduling(length: DayLength, startTimes: MultiDayStartTimeOptions, endTimes: MultiDayEndTimeOptions | null = null, startDay?: DayConstraint[], endDay?: DayConstraint[]): MultiDayScheduling {
+    return {
+        _type: 'multi-day-scheduling',
+        length,
+        startTimes,
+        endTimes: endTimes ?? undefined,
+        startDay,
+        endDay
+    }
+}
+
 
 export type DayConstraint = DaysOfWeek
 
@@ -172,23 +234,6 @@ export function fixedLength(days: Days): FixedLength {
 
 export type DayLength = VariableLength | FixedLength
 
-export interface MultiDayScheduling {
-    _type: 'multi-day-scheduling'
-    length: DayLength
-    times: TimeslotSelection | FixedTime | PickTime | AnyTimeBetween
-    startDay?: DayConstraint[]
-    endDay?: DayConstraint[]
-}
-
-export function multiDayScheduling(length: DayLength, times: TimeslotSelection | FixedTime | PickTime | AnyTimeBetween, startDay?: DayConstraint[], endDay?: DayConstraint[]): MultiDayScheduling {
-    return {
-        _type: 'multi-day-scheduling',
-        length,
-        times,
-        startDay,
-        endDay
-    }
-}
 
 const mobileCarWash: Service = {
     id: "mobile-car-wash",
@@ -271,7 +316,7 @@ const petBoardingForManyDaysWithFixedTimes: Service = {
     scheduleConfig:
         multiDayScheduling(
             variableLength(days(1), days(7)),
-            fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up"))
+            startTimes(fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up")))
 }
 
 const petBoardingForManyDaysWithSelectableTimes: Service = {
@@ -280,7 +325,7 @@ const petBoardingForManyDaysWithSelectableTimes: Service = {
     description: "For many days",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(7)),
-        anyTimeBetween(time24("09:00"), time24("17:00")))
+        startTimes(anyTimeBetween(time24("09:00"), time24("17:00"))))
 }
 
 const hotelRoom: Service = {
@@ -289,7 +334,17 @@ const hotelRoom: Service = {
     description: "Stay overnight",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(365)),
-        fixedTime(time24("14:00"), "Check-in", time24("11:00"), "Check-out"))
+        startTimes(fixedTime(time24("14:00"), "Check-in", time24("11:00"), "Check-out")))
+}
+
+const hotelRoomWithLateCheckoutAtWeekends: Service = {
+    id: "hotel-room-with-late-checkout-at-weekends",
+    name: "Hotel Room with late checkout at weekends",
+    description: "Stay overnight",
+    scheduleConfig: multiDayScheduling(
+        variableLength(days(1), days(365)),
+        startTimes(fixedTime(time24("14:00"), "Check-in", time24("11:00"), "Check-out"),
+            {weekend: fixedTime(time24("14:00"), "Check-in", time24("14:00"), "Check-out")}))
 }
 
 const summerCamp: Service = {
@@ -298,7 +353,7 @@ const summerCamp: Service = {
     description: "For kids",
     scheduleConfig: multiDayScheduling(
         fixedLength(days(5)),
-        fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up"))
+        startTimes(fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up")))
 }
 
 const equipmentRentalWithFlexibleTime: Service = {
@@ -307,7 +362,7 @@ const equipmentRentalWithFlexibleTime: Service = {
     description: "Rent equipment",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(7)),
-        anyTimeBetween(time24("09:00"), time24("17:00")))
+        startTimes(anyTimeBetween(time24("09:00"), time24("17:00"))))
 }
 
 const equipmentRentalWithControlledTimes: Service = {
@@ -316,7 +371,7 @@ const equipmentRentalWithControlledTimes: Service = {
     description: "Rent equipment",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(7)),
-        pickTime(timeRange(time24("09:00"), time24("17:00"), period(minutes(60)))))
+        startTimes(pickTime(timeRange(time24("09:00"), time24("17:00"), period(minutes(60))))))
 }
 
 const yachtCharter: Service = {
@@ -325,7 +380,8 @@ const yachtCharter: Service = {
     description: "Charter a yacht",
     scheduleConfig: multiDayScheduling(
         variableLength(days(7), days(28)),
-        fixedTime(time24("15:00"), "Collect", time24("12:00"), "Return"),
+        startTimes(fixedTime(time24("15:00"), "Collect", time24("12:00"), "Return")),
+        null,
         [daysOfWeek("Saturday")],
         [daysOfWeek("Saturday")])
 }
@@ -338,6 +394,7 @@ export const allConfigs = [
     {service: petBoardingForOneDayWithSelectableCheckInAndOut},
     {service: petBoardingForManyDaysWithFixedTimes},
     {service: hotelRoom},
+    {service: hotelRoomWithLateCheckoutAtWeekends},
     {service: summerCamp},
     {service: equipmentRentalWithFlexibleTime},
     {service: equipmentRentalWithControlledTimes},

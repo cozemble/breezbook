@@ -1,9 +1,11 @@
 <script lang="ts">
     import {
         allConfigs,
-        type AnyTimeBetween, type DurationOption,
-        type FixedDurationConfig,
+        type AnyTimeBetween,
+        type DurationOption,
+        type FixedTime,
         type PickTime,
+        type TimeslotSelection,
         type VariableDurationConfig
     } from "./types3";
     import {afterUpdate} from "svelte";
@@ -22,14 +24,14 @@
         }
     }
 
-    function flattenTimes(times: FixedDurationConfig | VariableDurationConfig): FixedDurationConfig | PickTime | AnyTimeBetween {
+    function flattenTimes(times: TimeslotSelection | FixedTime | VariableDurationConfig): TimeslotSelection | FixedTime | PickTime | AnyTimeBetween {
         if (times._type === 'variable-duration-config') {
             return times.times;
         }
         return times;
     }
 
-    function maybeDuration(times: FixedDurationConfig | VariableDurationConfig): DurationOption | null {
+    function maybeDuration(times: TimeslotSelection | FixedTime | VariableDurationConfig): DurationOption | null {
         if (times._type === 'variable-duration-config') {
             return times.duration;
         }
@@ -62,22 +64,8 @@
                            duration={maybeDuration(service.scheduleConfig.times)}
                            times={flattenTimes(service.scheduleConfig.times)}/>
     {:else}
-        <MultiDaySchedule config={service.scheduleConfig}/>
+        <MultiDaySchedule startDayConstraints={service.scheduleConfig.startDay ?? []}
+                          endDayConstraints={service.scheduleConfig.endDay ?? []}
+                          startTimes={service.scheduleConfig.startTimes}/>
     {/if}
 {/key}
-
-<div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
-    <div class="card-body p-4">
-
-        <!-- Start Date Selection -->
-
-        <!-- Start Time Selection -->
-
-        <!-- End Date Selection (if applicable) -->
-
-        <!-- End Time Selection (if applicable) -->
-
-
-        <!-- Selected Values Display -->
-    </div>
-</div>
