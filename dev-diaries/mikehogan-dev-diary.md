@@ -2591,3 +2591,35 @@ const mobileCarWash: Service = {
     }
 }
 ```
+
+# Thu 25 Jul 2024
+Resolved the above by shifting to:
+
+```typescript
+const mobileCarWash: Service = {
+    id: "mobile-car-wash",
+    name: "Mobile Car Wash",
+    description: "We come to you",
+    schedulingOptions:
+        singleDayScheduling(
+            timeslotSelection(
+                [
+                    timeslot(time24("09:00"), time24("11:00"), "Morning"),
+                    timeslot(time24("11:00"), time24("13:00"), "Midday"),
+                    timeslot(time24("13:00"), time24("15:00"), "Afternoon"),
+                    timeslot(time24("15:00"), time24("17:00"), "Late afternoon")]))
+}
+```
+
+and 
+
+```typescript
+const equipmentRentalWithControlledTimes: Service = {
+    id: "equipment-rental-with-controlled-times",
+    name: "Equipment Rental with controlled times",
+    description: "Rent equipment",
+    schedulingOptions: multiDayScheduling(
+        variableLength(days(1), days(7)),
+        pickTime(timeRange(time24("09:00"), time24("17:00"), period(minutes(60)))))
+}
+```
