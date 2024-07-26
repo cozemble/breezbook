@@ -316,7 +316,9 @@ const petBoardingForManyDaysWithFixedTimes: Service = {
     scheduleConfig:
         multiDayScheduling(
             variableLength(days(1), days(7)),
-            startTimes(fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up")))
+            startTimes(
+                fixedTime(time24("09:00"), "Drop-off",
+                    time24("17:00"), "Pick-up")))
 }
 
 const petBoardingForManyDaysWithSelectableTimes: Service = {
@@ -334,7 +336,9 @@ const hotelRoom: Service = {
     description: "Stay overnight",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(365)),
-        startTimes(fixedTime(time24("15:00"), "Check-in", time24("11:00"), "Check-out")))
+        startTimes(
+            fixedTime(time24("15:00"), "Check-in",
+                time24("11:00"), "Check-out")))
 }
 
 const hotelRoomWithLateCheckoutAtWeekends: Service = {
@@ -343,8 +347,12 @@ const hotelRoomWithLateCheckoutAtWeekends: Service = {
     description: "Stay overnight",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(365)),
-        startTimes(fixedTime(time24("15:00"), "Check-in", time24("11:00"), "Check-out"),
-            {weekend: fixedTime(time24("15:00"), "Check-in", time24("14:00"), "Check-out")}))
+        startTimes(fixedTime(time24("15:00"), "Check-in",
+                time24("11:00"), "Check-out"),
+            {
+                weekend: fixedTime(time24("15:00"), "Check-in",
+                    time24("14:00"), "Check-out")
+            }))
 }
 
 const summerCamp: Service = {
@@ -353,7 +361,10 @@ const summerCamp: Service = {
     description: "For kids",
     scheduleConfig: multiDayScheduling(
         fixedLength(days(5)),
-        startTimes(fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up")),
+        startTimes(
+            fixedTime(
+                time24("09:00"), "Drop-off",
+                time24("17:00"), "Pick-up")),
         null,
         [daysOfWeek("Monday")])
 }
@@ -364,7 +375,8 @@ const equipmentRentalWithFlexibleTime: Service = {
     description: "Rent equipment",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(7)),
-        startTimes(anyTimeBetween(time24("09:00"), time24("17:00"))))
+        startTimes(
+            anyTimeBetween(time24("09:00"), time24("17:00"))))
 }
 
 const equipmentRentalWithControlledTimes: Service = {
@@ -373,7 +385,12 @@ const equipmentRentalWithControlledTimes: Service = {
     description: "Rent equipment",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(7)),
-        startTimes(pickTime(timeRange(time24("09:00"), time24("17:00"), period(minutes(60))))))
+        startTimes(
+            pickTime(
+                timeRange(
+                    time24("09:00"),
+                    time24("17:00"),
+                    period(minutes(60))))))
 }
 
 const yachtCharter: Service = {
@@ -382,7 +399,10 @@ const yachtCharter: Service = {
     description: "Charter a yacht",
     scheduleConfig: multiDayScheduling(
         variableLength(days(7), days(28)),
-        startTimes(fixedTime(time24("15:00"), "Collect", time24("12:00"), "Return")),
+        startTimes(
+            fixedTime(
+                time24("15:00"), "Collect",
+                time24("12:00"), "Return")),
         null,
         [daysOfWeek("Saturday")],
         [daysOfWeek("Saturday")])
