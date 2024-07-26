@@ -251,6 +251,7 @@ const mobileCarWash: Service = {
 }
 // END-CODE: mobile-car-wash
 
+// BEGIN-CODE: group-dog-walk
 const groupDogWalk: Service = {
     id: "group-dog-walk",
     name: "Group Dog Walk",
@@ -262,7 +263,9 @@ const groupDogWalk: Service = {
                     timeslot(time24("09:00"), time24("10:00"), "Morning slot"),
                     timeslot(time24("17:00"), time24("18:00"), "Evening slot")]))
 }
+// END-CODE: group-dog-walk
 
+// BEGIN-CODE: individual-dog-walk
 const individualDogWalkWithFixedTimeChoices: Service = {
     id: "individual-dog-walk",
     name: "Individual Dog Walk",
@@ -277,7 +280,9 @@ const individualDogWalkWithFixedTimeChoices: Service = {
                         time24("16:00"),
                         period(minutes(30))))))
 }
+// END-CODE: individual-dog-walk
 
+// BEGIN-CODE: individual-dog-walk-with-selectable-time-range
 const individualDogWalkWithToTheMinuteSelectableTime: Service = {
     id: "individual-dog-walk-with-selectable-time-range",
     name: "Individual Dog Walk with Selectable Time Range",
@@ -288,7 +293,9 @@ const individualDogWalkWithToTheMinuteSelectableTime: Service = {
                 durationRange(minutes(30), minutes(120)),
                 anyTimeBetween(time24("09:00"), time24("17:00"))))
 }
+// END-CODE: individual-dog-walk-with-selectable-time-range
 
+// BEGIN-CODE: pet-boarding-for-one-day-with-fixed-check-in-and-out
 const petBoardingForOneDayWithFixedCheckInAndOut: Service = {
     id: "pet-boarding-for-one-day-with-fixed-check-in-and-out",
     name: "Pet Boarding For One Day With Fixed Check-In And Out",
@@ -299,7 +306,9 @@ const petBoardingForOneDayWithFixedCheckInAndOut: Service = {
                 time24("09:00"), "Drop-off",
                 time24("17:00"), "Pick-up"))
 }
+// END-CODE: pet-boarding-for-one-day-with-fixed-check-in-and-out
 
+// BEGIN-CODE: pet-boarding-for-one-day-with-selectable-check-in-and-out
 const petBoardingForOneDayWithSelectableCheckInAndOut: Service = {
     id: "pet-boarding-for-one-day-with-selectable-check-in-and-out",
     name: "Pet Boarding For One Day With Selectable Check-In And Out",
@@ -310,7 +319,9 @@ const petBoardingForOneDayWithSelectableCheckInAndOut: Service = {
                 durationRange(hours(4), hours(8)),
                 anyTimeBetween(time24("09:00"), time24("17:00"))))
 }
+// END-CODE: pet-boarding-for-one-day-with-selectable-check-in-and-out
 
+// BEGIN-CODE: pet-boarding-for-many-days-with-fixed-times
 const petBoardingForManyDaysWithFixedTimes: Service = {
     id: "pet-boarding-for-many-days-with-fixed-times",
     name: "Pet Boarding For Many Days With Fixed Times",
@@ -322,7 +333,9 @@ const petBoardingForManyDaysWithFixedTimes: Service = {
                 fixedTime(time24("09:00"), "Drop-off",
                     time24("17:00"), "Pick-up")))
 }
+// END-CODE: pet-boarding-for-many-days-with-fixed-times
 
+// BEGIN-CODE: pet-boarding-for-many-days-with-selectable-times
 const petBoardingForManyDaysWithSelectableTimes: Service = {
     id: "pet-boarding-for-many-days-with-selectable-times",
     name: "Pet Boarding For Many Days With Selectable Times",
@@ -331,7 +344,9 @@ const petBoardingForManyDaysWithSelectableTimes: Service = {
         variableLength(days(1), days(7)),
         startTimes(anyTimeBetween(time24("09:00"), time24("17:00"))))
 }
+// END-CODE: pet-boarding-for-many-days-with-selectable-times
 
+// BEGIN-CODE: hotel-room
 const hotelRoom: Service = {
     id: "hotel-room",
     name: "Hotel Room",
@@ -342,7 +357,9 @@ const hotelRoom: Service = {
             fixedTime(time24("15:00"), "Check-in",
                 time24("11:00"), "Check-out")))
 }
+// END-CODE: hotel-room
 
+// BEGIN-CODE: hotel-room-with-late-checkout-at-weekends
 const hotelRoomWithLateCheckoutAtWeekends: Service = {
     id: "hotel-room-with-late-checkout-at-weekends",
     name: "Hotel Room with late checkout at weekends",
@@ -356,7 +373,9 @@ const hotelRoomWithLateCheckoutAtWeekends: Service = {
                     time24("14:00"), "Check-out")
             }))
 }
+// END-CODE: hotel-room-with-late-checkout-at-weekends
 
+// BEGIN-CODE: summer-camp
 const summerCamp: Service = {
     id: "summer-camp",
     name: "Summer Camp",
@@ -370,7 +389,9 @@ const summerCamp: Service = {
         null,
         [daysOfWeek("Monday")])
 }
+// END-CODE: summer-camp
 
+// BEGIN-CODE: equipment-rental-with-flexible-time
 const equipmentRentalWithFlexibleTime: Service = {
     id: "equipment-rental-with-flexible-time",
     name: "Equipment Rental with flexible time",
@@ -380,7 +401,9 @@ const equipmentRentalWithFlexibleTime: Service = {
         startTimes(
             anyTimeBetween(time24("09:00"), time24("17:00"))))
 }
+// END-CODE: equipment-rental-with-flexible-time
 
+// BEGIN-CODE: equipment-rental-with-controlled-times
 const equipmentRentalWithControlledTimes: Service = {
     id: "equipment-rental-with-controlled-times",
     name: "Equipment Rental with controlled times",
@@ -394,7 +417,9 @@ const equipmentRentalWithControlledTimes: Service = {
                     time24("17:00"),
                     period(minutes(60))))))
 }
+// END-CODE: equipment-rental-with-controlled-times
 
+// BEGIN-CODE: yacht-charter
 const yachtCharter: Service = {
     id: "yacht-charter",
     name: "Yacht Charter",
@@ -409,6 +434,7 @@ const yachtCharter: Service = {
         [daysOfWeek("Saturday")],
         [daysOfWeek("Saturday")])
 }
+// END-CODE: yacht-charter
 
 export const allConfigs = [
     {service: mobileCarWash},

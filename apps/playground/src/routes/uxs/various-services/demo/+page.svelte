@@ -55,6 +55,12 @@
             </select>
         </div>
 
+        {#key service.id}
+            <CodePresenter
+                    githubUrl="https://raw.githubusercontent.com/cozemble/breezbook/main/apps/playground/src/routes/uxs/various-services/demo/types3.ts"
+                    codeBlockId={service.id}/>
+        {/key}
+
         <!--        <div class="form-control mb-4">-->
         <!--            <label class="label">Configuration definition</label>-->
         <!--            <pre>{JSON.stringify(definition, null, 2)}</pre>-->

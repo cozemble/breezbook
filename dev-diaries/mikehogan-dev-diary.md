@@ -2641,3 +2641,6 @@ running using astro and svelte, and the plan with that is to demo code and featu
 this little component will be useful.  
 
 At least I am convincing myself that it will.
+
+## Update on the above
+Actually that took about 20 minutes to do.  Thanks Claude.
