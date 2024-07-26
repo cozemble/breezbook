@@ -236,19 +236,19 @@ export type DayLength = VariableLength | FixedLength
 
 
 // BEGIN-CODE: mobile-car-wash
-const mobileCarWash: Service = {
-    id: "mobile-car-wash",
-    name: "Mobile Car Wash",
-    description: "We come to you",
-    scheduleConfig:
-        singleDayScheduling(
-            timeslotSelection(
-                [
-                    timeslot(time24("09:00"), time24("11:00"), "Morning"),
-                    timeslot(time24("11:00"), time24("13:00"), "Midday"),
-                    timeslot(time24("13:00"), time24("15:00"), "Afternoon"),
-                    timeslot(time24("15:00"), time24("17:00"), "Late afternoon")]))
-}
+        const mobileCarWash: Service = {
+            id: "mobile-car-wash",
+            name: "Mobile Car Wash",
+            description: "We come to you",
+            scheduleConfig:
+                singleDayScheduling(
+                    timeslotSelection(
+                        [
+                            timeslot(time24("09:00"), time24("11:00"), "Morning"),
+                            timeslot(time24("11:00"), time24("13:00"), "Midday"),
+                            timeslot(time24("13:00"), time24("15:00"), "Afternoon"),
+                            timeslot(time24("15:00"), time24("17:00"), "Late afternoon")]))
+        }
 // END-CODE: mobile-car-wash
 
 // BEGIN-CODE: group-dog-walk
@@ -376,19 +376,19 @@ const hotelRoomWithLateCheckoutAtWeekends: Service = {
 // END-CODE: hotel-room-with-late-checkout-at-weekends
 
 // BEGIN-CODE: summer-camp
-const summerCamp: Service = {
-    id: "summer-camp",
-    name: "Summer Camp",
-    description: "For kids",
-    scheduleConfig: multiDayScheduling(
-        fixedLength(days(5)),
-        startTimes(
-            fixedTime(
-                time24("09:00"), "Drop-off",
-                time24("17:00"), "Pick-up")),
-        null,
-        [daysOfWeek("Monday")])
-}
+        const summerCamp: Service = {
+            id: "summer-camp",
+            name: "Summer Camp",
+            description: "For kids",
+            scheduleConfig: multiDayScheduling(
+                fixedLength(days(5)),
+                startTimes(
+                    fixedTime(
+                        time24("09:00"), "Drop-off",
+                        time24("17:00"), "Pick-up")),
+                null,
+                [daysOfWeek("Monday")])
+        }
 // END-CODE: summer-camp
 
 // BEGIN-CODE: equipment-rental-with-flexible-time
@@ -420,20 +420,20 @@ const equipmentRentalWithControlledTimes: Service = {
 // END-CODE: equipment-rental-with-controlled-times
 
 // BEGIN-CODE: yacht-charter
-const yachtCharter: Service = {
-    id: "yacht-charter",
-    name: "Yacht Charter",
-    description: "Charter a yacht",
-    scheduleConfig: multiDayScheduling(
-        variableLength(days(7), days(28)),
-        startTimes(
-            fixedTime(
-                time24("15:00"), "Collect",
-                time24("12:00"), "Return")),
-        null,
-        [daysOfWeek("Saturday")],
-        [daysOfWeek("Saturday")])
-}
+        const yachtCharter: Service = {
+            id: "yacht-charter",
+            name: "Yacht Charter",
+            description: "Charter a yacht",
+            scheduleConfig: multiDayScheduling(
+                variableLength(days(7), days(28)),
+                startTimes(
+                    fixedTime(
+                        time24("15:00"), "Collect",
+                        time24("12:00"), "Return")),
+                null,
+                [daysOfWeek("Saturday")],
+                [daysOfWeek("Saturday")])
+        }
 // END-CODE: yacht-charter
 
 export const allConfigs = [
