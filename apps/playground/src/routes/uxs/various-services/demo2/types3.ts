@@ -235,6 +235,7 @@ export function fixedLength(days: Days): FixedLength {
 export type DayLength = VariableLength | FixedLength
 
 
+// BEGIN-CODE: mobile-car-wash
 const mobileCarWash: Service = {
     id: "mobile-car-wash",
     name: "Mobile Car Wash",
@@ -248,6 +249,7 @@ const mobileCarWash: Service = {
                     timeslot(time24("13:00"), time24("15:00"), "Afternoon"),
                     timeslot(time24("15:00"), time24("17:00"), "Late afternoon")]))
 }
+// END-CODE: mobile-car-wash
 
 const groupDogWalk: Service = {
     id: "group-dog-walk",
