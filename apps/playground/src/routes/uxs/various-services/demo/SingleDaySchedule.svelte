@@ -16,7 +16,7 @@
     import PickStartTime from "./PickStartTime.svelte";
     import UserEnteredTime from "./UserEnteredTime.svelte";
     import {Clock} from "lucide-svelte";
-    import type {Duration} from "../demo/types2";
+    import type {Duration} from "../demo-0.1/types2";
     import PrintDuration from "./PrintDuration.svelte";
     import PrintFixedTime from "./PrintFixedTime.svelte";
 

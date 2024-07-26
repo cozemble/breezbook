@@ -1,23 +1,43 @@
 <script lang="ts">
-    import {time24, time24Fns, type TwentyFourHourClockTime} from "@breezbook/packages-types";
-    import UserEnteredTimeSelector from "$lib/ui/time-picker/UserEnteredTimeSelector.svelte";
-    import {createEventDispatcher} from "svelte";
-    import {time} from "./timeSelectionUiTypes";
+    import {type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {type SelectableTimeOption, type Time, type Timeslot} from "./uiTypes";
+    import type {DurationOption} from "./types3";
+    import UserEnteredStartTime from "./UserEnteredStartTime.svelte";
+    import UserEnteredStartTimeslot from "./UserEnteredStartTimeslot.svelte";
 
     export let from: TwentyFourHourClockTime;
     export let to: TwentyFourHourClockTime;
-    export let selectedTime: TwentyFourHourClockTime | null = null;
+    export let selectedTime: SelectableTimeOption | null = null;
+    export let duration: DurationOption
+    export let onStartTimeSelected: (time: SelectableTimeOption) => void
 
-    const dispatch = createEventDispatcher();
+    function castAsTime(time: SelectableTimeOption | null): Time | null {
+        if (time === null) {
+            return null
+        }
+        if (time._type === 'time') {
+            return time
+        }
+        throw new Error(`Unexpected time type: ${time._type}`)
+    }
 
-    $: startHour = time24Fns.getHour(from);
-    $: endHour = time24Fns.getHour(to);
-    $: hour = selectedTime ? time24Fns.getHour(selectedTime) : 0;
-    $: minute = selectedTime ? time24Fns.getMinutes(selectedTime) : 0;
+    function castAsTimeslot(time: SelectableTimeOption | null): Timeslot | null {
+        if (time === null) {
+            return null
+        }
+        if (time._type === 'time-slot') {
+            return time
+        }
+        throw new Error(`Unexpected time type: ${time._type}`)
+    }
 
-    function onTimeSelected(event: CustomEvent<string>) {
-        dispatch('timeSelected', time(time24(event.detail)))
+    function onTimeSelected(event: CustomEvent<SelectableTimeOption>) {
+        onStartTimeSelected(event.detail)
     }
 </script>
 
-<UserEnteredTimeSelector {startHour} {endHour} {hour} {minute} on:timeSelected={onTimeSelected}/>
+{#if duration._type === "duration"}
+    <UserEnteredStartTime {from} {to} selectedTime={castAsTime(selectedTime)} on:timeSelected={onTimeSelected}/>
+{:else}
+    <UserEnteredStartTimeslot {from} {to} selectedTime={castAsTimeslot(selectedTime)} on:timeSelected={onTimeSelected}/>
+{/if}

@@ -1,44 +1,19 @@
 <script lang="ts">
-    import type {PickTimeConfig, Time, Timeslot} from "./timeSelectionUiTypes";
-    import {dayAndTime, dayAndTimeFns, type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
-    import {createEventDispatcher} from "svelte";
+    import {type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import type {PickTime} from "./types3";
+    import {getPossibleEndTimes} from "./toUiTypes";
     import SelectEndTime from "./SelectEndTime.svelte";
-    import {type Duration, durationFns, type SchedulingOptions} from "./types2";
-    import {getPossibleEndTimes} from "./toUiModel";
+    import type {Time} from "./uiTypes";
 
-    export let config: PickTimeConfig
-    export let selectedStartTime: TwentyFourHourClockTime
-    export let selectedStartDate: IsoDate
+    export let times: PickTime
     export let selectedEndDate: IsoDate
-    export let selectedEndTime: TwentyFourHourClockTime | null
-    export let minDuration: Duration
-    export let maxDuration: Duration | null = null
-    export let schedulingOptions: SchedulingOptions
-    const dispatch = createEventDispatcher();
-    const minDurationMinutes = durationFns.toMinutes(minDuration).value
-    const maxDurationMinutes = maxDuration ? durationFns.toMinutes(maxDuration).value : -1
+    export let selectedEndTime: Time | null
+    export let onEndTimeSelected: (time: TwentyFourHourClockTime) => void
 
-    $: possibleStartTimes = getPossibleEndTimes(selectedEndDate, schedulingOptions)
+    $: availableEndTimes = getPossibleEndTimes(selectedEndDate, times)
 
-    $: availableEndTimes = possibleStartTimes.filter(t => supportsDuration(t))
-
-    function supportsDuration(t: Time | Timeslot): boolean {
-        if (t._type === 'time-slot') {
-            return true
-        }
-        const duration = calculateDurationInMinutes(t.start)
-        return duration >= minDurationMinutes && (maxDurationMinutes === -1 || duration <= maxDurationMinutes)
-    }
-
-    function calculateDurationInMinutes(time: TwentyFourHourClockTime): number {
-        const start = dayAndTime(selectedStartDate, selectedStartTime)
-        const end = dayAndTime(selectedEndDate, time)
-        const result = dayAndTimeFns.minutesBetween(start, end).value
-        return result
-    }
-
-    function handleTimeSelection(event: CustomEvent<Time | Timeslot>) {
-        dispatch('timeSelected', event.detail)
+    function handleTimeSelection(event: CustomEvent<Time>) {
+        onEndTimeSelected(event.detail.start)
     }
 </script>
 
@@ -48,7 +23,7 @@
 
 <div class="grid grid-cols-3 gap-2">
     {#each availableEndTimes as time}
-        <SelectEndTime {time} selectedTime={selectedEndTime} on:clicked={handleTimeSelection}/>
+        <SelectEndTime {time} selectedTime={selectedEndTime?.start} on:clicked={handleTimeSelection}/>
     {/each}
 </div>
 

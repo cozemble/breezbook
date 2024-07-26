@@ -2623,3 +2623,21 @@ const equipmentRentalWithControlledTimes: Service = {
         pickTime(timeRange(time24("09:00"), time24("17:00"), period(minutes(60)))))
 }
 ```
+
+# Fri 26 Jul 2024
+I have most of the scheduling configuration working now, with some small ui glitches and bugs, which I don't care about 
+because the point here was to prove the ability to express different scheduling options.
+
+The little demo app I wrote to prove is ok.  It allows me to pick the service, and then the UI takes me through the
+timeslot selection particular to that configuration.  I want this demo to show the typescript code behind the 
+configuration, when it is selected.  I was initially thinking of adding in images of the typescript code for each
+configuration, this will quickly become a maintenance nightmare.
+
+Another option is to have a svelte component that fetches the typescript code from github, finds the relevant block, using
+some comment markers, and displays it.  
+
+It's a bit of a diversion from the mission of making a booking engine, but: I also plan to get my personal site up and 
+running using astro and svelte, and the plan with that is to demo code and features, and small "attractor" widgets. So
+this little component will be useful.  
+
+At least I am convincing myself that it will.

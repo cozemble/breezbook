@@ -1,16 +1,20 @@
 <script lang="ts">
-    import type {PickTimeConfig} from "./timeSelectionUiTypes";
-    import type {IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import type {IsoDate} from "@breezbook/packages-types";
+    import type {PickTime, TimeslotSelection} from "./types3";
+    import {getPossibleStartTimes} from "./toUiTypes";
+    import type {SelectableTimeOption} from "./uiTypes";
     import SelectStartTime from "./SelectStartTime.svelte";
-    import type {SchedulingOptions} from "./types2";
-    import {getPossibleStartTimes} from "./toUiModel";
 
     export let selectedStartDate: IsoDate
-    export let config: PickTimeConfig
-    export let selectedStartTime: TwentyFourHourClockTime | null
-    export let schedulingOptions: SchedulingOptions
+    export let selectedStartTime: SelectableTimeOption | null
+    export let times: TimeslotSelection | PickTime
+    export let onStartTimeSelected: (time: SelectableTimeOption) => void
 
-    $: availableStartTimes = getPossibleStartTimes(selectedStartDate, schedulingOptions)
+    $: availableStartTimes = getPossibleStartTimes(selectedStartDate, times)
+
+    function onClicked(event: CustomEvent<SelectableTimeOption>) {
+        onStartTimeSelected(event.detail)
+    }
 </script>
 
 
@@ -20,7 +24,7 @@
 
 <div class="grid grid-cols-3 gap-2">
     {#each availableStartTimes as time}
-        <SelectStartTime {time} selectedTime={selectedStartTime} on:clicked/>
+        <SelectStartTime {time} selectedTime={selectedStartTime} on:clicked={onClicked}/>
     {/each}
     {#if availableStartTimes.length === 0}
         <div class="col-span-3 md:col-span-4 text-center text-xs opacity-70">
