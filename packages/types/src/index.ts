@@ -429,6 +429,10 @@ export const time24Fns = {
         const paddedHours = hours.toString().padStart(2, '0');
         const paddedMins = minutes.toString().padStart(2, '0');
         return time24(`${paddedHours}:${paddedMins}`);
+    },
+    addDays(start: IsoDate, days: Days | number): IsoDate {
+        const numberOfDays = typeof days === 'number' ? days : days.value;
+        return isoDate(dayjs(start.value).add(numberOfDays, 'day').format('YYYY-MM-DD'));
     }
 };
 

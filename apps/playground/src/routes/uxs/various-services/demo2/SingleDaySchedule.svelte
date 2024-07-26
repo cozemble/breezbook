@@ -18,6 +18,7 @@
     import {Clock} from "lucide-svelte";
     import type {Duration} from "../demo/types2";
     import PrintDuration from "./PrintDuration.svelte";
+    import PrintFixedTime from "./PrintFixedTime.svelte";
 
     export let dayConstraints: DayConstraint[]
     export let times: TimeslotSelection | FixedTime | PickTime | AnyTimeBetween
@@ -110,25 +111,13 @@
                     <UserEnteredTime from={times.from} to={times.to}
                                      selectedTime={userSelectedTimeCast($state.selectedTime)}
                                      duration={duration}
-                                     {onStartTimeSelected} />
+                                     {onStartTimeSelected}/>
                 {/if}
             </div>
         {/if}
         {#if $state.selectedTime}
             {#if $state.selectedTime._type === 'fixed-time'}
-                <div class="form-control mb-4">
-                    <div class="alert alert-info text-sm">
-                        <Clock class="mr-1" size={14}/>
-                        <span>{$state.selectedTime.start.value} - {$state.selectedTime.startLabel}</span>
-                    </div>
-                </div>
-
-                <div class="form-control mb-4">
-                    <div class="alert alert-info text-sm">
-                        <Clock class="mr-1" size={14}/>
-                        <span>{$state.selectedTime.end.value} - {$state.selectedTime.endLabel}</span>
-                    </div>
-                </div>
+                <PrintFixedTime time={$state.selectedTime}/>
             {/if}
             {#if durationReport}
                 <div class="form-control mb-4">

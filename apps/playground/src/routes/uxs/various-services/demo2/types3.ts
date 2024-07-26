@@ -334,7 +334,7 @@ const hotelRoom: Service = {
     description: "Stay overnight",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(365)),
-        startTimes(fixedTime(time24("14:00"), "Check-in", time24("11:00"), "Check-out")))
+        startTimes(fixedTime(time24("15:00"), "Check-in", time24("11:00"), "Check-out")))
 }
 
 const hotelRoomWithLateCheckoutAtWeekends: Service = {
@@ -343,8 +343,8 @@ const hotelRoomWithLateCheckoutAtWeekends: Service = {
     description: "Stay overnight",
     scheduleConfig: multiDayScheduling(
         variableLength(days(1), days(365)),
-        startTimes(fixedTime(time24("14:00"), "Check-in", time24("11:00"), "Check-out"),
-            {weekend: fixedTime(time24("14:00"), "Check-in", time24("14:00"), "Check-out")}))
+        startTimes(fixedTime(time24("15:00"), "Check-in", time24("11:00"), "Check-out"),
+            {weekend: fixedTime(time24("15:00"), "Check-in", time24("14:00"), "Check-out")}))
 }
 
 const summerCamp: Service = {
@@ -353,7 +353,9 @@ const summerCamp: Service = {
     description: "For kids",
     scheduleConfig: multiDayScheduling(
         fixedLength(days(5)),
-        startTimes(fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up")))
+        startTimes(fixedTime(time24("09:00"), "Drop-off", time24("17:00"), "Pick-up")),
+        null,
+        [daysOfWeek("Monday")])
 }
 
 const equipmentRentalWithFlexibleTime: Service = {

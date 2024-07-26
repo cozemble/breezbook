@@ -1,14 +1,6 @@
 import {type DisabledDays, formatDate} from "$lib/ui/time-picker/types";
 import {type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbook/packages-types";
-import type {
-    DayConstraint,
-    DayLength,
-    FixedLength,
-    PickTime,
-    TimeRange,
-    TimeslotSelection,
-    VariableLength
-} from "./types3";
+import type {DayConstraint, DayLength, PickTime, TimeRange, TimeslotSelection, VariableLength} from "./types3";
 import {disabled, type Disabled} from "../demo/timeSelectionUiTypes";
 import {type SelectableTimeOption, time, type Time, timeslot} from "./uiTypes";
 
@@ -64,7 +56,7 @@ export function getPossibleStartTimes(startDate: IsoDate, times: TimeslotSelecti
     }
 }
 
-export function getPossibleEndTimes(endDate:IsoDate, times:  PickTime): Time[] {
+export function getPossibleEndTimes(endDate: IsoDate, times: PickTime): Time[] {
     return timeRangeToTimes(times.timeRange)
 }
 
@@ -76,11 +68,11 @@ function disabledIfBeforeDate(date: IsoDate, selectedStartDate: IsoDate): Disabl
 }
 
 function disabledIfBreaksRangeLength(date: IsoDate, selectedStartDate: IsoDate, length: VariableLength): Disabled | undefined {
-    const daysBetween = isoDateFns.daysBetween(selectedStartDate,date)
-    if (daysBetween + 1 < length.minDays.value) {
+    const daysBetween = isoDateFns.daysBetween(selectedStartDate, date)
+    if (daysBetween < length.minDays.value) {
         return disabled("Date is too soon")
     }
-    if(length.maxDays && daysBetween + 1 > length.maxDays.value) {
+    if (length.maxDays && daysBetween + 1 > length.maxDays.value) {
         return disabled("Date is too far in the future")
     }
     return undefined
@@ -89,6 +81,12 @@ function disabledIfBreaksRangeLength(date: IsoDate, selectedStartDate: IsoDate, 
 function disabledIfBreaksLength(date: IsoDate, selectedStartDate: IsoDate, length: DayLength): Disabled | undefined {
     if (length._type === "variable-length") {
         return disabledIfBreaksRangeLength(date, selectedStartDate, length)
+    }
+    if (length._type === "fixed-length") {
+        const daysBetween = isoDateFns.daysBetween(selectedStartDate, date)
+        if (daysBetween + 1 !== length.days.value) {
+            return disabled("Date is not the correct length")
+        }
     }
     return undefined
 }

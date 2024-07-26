@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {type IsoDate, isoDateFns} from "@breezbook/packages-types";
+    import {type IsoDate} from "@breezbook/packages-types";
     import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
     import {daysOfWeek} from "./uIConstants";
     import MonthSelector from "./MonthSelector.svelte";
@@ -13,7 +13,7 @@
     let currentMonth: Date = new Date(selectedStartDate.value);
 
     $: selectedEndDateAsDate = selectedEndDate ? new Date(selectedEndDate.value) : null;
-    $: disabledDays = disabledEndDays(currentMonth, selectedStartDate, length,dayConstraints);
+    $: disabledDays = disabledEndDays(currentMonth, selectedStartDate, length, dayConstraints);
 
     function changeStartMonth(months: number) {
         currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + months, 1);
@@ -22,9 +22,15 @@
 </script>
 
 <div class="form-control mb-4">
-    <label class="label">
-        <span class="label-text font-semibold">Select End Date</span>
-    </label>
+    {#if length._type === 'variable-length'}
+        <label class="label">
+            <span class="label-text font-semibold">Select End Date</span>
+        </label>
+    {:else}
+        <label class="label">
+            <span class="label-text font-semibold">Fixed End Date</span>
+        </label>
+    {/if}
 
     <MonthSelector {currentMonth} on:prevMonth={() => changeStartMonth(-1)} on:nextMonth={() => changeStartMonth(1)}/>
 

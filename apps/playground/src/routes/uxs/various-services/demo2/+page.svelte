@@ -43,7 +43,10 @@
 <div class="card bg-base-100 shadow-xl max-w-sm mx-auto">
     <div class="card-body p-4">
         <div class="form-control mb-4">
-            <label class="label">Select service type</label>
+            <label class="label">
+                <span class="label-text font-semibold">Select Service Type</span>
+            </label>
+
             <select class="input-bordered input" on:change={onConfigChange}>
                 {#each allConfigs as c}
                     <option value={c.service.name} selected={c.service === service}>{c.service.name}</option>

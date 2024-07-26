@@ -11,13 +11,15 @@
     } from "./types3";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {derived, type Readable, writable} from "svelte/store";
-    import {initialMultiDaySelection, type SelectableTimeOption, time} from "./uiTypes";
-    import {type IsoDate, isoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {initialMultiDaySelection, type SelectableTimeOption, type Time, time} from "./uiTypes";
+    import {type IsoDate, isoDate, time24Fns, type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import {formatDate} from "$lib/ui/time-picker/types";
     import PickStartTime from "./PickStartTime.svelte";
     import {afterUpdate} from "svelte";
     import SelectEndDate from "./SelectEndDate.svelte";
     import PickEndTime from "./PickEndTime.svelte";
+    import PrintFixedTime from "./PrintFixedTime.svelte";
+    import UserEnteredStartTime from "./UserEnteredStartTime.svelte";
 
     export let startDayConstraints: DayConstraint[]
     export let endDayConstraints: DayConstraint[]
@@ -42,9 +44,16 @@
         }
         if (length._type === 'variable-length' && startDate) {
             const startTimes = maybeStartTimeOptions(startDate)
-            if (startTimes?._type === 'pick-time') {
+            if (startTimes?._type === 'pick-time' || startTimes?._type === 'any-time-between') {
                 return startTimes
             }
+        }
+        return null
+    }
+
+    function maybeEndDate(startDate: IsoDate, length: DayLength): IsoDate | null {
+        if (length._type === 'fixed-length') {
+            return time24Fns.addDays(startDate, length.days.value - 1)
         }
         return null
     }
@@ -53,8 +62,9 @@
         const startDate = isoDate(formatDate(event.detail))
         state.update(s => {
             const startTimeOption = maybeStartTimeOptions(startDate)
+            const endDate = maybeEndDate(startDate, length)
             const selectedTime = startTimeOption?._type === 'fixed-time' ? startTimeOption : null
-            return ({...s, startDate, selectedStartTime: selectedTime});
+            return ({...s, startDate, selectedStartTime: selectedTime, endDate});
         })
     }
 
@@ -75,6 +85,14 @@
         state.update(s => ({...s, selectedEndTime: theTime}))
     }
 
+    function onStartTimeSelectedEvent(event: CustomEvent<Time>) {
+        onStartTimeSelected(event.detail)
+    }
+
+    function onEndTimeSelectedEvent(event: CustomEvent<Time>) {
+        onEndTimeSelected(event.detail.start)
+    }
+
     afterUpdate(() => {
         console.log('state', $state)
         console.log('startTimeOptions', $startTimeOptions)
@@ -89,13 +107,22 @@
                 selectedStartDate={$state.startDate}
                 on:clicked={onStartDateSelected}/>
 
-        {#if $state.startDate && $startTimeOptions}
-            {#if $startTimeOptions._type === "pick-time" && $state.selectedStartTime?._type !== 'fixed-time'}
+        {#if $state.startDate && $startTimeOptions && $state.selectedStartTime?._type !== 'fixed-time'}
+            {#if $startTimeOptions._type === "pick-time"}
                 <PickStartTime
                         times={$startTimeOptions}
                         selectedStartDate={$state.startDate}
                         selectedStartTime={$state.selectedStartTime}
                         {onStartTimeSelected}/>
+            {/if}
+            {#if $startTimeOptions._type === "any-time-between"}
+                <label class="label">
+                    <span class="label-text font-semibold">Select Start Time</span>
+                </label>
+                <UserEnteredStartTime from={$startTimeOptions.from}
+                                      to={$startTimeOptions.to}
+                                      selectedTime={$state.selectedStartTime}
+                                      on:timeSelected={onStartTimeSelectedEvent}/>
             {/if}
         {/if}
 
@@ -108,13 +135,25 @@
                     on:clicked={onEndDateSelected}/>
         {/if}
 
-        {#if $state.startDate && $state.selectedStartTime && $state.endDate && $endTimeOptions}
-            {#if $endTimeOptions._type === "pick-time"}
+        {#if $state.startDate && $state.selectedStartTime && $state.endDate}
+            {#if $endTimeOptions?._type === "pick-time"}
                 <PickEndTime
                         times={$endTimeOptions}
                         selectedEndDate={$state.endDate}
                         selectedEndTime={$state.selectedEndTime}
                         {onEndTimeSelected}/>
+            {/if}
+            {#if $state.selectedStartTime._type === 'fixed-time'}
+                <PrintFixedTime time={$state.selectedStartTime}/>
+            {/if}
+            {#if $endTimeOptions?._type === "any-time-between"}
+                <label class="label">
+                    <span class="label-text font-semibold">Select End Time</span>
+                </label>
+                <UserEnteredStartTime from={$endTimeOptions.from}
+                                      to={$endTimeOptions.to}
+                                      selectedTime={$state.selectedEndTime}
+                                      on:timeSelected={onEndTimeSelectedEvent}/>
             {/if}
         {/if}
     </div>
