@@ -2644,3 +2644,13 @@ At least I am convincing myself that it will.
 
 ## Update on the above
 Actually that took about 20 minutes to do.  Thanks Claude.
+
+# Sun 28 Jul 2024
+I published the "various scheduling options" demo to a few friends.  They all commented back with UI improvements.  It made
+it clear to me that the fact that this is a "canvas" for me to prove to myself that the domain model I am building works
+logically, and can support the building of _some_ ui.
+
+I like this way of working.  It makes the modeling of a problem space tactile.  I can "work" the model visually to ensure
+it hangs together in different circumstances.
+
+I expect I will do the same with the pricing model.  Where else might it apply?
