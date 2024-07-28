@@ -1,73 +1,23 @@
+import {days, duration, hours, minutes, time24} from "@breezbook/packages-types";
 import {
-    days,
-    type Days,
-    duration,
-    type Duration,
-    type DurationUnit,
-    hours,
-    type IsoDate,
-    isoDateFns,
-    minutes,
-    type Minutes,
-    time24,
-    type TwentyFourHourClockTime
-} from "@breezbook/packages-types";
-import {timeslotSpec, type TimeslotSpec} from "@breezbook/packages-core";
+    anyTimeBetween,
+    daysOfWeek,
+    durationRange,
+    fixedLength,
+    fixedTime,
+    multiDayScheduling,
+    period,
+    pickTime,
+    type ScheduleConfig,
+    singleDayScheduling,
+    startTimes,
+    timeRange,
+    timeslot,
+    timeslotSelection,
+    variableDurationConfig,
+    variableLength
+} from "./scheduleConfig";
 
-export interface Period {
-    _type: 'period'
-    duration: Minutes
-}
-
-export function period(duration: Minutes): Period {
-    return {_type: 'period', duration}
-}
-
-
-export interface TimeRange {
-    _type: 'time-range'
-    from: TwentyFourHourClockTime
-    to: TwentyFourHourClockTime
-    period: Period
-}
-
-export interface AnyTimeBetween {
-    _type: 'any-time-between'
-    from: TwentyFourHourClockTime
-    to: TwentyFourHourClockTime
-}
-
-export function anyTimeBetween(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime): AnyTimeBetween {
-    return {_type: 'any-time-between', from, to}
-}
-
-export function timeRange(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime, period: Period): TimeRange {
-    return {_type: 'time-range', from, to, period}
-
-}
-
-export interface DurationRange {
-    _type: 'duration-range'
-    minDuration: Duration
-    maxDuration: Duration | null
-}
-
-export function durationRange(minDuration: DurationUnit, maxDuration?: DurationUnit): DurationRange {
-    return {
-        _type: 'duration-range',
-        minDuration: duration(minDuration),
-        maxDuration: maxDuration ? duration(maxDuration) : null
-    }
-}
-
-export interface DaysOfWeek {
-    _type: 'days-of-week'
-    days: string[]
-}
-
-export function daysOfWeek(...days: string[]): DaysOfWeek {
-    return {_type: 'days-of-week', days}
-}
 
 export interface Service {
     id: string
@@ -76,179 +26,21 @@ export interface Service {
     scheduleConfig: ScheduleConfig
 }
 
-export interface TimeslotSelection {
-    _type: 'timeslot-selection'
-    times: TimeslotSpec[]
-}
-
-function timeslotSelection(times: TimeslotSpec[]): TimeslotSelection {
-    return {_type: 'timeslot-selection', times}
-}
-
-function timeslot(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime, description: string): TimeslotSpec {
-    return timeslotSpec(from, to, description)
-}
-
-export interface PickTime {
-    _type: 'pick-time'
-    timeRange: TimeRange
-}
-
-export function pickTime(timeRange: TimeRange): PickTime {
-    return {_type: 'pick-time', timeRange}
-}
-
-export interface FixedTime {
-    _type: 'fixed-time'
-    start: TwentyFourHourClockTime
-    end: TwentyFourHourClockTime
-    startLabel: string
-    endLabel: string
-}
-
-export function fixedTime(start: TwentyFourHourClockTime, startLabel: string, end: TwentyFourHourClockTime, endLabel: string): FixedTime {
-    return {_type: 'fixed-time', start, startLabel, end, endLabel}
-}
-
-export type DurationOption = Duration | DurationRange
-
-export interface VariableDurationConfig {
-    _type: 'variable-duration-config'
-    times: PickTime | AnyTimeBetween
-    duration: DurationOption
-}
-
-export function variableDurationConfig(duration: Duration | DurationRange, times: PickTime | AnyTimeBetween): VariableDurationConfig {
-    return {
-        _type: 'variable-duration-config',
-        times,
-        duration
-    }
-}
-
-export interface TimeOptions<T> {
-    _type: 'time-options'
-    usual: T;
-    seasonal?: {
-        [season: string]: T;
-    };
-    weekday?: T;
-    weekend?: T;
-    special?: {
-        [dateString: string]: T;
-    };
-}
-
-export const timeOptionsFns = {
-    forDate<T>(options: TimeOptions<T>, date: IsoDate): T {
-        if (options.special && options.special[date.value]) {
-            return options.special[date.value]
-        }
-        if (options.weekend && isoDateFns.isWeekend(date)) {
-            return options.weekend
-        }
-        if (options.weekday && !isoDateFns.isWeekend(date)) {
-            return options.weekday
-        }
-        return options.usual
-    }
-}
-
-export type TimeOptionsParams<T> = Omit<TimeOptions<T>, "usual" | "_type">
-
-export function startTimes<T>(usual: T, params: TimeOptionsParams<T> = {}): TimeOptions<T> {
-    return {
-        _type: 'time-options',
-        usual,
-        ...params
-    }
-}
-
-export type MultiDayStartTimeOptions = TimeOptions<FixedTime | PickTime | AnyTimeBetween>
-export type MultiDayEndTimeOptions = TimeOptions<PickTime | AnyTimeBetween>
-
-export interface SingleDayScheduling {
-    _type: 'single-day-scheduling'
-    times: TimeslotSelection | FixedTime | VariableDurationConfig
-    startDay?: DayConstraint[]
-}
-
-export interface MultiDayScheduling {
-    _type: 'multi-day-scheduling'
-    length: DayLength
-    startTimes: MultiDayStartTimeOptions
-    endTimes?: MultiDayEndTimeOptions
-    startDay?: DayConstraint[]
-    endDay?: DayConstraint[]
-}
-
-export type ScheduleConfig = SingleDayScheduling | MultiDayScheduling
-
-export function singleDayScheduling(times: TimeslotSelection | FixedTime | VariableDurationConfig, startDay?: DayConstraint[]): SingleDayScheduling {
-    return {
-        _type: 'single-day-scheduling',
-        times,
-        startDay
-    }
-}
-
-export function multiDayScheduling(length: DayLength, startTimes: MultiDayStartTimeOptions, endTimes: MultiDayEndTimeOptions | null = null, startDay?: DayConstraint[], endDay?: DayConstraint[]): MultiDayScheduling {
-    return {
-        _type: 'multi-day-scheduling',
-        length,
-        startTimes,
-        endTimes: endTimes ?? undefined,
-        startDay,
-        endDay
-    }
-}
-
-
-export type DayConstraint = DaysOfWeek
-
-export interface VariableLength {
-    _type: 'variable-length'
-    minDays: Days
-    maxDays?: Days
-}
-
-export function variableLength(minDays: Days, maxDays?: Days): VariableLength {
-    return {
-        _type: 'variable-length',
-        minDays,
-        maxDays
-    }
-}
-
-export interface FixedLength {
-    _type: 'fixed-length'
-    days: Days
-}
-
-export function fixedLength(days: Days): FixedLength {
-    return {
-        _type: 'fixed-length',
-        days
-    }
-}
-
-export type DayLength = VariableLength | FixedLength
-
 
 // BEGIN-CODE: mobile-car-wash
-        const mobileCarWash: Service = {
-            id: "mobile-car-wash",
-            name: "Mobile Car Wash",
-            description: "We come to you",
-            scheduleConfig:
-                singleDayScheduling(
-                    timeslotSelection(
-                        [
-                            timeslot(time24("09:00"), time24("11:00"), "Morning"),
-                            timeslot(time24("11:00"), time24("13:00"), "Midday"),
-                            timeslot(time24("13:00"), time24("15:00"), "Afternoon"),
-                            timeslot(time24("15:00"), time24("17:00"), "Late afternoon")]))
-        }
+const mobileCarWash: Service = {
+    id: "mobile-car-wash",
+    name: "Mobile Car Wash",
+    description: "We come to you",
+    scheduleConfig:
+        singleDayScheduling(
+            timeslotSelection(
+                [
+                    timeslot(time24("09:00"), time24("11:00"), "Morning"),
+                    timeslot(time24("11:00"), time24("13:00"), "Midday"),
+                    timeslot(time24("13:00"), time24("15:00"), "Afternoon"),
+                    timeslot(time24("15:00"), time24("17:00"), "Late afternoon")]))
+}
 // END-CODE: mobile-car-wash
 
 // BEGIN-CODE: group-dog-walk
@@ -376,19 +168,19 @@ const hotelRoomWithLateCheckoutAtWeekends: Service = {
 // END-CODE: hotel-room-with-late-checkout-at-weekends
 
 // BEGIN-CODE: summer-camp
-        const summerCamp: Service = {
-            id: "summer-camp",
-            name: "Summer Camp",
-            description: "For kids",
-            scheduleConfig: multiDayScheduling(
-                fixedLength(days(5)),
-                startTimes(
-                    fixedTime(
-                        time24("09:00"), "Drop-off",
-                        time24("17:00"), "Pick-up")),
-                null,
-                [daysOfWeek("Monday")])
-        }
+const summerCamp: Service = {
+    id: "summer-camp",
+    name: "Summer Camp",
+    description: "For kids",
+    scheduleConfig: multiDayScheduling(
+        fixedLength(days(5)),
+        startTimes(
+            fixedTime(
+                time24("09:00"), "Drop-off",
+                time24("17:00"), "Pick-up")),
+        null,
+        [daysOfWeek("Monday")])
+}
 // END-CODE: summer-camp
 
 // BEGIN-CODE: equipment-rental-with-flexible-time
@@ -420,20 +212,20 @@ const equipmentRentalWithControlledTimes: Service = {
 // END-CODE: equipment-rental-with-controlled-times
 
 // BEGIN-CODE: yacht-charter
-        const yachtCharter: Service = {
-            id: "yacht-charter",
-            name: "Yacht Charter",
-            description: "Charter a yacht",
-            scheduleConfig: multiDayScheduling(
-                variableLength(days(7), days(28)),
-                startTimes(
-                    fixedTime(
-                        time24("15:00"), "Collect",
-                        time24("12:00"), "Return")),
-                null,
-                [daysOfWeek("Saturday")],
-                [daysOfWeek("Saturday")])
-        }
+const yachtCharter: Service = {
+    id: "yacht-charter",
+    name: "Yacht Charter",
+    description: "Charter a yacht",
+    scheduleConfig: multiDayScheduling(
+        variableLength(days(7), days(28)),
+        startTimes(
+            fixedTime(
+                time24("15:00"), "Collect",
+                time24("12:00"), "Return")),
+        null,
+        [daysOfWeek("Saturday")],
+        [daysOfWeek("Saturday")])
+}
 // END-CODE: yacht-charter
 
 export const allConfigs = [

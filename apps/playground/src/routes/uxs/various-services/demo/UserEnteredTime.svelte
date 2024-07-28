@@ -1,9 +1,9 @@
 <script lang="ts">
     import {type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import {type SelectableTimeOption, type Time, type Timeslot} from "./uiTypes";
-    import type {DurationOption} from "./types3";
     import UserEnteredStartTime from "./UserEnteredStartTime.svelte";
     import UserEnteredStartTimeslot from "./UserEnteredStartTimeslot.svelte";
+    import type {DurationOption} from "./scheduleConfig";
 
     export let from: TwentyFourHourClockTime;
     export let to: TwentyFourHourClockTime;

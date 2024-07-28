@@ -1,17 +1,19 @@
 <script lang="ts">
     import {
-        allConfigs,
-        type AnyTimeBetween,
-        type DurationOption,
-        type FixedTime,
-        type PickTime,
-        type TimeslotSelection,
-        type VariableDurationConfig
+        allConfigs
     } from "./types3";
     import {afterUpdate} from "svelte";
     import SingleDaySchedule from "./SingleDaySchedule.svelte";
     import MultiDaySchedule from "./MultiDaySchedule.svelte";
     import CodePresenter from "$lib/ui/code-presenter/CodePresenter.svelte";
+    import type {
+        AnyTimeBetween,
+        DurationOption,
+        FixedTime,
+        PickTime,
+        TimeslotSelection,
+        VariableDurationConfig
+    } from "./scheduleConfig";
 
     let service = allConfigs[0].service;
 

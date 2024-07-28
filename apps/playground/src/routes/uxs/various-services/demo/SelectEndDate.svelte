@@ -3,8 +3,8 @@
     import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
     import {daysOfWeek} from "./uIConstants";
     import MonthSelector from "./MonthSelector.svelte";
-    import type {DayConstraint, DayLength} from "./types3";
     import {disabledEndDays} from "./toUiTypes";
+    import type {DayConstraint, DayLength} from "./scheduleConfig";
 
     export let selectedStartDate: IsoDate
     export let selectedEndDate: IsoDate | null

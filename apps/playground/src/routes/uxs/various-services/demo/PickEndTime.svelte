@@ -1,9 +1,9 @@
 <script lang="ts">
     import {type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
-    import type {PickTime} from "./types3";
     import {getPossibleEndTimes} from "./toUiTypes";
     import SelectEndTime from "./SelectEndTime.svelte";
     import type {Time} from "./uiTypes";
+    import type {PickTime} from "./scheduleConfig";
 
     export let times: PickTime
     export let selectedEndDate: IsoDate

@@ -4,7 +4,8 @@
     import {daysOfWeek} from "./uIConstants";
     import MonthSelector from "./MonthSelector.svelte";
     import {disabledStartDays} from "./toUiTypes";
-    import type {DayConstraint} from "./types3";
+
+    import type {DayConstraint} from "./scheduleConfig";
 
     export let selectedStartDate: IsoDate | null = null;
     export let dayConstraints: DayConstraint[] = [];

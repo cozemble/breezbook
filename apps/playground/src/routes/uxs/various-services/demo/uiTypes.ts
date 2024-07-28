@@ -1,5 +1,6 @@
 import type {Duration, IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-types";
-import type {FixedTime} from "./types3";
+
+import type {FixedTime} from "./scheduleConfig";
 
 export interface Time {
     _type: "time";

@@ -1,13 +1,4 @@
 <script lang="ts">
-    import type {
-        AnyTimeBetween,
-        DayConstraint,
-        DurationOption,
-        DurationRange,
-        FixedTime,
-        PickTime,
-        TimeslotSelection
-    } from "./types3";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {writable} from "svelte/store";
     import type {DurationReport, SelectableTimeOption, SingleDaySelection, TimeOption, Timeslot} from "./uiTypes";
@@ -19,6 +10,15 @@
     import type {Duration} from "../demo-0.1/types2";
     import PrintDuration from "./PrintDuration.svelte";
     import PrintFixedTime from "./PrintFixedTime.svelte";
+    import type {
+        AnyTimeBetween,
+        DayConstraint,
+        DurationOption,
+        DurationRange,
+        FixedTime,
+        PickTime,
+        TimeslotSelection
+    } from "./scheduleConfig";
 
     export let dayConstraints: DayConstraint[]
     export let times: TimeslotSelection | FixedTime | PickTime | AnyTimeBetween

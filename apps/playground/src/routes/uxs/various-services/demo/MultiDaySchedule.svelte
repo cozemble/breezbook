@@ -1,14 +1,4 @@
 <script lang="ts">
-    import {
-        type AnyTimeBetween,
-        type DayConstraint,
-        type DayLength,
-        type FixedTime,
-        type MultiDayEndTimeOptions,
-        type MultiDayStartTimeOptions,
-        type PickTime,
-        timeOptionsFns
-    } from "./types3";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {derived, type Readable, writable} from "svelte/store";
     import {initialMultiDaySelection, type SelectableTimeOption, type Time, time} from "./uiTypes";
@@ -20,6 +10,14 @@
     import PickEndTime from "./PickEndTime.svelte";
     import PrintFixedTime from "./PrintFixedTime.svelte";
     import UserEnteredStartTime from "./UserEnteredStartTime.svelte";
+    import {
+        type AnyTimeBetween,
+        type DayConstraint,
+        type DayLength, type FixedTime,
+        type MultiDayEndTimeOptions,
+        type MultiDayStartTimeOptions, type PickTime,
+        timeOptionsFns
+    } from "./scheduleConfig";
 
     export let startDayConstraints: DayConstraint[]
     export let endDayConstraints: DayConstraint[]

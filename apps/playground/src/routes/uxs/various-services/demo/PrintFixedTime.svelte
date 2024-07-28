@@ -1,6 +1,7 @@
 <script lang="ts">
     import {Clock} from "lucide-svelte";
-    import type {FixedTime} from "./types3";
+
+    import type {FixedTime} from "./scheduleConfig";
 
     export let time: FixedTime
 </script>

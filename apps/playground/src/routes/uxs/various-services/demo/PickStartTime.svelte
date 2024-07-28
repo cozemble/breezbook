@@ -1,9 +1,9 @@
 <script lang="ts">
     import type {IsoDate} from "@breezbook/packages-types";
-    import type {PickTime, TimeslotSelection} from "./types3";
     import {getPossibleStartTimes} from "./toUiTypes";
     import type {SelectableTimeOption} from "./uiTypes";
     import SelectStartTime from "./SelectStartTime.svelte";
+    import type {PickTime, TimeslotSelection} from "./scheduleConfig";
 
     export let selectedStartDate: IsoDate
     export let selectedStartTime: SelectableTimeOption | null
