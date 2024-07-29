@@ -13,7 +13,7 @@ import {
     Capacity,
     capacityFns,
     dayAndTimePeriod,
-    DayAndTimePeriod, durationFns,
+    DayAndTimePeriod, Duration, durationFns,
     exactTimeAvailability,
     ExactTimeAvailability,
     IsoDate,
@@ -71,6 +71,12 @@ export const startTimeFns = {
         }
         return startTime.slot.to
     }
+}
+
+export interface StartTimeAndDuration {
+    _type: 'start.time.and.duration'
+    startTime: StartTime
+    duration: Duration
 }
 
 export interface AvailableSlot {

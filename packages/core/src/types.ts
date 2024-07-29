@@ -127,8 +127,6 @@ export function customer(firstName: string, lastName: string, emailStr: string, 
     };
 }
 
-export type BookableSlot = ExactTimeAvailability | TimeslotSpec;
-
 export interface FixedResourceAllocation {
     _type: 'fixed.resource.allocation';
     requirementId: ResourceRequirementId;
@@ -745,7 +743,7 @@ export interface OrderLine {
     servicePriceCurrency: string;
     addOns: AddOnOrder[];
     date: IsoDate;
-    slot: BookableSlot;
+    slot: StartTime;
     serviceFormData: unknown[];
 }
 
@@ -835,7 +833,7 @@ export function orderLine(
     servicePrice: Price,
     addOns: AddOnOrder[],
     date: IsoDate,
-    slot: BookableSlot,
+    slot: StartTime,
     serviceFormData: unknown[]
 ): OrderLine {
     return {
