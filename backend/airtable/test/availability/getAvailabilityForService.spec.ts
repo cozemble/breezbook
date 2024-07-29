@@ -38,26 +38,20 @@ const theOnlyTimeslotWeHave = carwash.nineToOne;
 
 test('if resource is available and there are no bookings, then we have service availability', () => {
     const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([]), serviceAvailabilityRequest(carwash.smallCarWash.id, today, today));
-    expect(availability).toBeDefined();
-    expect(availability.slots[today.value]).toBeDefined();
-    expect(availability.slots[today.value]).toHaveLength(3);
+    expect(availabilityResponseFns.slotsForDate(availability, today)).toHaveLength(3);
 });
 
 test('if some but not all resources are assigned to a timeslot, then we still have service availability for that timeslot', () => {
     const bookingForVan1 = booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave.slot);
     const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([bookingForVan1]), serviceAvailabilityRequest(carwash.smallCarWash.id, today, today));
-    expect(availability).toBeDefined();
-    expect(availability.slots[today.value]).toBeDefined();
-    expect(availability.slots[today.value]).toHaveLength(3);
+    expect(availabilityResponseFns.slotsForDate(availability, today)).toHaveLength(3);
 });
 
 test('if all resources are assigned to a timeslot, then we have no service availability for that timeslot', () => {
     const bookingForVan1 = booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave.slot);
     const bookingForVan2 = booking(customerId('customer#1'), carwash.smallCarWash, today, theOnlyTimeslotWeHave.slot);
     const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([bookingForVan1, bookingForVan2]), serviceAvailabilityRequest(carwash.smallCarWash.id, today, today));
-    expect(availability).toBeDefined();
-    expect(availability.slots[today.value]).toBeDefined();
-    expect(availability.slots[today.value]).toHaveLength(2);
+    expect(availabilityResponseFns.slotsForDate(availability, today)).toHaveLength(2);
 });
 
 test('cancelled bookings do not count against availability', () => {
@@ -66,14 +60,13 @@ test('cancelled bookings do not count against availability', () => {
         status: 'cancelled'
     };
     const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([theBooking]), serviceAvailabilityRequest(carwash.smallCarWash.id, today, today));
-    expect(availability).toBeDefined();
-    expect(availability.slots[today.value]).toBeDefined();
-    expect(availability.slots[today.value]).toHaveLength(3);
+    expect(availabilityResponseFns.slotsForDate(availability, today)).toHaveLength(3);
 });
 
 test('pricing can be dynamic', () => {
     const availability = getAvailabilityForService(everythingForCarWashTenantWithDynamicPricing([]), serviceAvailabilityRequest(carwash.smallCarWash.id, today, today));
-    expect(availability.slots[today.value]?.[0]?.priceWithNoDecimalPlaces).toBe(1400);
+    const slots = availabilityResponseFns.slotsForDate(availability, today);
+    expect(slots[0]?.priceWithNoDecimalPlaces).toBe(1400);
 });
 
 describe("given a service with service options", () => {
@@ -116,7 +109,7 @@ describe("given a service with service options", () => {
                 serviceOptionRequest(extra60Mins.id, 2)])) as AvailabilityResponse;
         const slotsToday = availabilityResponseFns.slotsForDate(availabilityWithTwoExtras, saturday);
         const firstSlot = mandatory(slotsToday[0], "No slots for " + saturday.value);
-        expect(firstSlot.priceBreakdown.servicePrice).toBe(dogWalkingTenant.servicePrices.individualDogWalk + 200);
+        expect(firstSlot.priceBreakdown.servicePrice).toBe(dogWalkingTenant.servicePrices.individualDogWalk + 500);
         expect(firstSlot.priceBreakdown.pricedOptions).toHaveLength(2);
 
         expect(firstSlot.priceBreakdown.pricedOptions[0].serviceOptionId).toBe(extra30Mins.id.value);

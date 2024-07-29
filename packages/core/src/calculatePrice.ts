@@ -151,7 +151,7 @@ function getParameterisedPricingFactor(f: pricing.ParameterisedPricingFactor, sl
         if (overlap === null) {
             return {name: f.name, value: 0}
         }
-        const overlapDuration = timePeriodFns.toDuration(overlap);
+        const overlapDuration = timePeriodFns.duration(overlap);
         return {name: f.name, value: minuteFns.toHours(durationFns.toMinutes(overlapDuration))}
     }
     throw new Error(`Unknown required factor ${JSON.stringify(f)}`);
@@ -167,12 +167,12 @@ function factorsForSlot(requiredFactors: pricing.PricingFactorSpec[], slot: Avai
 }
 
 interface PricingContext {
-    serviceDuration: number
+    serviceDurationMinutes: number
 }
 
 function getPricingContext(slot: AvailableSlot): PricingContext {
     return {
-        serviceDuration: availableSlotFns.duration(slot).value
+        serviceDurationMinutes: durationFns.toMinutes(availableSlotFns.duration(slot)).value
     }
 }
 

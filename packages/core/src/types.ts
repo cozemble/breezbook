@@ -39,7 +39,7 @@ import {
     serviceOptionId,
     ServiceOptionId,
     timePeriod,
-    TimePeriod,
+    TimePeriod, timePeriodFns,
     Timezone,
     TwentyFourHourClockTime,
     ValueType,
@@ -91,6 +91,13 @@ export function timeslotSpec(from: TwentyFourHourClockTime, to: TwentyFourHourCl
         description,
         slot: timePeriod(from, to)
     };
+}
+
+export const timeslotSpecFns = {
+
+    duration(startTime: TimeslotSpec):Duration {
+        return timePeriodFns.duration(startTime.slot);
+    }
 }
 
 export interface BusinessAvailability {

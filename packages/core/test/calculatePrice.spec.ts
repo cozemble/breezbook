@@ -6,7 +6,7 @@ import {
     carwash,
     currencies,
     price,
-    resourceAllocation,
+    resourceAllocation, Service,
     serviceRequest,
     timeslotSpec
 } from "../src/index.js";
@@ -19,7 +19,7 @@ import {
     pricingFactorName,
     PricingRule
 } from "@breezbook/packages-pricing";
-import {capacity, IsoDate, isoDate, isoDateFns, time24, time24Fns} from '@breezbook/packages-types';
+import {capacity, durationFns, IsoDate, isoDate, isoDateFns, time24, time24Fns} from '@breezbook/packages-types';
 
 const today = isoDate();
 const tomorrow = isoDateFns.addDays(today, 1);
@@ -175,7 +175,7 @@ test("can make price amendments on the usage of a particular resource", () => {
 function carWash(date: IsoDate, van = carwash.van1, startTime = time24('09:00'), endTime = time24('11:00')): AvailableSlot {
     const diff = time24Fns.duration(startTime, endTime);
     const timeslot = timeslotSpec(startTime, endTime, `${startTime.value} - ${endTime.value}`)
-    const mutatedService = {...carwash.smallCarWash, duration: diff.value, startTimes: [timeslot]};
+    const mutatedService:Service = {...carwash.smallCarWash, duration: durationFns.toMinutes(diff), startTimes: [timeslot]};
     const theServiceRequest = serviceRequest(mutatedService, date,[],[]);
     return availableSlot(
         theServiceRequest,

@@ -6,14 +6,14 @@ import {
     ServiceOption,
     serviceOptionFns,
     StartTimeSpec,
-    TimeslotSpec,
+    TimeslotSpec, timeslotSpecFns,
 } from "./types.js";
 import {errorResponse, ErrorResponse, mandatory, success, Success} from "./utils.js";
 import {
     Capacity,
     capacityFns,
     dayAndTimePeriod,
-    DayAndTimePeriod, Duration, durationFns,
+    DayAndTimePeriod, duration, Duration, durationFns,
     exactTimeAvailability,
     ExactTimeAvailability,
     IsoDate,
@@ -40,7 +40,6 @@ import dateAndTime = resourcing.dateAndTime;
 import resourceRequirements = resourcing.resourceRequirements;
 import resourceBookings = resourcing.resourceBookings;
 import ResourceBookingResult = resourcing.ResourceBookingResult;
-import Available = resourcing.Available;
 
 export type StartTime = TimeslotSpec | ExactTimeAvailability
 
@@ -59,36 +58,53 @@ export function resourceAllocation(requirement: ResourceRequirement, resource: R
 }
 
 export const startTimeFns = {
-    getStartTime(startTime: StartTime): TwentyFourHourClockTime {
+    getStartTime(startTime: StartTime|TimeAndDuration): TwentyFourHourClockTime {
         if (startTime._type === 'exact.time.availability') {
+            return startTime.time
+        }
+        if(startTime._type === 'time.and.duration') {
             return startTime.time
         }
         return startTime.slot.from
     },
-    getEndTime(startTime: StartTime, duration: Minutes): TwentyFourHourClockTime {
+    getEndTime(startTime: StartTime|TimeAndDuration, duration: Minutes): TwentyFourHourClockTime {
         if (startTime._type === 'exact.time.availability') {
             return time24Fns.addMinutes(startTime.time, duration)
+        }
+        if(startTime._type === 'time.and.duration') {
+            return time24Fns.addDuration(startTime.time, startTime.duration)
         }
         return startTime.slot.to
     }
 }
 
-export interface StartTimeAndDuration {
-    _type: 'start.time.and.duration'
-    startTime: StartTime
+export interface TimeAndDuration {
+    _type: 'time.and.duration'
+    time: TwentyFourHourClockTime
     duration: Duration
 }
+
+export function timeAndDuration(time: TwentyFourHourClockTime, duration: Duration): TimeAndDuration {
+    return {
+        _type: 'time.and.duration',
+        time,
+        duration
+    }
+}
+
+
+export type AvailableSlotTime = TimeAndDuration | TimeslotSpec
 
 export interface AvailableSlot {
     _type: 'available.slot'
     serviceRequest: ServiceRequest
-    startTime: StartTime
+    startTime: AvailableSlotTime
     resourceAllocation: ResourceAllocation[]
     possibleCapacity: Capacity
     consumedCapacity: Capacity
 }
 
-export function availableSlot(serviceRequest: ServiceRequest, startTime: StartTime, resourceAllocation: ResourceAllocation[], possibleCapacity: Capacity,
+export function availableSlot(serviceRequest: ServiceRequest, startTime: AvailableSlotTime, resourceAllocation: ResourceAllocation[], possibleCapacity: Capacity,
                               consumedCapacity: Capacity): AvailableSlot {
     return {
         _type: "available.slot",
@@ -101,11 +117,16 @@ export function availableSlot(serviceRequest: ServiceRequest, startTime: StartTi
 }
 
 export const availableSlotFns = {
-
-    duration(slot: AvailableSlot): Minutes {
-        return durationFns.toMinutes(time24Fns.duration(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.serviceRequest.service.duration)))
+    duration(slot: AvailableSlot): Duration {
+        if (slot.startTime._type === 'time.and.duration') {
+            return slot.startTime.duration
+        }
+        return timeslotSpecFns.duration(slot.startTime)
     },
     servicePeriod(slot: AvailableSlot): TimePeriod {
+        if(slot.startTime._type === 'time.and.duration') {
+            return timePeriod(slot.startTime.time, time24Fns.addDuration(slot.startTime.time, slot.startTime.duration))
+        }
         return timePeriod(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.serviceRequest.service.duration))
     }
 }
@@ -212,7 +233,7 @@ function toResourceableBooking(booking: Booking, resources: Resource[]): resourc
         service, fixedResourceCommitments, totalCapacity, booking.id)
 }
 
-function startTimeForResponse(availabilityOutcome: Available, startTimes: StartTime[] | null) {
+function startTimeForResponse(availabilityOutcome: resourcing.Available, startTimes: StartTime[] | null, durationMinutes: Minutes):AvailableSlotTime {
     if (startTimes && startTimes.length > 0 && startTimes?.[0]?._type === 'timeslot.spec') {
         const timeSlots = startTimes as TimeslotSpec[];
         return mandatory(
@@ -220,7 +241,7 @@ function startTimeForResponse(availabilityOutcome: Available, startTimes: StartT
             `No start time found for timeslot ${availabilityOutcome.booking.booking.timeslot.from.time.value} in ${timeSlots.map(ts => ts.slot.from.value).join(",")}`);
 
     }
-    return exactTimeAvailability(availabilityOutcome.booking.booking.timeslot.from.time);
+    return timeAndDuration(availabilityOutcome.booking.booking.timeslot.from.time, duration(durationMinutes));
 }
 
 function getDayAvailability(config: AvailabilityConfiguration, serviceId: ServiceId, date: IsoDate): DayAndTimePeriod[] {
@@ -262,7 +283,7 @@ export const availability = {
             if (availabilityOutcome._type === 'available') {
                 result.push(availableSlot(
                     serviceRequest,
-                    startTimeForResponse(availabilityOutcome, serviceRequest.service.startTimes),
+                    startTimeForResponse(availabilityOutcome, serviceRequest.service.startTimes, duration),
                     availabilityOutcome.booking.resourceCommitments.map(r => resourceAllocation(r.requirement, r.resource)),
                     availabilityOutcome.potentialCapacity,
                     availabilityOutcome.consumedCapacity

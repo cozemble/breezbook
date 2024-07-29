@@ -433,6 +433,9 @@ export const time24Fns = {
     addDays(start: IsoDate, days: Days | number): IsoDate {
         const numberOfDays = typeof days === 'number' ? days : days.value;
         return isoDate(dayjs(start.value).add(numberOfDays, 'day').format('YYYY-MM-DD'));
+    },
+    addDuration(time: TwentyFourHourClockTime, duration: Duration):TwentyFourHourClockTime {
+        return time24Fns.addMinutes(time, durationFns.toMinutes(duration));
     }
 };
 
@@ -686,10 +689,10 @@ export const timePeriodFns = {
         }
         return null;
     },
-    toDuration(t: TimePeriod): Duration {
+    duration(t: TimePeriod): Duration {
         return duration(minutes(dayjs(`2021-01-01T${t.to.value}`).diff(`2021-01-01T${t.from.value}`, 'minutes')));
 
-    }
+    },
 };
 
 export interface FormId extends ValueType<string> {

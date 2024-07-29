@@ -105,8 +105,11 @@ export interface AvailabilityResponse {
 }
 
 export const availabilityResponseFns = {
-    slotsForDate(availabilityWithTwoExtras: AvailabilityResponse, date: IsoDate): Availability[] {
-        return mandatory(availabilityWithTwoExtras.slots[date.value], `No slots for date ${date.value}`);
+    slotsForDate(response: AvailabilityResponse | ErrorResponse, date: IsoDate): Availability[] {
+        if(response._type === 'error.response') {
+            throw new Error(response.errorMessage);
+        }
+        return mandatory(response.slots[date.value], `No slots for date ${date.value}`);
     }
 }
 

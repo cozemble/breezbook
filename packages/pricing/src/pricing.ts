@@ -303,7 +303,7 @@ export class PricingEngine {
             return price(context.currentPrice + this.amountToAdd(mutation, context));
         }
         if (mutation._type === 'per.hour') {
-            const numberOfHours = context.serviceDuration / 60;
+            const numberOfHours = context.serviceDurationMinutes / 60;
             const amount = this.amountToAdd(mutation.mutation, context) * numberOfHours;
             return price(context.currentPrice + amount);
         }
