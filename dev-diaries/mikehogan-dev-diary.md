@@ -2654,3 +2654,12 @@ I like this way of working.  It makes the modeling of a problem space tactile.  
 it hangs together in different circumstances.
 
 I expect I will do the same with the pricing model.  Where else might it apply?
+
+# Mon 29 Jul 2024
+Started moving the discovered `ScheduleConfig` into the main model.  Which means `Service` will no longer always have
+a `duration`.  Which matters when it comes to price calculation, because some of the pricing rules are duration based.
+Pricing happens on `AvailableSlot` types, which have a `StartTime`, but no duration.  In cases where `StartTime` is not
+a timeslot, in other words an exact time, I need to first add a duration to pair with it.  So reverting this current 
+attempt to add the `ScheduleConfig` types for now.  I suspect there might be other things I pin ball into when I come back
+to try again.
+
