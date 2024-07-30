@@ -2,7 +2,7 @@ import {derived, get, type Readable, writable} from 'svelte/store';
 import {H} from 'highlight.run';
 
 import * as types from '@breezbook/packages-types';
-import {addOnId} from '@breezbook/packages-types';
+import {addOnId, time24, timePeriod, timePeriodFns} from '@breezbook/packages-types';
 import * as core from '@breezbook/packages-core'
 import {addOnOrder} from '@breezbook/packages-core'
 import {
@@ -57,6 +57,7 @@ function createCheckoutStore() {
                     item.extras.map((extra) => addOnOrder(addOnId(extra.id))),
                     types.isoDate(item.time.day),
                     types.time24(item.time.start),
+                    timePeriodFns.duration(timePeriod(time24(item.time.start), time24(item.time.end))),
                     [item.details]
                 );
             });

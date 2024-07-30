@@ -7,7 +7,7 @@ import {
     DbServiceAddOn,
     DbServiceForm,
     DbServiceOptionResourceRequirement,
-    DbServiceResourceRequirement,
+    DbServiceResourceRequirement, DbServiceScheduleConfig,
     DbTenantSettings,
     DbTimeSlot
 } from './dbtypes.js';
@@ -25,7 +25,8 @@ import {
     service,
     Service as DomainService,
     Service,
-    serviceFns, ServiceImpact,
+    serviceFns,
+    ServiceImpact,
     serviceOption,
     ServiceOption,
     tenantSettings,
@@ -59,6 +60,7 @@ import {
     timezone
 } from "@breezbook/packages-types";
 import {resourcing} from "@breezbook/packages-resourcing";
+import {ScheduleConfig} from "@breezbook/packages-core/dist/scheduleConfig.js";
 import ResourceRequirement = resourcing.ResourceRequirement;
 import specificResource = resourcing.specificResource;
 import anySuitableResource = resourcing.anySuitableResource;
@@ -88,24 +90,20 @@ export function toDomainServiceOption(so: DbServiceOptionFormsAndResources, reso
         serviceOptionId(so.id));
 }
 
-export function toDomainService(dbService: DbService, addOns: DbServiceAddOn[], resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], timeslots: TimeslotSpec[], resourceRequirements: DbServiceResourceRequirement[], mappedResources: Resource[]): DomainService {
+export function toDomainService(dbService: DbService, addOns: DbServiceAddOn[], resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], resourceRequirements: DbServiceResourceRequirement[], mappedResources: Resource[], scheduleConfig: ScheduleConfig): DomainService {
     const permittedAddOns = addOns.filter((sa) => sa.service_id === dbService.id).map(s => addOnId(s.add_on_id))
     const mappedResourceRequirements = resourceRequirements.filter(rr => rr.service_id === dbService.id).map(rr => toDomainResourceRequirement(rr, resourceTypes, mappedResources));
     const forms = dbServiceForms.filter((sf) => sf.service_id === dbService.id).map((sf) => formId(sf.form_id));
     const priceAmount = (typeof dbService.price === "object" && "toNumber" in dbService.price) ? dbService.price.toNumber() : dbService.price;
-    let theService = service(
+    return service(
         mappedResourceRequirements,
-        minutes(dbService.duration_minutes),
         price(priceAmount, currency(dbService.price_currency)),
         permittedAddOns,
         forms,
+        scheduleConfig,
         capacity(dbService.capacity),
         serviceId(dbService.id)
-    );
-    if (dbService.requires_time_slot) {
-        theService = serviceFns.setStartTimes(theService, timeslots);
-    }
-    return theService
+    )
 }
 
 export function toDomainTimeslotSpec(ts: DbTimeSlot): TimeslotSpec {

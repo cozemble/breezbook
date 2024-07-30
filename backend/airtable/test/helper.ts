@@ -3,7 +3,8 @@ import {
     businessAvailability,
     businessConfiguration,
     carwash,
-    carwashForm, configuration,
+    carwashForm,
+    configuration,
     coupon,
     Customer,
     customer,
@@ -19,8 +20,19 @@ import {PricedBasket, pricedCreateOrderRequest} from '@breezbook/backend-api-typ
 import {everythingForAvailability} from '../src/express/getEverythingForAvailability.js';
 import {EndpointOutcome} from "../src/infra/endpoint.js";
 import {jexlExpression, multiply, pricingFactorName, PricingRule} from "@breezbook/packages-pricing";
-import {couponCode, dayAndTimePeriod, duration,
-    environmentId, IsoDate, isoDate, isoDateFns, minutes, tenantEnvironment, tenantId, timezone} from '@breezbook/packages-types';
+import {
+    couponCode,
+    dayAndTimePeriod,
+    duration,
+    environmentId,
+    IsoDate,
+    isoDate,
+    isoDateFns,
+    minutes,
+    tenantEnvironment,
+    tenantId,
+    timezone
+} from '@breezbook/packages-types';
 import resourceDayAvailability = configuration.resourceAvailability;
 import availabilityBlock = configuration.availabilityBlock;
 
@@ -92,7 +104,6 @@ export function everythingForCarWashTenantWithDynamicPricing(bookings: Booking[]
             businessAvailability(theBusinessAvailability),
             [carwash.van1, carwash.van2],
             theResourceAvailability,
-            [],
             [carwash.smallCarWash],
             [],
             carwash.addOns,

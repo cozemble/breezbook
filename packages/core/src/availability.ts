@@ -3,6 +3,7 @@ import {
     Booking,
     BusinessAvailability,
     Service,
+    serviceFns,
     ServiceOption,
     serviceOptionFns,
     StartTimeSpec,
@@ -36,7 +37,6 @@ import {configuration} from "./configuration/configuration.js";
 import ResourceRequirement = resourcing.ResourceRequirement;
 import Resource = resourcing.Resource;
 import ResourceAvailability = configuration.ResourceAvailability;
-import ServiceAvailability = configuration.ServiceAvailability;
 import listAvailability = resourcing.listAvailability;
 import resource = resourcing.resource;
 import timeslot = resourcing.timeslot;
@@ -62,23 +62,14 @@ export function resourceAllocation(requirement: ResourceRequirement, resource: R
 }
 
 export const startTimeFns = {
-    getStartTime(startTime: StartTime | TimeAndDuration): TwentyFourHourClockTime {
-        if (startTime._type === 'exact.time.availability') {
-            return startTime.time
-        }
-        if (startTime._type === 'time.and.duration') {
-            return startTime.time
-        }
-        return startTime.slot.from
-    },
-    getEndTime(startTime: StartTime | TimeAndDuration, duration: Minutes): TwentyFourHourClockTime {
-        if (startTime._type === 'exact.time.availability') {
-            return time24Fns.addMinutes(startTime.time, duration)
-        }
-        if (startTime._type === 'time.and.duration') {
-            return time24Fns.addDuration(startTime.time, startTime.duration)
-        }
-        return startTime.slot.to
+    fitAvailability(startTime: StartTime[], duration: Minutes, availability: DayAndTimePeriod[]): StartTime[] {
+        return startTime.filter(st => {
+            if (st._type === 'timeslot.spec') {
+                return availability.some(a => timePeriodFns.overlaps(a.period, st.slot))
+            }
+            const period = timePeriod(st.time, time24Fns.addMinutes(st.time, duration))
+            return availability.some(a => timePeriodFns.overlaps(a.period, period))
+        })
     }
 }
 
@@ -98,6 +89,21 @@ export function timeAndDuration(time: TwentyFourHourClockTime, duration: Duratio
 
 
 export type AvailableSlotTime = TimeAndDuration | TimeslotSpec
+
+export const availableSlotTimeFns = {
+    getStartTime(startTime: AvailableSlotTime): TwentyFourHourClockTime {
+        if (startTime._type === 'time.and.duration') {
+            return startTime.time
+        }
+        return startTime.slot.from
+    },
+    getEndTime(startTime: AvailableSlotTime): TwentyFourHourClockTime {
+        if (startTime._type === 'time.and.duration') {
+            return time24Fns.addDuration(startTime.time, startTime.duration)
+        }
+        return startTime.slot.to
+    }
+}
 
 export interface AvailableSlot {
     _type: 'available.slot'
@@ -131,14 +137,14 @@ export const availableSlotFns = {
         if (slot.startTime._type === 'time.and.duration') {
             return timePeriod(slot.startTime.time, time24Fns.addDuration(slot.startTime.time, slot.startTime.duration))
         }
-        return timePeriod(startTimeFns.getStartTime(slot.startTime), startTimeFns.getEndTime(slot.startTime, slot.serviceRequest.service.duration))
+        return timePeriod(availableSlotTimeFns.getStartTime(slot.startTime), availableSlotTimeFns.getEndTime(slot.startTime))
     }
 }
 
 function calcPossibleStartTimes(startTimeSpec: StartTimeSpec, availabilityForDay: DayAndTimePeriod[], serviceDuration: Minutes): TwentyFourHourClockTime[] {
     if (startTimeSpec._type === 'periodic.start.time') {
         return availabilityForDay.flatMap(a => {
-            const possibleStartTimes = timePeriodFns.listPossibleStartTimes(a.period, startTimeSpec.period)
+            const possibleStartTimes = timePeriodFns.listPossibleStartTimes(a.period, durationFns.toMinutes(startTimeSpec.period))
             return possibleStartTimes.filter(time => time24Fns.addMinutes(time, serviceDuration).value <= a.period.to.value)
         })
     } else {
@@ -150,17 +156,15 @@ export interface AvailabilityConfiguration {
     _type: 'availability.configuration'
     availability: BusinessAvailability;
     resourceAvailability: ResourceAvailability[];
-    serviceAvailability: ServiceAvailability[];
     timeslots: TimeslotSpec[];
     startTimeSpec: StartTimeSpec;
 }
 
-export function availabilityConfiguration(availability: BusinessAvailability, resourceAvailability: ResourceAvailability[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec, serviceAvailability: ServiceAvailability[] = []): AvailabilityConfiguration {
+export function availabilityConfiguration(availability: BusinessAvailability, resourceAvailability: ResourceAvailability[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec,): AvailabilityConfiguration {
     return {
         _type: "availability.configuration",
         availability,
         resourceAvailability,
-        serviceAvailability,
         timeslots,
         startTimeSpec
     }
@@ -193,8 +197,14 @@ export interface ServiceRequest {
     addOns: AddOnAndQuantity[]
 }
 
+export const serviceRequestFns = {
+    duration(request: ServiceRequest): Duration {
+        return request.duration
+    }
+}
+
 export function serviceRequest(service: Service, date: IsoDate, addOns: AddOnAndQuantity[] = [], options: ServiceOptionAndQuantity[] = [], specificDuration?: Duration): ServiceRequest {
-    const theDuration = specificDuration ?? duration(service.duration)
+    const theDuration = specificDuration ?? serviceFns.duration(service)
     return {
         _type: "service.request",
         date,
@@ -251,16 +261,8 @@ function startTimeForResponse(availabilityOutcome: resourcing.Available, startTi
     return timeAndDuration(availabilityOutcome.booking.booking.timeslot.from.time, duration(durationMinutes));
 }
 
-function getDayAvailability(config: AvailabilityConfiguration, serviceId: ServiceId, date: IsoDate): DayAndTimePeriod[] {
-    const availabilityForThisService = config.serviceAvailability
-        .filter(s => s.serviceId.value === serviceId.value);
-    if (availabilityForThisService.length === 0) {
-        return config.availability.availability.filter(a => a.day.value === date.value)
-    }
-    return availabilityForThisService
-        .flatMap(s => s.availability)
-        .filter(a => a.when.day.value === date.value)
-        .map(a => a.when);
+function getDayAvailability(config: AvailabilityConfiguration, date: IsoDate): DayAndTimePeriod[] {
+    return config.availability.availability.filter(a => a.day.value === date.value)
 }
 
 export const availability = {
@@ -273,7 +275,7 @@ export const availability = {
                               bookings: Booking[],
                               serviceRequest: ServiceRequest): Success<AvailableSlot[]> | ErrorResponse => {
         const date = serviceRequest.date
-        const businessAvailabilityForDay = getDayAvailability(config, serviceRequest.service.id, date);
+        const businessAvailabilityForDay = getDayAvailability(config, date);
         if (businessAvailabilityForDay.length === 0) {
             return errorResponse(availability.errorCodes.noAvailabilityForDay, `No availability for date '${date.value}'`)
         }
@@ -281,8 +283,9 @@ export const availability = {
         const service = toService(serviceRequest)
         const mappedBookings = bookings.map(b => toResourceableBooking(b, mappedResources))
         const bookingSpec = resourcing.bookingSpec(service)
-        const duration = [serviceRequest.service.duration, ...serviceRequest.options.map(o => durationFns.toMinutes(o.option.duration))].reduce((acc, d) => minuteFns.sum(acc, d), minutes(0))
-        const possibleStartTimes = serviceRequest.service.startTimes ?? calcPossibleStartTimes(config.startTimeSpec, businessAvailabilityForDay, duration).map(exactTimeAvailability);
+        const duration = [durationFns.toMinutes(serviceRequestFns.duration(serviceRequest)), ...serviceRequest.options.map(o => durationFns.toMinutes(o.option.duration))].reduce((acc, d) => minuteFns.sum(acc, d), minutes(0))
+        const serviceStartTimes = serviceFns.startTimes(serviceRequest.service, duration)
+        const possibleStartTimes = serviceStartTimes ? startTimeFns.fitAvailability(serviceStartTimes, duration, businessAvailabilityForDay) : calcPossibleStartTimes(config.startTimeSpec, businessAvailabilityForDay, duration).map(exactTimeAvailability);
         const requestedSlots = possibleStartTimes.map(st => toPeriod(serviceRequest.date, st, duration)).map(p => timeslot(dateAndTime(p.day, p.period.from), dateAndTime(p.day, p.period.to)))
         const availabilityOutcomes = listAvailability(mappedResources, mappedBookings, bookingSpec, requestedSlots)
         const result = [] as AvailableSlot[]
@@ -290,7 +293,7 @@ export const availability = {
             if (availabilityOutcome._type === 'available') {
                 result.push(availableSlot(
                     serviceRequest,
-                    startTimeForResponse(availabilityOutcome, serviceRequest.service.startTimes, duration),
+                    startTimeForResponse(availabilityOutcome, serviceFns.startTimes(serviceRequest.service, duration), duration),
                     availabilityOutcome.booking.resourceCommitments.map(r => resourceAllocation(r.requirement, r.resource)),
                     availabilityOutcome.potentialCapacity,
                     availabilityOutcome.consumedCapacity

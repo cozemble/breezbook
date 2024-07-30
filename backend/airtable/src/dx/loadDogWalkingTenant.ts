@@ -9,7 +9,6 @@ import {
     upsertResourceAvailability,
     upsertResourceType,
     upsertService,
-    upsertServiceAvailability,
     upsertServiceForm,
     upsertServiceImage,
     upsertServiceLabel,
@@ -19,13 +18,12 @@ import {
     upsertServiceOptionImage,
     upsertServiceOptionLabel,
     upsertServiceResourceRequirement,
+    upsertServiceScheduleConfig,
     upsertServiceServiceOption,
-    upsertServiceTimeslot,
     upsertTenant,
     upsertTenantBranding,
     upsertTenantBrandingLabels,
     upsertTenantSettings,
-    upsertTimeslot
 } from "../prisma/breezPrismaMutations.js";
 import {makeTestId} from "./testIds.js";
 import {
@@ -33,6 +31,7 @@ import {
     JsonSchemaForm,
     jsonSchemaFormLabels,
     languages,
+    minutes,
     schemaKeyLabel,
     tenantEnvironment,
     tenantId,
@@ -49,7 +48,12 @@ import {
     pricingFactorName,
     PricingRule
 } from "@breezbook/packages-pricing";
-import {consumesServiceCapacity} from "@breezbook/packages-core";
+import {consumesServiceCapacity, timeslot} from "@breezbook/packages-core";
+import {
+    singleDayScheduling,
+    singleDaySchedulingFns,
+    timeslotSelection
+} from "@breezbook/packages-core/dist/scheduleConfig.js";
 
 const tenant_id = 'breezbook-dog-walks';
 const environment_id = 'dev';
@@ -93,7 +97,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
     const dogWalkerResourceTypeId = makeTestId(tenant_id, environment_id, `resource_type.walker`);
     const resourceAlexId = makeTestId(tenant_id, environment_id, `resource.alex`);
     const tenantBrandingId = makeTestId(tenant_id, environment_id, `tenant_branding_${tenant_id}_${environment_id}`)
-
+    const mainLocationId = makeTestId(tenant_id, environment_id, 'main')
 
     return [
 
@@ -103,7 +107,7 @@ function breezbookDogWalkUpserts(): Upsert[] {
             slug: tenant_id
         }),
         upsertLocation({
-            id: makeTestId(tenant_id, environment_id, 'main'),
+            id: mainLocationId,
             tenant_id,
             environment_id,
             name: 'Main',
@@ -263,10 +267,20 @@ function breezbookDogWalkUpserts(): Upsert[] {
             environment_id,
             id: dogWalkingTenant.serviceIds.individualDogWalk,
             slug: 'individual_dog_walk',
-            duration_minutes: 60,
             price: dogWalkingTenant.servicePrices.individualDogWalk,
             price_currency: 'GBP',
-            requires_time_slot: false
+        }),
+        upsertServiceScheduleConfig({
+            id: makeTestId(tenant_id, environment_id, 'individual_dog_walk_schedule_config'),
+            tenant_id,
+            environment_id,
+            service_id: dogWalkingTenant.serviceIds.individualDogWalk,
+            schedule_config: singleDaySchedulingFns.pickTime({
+                startTime: time24('11:00'),
+                endTime: time24('16:00'),
+                duration: minutes(60),
+                period: minutes(30)
+            }) as any
         }),
         upsertServiceImage({
             tenant_id,
@@ -308,11 +322,20 @@ function breezbookDogWalkUpserts(): Upsert[] {
             environment_id,
             id: dogWalkingTenant.serviceIds.groupDogWalk,
             slug: 'group_dog_walk',
-            duration_minutes: 60,
             price: dogWalkingTenant.servicePrices.groupDogWalk,
             price_currency: 'GBP',
-            requires_time_slot: true,
-            capacity: 5
+            capacity: 5,
+        }),
+        upsertServiceScheduleConfig({
+            id: makeTestId(tenant_id, environment_id, 'group_dog_walk_schedule_config'),
+            tenant_id,
+            environment_id,
+            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
+            schedule_config: singleDayScheduling(
+                timeslotSelection([
+                    timeslot(time24('09:00'), time24('10:00'), "Morning walk"),
+                    timeslot(time24('17:00'), time24('18:00'), "Evening walk")
+                ])) as any
         }),
         upsertServiceImage({
             tenant_id,
@@ -337,48 +360,26 @@ function breezbookDogWalkUpserts(): Upsert[] {
             name: 'Group dog walk',
             description: 'A 60-min walk for your dog with 3 - 5 other dogs',
         }),
-        upsertTimeslot({
-            id: makeTestId(tenant_id, environment_id, 'group_dog_walk_morning'),
-            tenant_id,
-            environment_id,
-            location_id: makeTestId(tenant_id, environment_id, 'main'),
-            description: 'Morning walk',
-            start_time_24hr: '09:00',
-            end_time_24hr: '10:00'
-        }),
-        upsertTimeslot({
-            id: makeTestId(tenant_id, environment_id, 'group_dog_walk_evening'),
-            tenant_id,
-            environment_id,
-            location_id: makeTestId(tenant_id, environment_id, 'main'),
-            description: 'Evening walk',
-            start_time_24hr: '17:00',
-            end_time_24hr: '18:00'
-        }),
-        upsertServiceTimeslot({
-            id: makeTestId(tenant_id, environment_id, 'group_dog_walk_morning'),
-            tenant_id,
-            environment_id,
-            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
-            time_slot_id: makeTestId(tenant_id, environment_id, 'group_dog_walk_morning')
-        }),
-        upsertServiceTimeslot({
-            id: makeTestId(tenant_id, environment_id, 'group_dog_walk_evening'),
-            tenant_id,
-            environment_id,
-            service_id: dogWalkingTenant.serviceIds.groupDogWalk,
-            time_slot_id: makeTestId(tenant_id, environment_id, 'group_dog_walk_evening')
-        }),
 
         upsertService({
             tenant_id,
             environment_id,
             id: dogWalkingTenant.serviceIds.dropInVisit,
             slug: 'drop_in_visit',
-            duration_minutes: 30,
             price: dogWalkingTenant.servicePrices.dropInVisit,
             price_currency: 'GBP',
-            requires_time_slot: false
+        }),
+        upsertServiceScheduleConfig({
+            id: makeTestId(tenant_id, environment_id, 'drop_in_visit_schedule_config'),
+            tenant_id,
+            environment_id,
+            service_id: dogWalkingTenant.serviceIds.dropInVisit,
+            schedule_config: singleDaySchedulingFns.pickTime({
+                startTime: time24('11:00'),
+                endTime: time24('16:00'),
+                duration: minutes(30),
+                period: minutes(30)
+            }) as any
         }),
         upsertServiceImage({
             tenant_id,
@@ -409,10 +410,20 @@ function breezbookDogWalkUpserts(): Upsert[] {
             environment_id,
             id: dogWalkingTenant.serviceIds.petSit,
             slug: 'pet_sit',
-            duration_minutes: 120,
             price: dogWalkingTenant.servicePrices.petSit,
             price_currency: 'GBP',
-            requires_time_slot: false
+        }),
+        upsertServiceScheduleConfig({
+            id: makeTestId(tenant_id, environment_id, 'pet_sit_schedule_config'),
+            tenant_id,
+            environment_id,
+            service_id: dogWalkingTenant.serviceIds.petSit,
+            schedule_config: singleDaySchedulingFns.pickTime({
+                startTime: time24('11:00'),
+                endTime: time24('16:00'),
+                duration: minutes(120),
+                period: minutes(30)
+            }) as any
         }),
         upsertServiceImage({
             tenant_id,
@@ -474,36 +485,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
             requirement_type: 'any_suitable',
             resource_type: dogWalkerResourceTypeId,
         }),
-
-        ...daysOfWeek.flatMap(day => [
-            upsertServiceAvailability({
-                id: makeTestId(tenant_id, environment_id, `availability.${dogWalkingTenant.serviceIds.individualDogWalk}.${day}`),
-                tenant_id,
-                environment_id,
-                service_id: dogWalkingTenant.serviceIds.individualDogWalk,
-                day_of_week: day,
-                start_time_24hr: "11:00",
-                end_time_24hr: "16:00"
-            }),
-            upsertServiceAvailability({
-                id: makeTestId(tenant_id, environment_id, `availability.${dogWalkingTenant.serviceIds.dropInVisit}.${day}`),
-                tenant_id,
-                environment_id,
-                service_id: dogWalkingTenant.serviceIds.dropInVisit,
-                day_of_week: day,
-                start_time_24hr: "11:00",
-                end_time_24hr: "16:00"
-            }),
-            upsertServiceAvailability({
-                id: makeTestId(tenant_id, environment_id, `availability.${dogWalkingTenant.serviceIds.petSit}.${day}`),
-                tenant_id,
-                environment_id,
-                service_id: dogWalkingTenant.serviceIds.petSit,
-                day_of_week: day,
-                start_time_24hr: "11:00",
-                end_time_24hr: "16:00"
-            })
-        ]),
 
         upsertServiceLocation({
             tenant_id,

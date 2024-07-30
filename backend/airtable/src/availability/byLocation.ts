@@ -5,6 +5,7 @@ import {
     DbResourceAvailability,
     DbService,
     DbServiceLocation,
+    DbServiceScheduleConfig,
     DbTimeSlot,
     findManyForTenant
 } from "../prisma/dbtypes.js";
@@ -102,12 +103,12 @@ export const byLocation = {
         const services = await byLocation.findServices(prisma, location).then(l => l ? l.service_locations.map(s => s.services) : [])
 
         const serviceResourceRequirements = await findMany(prisma.service_resource_requirements, {});
+        const serviceScheduleConfigs = await byLocation.findServiceScheduleConfigs(prisma, location);
         const resourceTypes = await findMany(prisma.resource_types, {});
         const businessHours = await byLocation.findBusinessHours(prisma, location);
         const blockedTime = await byLocation.findBlockedime(prisma, location, fromDate, toDate);
         const resources = await findMany(prisma.resources, {});
         const resourceAvailability = await byLocation.findResourceAvailability(prisma, location);
-        const serviceAvailability = await byLocation.findServiceAvailability(prisma, location);
         const resourceOutage = await findMany(prisma.resource_blocked_time, dateWhereOpts)
         const timeSlots = await byLocation.findTimeslots(prisma, location);
         const pricingRules = await findMany(prisma.pricing_rules, {});
@@ -159,7 +160,7 @@ export const byLocation = {
             resourceAvailability,
             resourceOutage,
             services,
-            serviceAvailability,
+            serviceScheduleConfigs,
             serviceAddOns,
             serviceOptions,
             serviceResourceRequirements,
@@ -199,8 +200,8 @@ export const byLocation = {
             }
         })
     },
-    findServiceAvailability(prisma: PrismaClient, location: TenantEnvironmentLocation) {
-        return prisma.service_availability.findMany({
+    findServiceScheduleConfigs(prisma: PrismaClient, location: TenantEnvironmentLocation): Promise<DbServiceScheduleConfig[]> {
+        return prisma.service_schedule_config.findMany({
             where: {
                 tenant_id: location.tenantId.value,
                 environment_id: location.environmentId.value,

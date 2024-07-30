@@ -109,9 +109,8 @@ export function validateAvailability(everythingForAvailability: EverythingForAva
         businessAvailability(everythingForAvailability.businessConfiguration.availability.availability),
         everythingForAvailability.businessConfiguration.resourceAvailability,
         everythingForAvailability.businessConfiguration.timeslots,
-        everythingForAvailability.businessConfiguration.startTimeSpec,
-        everythingForAvailability.businessConfiguration.serviceAvailability);
-    const newBookings = everythingToCreateOrder.basket.lines.map(line => booking(everythingToCreateOrder.customer.id, line.service, line.date, timePeriod(line.startTime, time24Fns.addMinutes(line.startTime, line.service.duration))));
+        everythingForAvailability.businessConfiguration.startTimeSpec);
+    const newBookings = everythingToCreateOrder.basket.lines.map(line => booking(everythingToCreateOrder.customer.id, line.service, line.date, timePeriod(line.startTime, time24Fns.addDuration(line.startTime, line.duration))));
     const availabilityOutcomes: resourcing.ResourceBookingResult[] = availability.checkAvailability(availabilityConfig, everythingForAvailability.bookings, newBookings);
     for (const [index, outcome] of availabilityOutcomes.entries()) {
         if (outcome._type === 'unresourceable.booking') {
@@ -131,8 +130,7 @@ function businessIsOpen(everythingForTenant: EverythingForAvailability, date: Is
 }
 
 export function validateOpeningHours(everythingForTenant: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder): ErrorResponse | null {
-
-    const validationOutcomes = everythingToCreateOrder.basket.lines.map(line => businessIsOpen(everythingForTenant, line.date, timePeriodFns.calcPeriod(line.startTime, line.service.duration)))
+    const validationOutcomes = everythingToCreateOrder.basket.lines.map(line => businessIsOpen(everythingForTenant, line.date, timePeriodFns.calcPeriod(line.startTime, line.duration)))
     return validationOutcomes.find(o => o != null) ?? null
 }
 

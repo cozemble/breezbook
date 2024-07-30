@@ -5,7 +5,7 @@
     import {mandatory, priceFns} from "@breezbook/packages-core";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import StripePaymentForm from "$lib/uxs/personal-training/StripePaymentForm.svelte";
-    import {time24} from "@breezbook/packages-types";
+    import {duration, minutes, time24} from "@breezbook/packages-types";
     import {translations} from "$lib/ui/stores";
     import {env, tenantId} from "$lib/uxs/personal-training/constants";
 
@@ -16,7 +16,8 @@
     onMount(async () => {
         const date = mandatory(state.selectedSlot?.day, "selectedSlot.day")
         const time = mandatory(state.selectedSlot?.slot.startTime24hr, "selectedSlot.slot.startTime24hr")
-        const basket = unpricedBasket([unpricedBasketLine(state.serviceId, state.locationId, [], date, time24(time), state.filledForms ?? [], state.requirementOverrides ?? [])])
+        const service = mandatory(state.tenant.services.find(s => s.id === state.serviceId), "service")
+        const basket = unpricedBasket([unpricedBasketLine(state.serviceId, state.locationId, [], date, time24(time), duration(minutes(service.durationMinutes)),state.filledForms ?? [], state.requirementOverrides ?? [])])
         priced = await fetchJson(backendUrl(`/api/dev/breezbook-gym/basket/price`), {
             method: "POST",
             body: JSON.stringify(basket)

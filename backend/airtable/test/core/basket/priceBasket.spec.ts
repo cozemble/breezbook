@@ -17,7 +17,7 @@ import {
     isoDateFns,
     mandatory,
     minutes,
-    serviceOptionRequest
+    serviceOptionRequest, timePeriodFns
 } from '@breezbook/packages-types';
 
 const today = isoDate();
@@ -32,7 +32,7 @@ test('can price an empty basket', () => {
 });
 
 test('can price a basket with one line item', () => {
-    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne.slot.from, [])]);
+    const basket = unpricedBasket([unpricedBasketLine(carwash.smallCarWash.id, carwash.locations.london, [], dayBeyondDynamicPricing, carwash.nineToOne.slot.from, timePeriodFns.duration(carwash.nineToOne.slot),[])]);
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as PricedBasket;
     expect(result.total).toEqual(carwash.smallCarWash.price);
     expect(result.lines).toHaveLength(1);
@@ -110,6 +110,7 @@ test("adds the cost of service options to the line total", () => {
             [],
             dayBeyondDynamicPricing,
             carwash.nineToOne.slot.from,
+            timePeriodFns.duration(carwash.nineToOne.slot),
             [],
             [],
             [serviceOptionRequest(aServiceOption.id, 2)])]);

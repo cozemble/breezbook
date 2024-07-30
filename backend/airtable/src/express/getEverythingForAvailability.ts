@@ -4,7 +4,7 @@ import {
     BusinessConfiguration,
     configuration,
     Coupon,
-    periodicStartTime,
+    periodicStartTime, ScheduleConfig, singleDaySchedulingFns,
     TenantSettings,
 } from '@breezbook/packages-core';
 import {
@@ -43,12 +43,11 @@ import {
     DbResourceType,
     DbService,
     DbServiceAddOn,
-    DbServiceAvailability,
     DbServiceForm,
     DbServiceOption,
     DbServiceOptionForm,
     DbServiceOptionResourceRequirement,
-    DbServiceResourceRequirement,
+    DbServiceResourceRequirement, DbServiceScheduleConfig,
     DbTenantSettings,
     DbTimeSlot,
     findManyForTenant
@@ -182,9 +181,9 @@ export interface AvailabilityData {
     blockedTime: DbBlockedTime[];
     resources: DbResource[];
     resourceAvailability: DbResourceAvailability[];
-    serviceAvailability: DbServiceAvailability[]
     resourceOutage: DbResourceBlockedTime[];
     services: DbService[];
+    serviceScheduleConfigs: DbServiceScheduleConfig[];
     serviceAddOns: DbServiceAddOn[]
     serviceOptions: DbServiceOptionFormsAndResources[];
     serviceResourceRequirements: DbServiceResourceRequirement[]
@@ -208,9 +207,9 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
     const blockedTime = await findMany(prisma.blocked_time, dateWhereOpts);
     const resources = await findMany(prisma.resources, {});
     const resourceAvailability = await findMany(prisma.resource_availability, {});
-    const serviceAvailability = await findMany(prisma.service_availability, {});
     const resourceOutage = await findMany(prisma.resource_blocked_time, dateWhereOpts);
     const services = await findMany(prisma.services, {});
+    const serviceScheduleConfigs = await findMany(prisma.service_schedule_config, {});
     const serviceAddOns = await findMany(prisma.service_add_ons, {});
     const serviceResourceRequirements = await findMany(prisma.service_resource_requirements, {});
     const timeSlots = await findMany(prisma.time_slots, {});
@@ -250,7 +249,7 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
         resourceAvailability,
         resourceOutage,
         services,
-        serviceAvailability,
+        serviceScheduleConfigs,
         serviceAddOns,
         serviceOptions,
         serviceResourceRequirements,
@@ -264,17 +263,6 @@ export async function gatherAvailabilityData(prisma: PrismaClient, tenantEnviron
         tenantSettings,
         coupons,
     };
-}
-
-function makeServiceAvailability(dbAvailability: DbServiceAvailability[], dates: IsoDate[]): ServiceAvailability[] {
-    return dates.flatMap(date => {
-        const availabilities = dbAvailability.filter((dbAvail) => dbAvail.day_of_week === isoDateFns.dayOfWeek(date));
-        return availabilities.map((avail) => {
-            return serviceAvailability(serviceId(avail.service_id), [
-                availabilityBlock(dayAndTimePeriod(date, timePeriod(time24(avail.start_time_24hr), time24(avail.end_time_24hr))))
-            ]);
-        });
-    })
 }
 
 export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvironment: TenantEnvironment, fromDate: IsoDate, toDate: IsoDate, availabilityData: AvailabilityData) {
@@ -295,18 +283,19 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
     const mappedResources = availabilityData.resources.map((r) => toDomainResource(r, mappedResourceTypes));
 
     const mappedResourceAvailability = makeResourceAvailability(mappedResources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates)
+    const businessAvailability = makeBusinessAvailability(availabilityData.businessHours, availabilityData.blockedTime, dates)
     const services = availabilityData.services.map((s) => {
-        return toDomainService(s, availabilityData.serviceAddOns, mappedResourceTypes, availabilityData.serviceForms, mappedTimeSlots, availabilityData.serviceResourceRequirements, mappedResources);
+        const applicableScheduleConfig = availabilityData.serviceScheduleConfigs.find((sc) => sc.service_id === s.id);
+        const scheduleConfig = applicableScheduleConfig ? applicableScheduleConfig.schedule_config as unknown as ScheduleConfig : singleDaySchedulingFns.alwaysAvailable();
+        return toDomainService(s, availabilityData.serviceAddOns, mappedResourceTypes, availabilityData.serviceForms, availabilityData.serviceResourceRequirements, mappedResources, scheduleConfig);
     })
     const serviceOptions = availabilityData.serviceOptions.map((so) => toDomainServiceOption(so, mappedResourceTypes, mappedResources))
-    const mappedServiceAvailability = makeServiceAvailability(availabilityData.serviceAvailability, dates)
 
     return everythingForAvailability(
         businessConfiguration(
-            makeBusinessAvailability(availabilityData.businessHours, availabilityData.blockedTime, dates),
+            businessAvailability,
             mappedResources,
             mappedResourceAvailability,
-            mappedServiceAvailability,
             services,
             serviceOptions,
             mappedAddOns,

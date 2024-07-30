@@ -8,18 +8,18 @@ import {jsDateFns} from '@breezbook/packages-core/dist/jsDateFns.js';
 import {HttpError} from '../src/infra/functionalExpress.js';
 import {mutations} from '../src/mutation/mutations.js';
 import {DbBookingAndResourceRequirements} from "../src/express/getEverythingForAvailability.js";
-import {SystemClock} from "@breezbook/packages-core";
+import {singleDaySchedulingFns, SystemClock} from "@breezbook/packages-core";
 
 test("can't get a cancellation grant for a booking in the past", () => {
     const theBooking = makeDbBooking(isoDateFns.addDays(isoDate(), -1));
-    const outcome = doCancellationRequest([], [], [], [makeDbService()], [], theBooking, [], [], new SystemClock()) as HttpError;
+    const outcome = doCancellationRequest([], [], [makeDbService()], [], theBooking, [], [],new SystemClock()) as HttpError;
     expect(outcome._type).toBe('http.error');
     expect(outcome.status).toBe(400);
 });
 
 test('full refund if there are no refund rules, and booking is in the future', () => {
     const theBooking = makeDbBooking(isoDateFns.addDays(isoDate(), 1));
-    const outcome = doCancellationRequest([], [], [], [makeDbService()], [], theBooking, [], [], new SystemClock()) as CancellationGranted;
+    const outcome = doCancellationRequest([], [], [makeDbService()], [], theBooking, [], [], new SystemClock()) as CancellationGranted;
     expect(outcome._type).toBe('cancellation.granted');
     expect(outcome.refundPercentageAsRatio).toBe(1.0);
 });
@@ -48,10 +48,8 @@ function makeDbService(): DbService {
         tenant_id: 'tenant-id',
         name: 'service-name',
         description: 'service-description',
-        duration_minutes: 60,
         price: 3500,
         price_currency: 'GBP',
-        requires_time_slot: false,
         permitted_add_on_ids: []
     };
 }

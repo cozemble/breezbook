@@ -285,7 +285,7 @@ export interface TwentyFourHourClockTime extends ValueType<string> {
 
 export function time24(value: string, timezone?: Timezone): TwentyFourHourClockTime {
     if (!value.match(/^\d{2}:\d{2}$/)) {
-        throw new Error(`Invalid time format ${value}. Expected HH:MM`);
+        throw new Error(`Invalid time format '${value}' - expected HH:MM`);
     }
     return {
         _type: 'twenty.four.hour.clock.time',
@@ -350,17 +350,23 @@ export const durationFns = {
             return duration(days(asMinutes.value / 60 / 24));
         }
         throw new Error(`Unknown duration unit ${JSON.stringify(exemplar.value)}`);
+    },
+    toDuration(d: Duration | Minutes): Duration {
+        return d._type === 'duration' ? d : duration(d);
     }
 }
 
 export const time24Fns = {
     addMinutes: (time: TwentyFourHourClockTime, addition: Minutes): TwentyFourHourClockTime => {
-        const minutes = addition.value;
-        const [hours, mins] = time.value.split(':').map((s) => parseInt(s, 10));
-        if (hours === undefined || mins === undefined || isNaN(hours) || isNaN(minutes)) {
-            throw new Error(`Invalid time format ${time.value}. Expected HH:MM`);
+        const additionalMinutes = addition.value;
+        if(isNaN(additionalMinutes)) {
+            throw new Error(`Invalid minutes value ${additionalMinutes}, type = ${typeof additionalMinutes}`);
         }
-        const newMins = mins + minutes;
+        const [hours, mins] = time.value.split(':').map((s) => parseInt(s, 10));
+        if (hours === undefined || mins === undefined || isNaN(hours) || isNaN(mins)) {
+            throw new Error(`Invalid time format '${time.value}' - expected HH:MM (hours = ${hours}, minutes = ${mins})`);
+        }
+        const newMins = mins + additionalMinutes;
         const newHours = hours + Math.floor(newMins / 60);
         const newMinsMod60 = newMins % 60;
 
@@ -372,7 +378,7 @@ export const time24Fns = {
     toWords(time: TwentyFourHourClockTime): string {
         const [hours, minutes] = time.value.split(':').map((s) => parseInt(s, 10));
         if (hours === undefined || minutes === undefined || isNaN(hours) || isNaN(minutes)) {
-            throw new Error(`Invalid time format ${time.value}. Expected HH:MM`);
+            throw new Error(`Invalid time format '${time.value}' - expected HH:MM (hours = ${hours}, minutes = ${minutes})`);
         }
         const amPm = hours < 12 ? 'am' : 'pm';
         const adjustedHours = amPm === 'pm' ? hours - 12 : hours;
@@ -434,7 +440,7 @@ export const time24Fns = {
         const numberOfDays = typeof days === 'number' ? days : days.value;
         return isoDate(dayjs(start.value).add(numberOfDays, 'day').format('YYYY-MM-DD'));
     },
-    addDuration(time: TwentyFourHourClockTime, duration: Duration):TwentyFourHourClockTime {
+    addDuration(time: TwentyFourHourClockTime, duration: Duration): TwentyFourHourClockTime {
         return time24Fns.addMinutes(time, durationFns.toMinutes(duration));
     }
 };
@@ -662,12 +668,12 @@ export const timePeriodFns = {
             (period2.from.value <= period.from.value && period2.to.value >= period.to.value)
         );
     },
-    listPossibleStartTimes(period: TimePeriod, duration: Duration): TwentyFourHourClockTime[] {
+    listPossibleStartTimes(period: TimePeriod, duration: Minutes): TwentyFourHourClockTime[] {
         let currentTime = period.from;
         const result: TwentyFourHourClockTime[] = []
         while (currentTime.value < period.to.value) {
             result.push(currentTime);
-            currentTime = time24Fns.addMinutes(currentTime, durationFns.toMinutes(duration))
+            currentTime = time24Fns.addMinutes(currentTime, duration)
         }
         return result
     },

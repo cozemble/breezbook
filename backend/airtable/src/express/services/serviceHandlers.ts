@@ -13,11 +13,10 @@ import {
     DbServiceOptionImage,
     DbServiceOptionLabel,
     DbServiceOptionResourceRequirement,
-    DbServiceResourceRequirement,
-    DbServiceTimeslot
+    DbServiceResourceRequirement, DbServiceScheduleConfig,
 } from "../../prisma/dbtypes.js";
 import {anySuitableResourceSpec, Service, ServiceOption, specificResourceSpec} from "@breezbook/backend-api-types";
-import {addOnLabels, mandatory} from "@breezbook/packages-core";
+import {addOnLabels, mandatory, ScheduleConfig, scheduleConfigFns, serviceFns} from "@breezbook/packages-core";
 import {
     asHandler,
     EndpointDependencies,
@@ -29,7 +28,7 @@ import {
     tenantEnvironmentParam
 } from "../../infra/endpoint.js";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
-import {addOnId, formId, languageId, LanguageId, TenantEnvironment} from "@breezbook/packages-types";
+import {addOnId, durationFns, formId, languageId, LanguageId, TenantEnvironment} from "@breezbook/packages-types";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 
 export type RequiredServiceOptionData = DbServiceOption & {
@@ -53,7 +52,7 @@ export type RequiredServiceData = DbService & {
     service_service_options: {
         service_options: RequiredServiceOptionData;
     }[];
-    service_time_slots: DbServiceTimeslot[];
+    service_schedule_config: DbServiceScheduleConfig[]
     service_forms: DbServiceForm[];
     service_add_ons: RequiredAddOnData[];
 };
@@ -105,6 +104,9 @@ export function toApiService(service: RequiredServiceData, serviceResourceRequir
             labels
         });
     })
+    const dbServiceScheduleConfig = mandatory(service.service_schedule_config[0],`Service ${service.id} has no schedule config`)
+    const scheduleConfig = dbServiceScheduleConfig.schedule_config as unknown as ScheduleConfig
+
     return {
         id: service.id,
         name: firstLanguage.name,
@@ -112,7 +114,7 @@ export function toApiService(service: RequiredServiceData, serviceResourceRequir
         slug: service.slug,
         priceWithNoDecimalPlaces: priceAmount,
         priceCurrency: service.price_currency,
-        durationMinutes: service.duration_minutes,
+        durationMinutes: durationFns.toMinutes(scheduleConfigFns.duration(scheduleConfig)).value,
         hasDynamicPricing: hasPricingRules,
         image,
         resourceRequirements,
@@ -140,7 +142,7 @@ async function getServices(deps: EndpointDependencies, tenantEnvironment: Tenant
                     language_id: languageId.value
                 }
             },
-            service_time_slots: true,
+            service_schedule_config: true,
             service_resource_requirements: true,
             service_forms: true,
             service_service_options: {

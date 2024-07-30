@@ -455,13 +455,6 @@ export function upsertResourceMarkupLabels(create: Prisma.resource_markup_labels
     return makeUpsert('resource_markup_labels', entityId, create)
 }
 
-export type UpsertServiceTimeslot = Upsert<Prisma.service_time_slotsCreateArgs['data'], Prisma.service_time_slotsUpdateArgs['data'], Prisma.service_time_slotsUpdateArgs['where']>
-
-export function upsertServiceTimeslot(create: Prisma.service_time_slotsUncheckedCreateInput): UpsertServiceTimeslot {
-    const entityId = compositeKey("id", mandatory(create.id, "id"))
-    return makeUpsert('service_time_slots', entityId, create)
-}
-
 export type UpsertServiceOption = Upsert<Prisma.service_optionsCreateArgs['data'], Prisma.service_optionsUpdateArgs['data'], Prisma.service_optionsUpdateArgs['where']>
 
 export function upsertServiceOption(create: Prisma.service_optionsUncheckedCreateInput): UpsertServiceOption {
@@ -577,11 +570,10 @@ export function upsertBookingServiceOption(create: Prisma.booking_service_option
     return makeUpsert('booking_service_options', entityId, create)
 }
 
-export type UpsertServiceAvailability = Upsert<Prisma.service_availabilityCreateArgs['data'], Prisma.service_availabilityUpdateArgs['data'], Prisma.service_availabilityUpdateArgs['where']>
+export type UpsertServiceScheduleConfig = Upsert<Prisma.service_schedule_configCreateArgs['data'], Prisma.service_schedule_configUpdateArgs['data'], Prisma.service_schedule_configUpdateArgs['where']>
 
-export function upsertServiceAvailability(create: Prisma.service_availabilityUncheckedCreateInput): UpsertServiceAvailability {
+export function upsertServiceScheduleConfig(create: Prisma.service_schedule_configUncheckedCreateInput): UpsertServiceScheduleConfig {
     const entityId = compositeKey("id", mandatory(create.id, "id"))
-    return makeUpsert('service_availability', entityId, create)
+    return makeUpsert('service_schedule_config', entityId, create)
 }
-
 

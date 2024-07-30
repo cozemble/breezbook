@@ -17,7 +17,6 @@ import {
     Duration,
     Email,
     email,
-    ExactTimeAvailability,
     Form,
     FormId,
     id,
@@ -39,17 +38,18 @@ import {
     serviceOptionId,
     ServiceOptionId,
     timePeriod,
-    TimePeriod, timePeriodFns,
+    TimePeriod,
+    timePeriodFns,
     Timezone,
     TwentyFourHourClockTime,
     ValueType,
 } from '@breezbook/packages-types'
 import {resourcing} from "@breezbook/packages-resourcing";
 import {configuration} from "./configuration/configuration.js";
+import {ScheduleConfig, scheduleConfigFns} from "./scheduleConfig.js";
 import ResourceRequirement = resourcing.ResourceRequirement;
 import Resource = resourcing.Resource;
 import ResourceAvailability = configuration.ResourceAvailability;
-import ServiceAvailability = configuration.ServiceAvailability;
 
 export interface TenantSettings {
     _type: 'tenant.settings';
@@ -95,7 +95,7 @@ export function timeslotSpec(from: TwentyFourHourClockTime, to: TwentyFourHourCl
 
 export const timeslotSpecFns = {
 
-    duration(startTime: TimeslotSpec):Duration {
+    duration(startTime: TimeslotSpec): Duration {
         return timePeriodFns.duration(startTime.slot);
     }
 }
@@ -409,9 +409,6 @@ export const priceFns = {
         }
         return price(price1.amount.value - price2.amount.value, price1.currency);
     },
-    isEqual(price1: Price, price2: Price) {
-        return price1.amount.value === price2.amount.value && price1.currency.value === price2.currency.value;
-    },
     toWords(price: Price): string {
         const toWords = new ToWords();
         const amount = price.amount.value / 100;
@@ -468,14 +465,13 @@ export function price(amountInMinorUnits: number, currency: Currency): Price {
 
 export interface Service {
     id: ServiceId;
-    duration: Minutes;
     resourceRequirements: ResourceRequirement[]
     price: Price;
     permittedAddOns: AddOnId[];
     serviceFormIds: FormId[];
     options: ServiceOption[];
-    startTimes: StartTime[] | null;
     capacity: Capacity;
+    scheduleConfig: ScheduleConfig | Duration
 }
 
 export interface ConsumesServiceCapacity {
@@ -517,12 +513,6 @@ export const serviceFns = {
             options: service.options.concat(serviceOptions)
         };
     },
-    setStartTimes(service: Service, startTimes: StartTime[] | null): Service {
-        return {
-            ...service,
-            startTimes
-        }
-    },
     findService(services: Service[], serviceId: ServiceId): Service {
         const found = services.find(s => s.id.value === serviceId.value);
         if (!found) {
@@ -540,6 +530,18 @@ export const serviceFns = {
             resourceRequirements: theService.resourceRequirements.map(r => r.id.value === existing.id.value ? replacement : r)
         }
     },
+    duration(service: Service): Duration {
+        if (service.scheduleConfig._type === 'duration') {
+            return service.scheduleConfig;
+        }
+        return scheduleConfigFns.duration(service.scheduleConfig);
+    },
+    startTimes(service: Service, duration: Minutes): StartTime[] | null {
+        if (service.scheduleConfig._type === 'duration') {
+            return null;
+        }
+        return scheduleConfigFns.startTimes(service.scheduleConfig, duration);
+    }
 }
 
 export const serviceOptionFns = {
@@ -567,23 +569,22 @@ export const serviceOptionFns = {
 
 export function service(
     resourceRequirements: ResourceRequirement[],
-    duration: Minutes,
     price: Price,
     permittedAddOns: AddOnId[],
     serviceFormIds: FormId[],
+    scheduleConfig: ScheduleConfig,
     theCapacity = capacity(1),
     id = serviceId(uuidv4())
 ): Service {
     return {
         id,
-        duration,
         resourceRequirements,
         price,
         permittedAddOns,
         serviceFormIds,
         capacity: theCapacity,
         options: [],
-        startTimes: null
+        scheduleConfig
     };
 }
 
@@ -621,7 +622,6 @@ export interface BusinessConfiguration {
     _type: 'business.configuration';
     availability: BusinessAvailability;
     resourceAvailability: ResourceAvailability[];
-    serviceAvailability: ServiceAvailability[]
     resources: Resource[];
     services: Service[];
     serviceOptions: ServiceOption[];
@@ -704,7 +704,6 @@ export function businessConfiguration(
     availability: BusinessAvailability,
     resources: Resource[],
     resourceAvailability: ResourceAvailability[],
-    serviceAvailability: ServiceAvailability[],
     services: Service[],
     serviceOptions: ServiceOption[],
     addOns: AddOn[],
@@ -718,7 +717,6 @@ export function businessConfiguration(
         availability,
         resources,
         resourceAvailability,
-        serviceAvailability,
         services,
         serviceOptions,
         timeslots,

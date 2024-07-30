@@ -7,7 +7,6 @@ import {
     isoDate,
     languages,
     locationId,
-    minutes,
     resourceType,
     serviceId,
     tenantId,
@@ -23,7 +22,6 @@ import {
     percentageCoupon,
     price,
     service,
-    serviceFns,
     serviceLabels,
     timeslotSpec,
     unlimited
@@ -31,6 +29,7 @@ import {
 import {carwashForm} from './carWashForms.js';
 import {jexlExpression, multiply, pricingFactorName, PricingRule} from "@breezbook/packages-pricing";
 import {resourcing} from "@breezbook/packages-resourcing";
+import {singleDayScheduling, timeslotSelection} from "../scheduleConfig.js";
 import anySuitableResource = resourcing.anySuitableResource;
 import resource = resourcing.resource;
 
@@ -53,26 +52,32 @@ const oneToFour = timeslotSpec(onePm, fourPm, '13:00 - 16:00', id('timeSlot#2'))
 const fourToSix = timeslotSpec(fourPm, sixPm, '16:00 - 18:00', id('timeSlot#3'));
 const timeslots = [nineToOne, oneToFour, fourToSix]
 const anySuitableVan = anySuitableResource(van);
-const smallCarWash = serviceFns.setStartTimes(service(
+const smallCarWash = service(
     [anySuitableVan],
-    minutes(120),
     price(1000, GBP),
     [wax.id, polish.id],
     [carwashForm.id],
+    singleDayScheduling(timeslotSelection(timeslots)),
     capacity(1),
     serviceId('smallCarWash.id')
-), timeslots);
-const mediumCarWash = serviceFns.setStartTimes(service([anySuitableVan], minutes(120),
-    price(1500, GBP), [wax.id, polish.id], [], capacity(1), serviceId('mediumCarWash.id')), timeslots);
-const largeCarWash = serviceFns.setStartTimes(service(
+);
+const mediumCarWash = service(
     [anySuitableVan],
-    minutes(120),
+    price(1500, GBP),
+    [wax.id, polish.id],
+    [],
+    singleDayScheduling(timeslotSelection(timeslots)),
+    capacity(1),
+    serviceId('mediumCarWash.id'));
+const largeCarWash = service(
+    [anySuitableVan],
     price(2000, GBP),
     [wax.id, polish.id, cleanSeats.id, cleanCarpets.id],
     [],
+    singleDayScheduling(timeslotSelection(timeslots)),
     capacity(1),
     serviceId('largeCarWash.id')
-), timeslots);
+);
 
 const smallCarWashLabels = serviceLabels('Small Car Wash', 'Small Car Wash', smallCarWash.id, languages.en);
 const mediumCarWashLabels = serviceLabels('Medium Car Wash', 'Medium Car Wash', mediumCarWash.id, languages.en);

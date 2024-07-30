@@ -275,6 +275,7 @@
                         <TakePayment tenantId={tenant.id}
                                      environmentId="dev"
                                      serviceId={bookingData.service.id}
+                                     durationMinutes={bookingData.service.durationMinutes}
                                      locationId={bookingData.serviceLocation.locationId}
                                      serviceOptions={bookingData.serviceOptions}
                                      filledForms={bookingData.serviceFormData}

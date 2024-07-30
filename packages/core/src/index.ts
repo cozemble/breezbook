@@ -9,3 +9,4 @@ export {calculateOrderTotal} from './calculateOrderTotal.js';
 export * from './availability.js';
 export * from './lang/arrays.js';
 export * from './configuration/configuration.js'
+export * from './scheduleConfig.js'

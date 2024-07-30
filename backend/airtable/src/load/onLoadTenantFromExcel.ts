@@ -22,7 +22,7 @@ import {
     mandatory,
     tenantEnvironment,
     TenantId,
-    tenantId
+    tenantId, time24
 } from "@breezbook/packages-types";
 import {mutations, Upsert} from "../mutation/mutations.js";
 import {
@@ -45,6 +45,7 @@ import {
     upsertServiceLabel,
     upsertServiceLocation,
     upsertServiceResourceRequirement,
+    upsertServiceScheduleConfig,
     upsertTenant,
     upsertTenantBranding,
     upsertTenantBrandingLabels,
@@ -53,6 +54,7 @@ import {
     upsertTimeslot
 } from "../prisma/breezPrismaMutations.js";
 import {z, ZodType} from 'zod';
+import {singleDayScheduling, timeslot, timeslotSelection} from "@breezbook/packages-core";
 
 export async function onLoadTenantFromExcel(req: express.Request, res: express.Response): Promise<void> {
     await expressBridge(productionDeps, onLoadTenantFromExcelEndpoint, req, res)
@@ -320,13 +322,24 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
             tenant_id,
             environment_id,
             slug: s.ID,
-            duration_minutes: 120,
             price: s.Price * 100,
             price_currency: "GBP",
-            requires_time_slot: s["Requires Timeslot"] === "Y",
+        })
+        const scheduleConfigUpsert = upsertServiceScheduleConfig({
+            id: makeId(environment_id, "service_schedule_config", makeKey(tenant_id, s.ID)),
+            tenant_id,
+            environment_id,
+            service_id: serviceUpsert.create.data.id,
+            schedule_config: singleDayScheduling(timeslotSelection(timeslotData.map(ts => {
+                const description = ts["Start time"] + " - " + ts["End time"]
+                const start_time_24hr = ts["Start time"]
+                const end_time_24hr = ts["End time"]
+                return timeslot(time24(start_time_24hr), time24(end_time_24hr), description)
+            }))) as any
         })
         return [
             serviceUpsert,
+            scheduleConfigUpsert,
             ...allAddOnIds.map(addOnId => upsertServiceAddOn({
                 tenant_id,
                 environment_id,

@@ -2663,3 +2663,6 @@ a timeslot, in other words an exact time, I need to first add a duration to pair
 attempt to add the `ScheduleConfig` types for now.  I suspect there might be other things I pin ball into when I come back
 to try again.
 
+# Update on the above
+Been pushing on this all day.  Hard going.  Need to step away to keep energy high, so I don't fall into wanting to take
+shortcuts.

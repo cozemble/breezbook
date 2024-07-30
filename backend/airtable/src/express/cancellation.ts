@@ -10,25 +10,25 @@ import {
     withThreeRequestParams,
     withTwoRequestParams
 } from '../infra/functionalExpress.js';
-import {Clock, SystemClock} from '@breezbook/packages-core';
+import {Clock, fixedTime, ScheduleConfig, singleDayScheduling, SystemClock} from '@breezbook/packages-core';
 import {
     DbCancellationGrant,
     DbRefundRule,
     DbResource,
     DbResourceType,
-    DbService, DbServiceAddOn,
-    DbServiceResourceRequirement,
-    DbTimeSlot
+    DbService,
+    DbServiceAddOn,
+    DbServiceResourceRequirement
 } from '../prisma/dbtypes.js';
 import {dbBridge, DbExpressBridge, DbResourceFinder, namedDbResourceFinder} from '../infra/dbExpressBridge.js';
 import {findRefundRule, refundPolicy, TimebasedRefundRule} from '@breezbook/packages-core/dist/cancellation.js';
-import {toDomainBooking, toDomainResource, toDomainService, toDomainTimeslotSpec} from '../prisma/dbToDomain.js';
+import {toDomainBooking, toDomainResource, toDomainService} from '../prisma/dbToDomain.js';
 import {CancellationGranted, cancellationGranted} from '@breezbook/backend-api-types';
 import {updateBooking, updateCancellationGrant} from '../prisma/breezPrismaMutations.js';
 import {jsDateFns} from '@breezbook/packages-core/dist/jsDateFns.js';
 import {Mutations, mutations} from '../mutation/mutations.js';
 import {DbBookingAndResourceRequirements} from "./getEverythingForAvailability.js";
-import {BookingId, resourceType} from "@breezbook/packages-types";
+import {BookingId, resourceType, time24} from "@breezbook/packages-types";
 
 function findBookingById(bookingId: BookingId): DbResourceFinder<DbBookingAndResourceRequirements> {
     return (prisma, tenantEnvironment) => {
@@ -75,9 +75,14 @@ async function grantCancellation(res: express.Response, db: DbExpressBridge, gra
     return sendJson(res, grant, 201);
 }
 
+function makeScheduleToMatchBooking(theBooking: DbBookingAndResourceRequirements): ScheduleConfig {
+    const start = time24(theBooking.start_time_24hr);
+    const end = time24(theBooking.end_time_24hr);
+    return singleDayScheduling(fixedTime(start, "Start", end, "End"))
+}
+
 export function doCancellationRequest(
     refundRules: DbRefundRule[],
-    timeslots: DbTimeSlot[],
     resourceTypes: DbResourceType[],
     services: DbService[],
     serviceAddOns: DbServiceAddOn[],
@@ -88,8 +93,8 @@ export function doCancellationRequest(
 ): HttpError | CancellationGranted {
     const mappedResourceTypes = resourceTypes.map((rt) => resourceType(rt.id));
     const mappedResources = resources.map((r) => toDomainResource(r, mappedResourceTypes));
-    const mappedTimeslots = timeslots.map(toDomainTimeslotSpec);
-    const mappedServices = services.map(s => toDomainService(s, serviceAddOns,mappedResourceTypes, [], mappedTimeslots, serviceResourceRequirements, mappedResources))
+    const scheduleConfig = makeScheduleToMatchBooking(theBooking);
+    const mappedServices = services.map(s => toDomainService(s, serviceAddOns, mappedResourceTypes, [], serviceResourceRequirements, mappedResources, scheduleConfig))
     const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));
     const refundJudgement = findRefundRule(toDomainBooking(theBooking, mappedServices), theRefundPolicy, clock);
     if (refundJudgement._type === 'refund.possible') {
@@ -111,13 +116,12 @@ export async function requestCancellationGrant(req: express.Request, res: expres
                 }
             }
             const refundRules = await db.prisma.refund_rules.findMany(whereTenantEnv);
-            const timeslots = await db.prisma.time_slots.findMany(whereTenantEnv);
             const resourceTypes = await db.prisma.resource_types.findMany(whereTenantEnv);
             const resources = await db.prisma.resources.findMany(whereTenantEnv);
             const services = await db.prisma.services.findMany(whereTenantEnv);
             const serviceAddOns = await db.prisma.service_add_ons.findMany(whereTenantEnv);
             const serviceResourceRequirements = await db.prisma.service_resource_requirements.findMany(whereTenantEnv);
-            const outcome = doCancellationRequest(refundRules, timeslots, resourceTypes, services,serviceAddOns, theBooking, serviceResourceRequirements, resources);
+            const outcome = doCancellationRequest(refundRules, resourceTypes, services, serviceAddOns, theBooking, serviceResourceRequirements, resources);
             if (outcome._type === 'http.error') {
                 return res.status(outcome.status).send(outcome.message);
             }

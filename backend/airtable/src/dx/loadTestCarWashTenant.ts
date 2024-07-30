@@ -1,5 +1,13 @@
 import {PrismaClient} from '@prisma/client';
-import {carwash, currencies, price, Price} from "@breezbook/packages-core";
+import {
+    carwash,
+    currencies,
+    price,
+    Price,
+    singleDayScheduling,
+    timeslot,
+    timeslotSelection
+} from "@breezbook/packages-core";
 import {
     addOnId,
     AddOnId,
@@ -14,7 +22,7 @@ import {
     ServiceId,
     tenantEnvironment,
     TenantEnvironment,
-    tenantId
+    tenantId, time24
 } from "@breezbook/packages-types";
 import {maybeGetTenantSecret, storeTenantSecret} from "../infra/secretsInPostgres.js";
 import {STRIPE_API_KEY_SECRET_NAME, STRIPE_PUBLIC_KEY_SECRET_NAME} from "../express/stripeEndpoint.js";
@@ -37,7 +45,7 @@ import {
     upsertServiceImage,
     upsertServiceLabel,
     upsertServiceLocation,
-    upsertServiceResourceRequirement,
+    upsertServiceResourceRequirement, upsertServiceScheduleConfig,
     upsertTenant,
     upsertTenantBranding,
     upsertTenantBrandingLabels,
@@ -91,10 +99,8 @@ const serviceUpserts = carwash.services.map((service) => {
         tenant_id,
         environment_id,
         slug,
-        duration_minutes: service.duration.value,
         price: service.price.amount.value,
         price_currency: service.price.currency.value,
-        requires_time_slot: true
     });
 })
 
@@ -250,6 +256,17 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
         iana_timezone: 'Europe/London'
     })])
     await runUpserts(prisma, serviceUpserts)
+    await runUpserts(prisma, serviceUpserts.map(su => upsertServiceScheduleConfig({
+        id: makeTestId(tenant_id, environment_id, `service-schedule-config-${su.create.data.id}`),
+        tenant_id,
+        environment_id,
+        service_id: su.create.data.id,
+        schedule_config: singleDayScheduling(timeslotSelection(timeslots.map(t => {
+            const start = t.split(' ')[0];
+            const end = t.split(' ')[2];
+            return timeslot(time24(start), time24(end), t);
+        }))) as any
+    })))
     await runUpserts(prisma, serviceUpserts.flatMap((serviceUpsert) => {
         const labels = carwash.serviceLabels.filter(l => {
             const slug = l.serviceId.value.replace('/.id/', '');

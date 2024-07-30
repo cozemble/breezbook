@@ -5,17 +5,18 @@ import {EndpointDependencies, EndpointOutcome, specifiedDeps} from "../../src/in
 import {customer, fullPaymentOnCheckout,} from "@breezbook/packages-core";
 import {expectJson} from "../helper.js";
 import {
+    api,
     AvailabilityResponse,
     OrderCreatedResponse,
     PricedBasket,
     pricedCreateOrderRequest,
-    ResourceRequirementSpec,
     resourceRequirementOverride,
+    ResourceRequirementSpec,
     ResourceSummary,
     Service,
     Tenant,
     unpricedBasket,
-    unpricedBasketLine, api
+    unpricedBasketLine
 } from "@breezbook/backend-api-types";
 import {
     getServiceAvailabilityForLocationEndpoint
@@ -29,13 +30,18 @@ import {addOrderEndpoint} from "../../src/express/onAddOrderExpress.js";
 import {applyMutations} from "../../src/prisma/applyMutations.js";
 import {requestOf} from "@breezbook/packages-http/dist/requests.js";
 import {
-    environmentId, IsoDate,
+    duration,
+    environmentId,
+    IsoDate,
     isoDateFns,
     locationId,
     mandatory,
+    minutes,
     resourceType,
-    serviceId, tenantEnvironment,
-    tenantId, time24
+    serviceId,
+    tenantEnvironment,
+    tenantId,
+    time24
 } from "@breezbook/packages-types";
 import serviceAvailabilityOptions = api.serviceAvailabilityOptions;
 import ServiceAvailabilityOptions = api.ServiceAvailabilityOptions;
@@ -77,13 +83,13 @@ async function getReferenceData(deps: EndpointDependencies): Promise<{
 
 async function bookLastSlotOnDay(deps: EndpointDependencies, availabilityOptions: ServiceAvailabilityOptions, personalTrainingService: Service, personalTrainerRequirement: ResourceRequirementSpec, preferredPt: ResourceSummary, day: IsoDate): Promise<OrderCreatedResponse> {
     const onDay = `?fromDate=${day.value}&toDate=${day.value}`
-    const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onDay, availabilityOptions), params)))
+    const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onDay, availabilityOptions as any), params)))
     const availableSlots = availabilityResponse.slots?.[friday.value] ?? []
     const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot for Mike on Friday`)
-    const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(lastSlot.startTime24hr), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, preferredPt.id)])])
-    const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket), params)))
+    const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(lastSlot.startTime24hr), duration(minutes(60)), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, preferredPt.id)])])
+    const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket as any), params)))
     const orderRequest = pricedCreateOrderRequest(pricedBasket, customer("Mike", "Hogan", "mike@email.com", "+14155552671"), fullPaymentOnCheckout())
-    const orderResponse = expectJson<OrderCreatedResponse>(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest), params)).then(outcomes => handleMutations(deps, outcomes)))
+    const orderResponse = expectJson<OrderCreatedResponse>(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest as any), params)).then(outcomes => handleMutations(deps, outcomes)))
     expect(orderResponse.bookingIds).toHaveLength(1)
     return orderResponse
 }
@@ -106,18 +112,18 @@ describe("given the test gym tenant", () => {
             , [])
         // Mike is not in Harlow on Saturday
         const onSaturday = `?fromDate=${saturday.value}&toDate=${saturday.value}`
-        const mikesAvailabilityOnSaturday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onSaturday, availabilityOptions), params)))
+        const mikesAvailabilityOnSaturday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onSaturday, availabilityOptions as any), params)))
         expect(mikesAvailabilityOnSaturday.slots[saturday.value]).toBeUndefined()
 
         const onFriday = `?fromDate=${friday.value}&toDate=${friday.value}`
-        const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, availabilityOptions), params)))
+        const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, availabilityOptions as any), params)))
         expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
         const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0], `No slots found for Mike on Friday`)
         expect(firstSlot.priceWithNoDecimalPlaces).toBe(personalTrainingService.priceWithNoDecimalPlaces)
-        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, ptMike.id)])])
-        const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket), params)))
+        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), duration(minutes(60)),[{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, ptMike.id)])])
+        const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket as any), params)))
         const orderRequest = pricedCreateOrderRequest(pricedBasket, customer("Mike", "Hogan", "mike@email.com", "+14155552671"), fullPaymentOnCheckout())
-        const orderResponse = expectJson<OrderCreatedResponse>(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest), params)).then(outcomes => handleMutations(deps, outcomes)))
+        const orderResponse = expectJson<OrderCreatedResponse>(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest as any), params)).then(outcomes => handleMutations(deps, outcomes)))
         expect(orderResponse.bookingIds).toHaveLength(1)
         const bookingId = mandatory(orderResponse.bookingIds[0], `No booking id found in ${JSON.stringify(orderResponse)}`)
         const booking = await deps.prisma.bookings.findUnique({
@@ -134,7 +140,7 @@ describe("given the test gym tenant", () => {
         expect(requirement.resource_id).toBe(ptMike.id)
 
         // resource should now be consumed
-        const mikeOnFridayAgain = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, availabilityOptions), params)))
+        const mikeOnFridayAgain = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, availabilityOptions as any), params)))
         expect(mikeOnFridayAgain.slots[friday.value]).toHaveLength(15)
     });
 
@@ -159,7 +165,7 @@ describe("given the test gym tenant", () => {
             }]
             , [])
         const onTuesday = `?fromDate=${tuesday.value}&toDate=${tuesday.value}`
-        const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onTuesday, availabilityOptions), params)))
+        const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onTuesday, availabilityOptions as any), params)))
         expect(availabilityResponse.slots?.[tuesday.value]).toHaveLength(17)
         const availableSlots = availabilityResponse.slots?.[tuesday.value] ?? []
         const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot available`)

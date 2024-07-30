@@ -119,7 +119,7 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
                             language_id
                         }
                     },
-                    service_time_slots: true,
+                    service_schedule_config: true,
                     service_resource_requirements: true,
                     service_forms: true,
                     service_add_ons: {

@@ -59,7 +59,7 @@ import {
     isoDateFns,
     mandatory,
     tenantEnvironment,
-    tenantId,
+    tenantId, timePeriodFns,
     timezone
 } from "@breezbook/packages-types";
 import {dbCarwashTenant} from "../src/dx/loadTestCarWashTenant.js";
@@ -127,9 +127,16 @@ describe('Given a migrated database', () => {
                         ], [])),
                 fourDaysFromNow,
                 dbCarwashTenant.nineToOne.slot.from,
+                timePeriodFns.duration(dbCarwashTenant.nineToOne.slot),
                 [goodServiceFormData],
                 []),
-            pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, capacity(1), domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [pricedAddOn(dbCarwashTenant.wax.id, dbCarwashTenant.wax.price, 1, dbCarwashTenant.wax.price), pricedAddOn(dbCarwashTenant.polish.id, dbCarwashTenant.polish.price, 1, dbCarwashTenant.polish.price)], [])), fiveDaysFromNow, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])
+            pricedBasketLine(
+                dbCarwashTenant.locations.london,
+                dbCarwashTenant.mediumCarWash.id,
+                capacity(1),
+                domainToApi.priceBreakdown(
+                    priceBreakdown(dbCarwashTenant.mediumCarWash.price, [pricedAddOn(dbCarwashTenant.wax.id, dbCarwashTenant.wax.price, 1, dbCarwashTenant.wax.price), pricedAddOn(dbCarwashTenant.polish.id, dbCarwashTenant.polish.price, 1, dbCarwashTenant.polish.price)], [])),
+                fiveDaysFromNow, dbCarwashTenant.nineToOne.slot.from, timePeriodFns.duration(dbCarwashTenant.nineToOne.slot),[goodServiceFormData], [])
         ], priceFns.add(dbCarwashTenant.smallCarWash.price, dbCarwashTenant.wax.price, dbCarwashTenant.mediumCarWash.price, dbCarwashTenant.wax.price, dbCarwashTenant.polish.price))
 
         const fetched = await postOrder(
@@ -151,7 +158,14 @@ describe('Given a migrated database', () => {
 
     test('can price a basket', async () => {
         const theBasket = unpricedBasket([
-            unpricedBasketLine(dbCarwashTenant.mediumCarWash.id, dbCarwashTenant.locations.london, [addOnOrder(dbCarwashTenant.wax.id), addOnOrder(dbCarwashTenant.polish.id)], threeDaysFromNow, dbCarwashTenant.fourToSix.slot.from, [])
+            unpricedBasketLine(
+                dbCarwashTenant.mediumCarWash.id,
+                dbCarwashTenant.locations.london,
+                [addOnOrder(dbCarwashTenant.wax.id), addOnOrder(dbCarwashTenant.polish.id)],
+                threeDaysFromNow,
+                dbCarwashTenant.fourToSix.slot.from,
+                timePeriodFns.duration(dbCarwashTenant.fourToSix.slot),
+                [])
         ]);
 
         const fetched = await fetch(`http://localhost:${expressPort}/api/dev/tenant1/basket/price`, {
@@ -363,7 +377,16 @@ async function dbCarwashTenantReferenceData(): Promise<EverythingToCreateOrderRe
 }
 
 async function createBooking(date: IsoDate): Promise<string> {
-    const theBasket = pricedBasket([pricedBasketLine(dbCarwashTenant.locations.london, dbCarwashTenant.mediumCarWash.id, capacity(1), domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [], [])), date, dbCarwashTenant.nineToOne.slot.from, [goodServiceFormData], [])], dbCarwashTenant.mediumCarWash.price)
+    const theBasket = pricedBasket([pricedBasketLine(
+        dbCarwashTenant.locations.london,
+        dbCarwashTenant.mediumCarWash.id,
+        capacity(1),
+        domainToApi.priceBreakdown(priceBreakdown(dbCarwashTenant.mediumCarWash.price, [], [])),
+        date,
+        dbCarwashTenant.nineToOne.slot.from,
+        timePeriodFns.duration(dbCarwashTenant.nineToOne.slot),
+        [goodServiceFormData],
+        [])], dbCarwashTenant.mediumCarWash.price)
     const createOrderResponse = await insertOrder(
         tenantEnv,
         pricedCreateOrderRequest(

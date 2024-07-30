@@ -7,9 +7,9 @@ import {carwash, fullPaymentOnCheckout} from "@breezbook/packages-core";
 import * as api from "@breezbook/backend-api-types";
 import {fourDaysFromNow, goodCustomer} from "../helper.js";
 import {resourcing} from "@breezbook/packages-resourcing";
+import {capacity, duration, minutes} from "@breezbook/packages-types";
 import AnySuitableResource = resourcing.AnySuitableResource;
 import SpecificResource = resourcing.SpecificResource;
-import {capacity} from "@breezbook/packages-types";
 
 function createOrder(overrides: api.ResourceRequirementOverride[]) {
     return api.pricedCreateOrderRequest(api.pricedBasket([
@@ -17,9 +17,9 @@ function createOrder(overrides: api.ResourceRequirementOverride[]) {
                 carwash.locations.london,
                 carwash.smallCarWash.id,
                 capacity(1),
-                api.priceBreakdown(carwash.smallCarWash.price.amount.value,carwash.smallCarWash.price.currency.value,carwash.smallCarWash.price.amount.value,[], []),
+                api.priceBreakdown(carwash.smallCarWash.price.amount.value, carwash.smallCarWash.price.currency.value, carwash.smallCarWash.price.amount.value, [], []),
                 fourDaysFromNow,
-                carwash.nineAm, [], overrides)], carwash.smallCarWash.price),
+                carwash.nineAm, duration(minutes(120)), [], overrides)], carwash.smallCarWash.price),
         goodCustomer, fullPaymentOnCheckout());
 }
 

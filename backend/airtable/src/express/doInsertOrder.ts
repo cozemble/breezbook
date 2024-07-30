@@ -159,7 +159,7 @@ function processOrderLines(
     const bookingIds = [] as string[];
     for (const line of lines) {
         const service = line.service;
-        const servicePeriod = timePeriodFns.calcPeriod(line.startTime, service.duration);
+        const servicePeriod = timePeriodFns.calcPeriod(line.startTime, line.duration);
 
         const createOrderLineMutation = createOrderLine({
             tenant_id,

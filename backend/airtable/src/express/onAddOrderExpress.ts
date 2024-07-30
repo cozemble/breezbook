@@ -56,7 +56,7 @@ import {responseOf} from '@breezbook/packages-http/dist/responses.js';
 import {
     addOnId,
     byId,
-    Capacity,
+    Capacity, Duration,
     IsoDate,
     isoDateFns,
     LocationId,
@@ -162,6 +162,7 @@ export interface HydratedBasketLine {
     total: Price;
     date: IsoDate;
     startTime: TwentyFourHourClockTime;
+    duration: Duration
     serviceFormData: unknown[];
 }
 
@@ -184,7 +185,7 @@ export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, dis
     };
 }
 
-export function hydratedBasketLine(service: Service, locationId: LocationId, capacity: Capacity, options: HydratedServiceOption[], addOns: HydratedAddOn[], servicePrice: Price, total: Price, date: IsoDate, startTime: TwentyFourHourClockTime, serviceFormData: unknown[]): HydratedBasketLine {
+export function hydratedBasketLine(service: Service, locationId: LocationId, capacity: Capacity, options: HydratedServiceOption[], addOns: HydratedAddOn[], servicePrice: Price, total: Price, date: IsoDate, startTime: TwentyFourHourClockTime, duration: Duration,serviceFormData: unknown[]): HydratedBasketLine {
     return {
         service,
         locationId,
@@ -195,6 +196,7 @@ export function hydratedBasketLine(service: Service, locationId: LocationId, cap
         total,
         date,
         startTime,
+        duration,
         serviceFormData
     };
 }
@@ -222,7 +224,7 @@ export const hydratedBasketFns = {
     },
 
     toUnpricedBasketLine(line: HydratedBasketLine): UnpricedBasketLine {
-        return unpricedBasketLine(line.service.id, line.locationId, line.addOns.map((a) => hydratedBasketFns.toAddOnOrder(a)), line.date, line.startTime, line.serviceFormData, [], line.options.map((o) => hydratedBasketFns.toServiceOptionRequest(o)));
+        return unpricedBasketLine(line.service.id, line.locationId, line.addOns.map((a) => hydratedBasketFns.toAddOnOrder(a)), line.date, line.startTime, line.duration,line.serviceFormData, [], line.options.map((o) => hydratedBasketFns.toServiceOptionRequest(o)));
     },
 
     toAddOnOrder(addOn: HydratedAddOn): AddOnOrder {
@@ -269,6 +271,7 @@ export function makeEverythingToCreateOrder(everything: EverythingToCreateOrderR
                 const service = replaceRequirements(serviceFns.findService(everything.services, line.serviceId), everything.resources, line.resourceRequirementOverrides);
                 return {
                     service,
+                    duration: line.duration,
                     locationId: line.locationId,
                     capacity: line.capacity,
                     addOns: line.priceBreakdown.pricedAddOns.map((a) => {

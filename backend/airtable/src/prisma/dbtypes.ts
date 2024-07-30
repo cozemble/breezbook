@@ -43,7 +43,6 @@ import {
     service_options,
     service_resource_requirements,
     service_service_options,
-    service_time_slots,
     services,
     simple_kv_store,
     tenant_branding,
@@ -52,7 +51,7 @@ import {
     tenant_settings,
     tenants,
     time_slots,
-    service_availability
+    service_schedule_config,
 } from '@prisma/client';
 import {TenantEnvironment} from '@breezbook/packages-types';
 
@@ -102,7 +101,6 @@ export type {
     service_option_images as DbServiceOptionImage,
     add_on_images as DbAddOnImage,
     service_option_resource_requirements as DbServiceOptionResourceRequirement,
-    service_time_slots as DbServiceTimeslot,
     service_option_forms as DbServiceOptionForm,
     service_add_ons as DbServiceAddOn,
     order_line_add_ons as DbOrderLineAddOn,
@@ -110,7 +108,7 @@ export type {
     booking_add_ons as DbBookingAddOn,
     booking_service_options as DbBookingServiceOption,
     add_on_labels as DbAddOnLabel,
-    service_availability as DbServiceAvailability
+    service_schedule_config as DbServiceScheduleConfig,
 };
 
 export interface TenantEnvironmentPair {

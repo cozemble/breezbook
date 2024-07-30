@@ -10,10 +10,11 @@
     } from "@breezbook/backend-api-types";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import StripePaymentForm from "$lib/uxs/personal-training/StripePaymentForm.svelte";
-    import {isoDate, serviceOptionId, serviceOptionRequest, time24} from "@breezbook/packages-types";
+    import {duration, isoDate, minutes, serviceOptionId, serviceOptionRequest, time24} from "@breezbook/packages-types";
 
     export let date: string
     export let time: string
+    export let durationMinutes: number
     export let customerDetails: CoreCustomerDetails
     export let serviceId: string
     export let serviceOptions: ServiceOption[]
@@ -28,7 +29,7 @@
 
     onMount(async () => {
         const options = serviceOptions.map(o => serviceOptionRequest(serviceOptionId(o.id)))
-        const basket = unpricedBasket([unpricedBasketLine(serviceId, locationId, [], isoDate(date), time24(time), filledForms ?? [], requirementOverrides ?? [], options)])
+        const basket = unpricedBasket([unpricedBasketLine(serviceId, locationId, [], isoDate(date), time24(time), duration(minutes(durationMinutes)),filledForms ?? [], requirementOverrides ?? [], options)])
         priced = await fetchJson(backendUrl(`/api/${environmentId}/${tenantId}/basket/price`), {
             method: "POST",
             body: JSON.stringify(basket)

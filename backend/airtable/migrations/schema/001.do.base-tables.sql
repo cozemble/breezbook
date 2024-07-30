@@ -198,36 +198,32 @@ create table time_slots
 
 create table services
 (
-    id                 text primary key,
-    tenant_id          text references tenants (tenant_id) not null,
-    environment_id     text                                not null,
-    slug               text                                not null,
-    duration_minutes   integer                             not null,
-    price              numeric                             not null,
-    price_currency     text                                not null,
-    requires_time_slot boolean                             not null,
-    capacity           integer                             not null default 1,
-    start_date         timestamp with time zone            not null default current_timestamp,
-    end_date           timestamp with time zone            null     default null,
-    created_at         timestamp with time zone            not null default current_timestamp,
-    updated_at         timestamp with time zone            not null default current_timestamp,
+    id              text primary key,
+    tenant_id       text references tenants (tenant_id) not null,
+    environment_id  text                                not null,
+    slug            text                                not null,
+    price           numeric                             not null,
+    price_currency  text                                not null,
+    capacity        integer                             not null default 1,
+    start_date      timestamp with time zone            not null default current_timestamp,
+    end_date        timestamp with time zone            null     default null,
+    created_at      timestamp with time zone            not null default current_timestamp,
+    updated_at      timestamp with time zone            not null default current_timestamp,
     unique (tenant_id, environment_id, slug)
 );
 
-create table service_availability
+create table service_schedule_config
 (
     id              text primary key,
-    tenant_id       text references tenants (tenant_id),
-    environment_id  text                          not null,
-    service_id      text references services (id) not null,
-    location_id     text references locations (id),
-    day_of_week     varchar(10)                   not null,
-    start_time_24hr varchar(10)                   not null,
-    end_time_24hr   varchar(10)                   not null,
-    created_at      timestamp with time zone      not null default current_timestamp,
-    updated_at      timestamp with time zone      not null default current_timestamp
+    tenant_id       text references tenants (tenant_id) not null,
+    environment_id  text                                not null,
+    service_id      text references services (id)       not null,
+    location_id     text references locations (id)      null default null,
+    schedule_config jsonb                               not null,
+    created_at      timestamp with time zone            not null default current_timestamp,
+    updated_at      timestamp with time zone            not null default current_timestamp,
+    unique (tenant_id, environment_id, service_id, location_id)
 );
-
 
 create table service_add_ons
 (
@@ -306,18 +302,6 @@ create table service_option_resource_requirements
     updated_at        timestamp with time zone             not null default current_timestamp,
     check ((requirement_type = 'any_suitable' and resource_type is not null)
         or (requirement_type = 'specific_resource' and resource_id is not null))
-);
-
-create table service_time_slots
-(
-    id             text primary key,
-    tenant_id      text references tenants (tenant_id) not null,
-    environment_id text                                not null,
-    service_id     text references services (id)       not null,
-    time_slot_id   text references time_slots (id)     not null,
-    created_at     timestamp with time zone            not null default current_timestamp,
-    updated_at     timestamp with time zone            not null default current_timestamp,
-    unique (tenant_id, environment_id, service_id, time_slot_id)
 );
 
 create table service_labels
