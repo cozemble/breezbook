@@ -122,11 +122,6 @@ const navOptions = [
                                     <h3 class="text-lg font-semibold text-base-content">{trainer.name}</h3>
                                     <p class="text-sm text-base-content opacity-70">{trainer.specialty}</p>
                                     <p class="text-sm mt-2 text-base-content">{trainer.background}</p>
-                                    <ul class="list-disc list-inside text-sm mt-2 text-base-content">
-                                        {#each trainer.qualifications as qual}
-                                            <li>{qual}</li>
-                                        {/each}
-                                    </ul>
                                     <p class="font-bold mt-2 text-base-content">£{trainer.price} per session</p>
                                     <div class="mt-3 text-right">
                                         <button
@@ -141,6 +136,12 @@ const navOptions = [
                                     {#if expandedTrainer === trainer.id}
                                         <div class="mt-4 text-base-content">
                                             {trainer.details}
+                                            <ul class="list-disc list-inside text-sm mt-2 text-base-content">
+                                                {#each trainer.qualifications as qual}
+                                                    <li>{qual}</li>
+                                                {/each}
+                                            </ul>
+
                                         </div>
                                     {/if}
                                 </div>
