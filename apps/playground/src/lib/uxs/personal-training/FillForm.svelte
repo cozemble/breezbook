@@ -11,6 +11,8 @@
     const data = {} as Record<string, string>
     const dispatch = createEventDispatcher()
 
+    $: kindaValid = everyKeyHasValue(data)
+
     function label(key: string) {
         const itemDefinition = properties[key]
         if (itemDefinition.title) {
@@ -50,8 +52,13 @@
                     <span class="label-text-alt">{helpText(key)}</span>
                 {/if}
             </label>
-            <input class="input input-bordered" type="text" id={key} name={key} bind:value={data[key]}/>
+            <input class="input input-bordered w-full" type="text" id={key} name={key} bind:value={data[key]}/>
         </div>
     {/each}
-    <button class="btn btn-primary mt-4" type="submit" on:click={onSubmit}>{$translations.submit}</button>
+    <div class="mt-6 flex justify-end">
+        <button on:click={onSubmit} class:bg-primary={kindaValid}
+                disabled={!kindaValid}
+                class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
+            {$translations.next}
+        </button>
 </form>
