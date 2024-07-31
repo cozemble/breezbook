@@ -27,6 +27,7 @@ export interface Translations {
     thankYou: string
     chooseTrainer: string
     personalTraining: string
+    viewMore: string
 }
 
 const translationsEnglish: Translations = {
@@ -57,7 +58,8 @@ const translationsEnglish: Translations = {
     processingDotDotDot: "Processing...",
     thankYou: "Thank you",
     chooseTrainer: "Choose a trainer",
-    personalTraining: "Personal Training"
+    personalTraining: "Personal Training",
+    viewMore: "View More"
 }
 
 const translationsTurkish: Translations = {
@@ -88,7 +90,8 @@ const translationsTurkish: Translations = {
     processingDotDotDot: "İşleniyor...",
     thankYou: "Teşekkürler",
     chooseTrainer: "Antrenör seçin",
-    personalTraining: "Kişisel"
+    personalTraining: "Kişisel",
+    viewMore: "Daha Fazla"
 }
 
 export function translationsFor(lang: string): Translations {

@@ -2,6 +2,7 @@
     import {ChevronDown} from 'lucide-svelte';
     import type {ResourceSummary} from "@breezbook/backend-api-types";
     import Markdown from "$lib/markdown/Markdown.svelte";
+    import {translations} from "$lib/ui/stores";
 
     let selectedTrainer: string | null = null;
     let expandedTrainer: string | null = null;
@@ -57,11 +58,12 @@
                         <div class="flex-grow">
                             <h3 class="text-lg font-semibold text-base-content">{trainer.name}</h3>
                             <p class="text-sm text-base-content opacity-70">{trainer.topLine}</p>
-<!--                            <p class="font-bold mt-2 text-base-content">£{trainer.price} per session</p>-->
+                            <!--                            <p class="font-bold mt-2 text-base-content">£{trainer.price} per session</p>-->
                             <div class="mt-3 text-right">
                                 <button
                                         class="text-primary hover:text-primary-focus font-medium flex items-center justify-end w-full"
                                         on:click|stopPropagation={() => toggleExpandedTrainer(trainer.id)}>
+                                    {$translations.viewMore}
                                     View More
                                     <ChevronDown
                                             size={20}
@@ -84,7 +86,7 @@
     <div class="mt-6 flex justify-end">
         <button
                 class="px-6 py-2 bg-primary hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
-            Next
+            {$translations.next}
         </button>
     </div>
 </div>
