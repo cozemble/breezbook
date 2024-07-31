@@ -110,6 +110,12 @@ export const availabilityResponseFns = {
             throw new Error(response.errorMessage);
         }
         return mandatory(response.slots[date.value], `No slots for date ${date.value}`);
+    },
+    maybeSlotsForDate(response: AvailabilityResponse | ErrorResponse, date: IsoDate): Availability[] {
+        if(response._type === 'error.response') {
+            throw new Error(response.errorMessage);
+        }
+        return response.slots[date.value] ?? [];
     }
 }
 

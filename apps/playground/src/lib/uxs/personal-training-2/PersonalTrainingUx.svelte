@@ -8,7 +8,7 @@
     import {language, translations} from "$lib/ui/stores";
     import {type IsoDate, keyValue, type KeyValue, type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import ChooseTrainer from "$lib/uxs/personal-training-2/ChooseTrainer.svelte";
-    import ChooseTimeslot from "$lib/uxs/personal-training-2/ChooseTimeslot.svelte";
+    import ChooseTrainerTimeslot from "$lib/uxs/personal-training-2/ChooseTrainerTimeslot.svelte";
 
     export let languageId: string
     let tenant: Tenant
@@ -67,7 +67,7 @@
         $language = lang
     }
 
-    function onSlotSelected(date:IsoDate, time:TwentyFourHourClockTime) {
+    function onSlotSelected(date: IsoDate, time: TwentyFourHourClockTime) {
         console.log('Slot selected', date, time)
         journeyState = {
             ...journeyState,
@@ -90,9 +90,14 @@
                         <ChooseTrainer trainers={personalTrainers} onTrainerChosen={toggleSelection}/>
                     {/if}
 
-                    {#if selectedPersonalTrainer}
+                    {#if selectedPersonalTrainer && locationId}
                         <h2 class="text-xl font-bold">{$translations.chooseTime}</h2>
-                        <ChooseTimeslot locale={$language} {onSlotSelected}/>
+                        <ChooseTrainerTimeslot {personalTrainerRequirement}
+                                               {locationId}
+                                               service={personalTrainingService}
+                                               trainer={selectedPersonalTrainer}
+                                               locale={$language}
+                                               {onSlotSelected}/>
                     {/if}
                 </div>
             </div>

@@ -36,7 +36,9 @@
     }
 
     function onNext() {
-        console.log('Next button clicked');
+        if (selectedDate && selectedTime) {
+            onSlotSelected(selectedDate, selectedTime);
+        }
     }
 </script>
 
