@@ -30,7 +30,7 @@
 </script>
 
 {#if showStripe && priced && state.customerDetails}
-    <div class="w-2/6">
+    <div>
         <StripePaymentForm {priced}
                            customerDetails={state.customerDetails}
                            {tenantId}
