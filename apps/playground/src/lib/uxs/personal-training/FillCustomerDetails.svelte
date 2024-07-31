@@ -11,49 +11,61 @@
     }
     const dispatch = createEventDispatcher()
 
-    function onNext() {
-        if (!details.firstName || !details.lastName || !details.email || !details.phone) {
-            alert($translations.pleaseFillInAllFields)
-            return
+    function validate() {
+        if(!details.firstName || !details.lastName || !details.email || !details.phone) {
+            return $translations.pleaseFillInAllFields
         }
-        if (!details.email.includes('@')) {
-            alert($translations.pleaseEnterAValidEmail)
-            return
+        if(!details.email.includes('@')) {
+            return $translations.pleaseEnterAValidEmail
         }
-        if (details.firstName.length < 2) {
+        if(details.firstName.length < 2) {
+            return $translations.pleaseEnterALongerFirstName
+        }
+        if(details.lastName.length < 2) {
+            return $translations.pleaseEnterALongerLastName
+        }
+        if(details.phone.length < 2) {
+            return $translations.pleaseEnterALongerPhoneNumber
+        }
+        return null
+    }
 
-            alert($translations.pleaseEnterALongerFirstName)
-            return
-        }
-        if (details.lastName.length < 2) {
-            alert($translations.pleaseEnterALongerLastName)
-            return
-        }
-        if (details.phone.length < 2) {
-            alert($translations.pleaseEnterALongerPhoneNumber)
+    function onNext() {
+        const maybeError = validate()
+        if(maybeError) {
+            alert(maybeError)
             return
         }
         dispatch('filled', details)
     }
+
+    $: kindaValid = (validate() === null)
 </script>
 
-<h3>{$translations.yourDetails}</h3>
-<form class="flex flex-col w-1/6">
-    <label>
+<h2 class="text-xl font-bold">{$translations.yourDetails}</h2>
+
+<form class="flex flex-col">
+    <label class="label-text">
         {$translations.firstName}
-        <input class="input input-bordered" type="text" bind:value={details.firstName}/>
     </label>
-    <label>
+    <input class="input input-bordered" type="text" bind:value={details.firstName}/>
+    <label class="label-text">
         {$translations.lastName}
-        <input class="input input-bordered" type="text" bind:value={details.lastName}/>
     </label>
-    <label>
+    <input class="input input-bordered" type="text" bind:value={details.lastName}/>
+    <label class="label-text">
         {$translations.firstName}
-        <input class="input input-bordered" type="email" bind:value={details.email}/>
-    </label>
-    <label>
+    </label >
+    <input class="input input-bordered" type="email" bind:value={details.email}/>
+    <label class="label-text">
         {$translations.phone}
-        <input class="input input-bordered" type="tel" bind:value={details.phone}/>
     </label>
-    <button class="btn btn-primary" type="submit" on:click={onNext}>{$translations.next}</button>
+    <input class="input input-bordered" type="tel" bind:value={details.phone}/>
+    <div class="mt-6 flex justify-end">
+        <button on:click={onNext} class:bg-primary={kindaValid}
+                disabled={!kindaValid}
+                class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
+            {$translations.next}
+        </button>
+    </div>
 </form>

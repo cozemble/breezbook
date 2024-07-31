@@ -61,4 +61,5 @@
                 class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
             {$translations.next}
         </button>
+    </div>
 </form>

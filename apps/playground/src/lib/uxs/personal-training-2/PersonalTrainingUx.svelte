@@ -9,9 +9,16 @@
     import {keyValue, type KeyValue} from "@breezbook/packages-types";
     import ChooseTrainer from "$lib/uxs/personal-training-2/ChooseTrainer.svelte";
     import ChooseTrainerTimeslot from "$lib/uxs/personal-training-2/ChooseTrainerTimeslot.svelte";
-    import {type JourneyState, journeyStateFns, type Slot} from "$lib/uxs/personal-training/journeyState";
+    import {
+        type CoreCustomerDetails,
+        type JourneyState,
+        journeyStateFns,
+        type Slot
+    } from "$lib/uxs/personal-training/journeyState";
     import {initializeJourneyState} from "$lib/uxs/personal-training/journeyState.js";
     import FillForm from "$lib/uxs/personal-training/FillForm.svelte";
+    import FillCustomerDetails from "$lib/uxs/personal-training/FillCustomerDetails.svelte";
+    import TakePayment from "$lib/uxs/personal-training/TakePayment.svelte";
 
     export let languageId: string
     let tenant: Tenant
@@ -62,6 +69,14 @@
         journeyState = journeyStateFns.formFilled(journeyState, event.detail)
     }
 
+    function onCustomerDetailsFilled(event: CustomEvent<CoreCustomerDetails>) {
+        journeyState = journeyStateFns.setCustomerDetails(journeyState, event.detail)
+    }
+
+    function onPaymentComplete() {
+        journeyState = journeyStateFns.setPaid(journeyState)
+    }
+
 </script>
 
 <div class="container mx-auto p-2 max-w-md">
@@ -88,12 +103,16 @@
                     {/if}
 
 
-                    {#if journeyState.selectedSlot && journeyStateFns.requiresForms(journeyState) && !journeyStateFns.formsFilled(journeyState)}
-                        <FillForm form={journeyStateFns.currentUnfilledForm(journeyState)}
-                                  on:formFilled={onFormFilled}/>
+                    {#if journeyState.selectedSlot}
+                        {#if journeyStateFns.requiresForms(journeyState) && !journeyStateFns.formsFilled(journeyState)}
+                            <FillForm form={journeyStateFns.currentUnfilledForm(journeyState)}
+                                      on:formFilled={onFormFilled}/>
+                        {:else if !journeyStateFns.customerDetailsFilled(journeyState)}
+                            <FillCustomerDetails on:filled={onCustomerDetailsFilled}/>
+                        {:else if !journeyStateFns.isPaid(journeyState)}
+                            <TakePayment state={journeyState} on:paymentComplete={onPaymentComplete}/>
+                        {/if}
                     {/if}
-
-
                 </div>
             </div>
         {/if}
