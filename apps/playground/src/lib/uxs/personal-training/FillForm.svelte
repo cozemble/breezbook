@@ -39,12 +39,13 @@
     }
 </script>
 
-<h3>{form.name}</h3>
+<h2 class="text-xl font-bold">{form.name}</h2>
+
 <form class="mt-2">
     {#each keys as key}
         <div>
             <label for={key} class="label">
-                <span class="label-text">{label(key)}</span>
+                <span class="label-text font-bold">{label(key)}</span>
                 {#if helpText(key)}
                     <span class="label-text-alt">{helpText(key)}</span>
                 {/if}
