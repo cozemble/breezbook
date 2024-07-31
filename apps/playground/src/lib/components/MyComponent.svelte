@@ -78,15 +78,15 @@ const navOptions = [
 ];
 </script>
 
-<div class="container mx-auto p-4 max-w-2xl">
+<div class="container mx-auto p-2 max-w-md">
     <div class="flex items-center justify-between mb-4">
         <div class="flex items-center space-x-2">
-            <Dumbbell size={32} class="text-base-content" />
-            <h1 class="text-2xl font-bold">Breez Gym</h1>
+            <Dumbbell size={24} class="text-base-content" />
+            <h1 class="text-xl font-bold">Breez Gym</h1>
         </div>
     </div>
     <div class="bg-base-100 shadow-xl rounded-lg overflow-hidden border border-base-300">
-        <div class="p-6">
+        <div class="p-4">
             <div class="flex justify-between items-center mb-4">
                 {#each navOptions as { key, icon, options, onChange }}
                     <div class="flex items-center space-x-1 rounded-md shadow-sm px-2 py-1">
@@ -102,7 +102,7 @@ const navOptions = [
                     </div>
                 {/each}
             </div>
-            <p class="text-2xl font-bold mb-4">Personal Training</p>
+            <p class="text-lg font-bold mb-4">Personal Training</p>
 
             <div class="space-y-4">
                 <h2 class="text-xl font-bold mb-4 text-base-content">Choose Your Trainer</h2>
@@ -113,11 +113,11 @@ const navOptions = [
                                 ? 'bg-base-200 border border-base-300'
                                 : 'bg-base-100 shadow-md hover:shadow-lg hover:border-base-300 border border-transparent'}"
                             on:click={() => selectedTrainer = trainer.id}>
-                            <div class="flex items-start">
+                            <div class="flex flex-col md:flex-row items-start">
                                 <img
                                     src={trainer.image}
                                     alt={trainer.name}
-                                    class="w-24 h-24 rounded-full mr-4 object-cover" />
+                                    class="w-24 h-24 rounded-full mb-4 md:mb-0 md:mr-4 object-cover" />
                                 <div class="flex-grow">
                                     <h3 class="text-lg font-semibold text-base-content">{trainer.name}</h3>
                                     <p class="text-sm text-base-content opacity-70">{trainer.specialty}</p>
@@ -128,23 +128,23 @@ const navOptions = [
                                         {/each}
                                     </ul>
                                     <p class="font-bold mt-2 text-base-content">£{trainer.price} per session</p>
+                                    <div class="mt-3 text-right">
+                                        <button
+                                            class="text-primary hover:text-primary-focus font-medium flex items-center justify-end w-full"
+                                            on:click|stopPropagation={() => toggleExpandedTrainer(trainer.id)}>
+                                            View More
+                                            <ChevronDown
+                                                size={20}
+                                                class="ml-1 transform transition-transform {expandedTrainer === trainer.id ? 'rotate-180' : ''}" />
+                                        </button>
+                                    </div>
+                                    {#if expandedTrainer === trainer.id}
+                                        <div class="mt-4 text-base-content">
+                                            {trainer.details}
+                                        </div>
+                                    {/if}
                                 </div>
                             </div>
-                            <div class="mt-3 text-right">
-                                <button
-                                    class="text-primary hover:text-primary-focus font-medium flex items-center justify-end w-full"
-                                    on:click|stopPropagation={() => toggleExpandedTrainer(trainer.id)}>
-                                    View More
-                                    <ChevronDown
-                                        size={20}
-                                        class="ml-1 transform transition-transform {expandedTrainer === trainer.id ? 'rotate-180' : ''}" />
-                                </button>
-                            </div>
-                            {#if expandedTrainer === trainer.id}
-                                <div class="mt-4 text-base-content">
-                                    {trainer.details}
-                                </div>
-                            {/if}
                         </div>
                     {/each}
                 </div>
