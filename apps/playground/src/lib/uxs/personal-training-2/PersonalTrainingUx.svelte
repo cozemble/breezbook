@@ -6,8 +6,9 @@
     import TopNav from "$lib/uxs/personal-training-2/TopNav.svelte";
     import GymBrand from "$lib/uxs/personal-training-2/GymBrand.svelte";
     import {language, translations} from "$lib/ui/stores";
-    import {keyValue, type KeyValue} from "@breezbook/packages-types";
+    import {type IsoDate, keyValue, type KeyValue, type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import ChooseTrainer from "$lib/uxs/personal-training-2/ChooseTrainer.svelte";
+    import ChooseTimeslot from "$lib/uxs/personal-training-2/ChooseTimeslot.svelte";
 
     export let languageId: string
     let tenant: Tenant
@@ -18,6 +19,21 @@
     let personalTrainingService: Service
     let locations: KeyValue[] = []
     let state: "loading" | "loaded" = "loading"
+
+    interface JourneyState {
+        selectedDate: IsoDate | null
+        selectedTime: TwentyFourHourClockTime | null
+    }
+
+    function emptyJourneyState(): JourneyState {
+        return {
+            selectedDate: null,
+            selectedTime: null
+        }
+    }
+
+    let journeyState: JourneyState = emptyJourneyState()
+
 
     onMount(async () => {
         tenant = await fetchJson<Tenant>(backendUrl(`/api/dev/tenants?slug=breezbook-gym&lang=${languageId}`), {method: "GET"})
@@ -50,6 +66,15 @@
     async function onLanguageChanged(lang: string) {
         $language = lang
     }
+
+    function onSlotSelected(date:IsoDate, time:TwentyFourHourClockTime) {
+        console.log('Slot selected', date, time)
+        journeyState = {
+            ...journeyState,
+            selectedDate: date,
+            selectedTime: time
+        }
+    }
 </script>
 
 <div class="container mx-auto p-2 max-w-md">
@@ -61,8 +86,13 @@
 
                 <div class="space-y-4">
                     {#if !selectedPersonalTrainer}
-                        <h2 class="text-xl font-bold mb-4 text-base-content">{$translations.chooseTrainer}</h2>
-                        <ChooseTrainer trainers={personalTrainers}/>
+                        <h2 class="text-xl font-bold">{$translations.chooseTrainer}</h2>
+                        <ChooseTrainer trainers={personalTrainers} onTrainerChosen={toggleSelection}/>
+                    {/if}
+
+                    {#if selectedPersonalTrainer}
+                        <h2 class="text-xl font-bold">{$translations.chooseTime}</h2>
+                        <ChooseTimeslot locale={$language} {onSlotSelected}/>
                     {/if}
                 </div>
             </div>

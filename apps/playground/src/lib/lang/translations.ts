@@ -4,6 +4,7 @@ export interface Translations {
     location: string
     availabilityFor: string
     daysOfTheWeek: string[]
+    daysOfTheWeekShort: string[]
     noSlotsAvailable: string
     selectedSlot: string
     confirm: string
@@ -28,6 +29,7 @@ export interface Translations {
     chooseTrainer: string
     personalTraining: string
     viewMore: string
+    chooseTime: string
 }
 
 const translationsEnglish: Translations = {
@@ -36,6 +38,7 @@ const translationsEnglish: Translations = {
     location: "Location",
     availabilityFor: "Availability for",
     daysOfTheWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    daysOfTheWeekShort: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     noSlotsAvailable: "No slots available",
     selectedSlot: "Selected slot",
     confirm: "Confirm",
@@ -59,7 +62,8 @@ const translationsEnglish: Translations = {
     thankYou: "Thank you",
     chooseTrainer: "Choose a trainer",
     personalTraining: "Personal Training",
-    viewMore: "View More"
+    viewMore: "View More",
+    chooseTime: "Choose a time"
 }
 
 const translationsTurkish: Translations = {
@@ -68,6 +72,7 @@ const translationsTurkish: Translations = {
     location: "Konum",
     availabilityFor: "Müsaitlik",
     daysOfTheWeek: ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"],
+    daysOfTheWeekShort: ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"],
     noSlotsAvailable: "Uygun slot yok",
     selectedSlot: "Seçilen slot",
     confirm: "Onayla",
@@ -91,7 +96,8 @@ const translationsTurkish: Translations = {
     thankYou: "Teşekkürler",
     chooseTrainer: "Antrenör seçin",
     personalTraining: "Kişisel",
-    viewMore: "Daha Fazla"
+    viewMore: "Daha Fazla",
+    chooseTime: "Zaman Seçin"
 }
 
 export function translationsFor(lang: string): Translations {

@@ -3,19 +3,12 @@
     import type {ResourceSummary} from "@breezbook/backend-api-types";
     import Markdown from "$lib/markdown/Markdown.svelte";
     import {translations} from "$lib/ui/stores";
+    import {mandatory} from "@breezbook/packages-types";
 
+    export let trainers: ResourceSummary[]
+    export let onTrainerChosen: (t: ResourceSummary) => void
     let selectedTrainer: string | null = null;
     let expandedTrainer: string | null = null;
-    export let trainers: ResourceSummary[]
-
-    interface Trainer {
-        id: string;
-        name: string;
-        topLine: string
-        price: number;
-        image: string;
-        details: string;
-    }
 
     $:mappedTrainers = trainers.map(t => {
         const fullDetails = t.branding?.markup?.[0]?.markup ?? '';
@@ -34,14 +27,15 @@
         expandedTrainer = expandedTrainer === trainerId ? null : trainerId;
     }
 
-    function imageUrl(r: ResourceSummary): string | null {
-        return r.branding?.images?.[0]?.publicUrl ?? null
+    function onNext() {
+        if (selectedTrainer) {
+            const trainer = mandatory(trainers.find(t => t.id === selectedTrainer), `Trainer not found`);
+            onTrainerChosen(trainer);
+        }
     }
-
 </script>
 
 <div class="p-4">
-
     <div class="space-y-4">
         <div class="space-y-4">
             {#each mappedTrainers as trainer (trainer.id)}
@@ -83,8 +77,9 @@
     </div>
 
     <div class="mt-6 flex justify-end">
-        <button
-                class="px-6 py-2 bg-primary hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
+        <button on:click={onNext} class:bg-primary={selectedTrainer}
+                disabled={!selectedTrainer}
+                class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
             {$translations.next}
         </button>
     </div>
