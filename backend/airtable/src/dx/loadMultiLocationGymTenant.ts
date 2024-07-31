@@ -109,50 +109,40 @@ const serviceUpserts = [
         tenant_id,
         environment_id,
         slug: 'gym1hr',
-        // duration_minutes: 60,
         price: 1500,
         price_currency: 'GBP',
-        // requires_time_slot: false
     }),
     upsertService({
         id: makeTestId(tenant_id, environment_id, 'pt.service.1hr'),
         tenant_id,
         environment_id,
         slug: 'pt1hr',
-        // duration_minutes: 60,
         price: 7000,
         price_currency: 'GBP',
-        // requires_time_slot: false
     }),
     upsertService({
         id: makeTestId(tenant_id, environment_id, 'yoga.1to1.1hr'),
         tenant_id,
         environment_id,
         slug: 'yoga.1to1.1hr',
-        // duration_minutes: 60,
         price: 7900,
         price_currency: 'GBP',
-        // requires_time_slot: false
     }),
     upsertService({
         id: makeTestId(tenant_id, environment_id, 'massage.30mins'),
         tenant_id,
         environment_id,
         slug: 'massage.30mins',
-        // duration_minutes: 30,
         price: 4900,
         price_currency: 'GBP',
-        // requires_time_slot: false
     }),
     upsertService({
         id: makeTestId(tenant_id, environment_id, 'swim.30mins'),
         tenant_id,
         environment_id,
         slug: 'swim.30mins',
-        // duration_minutes: 30,
         price: 4900,
         price_currency: 'GBP',
-        // requires_time_slot: false
     })
 ];
 

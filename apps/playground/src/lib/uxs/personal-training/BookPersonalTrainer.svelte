@@ -1,6 +1,6 @@
 <script lang="ts">
     import {
-        type AnySuitableResourceSpec,
+        type AnySuitableResourceSpec, api,
         type AvailabilityResponse,
         type ResourceSummary,
         type Service,
@@ -40,10 +40,12 @@
             requirementId: personalTrainerRequirement.id.value,
             resourceId: trainer.id
         }]
+        const options = api.serviceAvailabilityOptions([], requirementOverrides, [])
+
         try {
             availableSlots = await fetchJson(backendUrl(`/api/dev/breezbook-gym/${locationId}/service/${service.id}/availability?${dateRange}&lang=${$language}`), {
                 method: "POST",
-                body: JSON.stringify({requirementOverrides})
+                body: JSON.stringify(options)
             })
             journeyState = initialJourneyState(tenant, availableSlots, locationId, requirementOverrides)
             showNoAvailabilityMessage = false
