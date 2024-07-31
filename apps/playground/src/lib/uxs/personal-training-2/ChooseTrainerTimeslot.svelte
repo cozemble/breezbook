@@ -13,10 +13,11 @@
     import {language, translations} from "$lib/ui/stores";
     import type {DateTimes, DisabledDays} from "$lib/ui/time-picker/types";
     import ChooseTimeslot from "$lib/uxs/personal-training-2/ChooseTimeslot.svelte";
+    import type {Slot} from "$lib/uxs/personal-training/journeyState";
 
     export let trainer: ResourceSummary
     export let locale: string = 'default';
-    export let onSlotSelected: (date: IsoDate, time: TwentyFourHourClockTime) => void;
+    export let onSlotSelected: (slot: Slot) => void;
     export let personalTrainerRequirement: AnySuitableResourceSpec
     export let locationId: string
     export let service: Service
@@ -27,6 +28,7 @@
     let showNoAvailabilityMessage = false
     let dateTimes: DateTimes = {}
     let disabledDays: DisabledDays = {}
+    let availableSlots: AvailabilityResponse
 
     function availabilityToDateTimes(availability: AvailabilityResponse): DateTimes {
         return dayList.reduce((acc, date) => {
@@ -54,24 +56,28 @@
         const options = api.serviceAvailabilityOptions([], requirementOverrides, [])
 
         try {
-            const availableSlots = await fetchJson(backendUrl(`/api/dev/breezbook-gym/${locationId}/service/${service.id}/availability?${dateRange}&lang=${$language}`), {
+            availableSlots = await fetchJson(backendUrl(`/api/dev/breezbook-gym/${locationId}/service/${service.id}/availability?${dateRange}&lang=${$language}`), {
                 method: "POST",
                 body: JSON.stringify(options)
             }) as AvailabilityResponse
             dateTimes = availabilityToDateTimes(availableSlots)
             disabledDays = calcDisabledDays(dateTimes)
-            console.log({availableSlots,dateTimes})
             showNoAvailabilityMessage = false
         } catch (error) {
             console.error({error})
             showNoAvailabilityMessage = true
         }
     })
+
+    function onDateTimeSelected(day: IsoDate, time: TwentyFourHourClockTime) {
+        const slot = availabilityResponseFns.slotForDateTime(availableSlots, day, time)
+        onSlotSelected({day, slot})
+    }
 </script>
 
 
 {#if showNoAvailabilityMessage}
     <div class="text-red-500">{$translations.noSlotsAvailable}</div>
 {:else}
-    <ChooseTimeslot {dateTimes} {disabledDays} {locale} {onSlotSelected}/>
+    <ChooseTimeslot {dateTimes} {disabledDays} {locale} onSlotSelected={onDateTimeSelected}/>
 {/if}

@@ -9,7 +9,8 @@ import {
     resourceRequirementId,
     ResourceRequirementId,
     resourceType,
-    ResourceType
+    ResourceType,
+    TwentyFourHourClockTime
 } from '@breezbook/packages-types';
 import {BookingIsInThePast} from '@breezbook/packages-core/dist/cancellation.js';
 import {v4 as uuidv4} from 'uuid';
@@ -106,16 +107,20 @@ export interface AvailabilityResponse {
 
 export const availabilityResponseFns = {
     slotsForDate(response: AvailabilityResponse | ErrorResponse, date: IsoDate): Availability[] {
-        if(response._type === 'error.response') {
+        if (response._type === 'error.response') {
             throw new Error(response.errorMessage);
         }
         return mandatory(response.slots[date.value], `No slots for date ${date.value}`);
     },
     maybeSlotsForDate(response: AvailabilityResponse | ErrorResponse, date: IsoDate): Availability[] {
-        if(response._type === 'error.response') {
+        if (response._type === 'error.response') {
             throw new Error(response.errorMessage);
         }
         return response.slots[date.value] ?? [];
+    },
+    slotForDateTime(availableSlots: AvailabilityResponse, date: IsoDate, time: TwentyFourHourClockTime): Availability {
+        const slots = availabilityResponseFns.slotsForDate(availableSlots, date);
+        return mandatory(slots.find(slot => slot.startTime24hr === time.value), `No slot for time ${time.value} on date ${date.value}`);
     }
 }
 

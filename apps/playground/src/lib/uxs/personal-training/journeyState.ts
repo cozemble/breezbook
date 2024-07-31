@@ -2,7 +2,6 @@ import {type Form, type IsoDate, jsonSchemaFormFns, mandatory} from "@breezbook/
 import {
     type AddOnSummary,
     type Availability,
-    type AvailabilityResponse,
     type FormAndLabels,
     type ResourceRequirementOverride,
     type Tenant
@@ -34,8 +33,9 @@ export interface JourneyState {
     requirementOverrides: ResourceRequirementOverride[]
 }
 
-export function initialJourneyState(tenant: Tenant, availabilityResponse: AvailabilityResponse, locationId: string, requirementOverrides: ResourceRequirementOverride[]): JourneyState {
-    const service = mandatory(tenant.services.find(s => s.id === availabilityResponse.serviceId), `Service with id ${availabilityResponse.serviceId} not found`)
+
+export function initializeJourneyState(tenant: Tenant, serviceId: string, locationId: string, requirementOverrides: ResourceRequirementOverride[]): JourneyState {
+    const service = mandatory(tenant.services.find(s => s.id === serviceId), `Service with id ${serviceId} not found`)
     const serviceForms = tenant.forms.filter(f => service.forms.some(sf => sf.value === f.form.id.value)).map(f => f.form)
     return {
         tenant,
@@ -46,7 +46,7 @@ export function initialJourneyState(tenant: Tenant, availabilityResponse: Availa
         filledForms: null,
         customerDetails: null,
         isPaid: false,
-        serviceId: availabilityResponse.serviceId,
+        serviceId,
         locationId,
         requirementOverrides
     }
@@ -100,6 +100,12 @@ export const journeyStateFns = {
             filledForms: null,
             customerDetails: null,
             isPaid: false
+        }
+    },
+    slotSelected(journeyState: JourneyState, slot: Slot):JourneyState {
+        return {
+            ...journeyState,
+            selectedSlot: slot
         }
     }
 }

@@ -1,6 +1,7 @@
 <script lang="ts">
     import {
-        type AnySuitableResourceSpec, api,
+        type AnySuitableResourceSpec,
+        api,
         type AvailabilityResponse,
         type ResourceSummary,
         type Service,
@@ -12,7 +13,7 @@
     import SelectSlot from "$lib/uxs/personal-training/SelectSlot.svelte";
     import {
         type CoreCustomerDetails,
-        initialJourneyState,
+        initializeJourneyState,
         type JourneyState,
         type Slot
     } from "$lib/uxs/personal-training/journeyState";
@@ -47,7 +48,7 @@
                 method: "POST",
                 body: JSON.stringify(options)
             })
-            journeyState = initialJourneyState(tenant, availableSlots, locationId, requirementOverrides)
+            journeyState = initializeJourneyState(tenant, availableSlots.serviceId, locationId, requirementOverrides)
             showNoAvailabilityMessage = false
         } catch (error) {
             // console.error({error})

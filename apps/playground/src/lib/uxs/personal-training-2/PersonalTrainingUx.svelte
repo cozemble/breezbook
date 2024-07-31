@@ -6,9 +6,12 @@
     import TopNav from "$lib/uxs/personal-training-2/TopNav.svelte";
     import GymBrand from "$lib/uxs/personal-training-2/GymBrand.svelte";
     import {language, translations} from "$lib/ui/stores";
-    import {type IsoDate, keyValue, type KeyValue, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {keyValue, type KeyValue} from "@breezbook/packages-types";
     import ChooseTrainer from "$lib/uxs/personal-training-2/ChooseTrainer.svelte";
     import ChooseTrainerTimeslot from "$lib/uxs/personal-training-2/ChooseTrainerTimeslot.svelte";
+    import {type JourneyState, journeyStateFns, type Slot} from "$lib/uxs/personal-training/journeyState";
+    import {initializeJourneyState} from "$lib/uxs/personal-training/journeyState.js";
+    import FillForm from "$lib/uxs/personal-training/FillForm.svelte";
 
     export let languageId: string
     let tenant: Tenant
@@ -20,20 +23,7 @@
     let locations: KeyValue[] = []
     let state: "loading" | "loaded" = "loading"
 
-    interface JourneyState {
-        selectedDate: IsoDate | null
-        selectedTime: TwentyFourHourClockTime | null
-    }
-
-    function emptyJourneyState(): JourneyState {
-        return {
-            selectedDate: null,
-            selectedTime: null
-        }
-    }
-
-    let journeyState: JourneyState = emptyJourneyState()
-
+    let journeyState: JourneyState
 
     onMount(async () => {
         tenant = await fetchJson<Tenant>(backendUrl(`/api/dev/tenants?slug=breezbook-gym&lang=${languageId}`), {method: "GET"})
@@ -48,14 +38,11 @@
         personalTrainers = await fetchJson<ResourceSummary[]>(backendUrl(`/api/dev/breezbook-gym/${locationId}/resources/personal.trainer/list?lang=${languageId}`), {method: "GET"})
         personalTrainingService = mandatory(tenant.services.find(s => s.slug === 'pt1hr'), `Service pt1hr not found`)
         personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`) as AnySuitableResourceSpec;
+        journeyState = initializeJourneyState(tenant, personalTrainingService.id, locationId, [])
     }
 
-    function toggleSelection(personalTrainer: ResourceSummary) {
-        if (selectedPersonalTrainer && selectedPersonalTrainer.id === personalTrainer.id) {
-            selectedPersonalTrainer = null
-        } else {
-            selectedPersonalTrainer = personalTrainer
-        }
+    function toggleSelection(t: ResourceSummary) {
+        selectedPersonalTrainer = t
     }
 
     async function onLocationChanged(id: string) {
@@ -67,14 +54,14 @@
         $language = lang
     }
 
-    function onSlotSelected(date: IsoDate, time: TwentyFourHourClockTime) {
-        console.log('Slot selected', date, time)
-        journeyState = {
-            ...journeyState,
-            selectedDate: date,
-            selectedTime: time
-        }
+    function onSlotSelected(slot: Slot) {
+        journeyState = journeyStateFns.slotSelected(journeyState, slot)
     }
+
+    function onFormFilled(event: CustomEvent) {
+        journeyState = journeyStateFns.formFilled(journeyState, event.detail)
+    }
+
 </script>
 
 <div class="container mx-auto p-2 max-w-md">
@@ -90,7 +77,7 @@
                         <ChooseTrainer trainers={personalTrainers} onTrainerChosen={toggleSelection}/>
                     {/if}
 
-                    {#if selectedPersonalTrainer && locationId}
+                    {#if selectedPersonalTrainer && locationId && !journeyState.selectedSlot}
                         <h2 class="text-xl font-bold">{$translations.chooseTime}</h2>
                         <ChooseTrainerTimeslot {personalTrainerRequirement}
                                                {locationId}
@@ -99,6 +86,14 @@
                                                locale={$language}
                                                {onSlotSelected}/>
                     {/if}
+
+
+                    {#if journeyState.selectedSlot && journeyStateFns.requiresForms(journeyState) && !journeyStateFns.formsFilled(journeyState)}
+                        <FillForm form={journeyStateFns.currentUnfilledForm(journeyState)}
+                                  on:formFilled={onFormFilled}/>
+                    {/if}
+
+
                 </div>
             </div>
         {/if}
