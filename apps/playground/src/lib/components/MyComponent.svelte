@@ -1,159 +1,97 @@
 <script lang="ts">
-import { ChevronDown, Flag, MapPin, PaintBucket, Dumbbell } from 'lucide-svelte';
+    import TopNav from "$lib/uxs/personal-training-2/TopNav.svelte";
+    import GymBrand from "$lib/uxs/personal-training-2/GymBrand.svelte";
+    import TimePicker from "$lib/ui/time-picker/TimePicker.svelte";
+    import {
+        type DateLabels,
+        type DateTimes,
+        type DisabledDays,
+        formatDate,
+        type TimeLabels,
+        type TimeString
+    } from "$lib/ui/time-picker/types";
 
-let step: number = 1;
-let selectedTrainer: string | null = null;
-let expandedTrainer: string | null = null;
+    let currentMonth: Date = new Date();
+    let selectedDate: Date | null = null;
+    let selectedTime: TimeString | null = null;
+    let dateLabels: DateLabels = {};
+    let dateTimes: DateTimes = {}
+    let timeLabels: TimeLabels = {};
+    let disabledDays: DisabledDays = {};
 
-interface Trainer {
-    id: string;
-    name: string;
-    specialty: string;
-    background: string;
-    qualifications: string[];
-    price: number;
-    image: string;
-    details: string;
-}
+    const times = ['07:00', '08:00', '09:00', '10:00', '11:00', '12:00',
+        '13:00', '14:00', '15:00', '16:00', '17:00', '18:00']
 
-const trainers: Trainer[] = [
-    {
-        id: 'mike',
-        name: 'Mike',
-        specialty: 'Recovery from injury',
-        background: 'Sports science background, worked with professional athletes and those recovering from injury.',
-        qualifications: ['BSc (Hons) Sports Science', 'Level 3 Personal Trainer', 'Level 3 Sports Massage Therapist'],
-        price: 70,
-        image: 'https://pbs.twimg.com/profile_images/1783563449005404160/qS4bslrZ_400x400.jpg',
-        details: 'Mike specializes in helping clients recover from injuries and regain their strength and mobility. He uses a combination of targeted exercises, stretching, and massage techniques to address specific issues and prevent future injuries.'
-    },
-    {
-        id: 'mete',
-        name: 'Mete',
-        specialty: 'Elite sports training, focus on power events',
-        background: 'Worked with Olympic gold medalists and world champions.',
-        qualifications: ['PhD in Sports Science', 'MSc in Exercise Science', 'BSc in Sports Science', 'Certified Strength and Conditioning Specialist (CSCS)'],
-        price: 90,
-        image: 'https://avatars.githubusercontent.com/u/86600423',
-        details: 'Mete is an expert in elite sports training, with a focus on power events like weightlifting, sprinting, and jumping. He has worked with Olympic gold medalists and world champions, helping them achieve peak performance through specialized training programs and advanced techniques.'
-    },
-];
 
-$: {
-    if (typeof document !== 'undefined') {
-        document.documentElement.setAttribute('data-theme', navState.theme.toLowerCase());
+    function generateDateLabels(): void {
+        const timePrices: TimeLabels = {};
+        const disabled: DisabledDays = {};
+        const theDateTimes: DateTimes = {};
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dateString = formatDate(date);
+
+            // Randomly disable some days (20% chance)
+            if (Math.random() < 0.2) {
+                disabled[dateString] = true;
+            } else {
+                // Generate time labels for non-disabled days
+                timePrices[dateString] = {};
+
+                // Generate random time slots for each day by dropping a few times from the times array
+                theDateTimes[dateString] = times.filter(() => Math.random() > 0.4);
+            }
+        }
+        timeLabels = timePrices;
+        disabledDays = disabled;
+        dateTimes = theDateTimes;
     }
-}
 
-function handleThemeChange(event: Event) {
-    const value = (event.target as HTMLSelectElement).value;
-    navState = { ...navState, theme: value.toLowerCase() };
-    document.documentElement.setAttribute('data-theme', navState.theme);
-}
 
-function handleLanguageChange(event: Event) {
-    const language = (event.target as HTMLSelectElement).value;
-    navState = { ...navState, language };
-}
+    function onMonthChanged(event: CustomEvent<Date>): void {
+        currentMonth = event.detail;
+        selectedDate = null;
+        selectedTime = null;
+        generateDateLabels();
+    }
 
-function handleLocationChange(event: Event) {
-    const location = (event.target as HTMLSelectElement).value;
-    navState = { ...navState, location };
-}
+    function onDateSelected(event: CustomEvent<Date>): void {
+        selectedDate = event.detail;
+    }
 
-function toggleExpandedTrainer(trainerId: string) {
-    expandedTrainer = expandedTrainer === trainerId ? null : trainerId;
-}
+    function onTimeSelected(event: CustomEvent<TimeString>): void {
+        selectedTime = event.detail;
+    }
 
-let navState: { [key: string]: string } = {
-    language: "English",
-    theme: "emerald",
-    location: "Harlow"
-};
 
-const navOptions = [
-    { key: 'language', icon: Flag, options: ['Turkish', 'English'], onChange: handleLanguageChange },
-    { key: 'theme', icon: PaintBucket, options: ['light', 'dark', 'emerald'], onChange: handleThemeChange },
-    { key: 'location', icon: MapPin, options: ['Harlow', 'London', 'Manchester'], onChange: handleLocationChange }
-];
 </script>
 
 <div class="container mx-auto p-2 max-w-md">
-    <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center space-x-2">
-            <Dumbbell size={24} class="text-base-content" />
-            <h1 class="text-xl font-bold">Breez Gym</h1>
-        </div>
-    </div>
+    <GymBrand/>
     <div class="bg-base-100 shadow-xl rounded-lg overflow-hidden border border-base-300">
         <div class="p-4">
-            <div class="flex justify-between items-center mb-4">
-                {#each navOptions as { key, icon, options, onChange }}
-                    <div class="flex items-center space-x-1 rounded-md shadow-sm px-2 py-1">
-                        <svelte:component this={icon} size={16} class="text-base-content" />
-                        <select
-                            value={navState[key]}
-                            on:change={onChange}
-                            class="bg-transparent border-none text-sm font-medium">
-                            {#each options as option}
-                                <option value={option} selected={navState[key] === option}>{option}</option>
-                            {/each}
-                        </select>
-                    </div>
-                {/each}
-            </div>
-            <p class="text-lg font-bold mb-4">Personal Training</p>
 
             <div class="space-y-4">
-                <h2 class="text-xl font-bold mb-4 text-base-content">Choose Your Trainer</h2>
-                <div class="space-y-4">
-                    {#each trainers as trainer (trainer.id)}
-                        <div
-                            class="p-4 rounded-lg cursor-pointer transition-all {selectedTrainer === trainer.id
-                                ? 'bg-base-200 border border-base-300'
-                                : 'bg-base-100 shadow-md hover:shadow-lg hover:border-base-300 border border-transparent'}"
-                            on:click={() => selectedTrainer = trainer.id}>
-                            <div class="flex flex-col md:flex-row items-start">
-                                <img
-                                    src={trainer.image}
-                                    alt={trainer.name}
-                                    class="w-24 h-24 rounded-full mb-4 md:mb-0 md:mr-4 object-cover" />
-                                <div class="flex-grow">
-                                    <h3 class="text-lg font-semibold text-base-content">{trainer.name}</h3>
-                                    <p class="text-sm text-base-content opacity-70">{trainer.specialty}</p>
-                                    <p class="text-sm mt-2 text-base-content">{trainer.background}</p>
-                                    <p class="font-bold mt-2 text-base-content">£{trainer.price} per session</p>
-                                    <div class="mt-3 text-right">
-                                        <button
-                                            class="text-primary hover:text-primary-focus font-medium flex items-center justify-end w-full"
-                                            on:click|stopPropagation={() => toggleExpandedTrainer(trainer.id)}>
-                                            View More
-                                            <ChevronDown
-                                                size={20}
-                                                class="ml-1 transform transition-transform {expandedTrainer === trainer.id ? 'rotate-180' : ''}" />
-                                        </button>
-                                    </div>
-                                    {#if expandedTrainer === trainer.id}
-                                        <div class="mt-4 text-base-content">
-                                            {trainer.details}
-                                            <ul class="list-disc list-inside text-sm mt-2 text-base-content">
-                                                {#each trainer.qualifications as qual}
-                                                    <li>{qual}</li>
-                                                {/each}
-                                            </ul>
-
-                                        </div>
-                                    {/if}
-                                </div>
-                            </div>
-                        </div>
-                    {/each}
-                </div>
+                <h2 class="text-xl font-bold mb-4 text-base-content">Choose Date and Time</h2>
+                <TimePicker {currentMonth}
+                            {selectedDate}
+                            {selectedTime}
+                            {dateLabels}
+                            {dateTimes}
+                            {timeLabels}
+                            {disabledDays}
+                            on:dateSelected={onDateSelected}
+                            on:timeSelected={onTimeSelected}
+                            on:monthChanged={onMonthChanged}/>
             </div>
 
             <div class="mt-6 flex justify-end">
                 <button
-                    class="px-6 py-2 bg-primary hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
+                        class="px-6 py-2 bg-primary hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
                     Next
                 </button>
             </div>

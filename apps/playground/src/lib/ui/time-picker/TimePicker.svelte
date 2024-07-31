@@ -69,7 +69,7 @@
 </script>
 
 
-<div class="card bg-base-300 shadow-xl w-full max-w-screen-md mx-auto">
+<div class="card shadow-xl w-full max-w-screen-md mx-auto">
     <div class="card-body">
         <div class="flex justify-between items-center mb-4">
             <h2 class="card-title">

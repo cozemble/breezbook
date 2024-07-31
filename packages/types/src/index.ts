@@ -359,7 +359,7 @@ export const durationFns = {
 export const time24Fns = {
     addMinutes: (time: TwentyFourHourClockTime, addition: Minutes): TwentyFourHourClockTime => {
         const additionalMinutes = addition.value;
-        if(isNaN(additionalMinutes)) {
+        if (isNaN(additionalMinutes)) {
             throw new Error(`Invalid minutes value ${additionalMinutes}, type = ${typeof additionalMinutes}`);
         }
         const [hours, mins] = time.value.split(':').map((s) => parseInt(s, 10));
@@ -882,6 +882,20 @@ export function serviceOptionRequest(serviceOptionId: ServiceOptionId, quantity 
     return {
         serviceOptionId,
         quantity
+    };
+}
+
+export interface KeyValue {
+    _type: "key.value";
+    key: string;
+    value: string;
+}
+
+export function keyValue(key: string, value: string): KeyValue {
+    return {
+        _type: "key.value",
+        key,
+        value
     };
 }
 

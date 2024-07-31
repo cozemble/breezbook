@@ -1,5 +1,3 @@
-import type {LanguageId} from "@breezbook/packages-types";
-
 export interface Translations {
     theme: string
     language: string
@@ -27,6 +25,8 @@ export interface Translations {
     pleaseEnterALongerPhoneNumber: string,
     processingDotDotDot: string,
     thankYou: string
+    chooseTrainer: string
+    personalTraining: string
 }
 
 const translationsEnglish: Translations = {
@@ -55,10 +55,12 @@ const translationsEnglish: Translations = {
     pleaseEnterALongerLastName: "Please enter a longer last name",
     pleaseEnterALongerPhoneNumber: "Please enter a longer phone number",
     processingDotDotDot: "Processing...",
-    thankYou: "Thank you"
+    thankYou: "Thank you",
+    chooseTrainer: "Choose a trainer",
+    personalTraining: "Personal Training"
 }
 
-const traslationsTurkish: Translations = {
+const translationsTurkish: Translations = {
     theme: "Tema",
     language: "Dil",
     location: "Konum",
@@ -84,16 +86,17 @@ const traslationsTurkish: Translations = {
     pleaseEnterALongerLastName: "Lütfen daha uzun bir soyad girin",
     pleaseEnterALongerPhoneNumber: "Lütfen daha uzun bir telefon numarası girin",
     processingDotDotDot: "İşleniyor...",
-    thankYou: "Teşekkürler"
-
+    thankYou: "Teşekkürler",
+    chooseTrainer: "Antrenör seçin",
+    personalTraining: "Kişisel"
 }
 
-export function translationsFor(lang:string): Translations {
+export function translationsFor(lang: string): Translations {
     switch (lang) {
         case "en":
             return translationsEnglish
         case "tr":
-            return traslationsTurkish
+            return translationsTurkish
         default:
             return translationsEnglish
     }
