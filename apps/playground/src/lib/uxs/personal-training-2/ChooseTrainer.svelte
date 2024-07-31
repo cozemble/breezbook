@@ -64,7 +64,6 @@
                                         class="text-primary hover:text-primary-focus font-medium flex items-center justify-end w-full"
                                         on:click|stopPropagation={() => toggleExpandedTrainer(trainer.id)}>
                                     {$translations.viewMore}
-                                    View More
                                     <ChevronDown
                                             size={20}
                                             class="ml-1 transform transition-transform {expandedTrainer === trainer.id ? 'rotate-180' : ''}"/>
