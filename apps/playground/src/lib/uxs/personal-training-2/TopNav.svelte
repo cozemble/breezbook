@@ -8,7 +8,18 @@
     export let onLanguageChanged: (lang: string) => void
     export let onLocationChanged: (location: string) => void;
     export let locations: KeyValue[]
-    export let themes: KeyValue[] = [keyValue('light', 'Light'), keyValue('dark', 'Dark'), keyValue('emerald', 'Emerald')]
+    const themeIds = [
+        "light", "dark", "cupcake", "bumblebee", "emerald", "corporate", "synthwave",
+        "retro", "cyberpunk", "valentine", "halloween", "garden", "forest", "aqua",
+        "lofi", "pastel", "fantasy", "wireframe", "black", "luxury", "dracula", "cmyk",
+        "autumn", "business", "acid", "lemonade", "night", "coffee", "winter"
+    ];
+
+    function upperFirst(s: string) {
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+
+    export let themes: KeyValue[] = themeIds.map(key => keyValue(key, upperFirst(key)));
     export let languages: KeyValue[] = [keyValue('tr', 'Turkish'), keyValue('en', 'English')]
     export let theme: Writable<string | null> = writable('light');
     export let language: Writable<string | null> = writable('en');
