@@ -10,3 +10,4 @@ export * from './availability.js';
 export * from './lang/arrays.js';
 export * from './configuration/configuration.js'
 export * from './scheduleConfig.js'
+export * from './availability/findEarliestAvailability.js'

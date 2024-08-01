@@ -7,7 +7,7 @@ import {calculatePrice} from "../calculatePrice.js";
 import Resource = resourcing.Resource;
 import specificResource = resourcing.specificResource;
 
-interface EarliestAvailability {
+export interface EarliestAvailability {
     resource: Resource;
     earliestDate: IsoDate | null;
     earliestTime: TwentyFourHourClockTime | null;

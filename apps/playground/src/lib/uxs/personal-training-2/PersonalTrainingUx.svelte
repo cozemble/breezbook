@@ -1,12 +1,18 @@
 <script lang="ts">
-    import type {AnySuitableResourceSpec, ResourceSummary, Service, Tenant} from "@breezbook/backend-api-types";
+    import type {
+        AnySuitableResourceSpec,
+        EarliestResourceAvailability,
+        ResourceSummary,
+        Service,
+        Tenant
+    } from "@breezbook/backend-api-types";
     import {onMount} from "svelte";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import {mandatory} from "@breezbook/packages-core";
     import TopNav from "$lib/uxs/personal-training-2/TopNav.svelte";
     import GymBrand from "$lib/uxs/personal-training-2/GymBrand.svelte";
     import {language, translations} from "$lib/ui/stores";
-    import {keyValue, type KeyValue} from "@breezbook/packages-types";
+    import {isoDate, isoDateFns, keyValue, type KeyValue} from "@breezbook/packages-types";
     import ChooseTrainer from "$lib/uxs/personal-training-2/ChooseTrainer.svelte";
     import ChooseTrainerTimeslot from "$lib/uxs/personal-training-2/ChooseTrainerTimeslot.svelte";
     import {
@@ -25,12 +31,13 @@
     let tenant: Tenant
     let personalTrainers: ResourceSummary[] = []
     let selectedPersonalTrainer: ResourceSummary | null = null
+    let earliestAvailability: EarliestResourceAvailability | null = null
     let locationId: Writable<string | null> = writable(null)
     let personalTrainerRequirement: AnySuitableResourceSpec
     let personalTrainingService: Service
     let locations: KeyValue[] = []
     let state: "loading" | "loaded" = "loading"
-    let navState:"chooseTrainer" | "chooseTime" | "fillForm" | "fillCustomerDetails" | "takePayment" = "chooseTrainer"
+    let navState: "chooseTrainer" | "chooseTime" | "fillForm" | "fillCustomerDetails" | "takePayment" = "chooseTrainer"
 
     let journeyState: JourneyState
 
@@ -50,6 +57,13 @@
         journeyState = initializeJourneyState(tenant, personalTrainingService.id, locationId, [])
         navState = "chooseTrainer"
         selectedPersonalTrainer = null
+        const today = isoDate()
+        const someDaysFromNow = isoDateFns.addDays(today, 14)
+        const dateRange = `fromDate=${today.value}&toDate=${someDaysFromNow.value}`
+
+        // /api/:envId/:tenantId/:locationId/resources/:type/service/:serviceId/availability
+        earliestAvailability = await fetchJson<EarliestResourceAvailability>(backendUrl(`/api/dev/breezbook-gym/${locationId}/resources/personal.trainer/service/${personalTrainingService.id}/availability?${dateRange}`), {method: "GET"})
+        console.log({earliestAvailability})
     }
 
     function toggleSelection(t: ResourceSummary) {
@@ -87,13 +101,13 @@
     }
 
     function goBack() {
-        if(navState === "chooseTime") {
+        if (navState === "chooseTime") {
             navState = "chooseTrainer"
-        } else if(navState === "fillForm") {
+        } else if (navState === "fillForm") {
             navState = "chooseTime"
-        } else if(navState === "fillCustomerDetails") {
+        } else if (navState === "fillCustomerDetails") {
             navState = "fillForm"
-        } else if(navState === "takePayment") {
+        } else if (navState === "takePayment") {
             navState = "fillCustomerDetails"
         }
     }

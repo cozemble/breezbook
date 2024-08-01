@@ -18,9 +18,18 @@ import {
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 import {
+    foldInRequestOverrides,
     ServiceAvailabilityRequest,
     serviceAvailabilityRequestParam
 } from "../availability/getServiceAvailabilityForLocation.js";
+import {byLocation} from "../../availability/byLocation.js";
+import {
+    availabilityConfiguration,
+    EarliestAvailability,
+    findEarliestAvailability,
+    serviceFns
+} from "@breezbook/packages-core";
+import {EarliestResourceAvailability} from "@breezbook/backend-api-types";
 
 export function resourceTypeParam(requestValue: RequestValueExtractor = path('type')): ParamExtractor<ResourceType> {
     return paramExtractor('type', requestValue.extractor, resourceType);
@@ -45,10 +54,41 @@ export async function onListResourcesAvailabilityByTypeRequestExpress(req: expre
 
 export async function listResourceAvailabilityByTypeRequestEndpoint(deps: EndpointDependencies, request: RequestContext): Promise<EndpointOutcome[]> {
     return asHandler(deps, request)
-        .withFourRequestParams(tenantEnvironmentLocationParam(), resourceTypeParam(), languageIdParam(), serviceAvailabilityRequestParam(), listResourceAvailabilityByType);
+        .withThreeRequestParams(tenantEnvironmentLocationParam(), resourceTypeParam(), serviceAvailabilityRequestParam(), listResourceAvailabilityByType);
 }
 
-export async function listResourceAvailabilityByType(deps: EndpointDependencies, tenantEnvironmentLocation: TenantEnvironmentLocation, resourceType: ResourceType, languageId: LanguageId, serviceAvailability: ServiceAvailabilityRequest): Promise<EndpointOutcome[]> {
-    // const outcome = await resources.listAvailabilityByType(deps.prisma, tenantEnvironmentLocation, resourceType, languageId, serviceAvailability);
-    return [httpResponseOutcome(responseOf(200, JSON.stringify({}), ['Content-Type', 'application/json']))];
+
+function toEarliestResourceAvailability(earliest: EarliestAvailability): EarliestResourceAvailability {
+    return {
+        resourceId: earliest.resource.id.value,
+        earliestDate: earliest.earliestDate?.value ?? null,
+        earliestTime: earliest.earliestTime?.value ?? null,
+        cheapestPrice: earliest.cheapestPrice?.amount?.value ?? null,
+        checkedPeriod: {
+            startDate: earliest.period.start.value,
+            endDate: earliest.period.end.value
+        }
+    }
+}
+
+export async function listResourceAvailabilityByType(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, resourceType: ResourceType, request: ServiceAvailabilityRequest): Promise<EndpointOutcome[]> {
+    const everythingForAvailability = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
+    const config = availabilityConfiguration(
+        everythingForAvailability.businessConfiguration.availability,
+        everythingForAvailability.businessConfiguration.resourceAvailability,
+        everythingForAvailability.businessConfiguration.timeslots,
+        everythingForAvailability.businessConfiguration.startTimeSpec);
+    const service = serviceFns.findService(everythingForAvailability.businessConfiguration.services, request.serviceId);
+    console.log({service:JSON.stringify(service, null, 2)});
+
+    const earliest = findEarliestAvailability(
+        config,
+        service,
+        everythingForAvailability.bookings,
+        resourceType,
+        request.fromDate,
+        request.toDate,
+        everythingForAvailability.pricingRules).map((earliest) => toEarliestResourceAvailability(earliest));
+
+    return [httpResponseOutcome(responseOf(200, JSON.stringify(earliest), ['Content-Type', 'application/json']))];
 }

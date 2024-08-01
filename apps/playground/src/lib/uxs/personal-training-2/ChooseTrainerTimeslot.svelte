@@ -24,8 +24,8 @@
     export let selectedSlot: Slot | null
 
     const today = isoDate()
-    const sevenDaysFromNow = isoDateFns.addDays(today, 14)
-    const dayList = isoDateFns.listDays(today, sevenDaysFromNow)
+    const someDaysFromNow = isoDateFns.addDays(today, 14)
+    const dayList = isoDateFns.listDays(today, someDaysFromNow)
     let showNoAvailabilityMessage = false
     let dateTimes: DateTimes = {}
     let disabledDays: DisabledDays = {}
@@ -49,7 +49,7 @@
     }
 
     onMount(async () => {
-        const dateRange = `fromDate=${today.value}&toDate=${sevenDaysFromNow.value}`
+        const dateRange = `fromDate=${today.value}&toDate=${someDaysFromNow.value}`
         const requirementOverrides = [{
             requirementId: personalTrainerRequirement.id.value,
             resourceId: trainer.id

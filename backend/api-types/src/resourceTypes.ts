@@ -31,3 +31,11 @@ export interface ResourceRequirementOverride {
 export function resourceRequirementOverride(requirementId: string, resourceId: string): ResourceRequirementOverride {
     return {requirementId, resourceId}
 }
+
+export interface EarliestResourceAvailability {
+    resourceId: string;
+    earliestDate: string | null;
+    earliestTime: string | null;
+    cheapestPrice: number | null;
+    checkedPeriod: { startDate: string, endDate: string }
+}

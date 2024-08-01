@@ -112,7 +112,7 @@ export async function getServiceAvailabilityForLocationEndpoint(deps: EndpointDe
     return asHandler(deps, req).withTwoRequestParams(tenantEnvironmentLocationParam(), serviceAvailabilityRequestParam(), getServiceAvailabilityForLocation)
 }
 
-function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAvailabilityRequest): EverythingForAvailability {
+export function foldInRequestOverrides(e: EverythingForAvailability, request: ServiceAvailabilityRequest): EverythingForAvailability {
     const theService = serviceFns.maybeFindService(e.businessConfiguration.services, request.serviceId)
     if (!theService) {
         return e;
