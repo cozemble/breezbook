@@ -2,7 +2,7 @@ import {
     DbAddOn,
     DbForm,
     DbPricingRule,
-    DbResource,
+    DbResource, DbResourceType,
     DbService,
     DbServiceAddOn,
     DbServiceForm,
@@ -50,7 +50,7 @@ import {
     isoDate,
     minutes,
     resourceId,
-    resourceRequirementId,
+    resourceRequirementId, resourceType,
     ResourceType,
     resourceTypeFns,
     serviceId,
@@ -68,15 +68,16 @@ import resource = resourcing.resource;
 import Resource = resourcing.Resource;
 import resourceAllocationRules = resourcing.resourceAllocationRules;
 
-function toDomainResourceRequirement(rr: DbServiceResourceRequirement | DbServiceOptionResourceRequirement, resourceTypes: ResourceType[], mappedResources: Resource[]): ResourceRequirement {
+function toDomainResourceRequirement(rr: DbServiceResourceRequirement | DbServiceOptionResourceRequirement, resourceTypes: DbResourceType[], mappedResources: Resource[]): ResourceRequirement {
     if (rr.requirement_type === 'specific_resource') {
         return specificResource(byId.find(mappedResources, resourceId(rr.id)), resourceRequirementId(rr.id))
     } else {
-        return anySuitableResource(resourceTypeFns.findByValue(resourceTypes, mandatory(rr.resource_type, `No resource type`)), resourceAllocationRules.any, resourceRequirementId(rr.id))
+        const dbResourceType = mandatory(resourceTypes.find(rt => rt.id === rr.resource_type), `No resource type found for resource requirement ${rr.resource_type}`);
+        return anySuitableResource(resourceType(dbResourceType.name), resourceAllocationRules.any, resourceRequirementId(rr.id))
     }
 }
 
-export function toDomainServiceOption(so: DbServiceOptionFormsAndResources, resourceTypes: ResourceType[], mappedResources: Resource[]): ServiceOption {
+export function toDomainServiceOption(so: DbServiceOptionFormsAndResources, resourceTypes: DbResourceType[], mappedResources: Resource[]): ServiceOption {
     const mappedResourceRequirements = so.service_option_resource_requirements.map(rr => toDomainResourceRequirement(rr, resourceTypes, mappedResources));
     const priceAmount = (typeof so.price === "object" && "toNumber" in so.price) ? so.price.toNumber() : so.price;
     const formIds = so.service_option_forms.map(f => formId(f.form_id));
@@ -90,7 +91,7 @@ export function toDomainServiceOption(so: DbServiceOptionFormsAndResources, reso
         serviceOptionId(so.id));
 }
 
-export function toDomainService(dbService: DbService, addOns: DbServiceAddOn[], resourceTypes: ResourceType[], dbServiceForms: DbServiceForm[], resourceRequirements: DbServiceResourceRequirement[], mappedResources: Resource[], scheduleConfig: ScheduleConfig): DomainService {
+export function toDomainService(dbService: DbService, addOns: DbServiceAddOn[], resourceTypes: DbResourceType[], dbServiceForms: DbServiceForm[], resourceRequirements: DbServiceResourceRequirement[], mappedResources: Resource[], scheduleConfig: ScheduleConfig): DomainService {
     const permittedAddOns = addOns.filter((sa) => sa.service_id === dbService.id).map(s => addOnId(s.add_on_id))
     const mappedResourceRequirements = resourceRequirements.filter(rr => rr.service_id === dbService.id).map(rr => toDomainResourceRequirement(rr, resourceTypes, mappedResources));
     const forms = dbServiceForms.filter((sf) => sf.service_id === dbService.id).map((sf) => formId(sf.form_id));
@@ -146,6 +147,7 @@ export function toDomainPricingRule(rule: DbPricingRule): PricingRule {
     return rule.definition as unknown as PricingRule;
 }
 
-export function toDomainResource(r: DbResource, resourceTypes: ResourceType[]): Resource {
-    return resource(resourceTypeFns.findByValue(resourceTypes, r.resource_type), [], r.metadata as any ?? {}, resourceId(r.id))
+export function toDomainResource(r: DbResource, dbResourceTypes: DbResourceType[]): Resource {
+    const dbResourceType = mandatory(dbResourceTypes.find(rt => rt.id === r.resource_type),`No resource type found for resource ${r.id}`);
+    return resource(resourceType(dbResourceType.name), [], r.metadata as any ?? {}, resourceId(r.id))
 }

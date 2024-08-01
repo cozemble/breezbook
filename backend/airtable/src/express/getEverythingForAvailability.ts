@@ -269,7 +269,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
     const coupons = availabilityData.coupons.map((c) => c.definition as unknown as Coupon);
 
     const dates = isoDateFns.listDays(fromDate, toDate);
-    const mappedResourceTypes = availabilityData.resourceTypes.map((rt) => resourceType(rt.id));
+    // const mappedResourceTypes = availabilityData.resourceTypes.map((rt) => resourceType(rt.id));
     const mappedAddOns = availabilityData.addOns.map((a) => toDomainAddOn(a));
     const mappedForms = availabilityData.forms.map((f) => toDomainForm(f));
     const customerFormId = availabilityData.tenantSettings.customer_form_id;
@@ -280,16 +280,16 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
         )
         : undefined;
     const mappedTimeSlots = availabilityData.timeSlots.map(toDomainTimeslotSpec);
-    const mappedResources = availabilityData.resources.map((r) => toDomainResource(r, mappedResourceTypes));
+    const mappedResources = availabilityData.resources.map((r) => toDomainResource(r, availabilityData.resourceTypes));
 
     const mappedResourceAvailability = makeResourceAvailability(mappedResources, availabilityData.resourceAvailability, availabilityData.resourceOutage, dates)
     const businessAvailability = makeBusinessAvailability(availabilityData.businessHours, availabilityData.blockedTime, dates)
     const services = availabilityData.services.map((s) => {
         const applicableScheduleConfig = availabilityData.serviceScheduleConfigs.find((sc) => sc.service_id === s.id);
         const scheduleConfig = applicableScheduleConfig ? applicableScheduleConfig.schedule_config as unknown as ScheduleConfig : singleDaySchedulingFns.alwaysAvailable();
-        return toDomainService(s, availabilityData.serviceAddOns, mappedResourceTypes, availabilityData.serviceForms, availabilityData.serviceResourceRequirements, mappedResources, scheduleConfig);
+        return toDomainService(s, availabilityData.serviceAddOns, availabilityData.resourceTypes, availabilityData.serviceForms, availabilityData.serviceResourceRequirements, mappedResources, scheduleConfig);
     })
-    const serviceOptions = availabilityData.serviceOptions.map((so) => toDomainServiceOption(so, mappedResourceTypes, mappedResources))
+    const serviceOptions = availabilityData.serviceOptions.map((so) => toDomainServiceOption(so, availabilityData.resourceTypes, mappedResources))
 
     return everythingForAvailability(
         businessConfiguration(

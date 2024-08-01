@@ -435,6 +435,8 @@ model resource_types {
   resources                            resources[]
   service_option_resource_requirements service_option_resource_requirements[]
   service_resource_requirements        service_resource_requirements[]
+
+  @@unique([tenant_id, environment_id, name])
 }
 
 model resources {

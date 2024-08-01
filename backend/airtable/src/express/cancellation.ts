@@ -91,10 +91,10 @@ export function doCancellationRequest(
     resources: DbResource[],
     clock = new SystemClock()
 ): HttpError | CancellationGranted {
-    const mappedResourceTypes = resourceTypes.map((rt) => resourceType(rt.id));
-    const mappedResources = resources.map((r) => toDomainResource(r, mappedResourceTypes));
+    // const mappedResourceTypes = resourceTypes.map((rt) => resourceType(rt.name));
+    const mappedResources = resources.map((r) => toDomainResource(r, resourceTypes));
     const scheduleConfig = makeScheduleToMatchBooking(theBooking);
-    const mappedServices = services.map(s => toDomainService(s, serviceAddOns, mappedResourceTypes, [], serviceResourceRequirements, mappedResources, scheduleConfig))
+    const mappedServices = services.map(s => toDomainService(s, serviceAddOns, resourceTypes, [], serviceResourceRequirements, mappedResources, scheduleConfig))
     const theRefundPolicy = refundPolicy(refundRules.map((r) => r.definition as any as TimebasedRefundRule));
     const refundJudgement = findRefundRule(toDomainBooking(theBooking, mappedServices), theRefundPolicy, clock);
     if (refundJudgement._type === 'refund.possible') {

@@ -77,7 +77,8 @@ create table resource_types
     environment_id text                                not null,
     name           text                                not null,
     created_at     timestamp with time zone            not null default current_timestamp,
-    updated_at     timestamp with time zone            not null default current_timestamp
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    unique (tenant_id, environment_id, name)
 );
 
 create table resources

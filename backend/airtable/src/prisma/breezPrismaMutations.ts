@@ -38,6 +38,43 @@ export function createBookingResourceRequirement(minusId: Omit<Prisma.booking_re
     };
 }
 
+export type CreateBookingAnySuitableResourceRequirement = Create<Prisma.booking_resource_requirementsCreateInput>;
+
+export function createBookingAnySuitableResourceRequirement(minusId: Omit<Prisma.booking_resource_requirementsUncheckedCreateInput, 'id'>, resourceTypeName: string): CreateBookingAnySuitableResourceRequirement {
+    const id = makeId(minusId.environment_id, "booking_resource_requirements")
+    const data: Prisma.booking_resource_requirementsCreateInput = {
+        id,
+        environment_id: minusId.environment_id,
+        requirement_id: minusId.requirement_id,
+        requirement_type: minusId.requirement_type,
+        tenants: {
+            connect: {
+                tenant_id: minusId.tenant_id
+            }
+        },
+        bookings: {
+          connect: {
+             id: minusId.booking_id
+          }
+        },
+        resource_types: {
+            connect: {
+                tenant_id_environment_id_name: {
+                    tenant_id: minusId.tenant_id,
+                    environment_id: minusId.environment_id,
+                    name: resourceTypeName
+                }
+            }
+        }
+    }
+    return {
+        _type: 'create',
+        data,
+        entity: 'booking_resource_requirements',
+        entityId: compositeKey("id", id)
+    };
+}
+
 export type CreateReservation = Create<Prisma.reservationsCreateArgs['data']>;
 
 export function createReservation(minusId: Omit<Prisma.reservationsUncheckedCreateInput, 'id'>): CreateReservation {

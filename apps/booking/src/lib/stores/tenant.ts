@@ -5,7 +5,6 @@ const TENANT_CTX_KEY = 'tenant';
 
 // TODO fully functional store when needed
 const createTenantStore = (tenant: Tenant) => {
-	console.log('Tenant store created', tenant);
 	return tenant;
 };
 

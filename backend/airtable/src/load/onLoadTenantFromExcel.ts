@@ -76,7 +76,7 @@ function toJson<T>(workbook: WorkBook, sheetName: string, type: ZodType): T[] {
 const TenantSettingsSchema = z.object({
     "Tenant ID": z.string(),
     "Name": z.string(),
-    "Customer Form ID": z.string(),
+    "Customer Form ID": z.string().optional(),
     "Timezone": z.string(),
     "Hero": z.string(),
     "Description": z.string(),
@@ -300,14 +300,10 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         labels: jsonSchemaFormFns.extractLabels(fu.create.data.definition as any, languages.en) as any
     }))
     const tenantSettingsUpserts = tenantSettingsData.map(ts => {
-        const contactDetailsForm = mandatory(formUpserts.find(f => {
-            const form = f.create.data.definition as any as JsonSchemaForm;
-            return form.id.value === ts["Customer Form ID"];
-        }), `Form not found for tenant settings ${ts["Customer Form ID"]}`);
         return upsertTenantSettings({
                 tenant_id,
                 environment_id,
-                customer_form_id: contactDetailsForm.create.data.id,
+                customer_form_id: null,
                 iana_timezone: ts.Timezone
             }
         );

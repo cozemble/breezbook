@@ -2,7 +2,7 @@ import {Customer, PaymentIntent, TenantSettings,} from '@breezbook/packages-core
 import {orderCreatedResponse, OrderCreatedResponse} from '@breezbook/backend-api-types';
 import {Prisma} from '@prisma/client';
 import {
-    createBooking,
+    createBooking, CreateBookingAnySuitableResourceRequirement, createBookingAnySuitableResourceRequirement,
     createBookingResourceRequirement,
     CreateBookingResourceRequirement,
     createOrder,
@@ -116,7 +116,7 @@ function upsertServiceFormValues(
     return upsertBookingServiceFormValues(create, update, where);
 }
 
-function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment, requirement: ResourceRequirement, bookingId: string): CreateBookingResourceRequirement {
+function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment, requirement: ResourceRequirement, bookingId: string): CreateBookingResourceRequirement|CreateBookingAnySuitableResourceRequirement {
     if (requirement._type === "complex.resource.requirement") {
         throw new Error("Cannot handle complex resource requirements");
     }
@@ -130,14 +130,13 @@ function toBookingResourceRequirementCreate(tenantEnvironment: TenantEnvironment
             requirement_type: 'specific_resource'
         })
     } else {
-        return createBookingResourceRequirement({
+        return createBookingAnySuitableResourceRequirement({
             tenant_id: tenantEnvironment.tenantId.value,
             environment_id: tenantEnvironment.environmentId.value,
             booking_id: bookingId,
             requirement_id: requirement.id.value,
             requirement_type: 'any_suitable',
-            resource_type: requirement.resourceType.value
-        })
+        }, requirement.resourceType.value);
     }
 }
 
