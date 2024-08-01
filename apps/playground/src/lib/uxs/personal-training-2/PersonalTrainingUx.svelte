@@ -31,7 +31,7 @@
     let tenant: Tenant
     let personalTrainers: ResourceSummary[] = []
     let selectedPersonalTrainer: ResourceSummary | null = null
-    let earliestAvailability: EarliestResourceAvailability | null = null
+    let earliestAvailability: EarliestResourceAvailability[] = []
     let locationId: Writable<string | null> = writable(null)
     let personalTrainerRequirement: AnySuitableResourceSpec
     let personalTrainingService: Service
@@ -61,9 +61,7 @@
         const someDaysFromNow = isoDateFns.addDays(today, 14)
         const dateRange = `fromDate=${today.value}&toDate=${someDaysFromNow.value}`
 
-        // /api/:envId/:tenantId/:locationId/resources/:type/service/:serviceId/availability
-        earliestAvailability = await fetchJson<EarliestResourceAvailability>(backendUrl(`/api/dev/breezbook-gym/${locationId}/resources/personal.trainer/service/${personalTrainingService.id}/availability?${dateRange}`), {method: "GET"})
-        console.log({earliestAvailability})
+        earliestAvailability = await fetchJson<EarliestResourceAvailability[]>(backendUrl(`/api/dev/breezbook-gym/${locationId}/resources/personal.trainer/service/${personalTrainingService.id}/availability?${dateRange}`), {method: "GET"})
     }
 
     function toggleSelection(t: ResourceSummary) {
@@ -126,6 +124,7 @@
                         <h2 class="text-xl font-bold">{$translations.chooseTrainer}</h2>
                         <ChooseTrainer trainers={personalTrainers}
                                        selectedTrainer={selectedPersonalTrainer?.id ?? null}
+                                       {earliestAvailability}
                                        onTrainerChosen={toggleSelection}/>
                     {/if}
 

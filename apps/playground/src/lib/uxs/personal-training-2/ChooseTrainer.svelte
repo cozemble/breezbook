@@ -1,27 +1,51 @@
 <script lang="ts">
     import {ChevronDown} from 'lucide-svelte';
-    import type {ResourceSummary} from "@breezbook/backend-api-types";
+    import type {EarliestResourceAvailability, ResourceSummary} from "@breezbook/backend-api-types";
     import Markdown from "$lib/markdown/Markdown.svelte";
     import {translations} from "$lib/ui/stores";
-    import {mandatory} from "@breezbook/packages-types";
+    import {isoDate, isoDateFns, mandatory} from "@breezbook/packages-types";
+    import {currencies, price, priceFns} from "@breezbook/packages-core";
 
     export let trainers: ResourceSummary[]
     export let onTrainerChosen: (t: ResourceSummary) => void
     export let selectedTrainer: string | null = null;
+    export let earliestAvailability: EarliestResourceAvailability[]
+
     let expandedTrainer: string | null = null;
 
-    $:mappedTrainers = trainers.map(t => {
-        const fullDetails = t.branding?.markup?.[0]?.markup ?? '';
-        const topLine = fullDetails.split('\n')[0];
-        return ({
-            id: t.id,
-            name: t.name,
-            topLine,
-            price: "todo ",
-            image: t.branding?.images?.[0]?.publicUrl ?? null,
-            details: fullDetails
+    $:mappedTrainers = mapTrainers(trainers, earliestAvailability);
+
+    function mapTrainers(trainers: ResourceSummary[], earliestAvailability: EarliestResourceAvailability[]) {
+        return trainers.map(t => {
+            const fullDetails = t.branding?.markup?.[0]?.markup ?? '';
+            const topLine = fullDetails.split('\n')[0];
+            let priceString = null as string | null;
+            const earliestForTrainer = earliestAvailability.find(ea => ea.resourceId === t.id);
+            let whenAvailable = null as string | null;
+            if (earliestForTrainer && earliestForTrainer.cheapestPrice) {
+                const p = priceFns.format(price(earliestForTrainer.cheapestPrice, currencies.GBP));
+                priceString = `£${p}`;
+            }
+            if (earliestForTrainer?.earliestDate) {
+                const date = isoDate(earliestForTrainer.earliestDate);
+                if (date.value === isoDate().value) {
+                    whenAvailable = `today`;
+                } else {
+                    whenAvailable = `from ${isoDateFns.dayOfWeek(date)}`;
+                }
+            }
+
+            return ({
+                id: t.id,
+                name: t.name,
+                topLine,
+                price: priceString,
+                image: t.branding?.images?.[0]?.publicUrl ?? null,
+                details: fullDetails,
+                whenAvailable
+            });
         });
-    })
+    }
 
     function toggleExpandedTrainer(trainerId: string) {
         expandedTrainer = expandedTrainer === trainerId ? null : trainerId;
@@ -52,7 +76,12 @@
                         <div class="flex-grow">
                             <h3 class="text-lg font-semibold text-base-content">{trainer.name}</h3>
                             <p class="text-sm text-base-content opacity-70">{trainer.topLine}</p>
-                            <!--                            <p class="font-bold mt-2 text-base-content">£{trainer.price} per session</p>-->
+                            {#if trainer.price}
+                                <p class="font-bold mt-2 text-base-content">{trainer.price} per session</p>
+                            {/if}
+                            {#if trainer.whenAvailable}
+                                <p class="mt-2 text-base-content opacity-70">Available {trainer.whenAvailable}</p>
+                            {/if}
                             <div class="mt-3 text-right">
                                 <button
                                         class="text-primary hover:text-primary-focus font-medium flex items-center justify-end w-full"
