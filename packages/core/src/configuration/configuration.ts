@@ -1,4 +1,11 @@
-import {DayAndTimePeriod, ResourceId, ServiceId} from "@breezbook/packages-types";
+import {
+    dayAndTimePeriod,
+    DayAndTimePeriod,
+    IsoDate,
+    ResourceId,
+    ServiceId,
+    TimePeriod
+} from "@breezbook/packages-types";
 import {resourcing} from "@breezbook/packages-resourcing";
 
 export namespace configuration {
@@ -15,6 +22,11 @@ export namespace configuration {
             _type: 'availability.block',
             when,
         };
+    }
+
+
+    export function makeAvailabilityBlocks(dates:IsoDate[],period:TimePeriod):AvailabilityBlock[] {
+        return dates.map(date => availabilityBlock(dayAndTimePeriod(date,period)));
     }
 
     export interface ResourceAvailability {

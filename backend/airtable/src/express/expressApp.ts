@@ -21,7 +21,10 @@ import {setupDevEnvironment} from "../dx/setupDevEnvironment.js";
 import {onAirtableOauthBegin, onAirtableOauthCallback} from "./oauth/airtableConnect.js";
 import {onVapiVoiceBotPromptRequest} from "./voicebot/vapiHandlers.js";
 import {onWaitlistSignup} from "./waitlist/onWaitlistSignup.js";
-import {onListResourcesByTypeRequestExpress} from "./resources/resourcesHandler.js";
+import {
+    onListResourcesAvailabilityByTypeRequestExpress,
+    onListResourcesByTypeRequestExpress
+} from "./resources/resourcesHandler.js";
 import {onGetServiceAvailabilityForLocationExpress} from "./availability/getServiceAvailabilityForLocation.js";
 import {onLoadTenantFromExcel} from "../load/onLoadTenantFromExcel.js";
 
@@ -84,6 +87,7 @@ export function expressApp(): Express {
     app.get(externalApiPaths.airtableOauthCallback, onAirtableOauthCallback);
     app.get(externalApiPaths.vapiVoiceBotPrompt, onVapiVoiceBotPromptRequest);
     app.get(externalApiPaths.listResourcesByType, onListResourcesByTypeRequestExpress);
+    app.get(externalApiPaths.listResourceAvailabilityByType, onListResourcesAvailabilityByTypeRequestExpress);
     app.post(externalApiPaths.waitlistSignup, onWaitlistSignup);
 
     app.post('/internal/api/:envId/webhook/received', handleReceivedWebhook);
@@ -111,6 +115,7 @@ export const externalApiPaths = {
     airtableOauthCallback: '/v1/connect/airtable/oauth2/callback',
     vapiVoiceBotPrompt: '/api/:envId/:tenantId/:locationId/voicebot/vapi/prompt',
     listResourcesByType: '/api/:envId/:tenantId/:locationId/resources/:type/list',
+    listResourceAvailabilityByType: '/api/:envId/:tenantId/:locationId/resources/:type/service/:serviceId/availability',
     waitlistSignup: '/api/signup/waitlist',
     priceBasket: '/api/:envId/:tenantId/basket/price',
     addOrder: '/api/:envId/:tenantId/orders',
