@@ -19,24 +19,26 @@
     import FillForm from "$lib/uxs/personal-training/FillForm.svelte";
     import FillCustomerDetails from "$lib/uxs/personal-training/FillCustomerDetails.svelte";
     import TakePayment from "$lib/uxs/personal-training/TakePayment.svelte";
+    import {type Writable, writable} from "svelte/store";
 
     export let languageId: string
     let tenant: Tenant
     let personalTrainers: ResourceSummary[] = []
     let selectedPersonalTrainer: ResourceSummary | null = null
-    let locationId: string | null = null
+    let locationId: Writable<string | null> = writable(null)
     let personalTrainerRequirement: AnySuitableResourceSpec
     let personalTrainingService: Service
     let locations: KeyValue[] = []
     let state: "loading" | "loaded" = "loading"
+    let navState:"chooseTrainer" | "chooseTime" | "fillForm" | "fillCustomerDetails" | "takePayment" = "chooseTrainer"
 
     let journeyState: JourneyState
 
     onMount(async () => {
         tenant = await fetchJson<Tenant>(backendUrl(`/api/dev/tenants?slug=breezbook-gym&lang=${languageId}`), {method: "GET"})
         console.log({tenant})
-        const serviceLocation = mandatory(tenant.serviceLocations.find(location => location.locationId.includes("harlow")), `Harlow location not found`)
-        locationId = serviceLocation.locationId
+        const serviceLocation = mandatory(tenant.serviceLocations.find(location => location.locationId.includes("london")), `London location not found`)
+        $locationId = serviceLocation.locationId
         locations = tenant.locations.map(location => keyValue(location.id, location.name))
         await fetchPersonalTrainers(serviceLocation.locationId)
         state = "loaded"
@@ -47,15 +49,19 @@
         personalTrainingService = mandatory(tenant.services.find(s => s.slug === 'pt1hr'), `Service pt1hr not found`)
         personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`) as AnySuitableResourceSpec;
         journeyState = initializeJourneyState(tenant, personalTrainingService.id, locationId, [])
+        navState = "chooseTrainer"
+        selectedPersonalTrainer = null
     }
 
     function toggleSelection(t: ResourceSummary) {
         selectedPersonalTrainer = t
+        navState = "chooseTime"
+        journeyState = journeyStateFns.clearSlot(journeyState)
     }
 
     async function onLocationChanged(id: string) {
-        locationId = id
-        await fetchPersonalTrainers(locationId)
+        $locationId = id
+        await fetchPersonalTrainers($locationId)
     }
 
     async function onLanguageChanged(lang: string) {
@@ -64,18 +70,33 @@
 
     function onSlotSelected(slot: Slot) {
         journeyState = journeyStateFns.slotSelected(journeyState, slot)
+        navState = "fillForm"
     }
 
     function onFormFilled(event: CustomEvent) {
         journeyState = journeyStateFns.formFilled(journeyState, event.detail)
+        navState = "fillCustomerDetails"
     }
 
     function onCustomerDetailsFilled(event: CustomEvent<CoreCustomerDetails>) {
         journeyState = journeyStateFns.setCustomerDetails(journeyState, event.detail)
+        navState = "takePayment"
     }
 
     function onPaymentComplete() {
         journeyState = journeyStateFns.setPaid(journeyState)
+    }
+
+    function goBack() {
+        if(navState === "chooseTime") {
+            navState = "chooseTrainer"
+        } else if(navState === "fillForm") {
+            navState = "chooseTime"
+        } else if(navState === "fillCustomerDetails") {
+            navState = "fillForm"
+        } else if(navState === "takePayment") {
+            navState = "fillCustomerDetails"
+        }
     }
 
 </script>
@@ -85,33 +106,38 @@
     <div class="bg-base-100 shadow-xl rounded-lg overflow-hidden border border-base-300">
         {#if state === "loaded"}
             <div class="p-4">
-                <TopNav {onLanguageChanged} {onLocationChanged} {locations} {language}/>
+                <TopNav {onLanguageChanged} {onLocationChanged} {locations} {language} location={locationId}/>
 
                 <div class="space-y-4">
-                    {#if !selectedPersonalTrainer}
+                    {#if navState === "chooseTrainer"}
                         <h2 class="text-xl font-bold">{$translations.chooseTrainer}</h2>
-                        <ChooseTrainer trainers={personalTrainers} onTrainerChosen={toggleSelection}/>
+                        <ChooseTrainer trainers={personalTrainers}
+                                       selectedTrainer={selectedPersonalTrainer?.id ?? null}
+                                       onTrainerChosen={toggleSelection}/>
                     {/if}
 
-                    {#if selectedPersonalTrainer && locationId && !journeyState.selectedSlot}
+                    {#if navState === "chooseTime" && selectedPersonalTrainer && $locationId}
                         <h2 class="text-xl font-bold">{$translations.chooseTime}</h2>
                         <ChooseTrainerTimeslot {personalTrainerRequirement}
-                                               {locationId}
+                                               locationId={$locationId}
+                                               selectedSlot={journeyState.selectedSlot}
                                                service={personalTrainingService}
                                                trainer={selectedPersonalTrainer}
                                                locale={$language}
+                                               on:back={goBack}
                                                {onSlotSelected}/>
                     {/if}
 
 
                     {#if journeyState.selectedSlot}
-                        {#if journeyStateFns.requiresForms(journeyState) && !journeyStateFns.formsFilled(journeyState)}
-                            <FillForm form={journeyStateFns.currentUnfilledForm(journeyState)}
-                                      on:formFilled={onFormFilled}/>
-                        {:else if !journeyStateFns.customerDetailsFilled(journeyState)}
-                            <FillCustomerDetails on:filled={onCustomerDetailsFilled}/>
-                        {:else if !journeyStateFns.isPaid(journeyState)}
-                            <TakePayment state={journeyState} on:paymentComplete={onPaymentComplete}/>
+                        {#if navState === "fillForm" }
+                            <FillForm form={journeyStateFns.getFirstServiceForm(journeyState)}
+                                      data={journeyStateFns.getFirstServiceFormData(journeyState)}
+                                      on:formFilled={onFormFilled} on:back={goBack}/>
+                        {:else if navState === "fillCustomerDetails"}
+                            <FillCustomerDetails on:filled={onCustomerDetailsFilled} on:back={goBack}/>
+                        {:else if navState === "takePayment"}
+                            <TakePayment state={journeyState} on:paymentComplete={onPaymentComplete} on:back={goBack}/>
                         {/if}
                     {/if}
                 </div>

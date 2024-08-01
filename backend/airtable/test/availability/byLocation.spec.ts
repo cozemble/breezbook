@@ -19,9 +19,9 @@ import {getAvailabilityForService} from "../../src/availability/getAvailabilityF
 
 const tenant = tenantId(multiLocationGym.tenant_id)
 const env = environmentId(multiLocationGym.environment_id)
-const harlow = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGym.locationHarlow))
-const stortford = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGym.locationStortford))
-const ware = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGym.locationWare))
+const london = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGym.locationLondon))
+const liverpool = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGym.locationLiverpool))
+const manchester = tenantEnvironmentLocation(env, tenant, locationId(multiLocationGym.locationManchester))
 
 describe("Given a gym with services at various locations", () => {
     let prisma: PrismaClient;
@@ -31,63 +31,63 @@ describe("Given a gym with services at various locations", () => {
         await loadMultiLocationGymTenant(prisma)
     })
 
-    test("harlow has gym, pt and massage as possible services", async () => {
-        const location = mandatory(await byLocation.findServices(prisma, harlow), `harlow services`)
+    test("london has gym, pt and massage as possible services", async () => {
+        const location = mandatory(await byLocation.findServices(prisma, london), `harlow services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.massage30mins])
     })
 
-    test("ware has gym, pt and swim as possible services", async () => {
-        const location = mandatory(await byLocation.findServices(prisma, ware), `ware services`)
+    test("manchester has gym, pt and swim as possible services", async () => {
+        const location = mandatory(await byLocation.findServices(prisma, manchester), `ware services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.swim30mins])
     });
 
-    test("stortford has gym, yoga and swim as possible services", async () => {
-        const location = mandatory(await byLocation.findServices(prisma, stortford), `stortford services`)
+    test("liverpool has gym, yoga and swim as possible services", async () => {
+        const location = mandatory(await byLocation.findServices(prisma, liverpool), `stortford services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.yoga1Hr, multiLocationGym.swim30mins])
     })
 
-    test("there is availability for gym, pt and massage at harlow", async () => {
-        const everything = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-22'), isoDate('2024-04-23'));
+    test("there is availability for gym, pt and massage at london", async () => {
+        const everything = await byLocation.getEverythingForAvailability(prisma, london, isoDate('2024-04-22'), isoDate('2024-04-23'));
         const serviceIds = everything.businessConfiguration.services.map(s => s.id.value)
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.massage30mins])
     });
 
-    test("default business hours for stortford and ware, closed on wednesdays at harlow", async () => {
-        const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
-        const daysAtHarlow = everythingHarlow.businessConfiguration.availability.availability.map(a => a.day.value)
-        expect(daysAtHarlow).toEqual(['2024-04-20', '2024-04-21', '2024-04-22', '2024-04-23', '2024-04-25', '2024-04-26', '2024-04-27'])
+    test("default business hours for liverpool and manchester, closed on wednesdays at london", async () => {
+        const everythingLondon = await byLocation.getEverythingForAvailability(prisma, london, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        const daysAtLondon = everythingLondon.businessConfiguration.availability.availability.map(a => a.day.value)
+        expect(daysAtLondon).toEqual(['2024-04-20', '2024-04-21', '2024-04-22', '2024-04-23', '2024-04-25', '2024-04-26', '2024-04-27'])
 
-        const everythingWare = await byLocation.getEverythingForAvailability(prisma, ware, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        const everythingWare = await byLocation.getEverythingForAvailability(prisma, manchester, isoDate('2024-04-20'), isoDate('2024-04-27'));
         const daysAtWare = everythingWare.businessConfiguration.availability.availability.map(a => a.day.value)
         expect(daysAtWare).toEqual(['2024-04-20', '2024-04-21', '2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26', '2024-04-27'])
 
-        const everythingStortford = await byLocation.getEverythingForAvailability(prisma, ware, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        const everythingStortford = await byLocation.getEverythingForAvailability(prisma, manchester, isoDate('2024-04-20'), isoDate('2024-04-27'));
         const daysAtStortford = everythingStortford.businessConfiguration.availability.availability.map(a => a.day.value)
         expect(daysAtStortford).toEqual(['2024-04-20', '2024-04-21', '2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26', '2024-04-27'])
     });
 
-    test("everywhere is closed for christmas day, but harlow is also closed on dec 26th", async () => {
-        const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-12-24'), isoDate('2024-12-27'));
-        const daysAtHarlow = everythingHarlow.businessConfiguration.availability.availability.map(a => a.day.value)
-        expect(daysAtHarlow).toEqual(['2024-12-24', '2024-12-27'])
+    test("everywhere is closed for christmas day, but london is also closed on dec 26th", async () => {
+        const everythingLondon = await byLocation.getEverythingForAvailability(prisma, london, isoDate('2024-12-24'), isoDate('2024-12-27'));
+        const daysAtLondon = everythingLondon.businessConfiguration.availability.availability.map(a => a.day.value)
+        expect(daysAtLondon).toEqual(['2024-12-24', '2024-12-27'])
 
-        const everythingWare = await byLocation.getEverythingForAvailability(prisma, ware, isoDate('2024-12-24'), isoDate('2024-12-27'));
+        const everythingWare = await byLocation.getEverythingForAvailability(prisma, manchester, isoDate('2024-12-24'), isoDate('2024-12-27'));
         const daysAtWare = everythingWare.businessConfiguration.availability.availability.map(a => a.day.value)
         expect(daysAtWare).toEqual(['2024-12-24', '2024-12-26', '2024-12-27'])
 
-        const everythingStortford = await byLocation.getEverythingForAvailability(prisma, ware, isoDate('2024-12-24'), isoDate('2024-12-27'));
+        const everythingStortford = await byLocation.getEverythingForAvailability(prisma, manchester, isoDate('2024-12-24'), isoDate('2024-12-27'));
         const daysAtStortford = everythingStortford.businessConfiguration.availability.availability.map(a => a.day.value)
         expect(daysAtStortford).toEqual(['2024-12-24', '2024-12-26', '2024-12-27'])
     });
 
-    test("ptMike is at harlow mon-friday, and ptMete is there on tue and sat", async () => {
-        const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
-        const ptMikeDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.when.day.value))
+    test("ptMike is at london mon-friday, and ptMete is there on tue and sat", async () => {
+        const everythingLondon = await byLocation.getEverythingForAvailability(prisma, london, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        const ptMikeDays = everythingLondon.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.when.day.value))
         expect(ptMikeDays).toEqual(['2024-04-22', '2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26'])
-        const ptMeteDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMete).flatMap(ra => ra.availability.map(a => a.when.day.value))
+        const ptMeteDays = everythingLondon.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMete).flatMap(ra => ra.availability.map(a => a.when.day.value))
         expect(ptMeteDays).toEqual(['2024-04-20', '2024-04-23', '2024-04-27'])
     })
 
@@ -103,8 +103,8 @@ describe("Given a gym with services at various locations", () => {
                 end_time_24hr: "18:00",
             }
         });
-        const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
-        const ptMikeDays = everythingHarlow.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.when.day.value))
+        const everythingLondon = await byLocation.getEverythingForAvailability(prisma, london, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        const ptMikeDays = everythingLondon.businessConfiguration.resourceAvailability.filter(ra => ra.resource.id.value === multiLocationGym.ptMike).flatMap(ra => ra.availability.map(a => a.when.day.value))
         expect(ptMikeDays).toEqual(['2024-04-23', '2024-04-24', '2024-04-25', '2024-04-26'])
     });
 
@@ -115,7 +115,7 @@ describe("Given a gym with services at various locations", () => {
                 tenant_id: multiLocationGym.tenant_id,
                 environment_id: multiLocationGym.environment_id,
                 service_id: multiLocationGym.pt1Hr,
-                location_id: multiLocationGym.locationHarlow,
+                location_id: multiLocationGym.locationLondon,
                 order_id: "order1",
                 date: '2024-04-22',
                 start_time_24hr: "09:00",
@@ -128,7 +128,7 @@ describe("Given a gym with services at various locations", () => {
                 tenant_id: multiLocationGym.tenant_id,
                 environment_id: multiLocationGym.environment_id,
                 service_id: multiLocationGym.pt1Hr,
-                location_id: multiLocationGym.locationWare,
+                location_id: multiLocationGym.locationManchester,
                 order_id: "order1",
                 date: '2024-04-22',
                 start_time_24hr: "09:00",
@@ -138,8 +138,8 @@ describe("Given a gym with services at various locations", () => {
                 booked_capacity: 1
             }]
         });
-        const everythingHarlow = await byLocation.getEverythingForAvailability(prisma, harlow, isoDate('2024-04-20'), isoDate('2024-04-27'));
-        expect(everythingHarlow.bookings).toHaveLength(1)
+        const everythingLondon = await byLocation.getEverythingForAvailability(prisma, london, isoDate('2024-04-20'), isoDate('2024-04-27'));
+        expect(everythingLondon.bookings).toHaveLength(1)
     });
 
 })

@@ -10,6 +10,8 @@
     } from "$lib/ui/time-picker/types";
     import {translations} from "$lib/ui/stores";
     import {isoDate, type IsoDate, time24, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {createEventDispatcher} from "svelte";
+    import {ChevronLeft} from "lucide-svelte";
 
     let currentMonth: Date = new Date();
     export let selectedDate: IsoDate | null = null;
@@ -20,6 +22,7 @@
     export let disabledDays: DisabledDays = {};
     export let locale: string = 'default';
     export let onSlotSelected: (date: IsoDate, time: TwentyFourHourClockTime) => void;
+    const dispatch = createEventDispatcher();
 
     function onMonthChanged(event: CustomEvent<Date>): void {
         currentMonth = event.detail;
@@ -40,6 +43,10 @@
             onSlotSelected(selectedDate, selectedTime);
         }
     }
+
+    function onBack() {
+        dispatch("back");
+    }
 </script>
 
 <TimePicker {currentMonth}
@@ -55,10 +62,16 @@
             on:timeSelected={onTimeSelected}
             on:monthChanged={onMonthChanged}/>
 
-<div class="mt-6 flex justify-end">
-    <button on:click={onNext} class:bg-primary={selectedTime}
-            disabled={!selectedTime}
-            class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
-        {$translations.next}
+<div class="mt-6 flex">
+    <button on:click={onBack} class="btn mr-6">
+        <ChevronLeft size={28}/>
     </button>
+
+    <div class="flex justify-end w-full">
+        <button on:click={onNext} class:bg-primary={selectedTime}
+                disabled={!selectedTime}
+                class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
+            {$translations.next}
+        </button>
+    </div>
 </div>

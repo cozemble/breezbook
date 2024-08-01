@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {onMount} from "svelte";
+    import {createEventDispatcher, onMount} from "svelte";
     import type {JourneyState} from "$lib/uxs/personal-training/journeyState";
     import {type PricedBasket, unpricedBasket, unpricedBasketLine} from "@breezbook/backend-api-types";
     import {mandatory, priceFns} from "@breezbook/packages-core";
@@ -8,10 +8,12 @@
     import {duration, minutes, time24} from "@breezbook/packages-types";
     import {translations} from "$lib/ui/stores";
     import {env, tenantId} from "$lib/uxs/personal-training/constants";
+    import {ChevronLeft} from "lucide-svelte";
 
     export let state: JourneyState
     let priced: PricedBasket
     let showStripe = false
+    const dispatch = createEventDispatcher()
 
     onMount(async () => {
         const date = mandatory(state.selectedSlot?.day, "selectedSlot.day")
@@ -26,6 +28,10 @@
 
     function onPay() {
         showStripe = true
+    }
+
+    function onBack() {
+        dispatch("back")
     }
 </script>
 
@@ -42,8 +48,15 @@
         <h2>{$translations.payment}</h2>
         <p>{$translations.price}: £ {priceFns.format(priced.total)}</p>
 
-        <div class="mt-6 flex justify-end">
-            <button class="btn btn-primary" on:click={onPay}>{$translations.pay}</button>
+        <div class="mt-6 flex">
+            <button on:click={onBack} class="btn mr-6">
+                <ChevronLeft size={28}/>
+            </button>
+
+            <div class="flex justify-end w-full">
+                <button class="btn btn-primary" on:click={onPay}>{$translations.pay}</button>
+            </div>
         </div>
+
     </div>
 {/if}

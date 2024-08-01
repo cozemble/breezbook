@@ -40,32 +40,32 @@ import {simpleScheduleConfig} from "@breezbook/packages-core";
 
 const tenant_id = 'breezbook-gym';
 const environment_id = 'dev';
-const locationHarlow = makeTestId(tenant_id, environment_id, 'europe.uk.harlow');
-const locationStortford = makeTestId(tenant_id, environment_id, 'europe.uk.bishops-stortford');
-const locationWare = makeTestId(tenant_id, environment_id, 'europe.uk.ware');
+const locationLondon = makeTestId(tenant_id, environment_id, 'europe.uk.london');
+const locationLiverpool = makeTestId(tenant_id, environment_id, 'europe.uk.liverpool');
+const locationManchester = makeTestId(tenant_id, environment_id, 'europe.uk.manchester');
 const resourceTypes = ['personal.trainer', 'massage.therapist', 'yoga.instructor'];
 
 const locationUpserts = [
     upsertLocation({
-        id: locationHarlow,
+        id: locationLondon,
         tenant_id,
         environment_id,
-        name: 'Harlow',
-        slug: 'harlow'
+        name: 'London',
+        slug: 'london'
     }),
     upsertLocation({
-        id: locationStortford,
+        id: locationLiverpool,
         tenant_id,
         environment_id,
-        name: 'Bishops Stortford',
-        slug: 'stortford'
+        name: 'Liverpool',
+        slug: 'liverpool'
     }),
     upsertLocation({
-        id: locationWare,
+        id: locationManchester,
         tenant_id,
         environment_id,
-        name: 'Ware',
-        slug: 'ware'
+        name: 'Manchester',
+        slug: 'manchester'
     })
 ];
 
@@ -153,9 +153,9 @@ const [gym1Hr, pt1Hr, yoga1Hr, massage30mins, swim30mins] = serviceUpserts;
 export const multiLocationGym = {
     tenant_id,
     environment_id,
-    locationHarlow,
-    locationStortford,
-    locationWare,
+    locationLondon,
+    locationLiverpool,
+    locationManchester,
     gym1Hr: gym1Hr.create.data.id,
     pt1Hr: pt1Hr.create.data.id,
     yoga1Hr: yoga1Hr.create.data.id,
@@ -210,18 +210,18 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             day_of_week: day,
             start_time_24hr,
             end_time_24hr,
-            location_id: locationHarlow
+            location_id: locationLondon
         })
     );
     await runUpserts(prisma, [...businessHourUpserts, ...harlowBusinessHourUpserts]);
 
-    // everywhere is closed on Christmas day, and Harlow on the 26th in addition
+    // everywhere is closed on Christmas day, and London on the 26th in addition
     const blockedTimeUpserts = [
         upsertBlockedTime({
             id: makeTestId(tenant_id, environment_id, `blocked_time.christmas.1`),
             tenant_id,
             environment_id,
-            location_id: locationHarlow,
+            location_id: locationLondon,
             date: '2024-12-25',
             start_time_24hr,
             end_time_24hr
@@ -230,7 +230,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             id: makeTestId(tenant_id, environment_id, `blocked_time.christmas.2`),
             tenant_id,
             environment_id,
-            location_id: locationHarlow,
+            location_id: locationLondon,
             date: '2024-12-26',
             start_time_24hr,
             end_time_24hr
@@ -239,7 +239,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             id: makeTestId(tenant_id, environment_id, `blocked_time.christmas.3`),
             tenant_id,
             environment_id,
-            location_id: locationStortford,
+            location_id: locationLiverpool,
             date: '2024-12-25',
             start_time_24hr,
             end_time_24hr
@@ -248,7 +248,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             id: makeTestId(tenant_id, environment_id, `blocked_time.christmas.4`),
             tenant_id,
             environment_id,
-            location_id: locationWare,
+            location_id: locationManchester,
             date: '2024-12-25',
             start_time_24hr,
             end_time_24hr
@@ -393,7 +393,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
                 tenant_id,
                 environment_id,
                 resource_id: upsertPtMike.create.data.id,
-                location_id: locationHarlow,
+                location_id: locationLondon,
                 day_of_week: day,
                 start_time_24hr,
                 end_time_24hr
@@ -408,7 +408,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
                 tenant_id,
                 environment_id,
                 resource_id: upsertPtMike.create.data.id,
-                location_id: locationWare,
+                location_id: locationManchester,
                 day_of_week: day,
                 start_time_24hr,
                 end_time_24hr
@@ -422,7 +422,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             tenant_id,
             environment_id,
             resource_id: upsertPtMete.create.data.id,
-            location_id: locationHarlow,
+            location_id: locationLondon,
             day_of_week: 'Tuesday',
             start_time_24hr,
             end_time_24hr
@@ -432,7 +432,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             tenant_id,
             environment_id,
             resource_id: upsertPtMete.create.data.id,
-            location_id: locationHarlow,
+            location_id: locationLondon,
             day_of_week: 'Saturday',
             start_time_24hr,
             end_time_24hr
@@ -460,7 +460,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
                 tenant_id,
                 environment_id,
                 resource_id: mtMete.create.data.id,
-                location_id: locationHarlow,
+                location_id: locationLondon,
                 day_of_week: day,
                 start_time_24hr,
                 end_time_24hr
@@ -677,54 +677,54 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             tenant_id,
             environment_id,
             service_id: gym1Hr.create.data.id,
-            location_id: locationHarlow
+            location_id: locationLondon
         }),
         upsertServiceLocation({
             tenant_id,
             environment_id,
             service_id: gym1Hr.create.data.id,
-            location_id: locationStortford
+            location_id: locationLiverpool
         }),
         upsertServiceLocation({
             tenant_id,
             environment_id,
             service_id: gym1Hr.create.data.id,
-            location_id: locationWare
+            location_id: locationManchester
         }),
-        // only Harlow and Ware have a PT service
+        // only London and Manchester have a PT service
         upsertServiceLocation({
             tenant_id,
             environment_id,
             service_id: pt1Hr.create.data.id,
-            location_id: locationHarlow
+            location_id: locationLondon
         }),
-        upsertServiceLocation({tenant_id, environment_id, service_id: pt1Hr.create.data.id, location_id: locationWare}),
-        // only Bishops Stortford has a yoga service
+        upsertServiceLocation({tenant_id, environment_id, service_id: pt1Hr.create.data.id, location_id: locationManchester}),
+        // only Liverpool has a yoga service
         upsertServiceLocation({
             tenant_id,
             environment_id,
             service_id: yoga1Hr.create.data.id,
-            location_id: locationStortford
+            location_id: locationLiverpool
         }),
-        // only Harlow has a massage service
+        // only London has a massage service
         upsertServiceLocation({
             tenant_id,
             environment_id,
             service_id: massage30mins.create.data.id,
-            location_id: locationHarlow
+            location_id: locationLondon
         }),
-        // only Ware and Stortford have a swim service
+        // only Manchester and Liverpool have a swim service
         upsertServiceLocation({
             tenant_id,
             environment_id,
             service_id: swim30mins.create.data.id,
-            location_id: locationWare
+            location_id: locationManchester
         }),
         upsertServiceLocation({
             tenant_id,
             environment_id,
             service_id: swim30mins.create.data.id,
-            location_id: locationStortford
+            location_id: locationLiverpool
         })
     ]);
 

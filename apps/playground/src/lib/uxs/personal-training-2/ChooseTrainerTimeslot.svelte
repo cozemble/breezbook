@@ -7,7 +7,7 @@
         type ResourceSummary,
         type Service
     } from "@breezbook/backend-api-types";
-    import {isoDate, type IsoDate, isoDateFns, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {isoDate, type IsoDate, isoDateFns, time24, type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import {onMount} from "svelte";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import {language, translations} from "$lib/ui/stores";
@@ -21,6 +21,7 @@
     export let personalTrainerRequirement: AnySuitableResourceSpec
     export let locationId: string
     export let service: Service
+    export let selectedSlot: Slot | null
 
     const today = isoDate()
     const sevenDaysFromNow = isoDateFns.addDays(today, 14)
@@ -79,5 +80,11 @@
 {#if showNoAvailabilityMessage}
     <div class="text-red-500">{$translations.noSlotsAvailable}</div>
 {:else}
-    <ChooseTimeslot {dateTimes} {disabledDays} {locale} onSlotSelected={onDateTimeSelected}/>
+    <ChooseTimeslot {dateTimes}
+                    {disabledDays}
+                    {locale}
+                    selectedDate={selectedSlot?.day}
+                    selectedTime={selectedSlot ? time24(selectedSlot.slot.startTime24hr) : null}
+                    onSlotSelected={onDateTimeSelected}
+                    on:back/>
 {/if}

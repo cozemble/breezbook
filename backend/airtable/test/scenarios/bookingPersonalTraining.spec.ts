@@ -48,7 +48,7 @@ import ServiceAvailabilityOptions = api.ServiceAvailabilityOptions;
 
 const env = environmentId(multiLocationGym.environment_id);
 const tenant = tenantId(multiLocationGym.tenant_id);
-const harlow = locationId(multiLocationGym.locationHarlow)
+const london = locationId(multiLocationGym.locationLondon)
 const personalTrainer = resourceType('personal.trainer')
 const personalTraining = serviceId(multiLocationGym.pt1Hr)
 const friday = isoDateFns.next('Friday')
@@ -59,7 +59,7 @@ const params = {
     'envId': env.value,
     'tenantId': tenant.value,
     'serviceId': personalTraining.value,
-    locationId: harlow.value
+    locationId: london.value
 }
 
 async function getReferenceData(deps: EndpointDependencies): Promise<{
@@ -86,7 +86,7 @@ async function bookLastSlotOnDay(deps: EndpointDependencies, availabilityOptions
     const availabilityResponse = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onDay, availabilityOptions as any), params)))
     const availableSlots = availabilityResponse.slots?.[friday.value] ?? []
     const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot for Mike on Friday`)
-    const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(lastSlot.startTime24hr), duration(minutes(60)), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, preferredPt.id)])])
+    const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, london, [], friday, time24(lastSlot.startTime24hr), duration(minutes(60)), [{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, preferredPt.id)])])
     const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket as any), params)))
     const orderRequest = pricedCreateOrderRequest(pricedBasket, customer("Mike", "Hogan", "mike@email.com", "+14155552671"), fullPaymentOnCheckout())
     const orderResponse = expectJson<OrderCreatedResponse>(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest as any), params)).then(outcomes => handleMutations(deps, outcomes)))
@@ -110,7 +110,7 @@ describe("given the test gym tenant", () => {
                 resourceId: ptMike.id
             }]
             , [])
-        // Mike is not in Harlow on Saturday
+        // Mike is not in London on Saturday
         const onSaturday = `?fromDate=${saturday.value}&toDate=${saturday.value}`
         const mikesAvailabilityOnSaturday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onSaturday, availabilityOptions as any), params)))
         expect(mikesAvailabilityOnSaturday.slots[saturday.value]).toBeUndefined()
@@ -120,7 +120,7 @@ describe("given the test gym tenant", () => {
         expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
         const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0], `No slots found for Mike on Friday`)
         expect(firstSlot.priceWithNoDecimalPlaces).toBe(personalTrainingService.priceWithNoDecimalPlaces)
-        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, harlow, [], friday, time24(firstSlot.startTime24hr), duration(minutes(60)),[{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, ptMike.id)])])
+        const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, london, [], friday, time24(firstSlot.startTime24hr), duration(minutes(60)),[{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, ptMike.id)])])
         const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket as any), params)))
         const orderRequest = pricedCreateOrderRequest(pricedBasket, customer("Mike", "Hogan", "mike@email.com", "+14155552671"), fullPaymentOnCheckout())
         const orderResponse = expectJson<OrderCreatedResponse>(await addOrderEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.addOrder, orderRequest as any), params)).then(outcomes => handleMutations(deps, outcomes)))

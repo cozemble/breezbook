@@ -2,6 +2,7 @@
     import type {CoreCustomerDetails} from "$lib/uxs/personal-training/journeyState";
     import {createEventDispatcher} from "svelte";
     import {translations} from "$lib/ui/stores";
+    import {ChevronLeft} from "lucide-svelte";
 
     const details: CoreCustomerDetails = {
         firstName: 'Mike',
@@ -39,6 +40,10 @@
         dispatch('filled', details)
     }
 
+    function onBack() {
+        dispatch('back')
+    }
+
     $: kindaValid = (validate() === null)
 </script>
 
@@ -61,11 +66,18 @@
         {$translations.phone}
     </label>
     <input class="input input-bordered" type="tel" bind:value={details.phone}/>
-    <div class="mt-6 flex justify-end">
-        <button on:click={onNext} class:bg-primary={kindaValid}
-                disabled={!kindaValid}
-                class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
-            {$translations.next}
+
+    <div class="mt-6 flex">
+        <button on:click={onBack} class="btn mr-6">
+            <ChevronLeft size={28}/>
         </button>
+
+        <div class="flex justify-end w-full">
+            <button on:click={onNext} class:bg-primary={kindaValid}
+                    disabled={!kindaValid}
+                    class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
+                {$translations.next}
+            </button>
+        </div>
     </div>
 </form>

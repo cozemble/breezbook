@@ -294,7 +294,7 @@ describe('Given a migrated database', () => {
         const url = `http://localhost:${expressPort}${externalApiPaths.listResourcesByType}`
             .replace(":envId", multiLocationGym.environment_id)
             .replace(":tenantId", multiLocationGym.tenant_id)
-            .replace(":location", multiLocationGym.locationHarlow)
+            .replace(":location", multiLocationGym.locationLondon)
             .replace(":type", "personal.trainer");
         const response = await fetch(url, {
             method: 'GET',

@@ -10,6 +10,7 @@ export interface Translations {
     confirm: string
     submit: string
     next: string
+    back: string
     payment: string
     pay: string
     price: string
@@ -44,6 +45,7 @@ const translationsEnglish: Translations = {
     confirm: "Confirm",
     submit: "Submit",
     next: "Next",
+    back: "Back",
     payment: "Payment",
     pay: "Pay",
     price: "Price",
@@ -78,6 +80,7 @@ const translationsTurkish: Translations = {
     confirm: "Onayla",
     submit: "Gönder",
     next: "Sonraki",
+    back: "Geri",
     payment: "Ödeme",
     pay: "Öde",
     price: "Fiyat",

@@ -7,7 +7,7 @@
 
     export let trainers: ResourceSummary[]
     export let onTrainerChosen: (t: ResourceSummary) => void
-    let selectedTrainer: string | null = null;
+    export let selectedTrainer: string | null = null;
     let expandedTrainer: string | null = null;
 
     $:mappedTrainers = trainers.map(t => {

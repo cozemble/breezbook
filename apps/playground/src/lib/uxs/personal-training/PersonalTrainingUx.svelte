@@ -17,7 +17,7 @@
 
     onMount(async () => {
         tenant = await fetchJson<Tenant>(backendUrl(`/api/dev/tenants?slug=breezbook-gym&lang=${languageId}`), {method: "GET"})
-        const serviceLocation = mandatory(tenant.serviceLocations.find(location => location.locationId.includes("harlow")), `Harlow location not found`)
+        const serviceLocation = mandatory(tenant.serviceLocations.find(location => location.locationId.includes("london")), `London location not found`)
         locationId = serviceLocation.locationId
         await fetchPersonalTrainers(serviceLocation.locationId)
     })

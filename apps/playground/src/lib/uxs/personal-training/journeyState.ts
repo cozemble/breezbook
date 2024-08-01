@@ -74,6 +74,10 @@ export const journeyStateFns = {
         const form = mandatory(state.expectedForms[indexOfLastFilledForm], `Expected form at index ${indexOfLastFilledForm} not found`)
         return applyFormLabels(form, state.tenant.forms)
     },
+    getFirstServiceForm(state: JourneyState): Form {
+        const form = mandatory(state.expectedForms[0], `Expected form at index 0 not found`)
+        return applyFormLabels(form, state.tenant.forms)
+    },
     customerDetailsFilled(journeyState: JourneyState) {
         return journeyState.customerDetails !== null
     },
@@ -102,10 +106,19 @@ export const journeyStateFns = {
             isPaid: false
         }
     },
-    slotSelected(journeyState: JourneyState, slot: Slot):JourneyState {
+    slotSelected(journeyState: JourneyState, slot: Slot): JourneyState {
         return {
             ...journeyState,
             selectedSlot: slot
         }
+    },
+    clearSlot(journeyState: JourneyState): JourneyState {
+        return {
+            ...journeyState,
+            selectedSlot: null
+        }
+    },
+    getFirstServiceFormData(journeyState: JourneyState) {
+        return journeyState.filledForms ? journeyState.filledForms[0] : {}
     }
 }
