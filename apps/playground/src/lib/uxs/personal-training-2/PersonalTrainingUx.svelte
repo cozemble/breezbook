@@ -36,7 +36,6 @@
 
     onMount(async () => {
         tenant = await fetchJson<Tenant>(backendUrl(`/api/dev/tenants?slug=breezbook-gym&lang=${languageId}`), {method: "GET"})
-        console.log({tenant})
         const serviceLocation = mandatory(tenant.serviceLocations.find(location => location.locationId.includes("london")), `London location not found`)
         $locationId = serviceLocation.locationId
         locations = tenant.locations.map(location => keyValue(location.id, location.name))
