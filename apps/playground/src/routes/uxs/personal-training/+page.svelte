@@ -41,6 +41,7 @@
             <li>Theme'ing - choose your colours</li>
             <li>Multiple locations - the "gym" has locations in London, Liverpool and Manchester</li>
             <li>Differentiated pricing - some trainers are more expensive than others</li>
+            <li>Custom forms - as a user what their fitness goals are</li>
             <li>Stripe integration</li>
         </ul>
 
