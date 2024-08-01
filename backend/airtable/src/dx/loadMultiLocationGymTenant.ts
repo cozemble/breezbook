@@ -778,17 +778,17 @@ const goalsForm: JsonSchemaForm = {
 const goalsFormLabelsEnglish = jsonSchemaFormLabels(
     goalsForm.id,
     languages.en,
-    'Your goals',
+    'Your fitness goals',
     [schemaKeyLabel('goals', 'Goals')],
-    'What are your fitness goals'
+    'Let us know what you want to achieve'
 );
 
 const goalsFormLabelsTurkish = jsonSchemaFormLabels(
     goalsForm.id,
     languages.tr,
-    'Hedefleriniz',
+    'Fitness hedefleriniz',
     [schemaKeyLabel('goals', 'Hedefler')],
-    'Spor hedefleriniz nelerdir'
+    'Neyi başarmak istediğinizi bize bildirin'
 );
 
 const eliteIsMoreExpensive: PricingRule = {

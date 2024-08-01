@@ -11,6 +11,8 @@
     const data = {} as Record<string, string>
     const dispatch = createEventDispatcher()
 
+    console.log({form})
+
     $: kindaValid = everyKeyHasValue(data)
 
     function label(key: string) {
@@ -42,6 +44,9 @@
 </script>
 
 <h2 class="text-xl font-bold">{form.name}</h2>
+{#if form.description}
+    <div class="text-sm">{form.description}</div>
+{/if}
 
 <form class="mt-2">
     {#each keys as key}

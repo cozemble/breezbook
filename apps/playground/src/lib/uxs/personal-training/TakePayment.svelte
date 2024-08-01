@@ -41,6 +41,9 @@
     <div>
         <h2>{$translations.payment}</h2>
         <p>{$translations.price}: £ {priceFns.format(priced.total)}</p>
-        <button class="btn btn-primary" on:click={onPay}>{$translations.pay}</button>
+
+        <div class="mt-6 flex justify-end">
+            <button class="btn btn-primary" on:click={onPay}>{$translations.pay}</button>
+        </div>
     </div>
 {/if}

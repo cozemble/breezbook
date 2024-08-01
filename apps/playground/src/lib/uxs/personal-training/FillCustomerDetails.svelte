@@ -12,19 +12,19 @@
     const dispatch = createEventDispatcher()
 
     function validate() {
-        if(!details.firstName || !details.lastName || !details.email || !details.phone) {
+        if (!details.firstName || !details.lastName || !details.email || !details.phone) {
             return $translations.pleaseFillInAllFields
         }
-        if(!details.email.includes('@')) {
+        if (!details.email.includes('@')) {
             return $translations.pleaseEnterAValidEmail
         }
-        if(details.firstName.length < 2) {
+        if (details.firstName.length < 2) {
             return $translations.pleaseEnterALongerFirstName
         }
-        if(details.lastName.length < 2) {
+        if (details.lastName.length < 2) {
             return $translations.pleaseEnterALongerLastName
         }
-        if(details.phone.length < 2) {
+        if (details.phone.length < 2) {
             return $translations.pleaseEnterALongerPhoneNumber
         }
         return null
@@ -32,7 +32,7 @@
 
     function onNext() {
         const maybeError = validate()
-        if(maybeError) {
+        if (maybeError) {
             alert(maybeError)
             return
         }
@@ -49,15 +49,15 @@
         {$translations.firstName}
     </label>
     <input class="input input-bordered" type="text" bind:value={details.firstName}/>
-    <label class="label-text">
+    <label class="label-text mt-2">
         {$translations.lastName}
     </label>
     <input class="input input-bordered" type="text" bind:value={details.lastName}/>
-    <label class="label-text">
-        {$translations.firstName}
-    </label >
+    <label class="label-text  mt-2">
+        {$translations.email}
+    </label>
     <input class="input input-bordered" type="email" bind:value={details.email}/>
-    <label class="label-text">
+    <label class="label-text mt-2">
         {$translations.phone}
     </label>
     <input class="input input-bordered" type="tel" bind:value={details.phone}/>

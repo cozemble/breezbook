@@ -48,7 +48,7 @@ const translationsEnglish: Translations = {
     pay: "Pay",
     price: "Price",
     personalTrainers: "Personal Trainers",
-    yourDetails: "Your Details",
+    yourDetails: "Your Contact Details",
     firstName: "First Name",
     lastName: "Last Name",
     email: "Email",
