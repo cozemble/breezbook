@@ -26,6 +26,7 @@
     import FillCustomerDetails from "$lib/uxs/personal-training/FillCustomerDetails.svelte";
     import TakePayment from "$lib/uxs/personal-training/TakePayment.svelte";
     import {type Writable, writable} from "svelte/store";
+    import BookingSummary from "$lib/uxs/personal-training-2/BookingSummary.svelte";
 
     export let languageId: string
     let tenant: Tenant
@@ -67,7 +68,12 @@
     function toggleSelection(t: ResourceSummary) {
         selectedPersonalTrainer = t
         navState = "chooseTime"
-        journeyState = journeyStateFns.clearSlot(journeyState)
+        const requirementOverrides = [{
+            requirementId: personalTrainerRequirement.id.value,
+            resourceId: t.id
+        }]
+
+        journeyState = journeyStateFns.setResourceRequirements(journeyState, requirementOverrides)
     }
 
     async function onLocationChanged(id: string) {
@@ -81,6 +87,7 @@
 
     function onSlotSelected(slot: Slot) {
         journeyState = journeyStateFns.slotSelected(journeyState, slot)
+        console.log({journeyState})
         navState = "fillForm"
     }
 
@@ -118,6 +125,11 @@
         {#if state === "loaded"}
             <div class="p-4">
                 <TopNav {onLanguageChanged} {onLocationChanged} {locations} {language} location={locationId}/>
+                <BookingSummary
+                        trainerName={selectedPersonalTrainer?.name ?? null}
+                        priceWithNoDecimalPlaces={journeyState.selectedSlot?.slot?.priceWithNoDecimalPlaces ?? null}
+                        date={journeyState.selectedSlot?.day?.value ?? null}
+                        time={journeyState.selectedSlot?.slot?.startTime24hr ?? null}/>
 
                 <div class="space-y-4">
                     {#if navState === "chooseTrainer"}

@@ -112,10 +112,11 @@ export const journeyStateFns = {
             selectedSlot: slot
         }
     },
-    clearSlot(journeyState: JourneyState): JourneyState {
+    setResourceRequirements(journeyState: JourneyState, requirementOverrides: ResourceRequirementOverride[]): JourneyState {
         return {
             ...journeyState,
-            selectedSlot: null
+            selectedSlot: null,
+            requirementOverrides
         }
     },
     getFirstServiceFormData(journeyState: JourneyState) {

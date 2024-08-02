@@ -20,6 +20,7 @@
         const time = mandatory(state.selectedSlot?.slot.startTime24hr, "selectedSlot.slot.startTime24hr")
         const service = mandatory(state.tenant.services.find(s => s.id === state.serviceId), "service")
         const basket = unpricedBasket([unpricedBasketLine(state.serviceId, state.locationId, [], date, time24(time), duration(minutes(service.durationMinutes)),state.filledForms ?? [], state.requirementOverrides ?? [])])
+        console.log({basket})
         priced = await fetchJson(backendUrl(`/api/dev/breezbook-gym/basket/price`), {
             method: "POST",
             body: JSON.stringify(basket)
@@ -45,8 +46,6 @@
     </div>
 {:else if priced}
     <div>
-        <h2>{$translations.payment}</h2>
-        <p>{$translations.price}: £ {priceFns.format(priced.total)}</p>
 
         <div class="mt-6 flex">
             <button on:click={onBack} class="btn mr-6">
@@ -54,7 +53,7 @@
             </button>
 
             <div class="flex justify-end w-full">
-                <button class="btn btn-primary" on:click={onPay}>{$translations.pay}</button>
+                <button class="btn btn-primary w-5/6" on:click={onPay}>{$translations.pay}</button>
             </div>
         </div>
 
