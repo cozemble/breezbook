@@ -57,7 +57,7 @@
                 if (timeSelectionSection) {
                     timeSelectionSection.scrollIntoView({ behavior: 'smooth' });
                 }
-            }, 0);
+            }, 50);
         }
     }
 
