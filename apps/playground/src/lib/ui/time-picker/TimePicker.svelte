@@ -26,10 +26,6 @@
     let timeFormat: '12h' | '24h' = '24h';
     let timeSelectionSection: HTMLElement|null;
 
-    onMount(() => {
-        timeSelectionSection = document.getElementById('time-selection-section');
-    });
-
     function setTimeFormat(format: '12h' | '24h'): void {
         timeFormat = format;
     }
@@ -57,6 +53,7 @@
             dispatch('dateSelected', date);
             // Smooth scroll to time selection section
             setTimeout(() => {
+                console.log({timeSelectionSection})
                 if (timeSelectionSection) {
                     timeSelectionSection.scrollIntoView({ behavior: 'smooth' });
                 }
@@ -106,7 +103,7 @@
     </div>
 
     {#if selectedDate}
-        <div id="time-selection-section" class="mt-6">
+        <div class="mt-6" bind:this={timeSelectionSection}>
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold">
                     {selectedDate.toLocaleString('default', {weekday: 'short', day: 'numeric'})}

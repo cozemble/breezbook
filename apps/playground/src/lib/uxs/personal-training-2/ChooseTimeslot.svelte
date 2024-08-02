@@ -12,6 +12,7 @@
     import {isoDate, type IsoDate, time24, type TwentyFourHourClockTime} from "@breezbook/packages-types";
     import {createEventDispatcher} from "svelte";
     import {ChevronLeft} from "lucide-svelte";
+    import StickyFooterWrapper from "$lib/ui/StickyFooterWrapper.svelte";
 
     let currentMonth: Date = new Date();
     export let selectedDate: IsoDate | null = null;
@@ -62,8 +63,7 @@
             on:timeSelected={onTimeSelected}
             on:monthChanged={onMonthChanged}/>
 
-<div class="fixed bottom-0 left-0 right-0 bg-base-100 shadow-lg border-t border-base-300  mx-auto p-2 max-w-md container">
-
+<StickyFooterWrapper>
     <div class="flex">
         <button on:click={onBack} class="btn mr-6">
             <ChevronLeft size={28}/>
@@ -77,4 +77,4 @@
             </button>
         </div>
     </div>
-</div>
+</StickyFooterWrapper>

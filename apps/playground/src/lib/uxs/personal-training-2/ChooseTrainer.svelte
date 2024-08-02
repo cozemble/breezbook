@@ -5,6 +5,7 @@
     import {translations} from "$lib/ui/stores";
     import {isoDate, isoDateFns, mandatory} from "@breezbook/packages-types";
     import {currencies, price, priceFns} from "@breezbook/packages-core";
+    import StickyFooterWrapper from "$lib/ui/StickyFooterWrapper.svelte";
 
     export let trainers: ResourceSummary[]
     export let onTrainerChosen: (t: ResourceSummary) => void
@@ -107,13 +108,14 @@
     {/each}
 </div>
 
-{#if selectedTrainer}
-    <div class="fixed bottom-0 left-0 right-0 bg-base-100 shadow-lg border-t border-base-300  mx-auto p-2 max-w-md container">
-        <div class="flex justify-end px-4">
-            <button on:click={onNext}
+<StickyFooterWrapper>
+    {#if selectedTrainer}
+        <div class="flex justify-end">
+            <button
+                    on:click={onNext}
                     class="px-6 py-2 bg-primary hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
                 {$translations.next}
             </button>
         </div>
-    </div>
-{/if}
+    {/if}
+</StickyFooterWrapper>
