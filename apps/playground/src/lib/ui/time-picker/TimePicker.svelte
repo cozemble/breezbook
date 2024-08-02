@@ -9,7 +9,7 @@
         type TimeString
     } from "./types";
     import TimeButton from "./TimeButton.svelte";
-    import {createEventDispatcher} from "svelte";
+    import {createEventDispatcher, onMount} from "svelte";
     import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
 
     export let currentMonth: Date = new Date();
@@ -22,9 +22,13 @@
     export let locale: string = 'default';
     export let daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
-
     const dispatch = createEventDispatcher();
     let timeFormat: '12h' | '24h' = '24h';
+    let timeSelectionSection: HTMLElement|null;
+
+    onMount(() => {
+        timeSelectionSection = document.getElementById('time-selection-section');
+    });
 
     function setTimeFormat(format: '12h' | '24h'): void {
         timeFormat = format;
@@ -51,6 +55,12 @@
         const isDisabled = disabledDays[dateString] || false;
         if (!isDisabled) {
             dispatch('dateSelected', date);
+            // Smooth scroll to time selection section
+            setTimeout(() => {
+                if (timeSelectionSection) {
+                    timeSelectionSection.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 0);
         }
     }
 
@@ -58,18 +68,14 @@
         dispatch('timeSelected', event.detail);
     }
 
-
     $: selectedDateString = selectedDate ? formatDate(selectedDate) : '';
     $: times = dateTimes[selectedDateString] || [];
-
     $: dayTimeLabels = timeLabels[selectedDateString] || {};
-
 
     function onDateSelected(event: CustomEvent<Date>) {
         handleDateSelect(event.detail);
     }
 </script>
-
 
 <div class="card-body">
     <div class="flex justify-between items-center mb-4">
@@ -100,7 +106,7 @@
     </div>
 
     {#if selectedDate}
-        <div class="mt-6">
+        <div id="time-selection-section" class="mt-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold">
                     {selectedDate.toLocaleString('default', {weekday: 'short', day: 'numeric'})}
@@ -135,5 +141,3 @@
         </div>
     {/if}
 </div>
-
-
