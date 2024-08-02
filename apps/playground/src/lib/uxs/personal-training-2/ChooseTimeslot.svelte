@@ -62,16 +62,19 @@
             on:timeSelected={onTimeSelected}
             on:monthChanged={onMonthChanged}/>
 
-<div class="mt-6 flex">
-    <button on:click={onBack} class="btn mr-6">
-        <ChevronLeft size={28}/>
-    </button>
+<div class="fixed bottom-0 left-0 right-0 bg-base-100 shadow-lg border-t border-base-300  mx-auto p-2 max-w-md container">
 
-    <div class="flex justify-end w-full">
-        <button on:click={onNext} class:bg-primary={selectedTime}
-                disabled={!selectedTime}
-                class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
-            {$translations.next}
+    <div class="flex">
+        <button on:click={onBack} class="btn mr-6">
+            <ChevronLeft size={28}/>
         </button>
+
+        <div class="flex justify-end w-full">
+            <button on:click={onNext} class:bg-primary={selectedTime}
+                    disabled={!selectedTime}
+                    class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
+                {$translations.next}
+            </button>
+        </div>
     </div>
 </div>

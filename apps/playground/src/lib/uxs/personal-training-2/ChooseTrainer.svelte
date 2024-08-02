@@ -13,7 +13,7 @@
 
     let expandedTrainer: string | null = null;
 
-    $:mappedTrainers = mapTrainers(trainers, earliestAvailability);
+    $: mappedTrainers = mapTrainers(trainers, earliestAvailability);
 
     function mapTrainers(trainers: ResourceSummary[], earliestAvailability: EarliestResourceAvailability[]) {
         return trainers.map(t => {
@@ -30,6 +30,8 @@
                 const date = isoDate(earliestForTrainer.earliestDate);
                 if (date.value === isoDate().value) {
                     whenAvailable = `today`;
+                } else if (date.value === isoDateFns.addDays(isoDate(), 1).value) {
+                    whenAvailable = `tomorrow`;
                 } else {
                     whenAvailable = `from ${isoDateFns.dayOfWeek(date)}`;
                 }
@@ -57,59 +59,61 @@
             onTrainerChosen(trainer);
         }
     }
+
+    function selectTrainer(trainerId: string) {
+        selectedTrainer = trainerId;
+    }
 </script>
 
-<div class="p-4">
-    <div class="space-y-4">
-        <div class="space-y-4">
-            {#each mappedTrainers as trainer (trainer.id)}
-                <div
-                        class="p-4 rounded-lg cursor-pointer transition-all {selectedTrainer === trainer.id
-                                ? 'bg-base-200 border border-base-300'
-                                : 'bg-base-100 shadow-md hover:shadow-lg hover:border-base-300 border border-transparent'}"
-                        on:click={() => selectedTrainer = trainer.id}>
-                    <div class="flex flex-col md:flex-row items-start">
-                        <img
-                                src={trainer.image}
-                                alt={trainer.name}
-                                class="w-24 h-24 rounded-full mb-4 md:mb-0 md:mr-4 object-cover"/>
-                        <div class="flex-grow">
-                            <h3 class="text-lg font-semibold text-base-content">{trainer.name}</h3>
-                            <p class="text-sm text-base-content opacity-70">{trainer.topLine}</p>
-                            {#if trainer.price}
-                                <p class="font-bold mt-2 text-base-content">{trainer.price} per session</p>
-                            {/if}
-                            {#if trainer.whenAvailable}
-                                <p class="mt-2 text-base-content opacity-70">Available {trainer.whenAvailable}</p>
-                            {/if}
-                            <div class="mt-3 text-right">
-                                <button
-                                        class="text-primary hover:text-primary-focus font-medium flex items-center justify-end w-full"
-                                        on:click|stopPropagation={() => toggleExpandedTrainer(trainer.id)}>
-                                    {$translations.viewMore}
-                                    <ChevronDown
-                                            size={20}
-                                            class="ml-1 transform transition-transform {expandedTrainer === trainer.id ? 'rotate-180' : ''}"/>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    {#if expandedTrainer === trainer.id}
-                        <div class="mt-4 text-base-content">
-                            <Markdown markdown={trainer.details}/>
-                        </div>
+<div class="space-y-4">
+    {#each mappedTrainers as trainer (trainer.id)}
+        <div
+                class="p-4 rounded-lg cursor-pointer transition-all {selectedTrainer === trainer.id
+                    ? 'bg-base-200 border border-base-300'
+                    : 'bg-base-100 shadow-md hover:shadow-lg hover:border-base-300 border border-transparent'}"
+                on:click={() => selectTrainer(trainer.id)}>
+            <div class="flex flex-col md:flex-row items-start">
+                <img
+                        src={trainer.image}
+                        alt={trainer.name}
+                        class="w-24 h-24 rounded-full mb-4 md:mb-0 md:mr-4 object-cover"/>
+                <div class="flex-grow">
+                    <h3 class="text-lg font-semibold text-base-content">{trainer.name}</h3>
+                    <p class="text-sm text-base-content opacity-70">{trainer.topLine}</p>
+                    {#if trainer.price}
+                        <p class="font-bold mt-2 text-base-content">{trainer.price} per session</p>
                     {/if}
-
+                    {#if trainer.whenAvailable}
+                        <p class="mt-2 text-base-content opacity-70">Available {trainer.whenAvailable}</p>
+                    {/if}
+                    <div class="mt-3 text-right">
+                        <button
+                                class="text-primary hover:text-primary-focus font-medium flex items-center justify-end w-full"
+                                on:click|stopPropagation={() => toggleExpandedTrainer(trainer.id)}>
+                            {$translations.viewMore}
+                            <ChevronDown
+                                    size={20}
+                                    class="ml-1 transform transition-transform {expandedTrainer === trainer.id ? 'rotate-180' : ''}"/>
+                        </button>
+                    </div>
                 </div>
-            {/each}
+            </div>
+            {#if expandedTrainer === trainer.id}
+                <div class="mt-4 text-base-content">
+                    <Markdown markdown={trainer.details}/>
+                </div>
+            {/if}
+        </div>
+    {/each}
+</div>
+
+{#if selectedTrainer}
+    <div class="fixed bottom-0 left-0 right-0 bg-base-100 shadow-lg border-t border-base-300  mx-auto p-2 max-w-md container">
+        <div class="flex justify-end px-4">
+            <button on:click={onNext}
+                    class="px-6 py-2 bg-primary hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
+                {$translations.next}
+            </button>
         </div>
     </div>
-
-    <div class="mt-6 flex justify-end">
-        <button on:click={onNext} class:bg-primary={selectedTrainer}
-                disabled={!selectedTrainer}
-                class="px-6 py-2 hover:bg-primary-focus text-primary-content rounded-md transition-colors font-semibold">
-            {$translations.next}
-        </button>
-    </div>
-</div>
+{/if}
