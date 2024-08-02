@@ -114,7 +114,7 @@
     }
 </script>
 
-<div class="card-body">
+<div class="card-body px-2">
     <div class="flex justify-between items-center mb-4">
         <h2 class="card-title">
             {currentMonth.toLocaleString(locale, {month: 'long', year: 'numeric'})}
