@@ -9,7 +9,7 @@
         type TimeString
     } from "./types";
     import TimeButton from "./TimeButton.svelte";
-    import {createEventDispatcher, onMount} from "svelte";
+    import {createEventDispatcher, tick, onMount} from "svelte";
     import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
 
     export let currentMonth: Date = new Date();
@@ -24,7 +24,15 @@
 
     const dispatch = createEventDispatcher();
     let timeFormat: '12h' | '24h' = '24h';
-    let timeSelectionSection: HTMLElement|null;
+    let timeSelectionSection: HTMLElement;
+    let timeSelectionHeader: HTMLElement;
+
+    onMount(() => {
+        document.addEventListener('scroll', checkTimeSelectionVisibility);
+        return () => {
+            document.removeEventListener('scroll', checkTimeSelectionVisibility);
+        };
+    });
 
     function setTimeFormat(format: '12h' | '24h'): void {
         timeFormat = format;
@@ -43,7 +51,7 @@
         dispatch('monthChanged', newMonth);
     }
 
-    function handleDateSelect(date: Date | undefined): void {
+    async function handleDateSelect(date: Date | undefined): Promise<void> {
         if (!date) {
             return;
         }
@@ -51,18 +59,47 @@
         const isDisabled = disabledDays[dateString] || false;
         if (!isDisabled) {
             dispatch('dateSelected', date);
-            // Smooth scroll to time selection section
-            setTimeout(() => {
-                console.log({timeSelectionSection})
-                if (timeSelectionSection) {
-                    timeSelectionSection.scrollIntoView({ behavior: 'smooth' });
-                }
-            }, 50);
+            await tick();
+            scrollToTimeSelection();
         }
     }
 
     function handleTimeSelect(event: CustomEvent<TimeString>): void {
         dispatch('timeSelected', event.detail);
+    }
+
+    function scrollToTimeSelection() {
+        if (timeSelectionSection) {
+            const headerOffset = 100; // Adjust this value based on your header height
+            const elementPosition = timeSelectionSection.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+
+            // Focus on the time selection header for accessibility
+            if (timeSelectionHeader) {
+                timeSelectionHeader.focus();
+            }
+        }
+    }
+
+    function checkTimeSelectionVisibility() {
+        if (timeSelectionSection && selectedDate) {
+            const rect = timeSelectionSection.getBoundingClientRect();
+            const isVisible = (
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+            );
+
+            if (!isVisible) {
+                scrollToTimeSelection();
+            }
+        }
     }
 
     $: selectedDateString = selectedDate ? formatDate(selectedDate) : '';
@@ -102,10 +139,10 @@
                      on:clicked={onDateSelected}/>
     </div>
 
-    {#if selectedDate}
-        <div class="mt-6" bind:this={timeSelectionSection}>
+    <div class="mt-6" bind:this={timeSelectionSection}>
+        {#if selectedDate}
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold">
+                <h3 class="text-lg font-semibold" tabindex="-1" bind:this={timeSelectionHeader}>
                     {selectedDate.toLocaleString('default', {weekday: 'short', day: 'numeric'})}
                 </h3>
                 <div class="btn-group">
@@ -135,6 +172,6 @@
                     </div>
                 {/if}
             </div>
-        </div>
-    {/if}
+        {/if}
+    </div>
 </div>
