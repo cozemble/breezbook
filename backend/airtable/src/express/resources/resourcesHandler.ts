@@ -18,7 +18,6 @@ import {
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 import {
-    foldInRequestOverrides,
     ServiceAvailabilityRequest,
     serviceAvailabilityRequestParam
 } from "../availability/getServiceAvailabilityForLocation.js";
@@ -72,14 +71,13 @@ function toEarliestResourceAvailability(earliest: EarliestAvailability): Earlies
 }
 
 export async function listResourceAvailabilityByType(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, resourceType: ResourceType, request: ServiceAvailabilityRequest): Promise<EndpointOutcome[]> {
-    const everythingForAvailability = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate).then(e => foldInRequestOverrides(e, request));
+    const everythingForAvailability = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate)
     const config = availabilityConfiguration(
         everythingForAvailability.businessConfiguration.availability,
         everythingForAvailability.businessConfiguration.resourceAvailability,
         everythingForAvailability.businessConfiguration.timeslots,
         everythingForAvailability.businessConfiguration.startTimeSpec);
     const service = serviceFns.findService(everythingForAvailability.businessConfiguration.services, request.serviceId);
-    console.log({service:JSON.stringify(service, null, 2)});
 
     const earliest = findEarliestAvailability(
         config,
