@@ -103,7 +103,8 @@ export const journeyStateFns = {
             selectedAddOns: null,
             filledForms: null,
             customerDetails: null,
-            isPaid: false
+            isPaid: false,
+            requirementOverrides: []
         }
     },
     slotSelected(journeyState: JourneyState, slot: Slot): JourneyState {

@@ -27,6 +27,7 @@
     import TakePayment from "$lib/uxs/personal-training/TakePayment.svelte";
     import {type Writable, writable} from "svelte/store";
     import BookingSummary from "$lib/uxs/personal-training-2/BookingSummary.svelte";
+    import {CheckCircle} from "lucide-svelte";
 
     export let languageId: string
     let tenant: Tenant
@@ -38,7 +39,7 @@
     let personalTrainingService: Service
     let locations: KeyValue[] = []
     let state: "loading" | "loaded" = "loading"
-    let navState: "chooseTrainer" | "chooseTime" | "fillForm" | "fillCustomerDetails" | "takePayment" = "chooseTrainer"
+    let navState: "chooseTrainer" | "chooseTime" | "fillForm" | "fillCustomerDetails" | "takePayment" | "thankYou" = "chooseTrainer"
 
     let journeyState: JourneyState
 
@@ -103,6 +104,7 @@
 
     function onPaymentComplete() {
         journeyState = journeyStateFns.setPaid(journeyState)
+        navState = "thankYou"
     }
 
     function goBack() {
@@ -115,6 +117,12 @@
         } else if (navState === "takePayment") {
             navState = "fillCustomerDetails"
         }
+    }
+
+    function bookAnotherSession() {
+        navState = "chooseTrainer"
+        journeyState = journeyStateFns.reset(journeyState)
+        selectedPersonalTrainer = null
     }
 
 </script>
@@ -162,6 +170,15 @@
                             <FillCustomerDetails on:filled={onCustomerDetailsFilled} on:back={goBack}/>
                         {:else if navState === "takePayment"}
                             <TakePayment state={journeyState} on:paymentComplete={onPaymentComplete} on:back={goBack}/>
+                        {:else if navState === "thankYou"}
+                            <div class="flex flex-col items-center">
+                                <CheckCircle size={64} class="text-success mb-6"/>
+                                <h3 class="text-2xl font-semibold mb-4 text-primary">{$translations.bookingConfirmed}
+                                    !</h3>
+                                <p class="text-center mb-6">{$translations.thankYouSentence}</p>
+                                <button class="btn btn-primary"
+                                        on:click={bookAnotherSession}>{$translations.bookAnotherSession}</button>
+                            </div>
                         {/if}
                     {/if}
                 </div>

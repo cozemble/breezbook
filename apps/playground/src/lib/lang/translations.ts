@@ -31,6 +31,9 @@ export interface Translations {
     personalTraining: string
     viewMore: string
     chooseTime: string
+    bookingConfirmed: string
+    thankYouSentence: string
+    bookAnotherSession: string
 }
 
 const translationsEnglish: Translations = {
@@ -65,7 +68,10 @@ const translationsEnglish: Translations = {
     chooseTrainer: "Choose a trainer",
     personalTraining: "Personal Training",
     viewMore: "View More",
-    chooseTime: "Choose a time"
+    chooseTime: "Choose a time",
+    bookingConfirmed: "Booking Confirmed",
+    thankYouSentence: "Thank you for your booking. We look forward to seeing you soon",
+    bookAnotherSession: "Book another session"
 }
 
 const translationsTurkish: Translations = {
@@ -100,7 +106,10 @@ const translationsTurkish: Translations = {
     chooseTrainer: "Antrenör seçin",
     personalTraining: "Kişisel",
     viewMore: "Daha Fazla",
-    chooseTime: "Zaman Seçin"
+    chooseTime: "Zaman Seçin",
+    bookingConfirmed: "Rezervasyon Onaylandı",
+    thankYouSentence: "Rezervasyonunuz için teşekkür ederiz. Sizi yakında görmekten mutluluk duyarız.",
+    bookAnotherSession: "Başka bir oturum rezerve et"
 }
 
 export function translationsFor(lang: string): Translations {
