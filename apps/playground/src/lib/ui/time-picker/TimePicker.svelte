@@ -26,6 +26,7 @@
     let timeFormat: '12h' | '24h' = '24h';
     let timeSelectionSection: HTMLElement;
     let timeSelectionHeader: HTMLElement;
+    let shouldScrollToTimeSelection = false;
 
     onMount(() => {
         document.addEventListener('scroll', checkTimeSelectionVisibility);
@@ -60,6 +61,7 @@
         if (!isDisabled) {
             dispatch('dateSelected', date);
             await tick();
+            shouldScrollToTimeSelection = true;
             scrollToTimeSelection();
         }
     }
@@ -69,7 +71,7 @@
     }
 
     function scrollToTimeSelection() {
-        if (timeSelectionSection) {
+        if (timeSelectionSection && shouldScrollToTimeSelection) {
             const headerOffset = 100; // Adjust this value based on your header height
             const elementPosition = timeSelectionSection.getBoundingClientRect().top;
             const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
@@ -83,6 +85,7 @@
             if (timeSelectionHeader) {
                 timeSelectionHeader.focus();
             }
+            shouldScrollToTimeSelection = false;
         }
     }
 
