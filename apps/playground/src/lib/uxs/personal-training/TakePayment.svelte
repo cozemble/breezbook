@@ -25,6 +25,7 @@
             method: "POST",
             body: JSON.stringify(basket)
         })
+        console.log({priced})
     })
 
     function onPay() {

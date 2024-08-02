@@ -33,9 +33,9 @@ import {HttpResponse} from "@breezbook/packages-http/dist/contract.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 import {resourcing} from "@breezbook/packages-resourcing";
 import {api} from "@breezbook/backend-api-types";
+import {getAvailabilityForService} from "../../availability/getAvailabilityForService.js";
 import specificResource = resourcing.specificResource;
 import serviceAvailabilityOptions = api.serviceAvailabilityOptions;
-import {getAvailabilityForService} from "../../availability/getAvailabilityForService.js";
 
 interface RequirementOverride {
     requirementId: ResourceRequirementId;
@@ -117,15 +117,9 @@ export function foldInRequestOverrides(e: EverythingForAvailability, request: Se
     if (!theService) {
         return e;
     }
-    const mutatedService = {
-        ...theService, resourceRequirements: theService.resourceRequirements.map(req => {
-            const maybeOverride = request.requirementOverrides.find(o => o.requirementId.value === req.id.value)
-            if (maybeOverride) {
-                return specificResource(byId.find(e.businessConfiguration.resources, maybeOverride.resourceId), maybeOverride.requirementId)
-            }
-            return req;
-        })
-    }
+    const mutatedService = request.requirementOverrides.reduce((acc, ro) => {
+        return serviceFns.makeRequirementSpecific(acc, ro.requirementId, byId.find(e.businessConfiguration.resources, ro.resourceId));
+    }, theService)
     return {
         ...e,
         businessConfiguration: {

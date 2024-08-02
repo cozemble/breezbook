@@ -164,6 +164,7 @@ export interface HydratedBasketLine {
     startTime: TwentyFourHourClockTime;
     duration: Duration
     serviceFormData: unknown[];
+    resourceRequirementOverrides: ResourceRequirementOverride[]
 }
 
 export interface HydratedBasket {
@@ -185,7 +186,7 @@ export function hydratedBasket(lines: HydratedBasketLine[], coupon?: Coupon, dis
     };
 }
 
-export function hydratedBasketLine(service: Service, locationId: LocationId, capacity: Capacity, options: HydratedServiceOption[], addOns: HydratedAddOn[], servicePrice: Price, total: Price, date: IsoDate, startTime: TwentyFourHourClockTime, duration: Duration,serviceFormData: unknown[]): HydratedBasketLine {
+export function hydratedBasketLine(service: Service, locationId: LocationId, capacity: Capacity, options: HydratedServiceOption[], addOns: HydratedAddOn[], servicePrice: Price, total: Price, date: IsoDate, startTime: TwentyFourHourClockTime, duration: Duration,serviceFormData: unknown[], resourceRequirementOverrides: ResourceRequirementOverride[]): HydratedBasketLine {
     return {
         service,
         locationId,
@@ -197,7 +198,8 @@ export function hydratedBasketLine(service: Service, locationId: LocationId, cap
         date,
         startTime,
         duration,
-        serviceFormData
+        serviceFormData,
+        resourceRequirementOverrides
     };
 }
 
@@ -224,7 +226,7 @@ export const hydratedBasketFns = {
     },
 
     toUnpricedBasketLine(line: HydratedBasketLine): UnpricedBasketLine {
-        return unpricedBasketLine(line.service.id, line.locationId, line.addOns.map((a) => hydratedBasketFns.toAddOnOrder(a)), line.date, line.startTime, line.duration,line.serviceFormData, [], line.options.map((o) => hydratedBasketFns.toServiceOptionRequest(o)));
+        return unpricedBasketLine(line.service.id, line.locationId, line.addOns.map((a) => hydratedBasketFns.toAddOnOrder(a)), line.date, line.startTime, line.duration,line.serviceFormData, line.resourceRequirementOverrides, line.options.map((o) => hydratedBasketFns.toServiceOptionRequest(o)));
     },
 
     toAddOnOrder(addOn: HydratedAddOn): AddOnOrder {
@@ -295,6 +297,7 @@ export function makeEverythingToCreateOrder(everything: EverythingToCreateOrderR
                     date: line.date,
                     startTime: line.startTime,
                     serviceFormData: line.serviceFormData,
+                    resourceRequirementOverrides: line.resourceRequirementOverrides
                 };
             }),
             coupon: orderRequest.basket.couponCode ? everything.coupons.find((c) => c.code.value === orderRequest.basket?.couponCode?.value) : undefined,

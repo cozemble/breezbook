@@ -43,9 +43,9 @@ function validateForm(forms: Form[], formId: FormId, formData: unknown): string 
     }
 }
 
-export function validateOrderTotal(everythingForTenant: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder): ErrorResponse | null {
+export function validateOrderTotal(everythingForAvailability: EverythingForAvailability, everythingToCreateOrder: EverythingToCreateOrder): ErrorResponse | null {
     const unpricedBasket = hydratedBasketFns.toUnpricedBasket(everythingToCreateOrder.basket);
-    const repricedBasket = priceBasket(everythingForTenant, unpricedBasket);
+    const repricedBasket = priceBasket(everythingForAvailability, unpricedBasket);
     if (repricedBasket._type === 'error.response') {
         return repricedBasket;
     }

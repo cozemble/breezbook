@@ -50,6 +50,7 @@ import {ScheduleConfig, scheduleConfigFns} from "./scheduleConfig.js";
 import ResourceRequirement = resourcing.ResourceRequirement;
 import Resource = resourcing.Resource;
 import ResourceAvailability = configuration.ResourceAvailability;
+import specificResource = resourcing.specificResource;
 
 export interface TenantSettings {
     _type: 'tenant.settings';
@@ -541,6 +542,17 @@ export const serviceFns = {
             return null;
         }
         return scheduleConfigFns.startTimes(service.scheduleConfig, duration);
+    },
+    makeRequirementSpecific(service: Service, requirementId: ResourceRequirementId, resource: Resource): Service {
+        const maybeRequirement = service.resourceRequirements.find(r => r.id.value === requirementId.value);
+        if (!maybeRequirement) {
+            throw new Error(`No resource requirement found with id ${requirementId.value}`);
+        }
+        const newResourceRequirement = specificResource(resource, requirementId);
+        return {
+            ...service,
+            resourceRequirements: service.resourceRequirements.map(r => r.id.value === requirementId.value ? newResourceRequirement : r)
+        }
     }
 }
 

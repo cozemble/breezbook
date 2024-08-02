@@ -20,7 +20,7 @@ import {
     success,
 } from '@breezbook/packages-core';
 import {AvailabilityResponse} from '@breezbook/backend-api-types';
-import {IsoDate, isoDateFns} from "@breezbook/packages-types";
+import {byId, IsoDate, isoDateFns} from "@breezbook/packages-types";
 import {ServiceAvailabilityRequest} from "../express/availability/getServiceAvailabilityForLocation.js";
 import {toAvailabilityResponse} from "./toAvailabilityResponse.js";
 
@@ -38,10 +38,14 @@ export function getAvailabilityForService(
         everythingForAvailability.businessConfiguration.resourceAvailability,
         everythingForAvailability.businessConfiguration.timeslots,
         everythingForAvailability.businessConfiguration.startTimeSpec);
-    const service = serviceFns.maybeFindService(everythingForAvailability.businessConfiguration.services, serviceId);
+    let service = serviceFns.maybeFindService(everythingForAvailability.businessConfiguration.services, serviceId);
     if (!service) {
         return errorResponse(getAvailabilityForServiceErrorCodes.serviceUnavailable, `Service with id ${serviceId.value} not found`);
     }
+    service = request.requirementOverrides.reduce((acc, ro) => {
+        return serviceFns.makeRequirementSpecific(acc, ro.requirementId, byId.find(everythingForAvailability.businessConfiguration.resources, ro.resourceId));
+    }, service)
+
     const serviceOptions = serviceOptionRequests.map((id) =>
         serviceOptionAndQuantity(serviceOptionFns.findServiceOption(everythingForAvailability.businessConfiguration.serviceOptions, id.serviceOptionId), id.quantity));
     const mappedAddOns = addOns.map((id) => addOnAndQuantity(addOnFns.findById(everythingForAvailability.businessConfiguration.addOns, id.addOnId), id.quantity));
