@@ -77,7 +77,10 @@ export async function listResourceAvailabilityByType(deps: EndpointDependencies,
         everythingForAvailability.businessConfiguration.resourceAvailability,
         everythingForAvailability.businessConfiguration.timeslots,
         everythingForAvailability.businessConfiguration.startTimeSpec);
-    const service = serviceFns.findService(everythingForAvailability.businessConfiguration.services, request.serviceId);
+    const service = serviceFns.maybeFindService(everythingForAvailability.businessConfiguration.services, request.serviceId);
+    if (!service) {
+        return [httpResponseOutcome(responseOf(404, JSON.stringify({error: `No service found with id '${request.serviceId.value}'`}), ['Content-Type', 'application/json']))];
+    }
 
     const earliest = findEarliestAvailability(
         config,

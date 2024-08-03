@@ -14,7 +14,7 @@
     import {ChevronLeft} from "lucide-svelte";
     import StickyFooterWrapper from "$lib/ui/StickyFooterWrapper.svelte";
 
-    let currentMonth: Date = new Date();
+    export let currentMonth: Date;
     export let selectedDate: IsoDate | null = null;
     export let selectedTime: TwentyFourHourClockTime | null = null;
     export let dateLabels: DateLabels = {};
@@ -23,10 +23,12 @@
     export let disabledDays: DisabledDays = {};
     export let locale: string = 'default';
     export let onSlotSelected: (date: IsoDate, time: TwentyFourHourClockTime) => void;
+    export let onMonthChanged: (date: Date) => void;
     const dispatch = createEventDispatcher();
 
-    function onMonthChanged(event: CustomEvent<Date>): void {
-        currentMonth = event.detail;
+    function handleMonthChanged(event: CustomEvent<Date>): void {
+        onMonthChanged(event.detail);
+        // currentMonth = event.detail;
         selectedDate = null;
         selectedTime = null;
     }
@@ -61,7 +63,7 @@
             daysOfWeek={$translations.daysOfTheWeekShort}
             on:dateSelected={onDateSelected}
             on:timeSelected={onTimeSelected}
-            on:monthChanged={onMonthChanged}/>
+            on:monthChanged={handleMonthChanged}/>
 
 <StickyFooterWrapper>
     <div class="flex">

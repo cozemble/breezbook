@@ -239,6 +239,12 @@ export const isoDateFns = {
     },
     daysBetween(a: IsoDate, b: IsoDate): number {
         return dayjs(b.value).diff(a.value, 'days');
+    },
+    addMonths(start: IsoDate, months: number): IsoDate {
+        return isoDate(dayjs(start.value).add(months, 'month').format('YYYY-MM-DD'));
+    },
+    startOfMonth(d: IsoDate):IsoDate {
+        return isoDate(dayjs(d.value).startOf('month').format('YYYY-MM-DD'));
     }
 };
 

@@ -36,6 +36,16 @@ export interface EndpointDependencies {
     eventSender: EventSender
 }
 
+export function dummyEventSender(): EventSender {
+    return async (event) => {
+        console.log(`Event: ${event.name} ${JSON.stringify(event.data)}`)
+    }
+}
+
+export function endpointDependencies(prisma: PrismaClient, eventSender: EventSender): EndpointDependencies {
+    return {prisma, eventSender};
+}
+
 export type EndpointDependenciesFactory = (request: RequestContext) => EndpointDependencies;
 
 export interface Handler {

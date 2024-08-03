@@ -40,6 +40,7 @@
     let locations: KeyValue[] = []
     let state: "loading" | "loaded" = "loading"
     let navState: "chooseTrainer" | "chooseTime" | "fillForm" | "fillCustomerDetails" | "takePayment" | "thankYou" = "chooseTrainer"
+    let showServiceUnavailable = false
 
     let journeyState: JourneyState
 
@@ -63,7 +64,9 @@
         const someDaysFromNow = isoDateFns.addDays(today, 14)
         const dateRange = `fromDate=${today.value}&toDate=${someDaysFromNow.value}`
 
-        earliestAvailability = await fetchJson<EarliestResourceAvailability[]>(backendUrl(`/api/dev/breezbook-gym/${locationId}/resources/personal.trainer/service/${personalTrainingService.id}/availability?${dateRange}`), {method: "GET"})
+        earliestAvailability = await fetchJson<EarliestResourceAvailability[]>(
+            backendUrl(`/api/dev/breezbook-gym/${locationId}/resources/personal.trainer/service/${personalTrainingService.id}/availability?${dateRange}`),
+            {method: "GET"})
     }
 
     function toggleSelection(t: ResourceSummary) {
@@ -79,7 +82,15 @@
 
     async function onLocationChanged(id: string) {
         $locationId = id
-        await fetchPersonalTrainers($locationId)
+        showServiceUnavailable = false
+        if (personalTrainingService) {
+            const serviceLocation = tenant.serviceLocations.find(location => location.locationId === id && location.serviceId === personalTrainingService.id)
+            if (serviceLocation) {
+                await fetchPersonalTrainers($locationId)
+            } else {
+                showServiceUnavailable = true
+            }
+        }
     }
 
     async function onLanguageChanged(lang: string) {
@@ -88,7 +99,6 @@
 
     function onSlotSelected(slot: Slot) {
         journeyState = journeyStateFns.slotSelected(journeyState, slot)
-        console.log({journeyState})
         navState = "fillForm"
     }
 
@@ -133,55 +143,60 @@
         {#if state === "loaded"}
             <div class="p-4">
                 <TopNav {onLanguageChanged} {onLocationChanged} {locations} {language} location={locationId}/>
-                <BookingSummary
-                        trainerName={selectedPersonalTrainer?.name ?? null}
-                        priceWithNoDecimalPlaces={journeyState.selectedSlot?.slot?.priceWithNoDecimalPlaces ?? null}
-                        date={journeyState.selectedSlot?.day?.value ?? null}
-                        time={journeyState.selectedSlot?.slot?.startTime24hr ?? null}/>
+                {#if showServiceUnavailable}
+                    <div class="bg-error p-4 text-center alert-error">{$translations.serviceUnavailableAtLocation}</div>
+                {:else}
+                    <BookingSummary
+                            trainerName={selectedPersonalTrainer?.name ?? null}
+                            priceWithNoDecimalPlaces={journeyState.selectedSlot?.slot?.priceWithNoDecimalPlaces ?? null}
+                            date={journeyState.selectedSlot?.day?.value ?? null}
+                            time={journeyState.selectedSlot?.slot?.startTime24hr ?? null}/>
 
-                <div class="space-y-4">
-                    {#if navState === "chooseTrainer"}
-                        <h2 class="text-xl font-bold">{$translations.chooseTrainer}</h2>
-                        <ChooseTrainer trainers={personalTrainers}
-                                       selectedTrainer={selectedPersonalTrainer?.id ?? null}
-                                       {earliestAvailability}
-                                       onTrainerChosen={toggleSelection}/>
-                    {/if}
-
-                    {#if navState === "chooseTime" && selectedPersonalTrainer && $locationId}
-                        <h2 class="text-xl font-bold">{$translations.chooseTime}</h2>
-                        <ChooseTrainerTimeslot {personalTrainerRequirement}
-                                               locationId={$locationId}
-                                               selectedSlot={journeyState.selectedSlot}
-                                               service={personalTrainingService}
-                                               trainer={selectedPersonalTrainer}
-                                               locale={$language}
-                                               on:back={goBack}
-                                               {onSlotSelected}/>
-                    {/if}
-
-
-                    {#if journeyState.selectedSlot}
-                        {#if navState === "fillForm" }
-                            <FillForm form={journeyStateFns.getFirstServiceForm(journeyState)}
-                                      data={journeyStateFns.getFirstServiceFormData(journeyState)}
-                                      on:formFilled={onFormFilled} on:back={goBack}/>
-                        {:else if navState === "fillCustomerDetails"}
-                            <FillCustomerDetails on:filled={onCustomerDetailsFilled} on:back={goBack}/>
-                        {:else if navState === "takePayment"}
-                            <TakePayment state={journeyState} on:paymentComplete={onPaymentComplete} on:back={goBack}/>
-                        {:else if navState === "thankYou"}
-                            <div class="flex flex-col items-center">
-                                <CheckCircle size={64} class="text-success mb-6"/>
-                                <h3 class="text-2xl font-semibold mb-4 text-primary">{$translations.bookingConfirmed}
-                                    !</h3>
-                                <p class="text-center mb-6">{$translations.thankYouSentence}</p>
-                                <button class="btn btn-primary"
-                                        on:click={bookAnotherSession}>{$translations.bookAnotherSession}</button>
-                            </div>
+                    <div class="space-y-4">
+                        {#if navState === "chooseTrainer"}
+                            <h2 class="text-xl font-bold">{$translations.chooseTrainer}</h2>
+                            <ChooseTrainer trainers={personalTrainers}
+                                           selectedTrainer={selectedPersonalTrainer?.id ?? null}
+                                           {earliestAvailability}
+                                           onTrainerChosen={toggleSelection}/>
                         {/if}
-                    {/if}
-                </div>
+
+                        {#if navState === "chooseTime" && selectedPersonalTrainer && $locationId}
+                            <h2 class="text-xl font-bold">{$translations.chooseTime}</h2>
+                            <ChooseTrainerTimeslot {personalTrainerRequirement}
+                                                   locationId={$locationId}
+                                                   selectedSlot={journeyState.selectedSlot}
+                                                   service={personalTrainingService}
+                                                   trainer={selectedPersonalTrainer}
+                                                   locale={$language}
+                                                   on:back={goBack}
+                                                   {onSlotSelected}/>
+                        {/if}
+
+
+                        {#if journeyState.selectedSlot}
+                            {#if navState === "fillForm" }
+                                <FillForm form={journeyStateFns.getFirstServiceForm(journeyState)}
+                                          data={journeyStateFns.getFirstServiceFormData(journeyState)}
+                                          on:formFilled={onFormFilled} on:back={goBack}/>
+                            {:else if navState === "fillCustomerDetails"}
+                                <FillCustomerDetails on:filled={onCustomerDetailsFilled} on:back={goBack}/>
+                            {:else if navState === "takePayment"}
+                                <TakePayment state={journeyState} on:paymentComplete={onPaymentComplete}
+                                             on:back={goBack}/>
+                            {:else if navState === "thankYou"}
+                                <div class="flex flex-col items-center">
+                                    <CheckCircle size={64} class="text-success mb-6"/>
+                                    <h3 class="text-2xl font-semibold mb-4 text-primary">{$translations.bookingConfirmed}
+                                        !</h3>
+                                    <p class="text-center mb-6">{$translations.thankYouSentence}</p>
+                                    <button class="btn btn-primary"
+                                            on:click={bookAnotherSession}>{$translations.bookAnotherSession}</button>
+                                </div>
+                            {/if}
+                        {/if}
+                    </div>
+                {/if}
             </div>
         {/if}
     </div>

@@ -34,6 +34,7 @@ export interface Translations {
     bookingConfirmed: string
     thankYouSentence: string
     bookAnotherSession: string
+    serviceUnavailableAtLocation: string
 }
 
 const translationsEnglish: Translations = {
@@ -71,7 +72,8 @@ const translationsEnglish: Translations = {
     chooseTime: "Choose a time",
     bookingConfirmed: "Booking Confirmed",
     thankYouSentence: "Thank you for your booking. We look forward to seeing you soon",
-    bookAnotherSession: "Book another session"
+    bookAnotherSession: "Book another session",
+    serviceUnavailableAtLocation: "Personal training unavailable at this location"
 }
 
 const translationsTurkish: Translations = {
@@ -109,7 +111,8 @@ const translationsTurkish: Translations = {
     chooseTime: "Zaman Seçin",
     bookingConfirmed: "Rezervasyon Onaylandı",
     thankYouSentence: "Rezervasyonunuz için teşekkür ederiz. Sizi yakında görmekten mutluluk duyarız.",
-    bookAnotherSession: "Başka bir oturum rezerve et"
+    bookAnotherSession: "Başka bir oturum rezerve et",
+    serviceUnavailableAtLocation: "Bu konum için kişisel antrenman mevcut değil"
 }
 
 export function translationsFor(lang: string): Translations {
