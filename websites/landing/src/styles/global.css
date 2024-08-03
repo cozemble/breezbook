@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	* {
+		@apply box-border;
+
+		/* improve readability */
+		letter-spacing: -0.02em;
+	}
+
+	.text-lg,
+	.text-xl,
+	.text-2xl,
+	.text-3xl {
+		/* headings have less letter spacing */
+		letter-spacing: -0.025em;
+		line-height: 1.4;
+		word-spacing: 0.05em;
+	}
+
+	.text-4xl,
+	.text-5xl,
+	.text-6xl,
+	.text-7xl,
+	.text-8xl,
+	.text-9xl {
+		letter-spacing: -0.03em;
+		line-height: 1.2;
+		word-spacing: 0.05em;
+	}
+
+	h1 {
+		@apply text-4xl font-bold;
+	}
+
+	h2 {
+		@apply text-3xl font-semibold;
+	}
+
+	h3 {
+		@apply text-2xl font-semibold;
+	}
+
+	h4 {
+		@apply text-xl font-medium;
+	}
+
+	h5 {
+		@apply text-lg font-medium;
+	}
+
+	h6 {
+		@apply text-base font-semibold;
+	}
+	.label {
+		@apply leading-3 text-sm !pl-0;
+	}
+}
+
+@layer components {
+	.one-line {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		line-height: 1.2;
+	}
+}
