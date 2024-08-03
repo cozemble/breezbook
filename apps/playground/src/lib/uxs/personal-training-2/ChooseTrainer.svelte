@@ -17,7 +17,9 @@
     $: mappedTrainers = mapTrainers(trainers, earliestAvailability);
 
     function mapTrainers(trainers: ResourceSummary[], earliestAvailability: EarliestResourceAvailability[]) {
-        return trainers.map(t => {
+        return trainers
+            .filter(t => earliestAvailability.some(ea => ea.resourceId === t.id))
+            .map(t => {
             const fullDetails = t.branding?.markup?.[0]?.markup ?? '';
             const topLine = fullDetails.split('\n')[0];
             let priceString = null as string | null;
