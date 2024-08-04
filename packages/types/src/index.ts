@@ -1,6 +1,5 @@
 import { v4 as uuidv4, v4 as uuid } from 'uuid';
 import { utc } from './dayjs.js';
-import { Duration } from 'dayjs/plugin/duration.js';
 
 export interface ValueType<T> {
 	_type: unknown;
