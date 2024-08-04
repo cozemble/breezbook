@@ -21,7 +21,8 @@
     "vitest": "0.33.0"
   },
   "dependencies": {
-    "dayjs": "^1.11.10",
+    "dayjs": "1.11.12",
+    "utc": "link:dayjs/plugin/utc",
     "uuid": "^9.0.1"
   }
 }

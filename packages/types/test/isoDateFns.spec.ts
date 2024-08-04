@@ -1,10 +1,10 @@
 import { isoDate, isoDateFns } from '../src/index.js';
 import { test, expect } from 'vitest';
-import dayjs from 'dayjs';
+import { utc } from '../src/dayjs.js';
 
 test('defaults to today', () => {
 	const today = isoDate();
-	expect(today.value).toEqual(dayjs().format('YYYY-MM-DD'));
+	expect(today.value).toEqual(utc().format('YYYY-MM-DD'));
 });
 
 test('can add days to a date', () => {

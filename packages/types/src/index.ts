@@ -1,5 +1,5 @@
 import {v4 as uuidv4, v4 as uuid} from 'uuid';
-import dayjs from "dayjs";
+import { utc } from './dayjs.js';
 
 export interface ValueType<T> {
     _type: unknown;
@@ -134,7 +134,7 @@ export interface IsoDate extends ValueType<string> {
     _type: 'iso.date';
 }
 
-export function isoDate(value: string = dayjs().format('YYYY-MM-DD')): IsoDate {
+export function isoDate(value: string = utc().format('YYYY-MM-DD')): IsoDate {
     if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) {
         throw new Error(`Invalid date format ${value}. Expected YYYY-MM-DD`);
     }
@@ -164,13 +164,13 @@ export const isoDateFns = {
         const dates: IsoDate[] = [];
         let currentDate = from;
         while (currentDate <= to) {
-            dates.push(isoDate(dayjs(currentDate).format('YYYY-MM-DD')));
-            currentDate = dayjs(currentDate).add(1, 'day').toDate();
+            dates.push(isoDate(utc(currentDate).format('YYYY-MM-DD')));
+            currentDate = utc(currentDate).add(1, 'day').toDate();
         }
         return dates;
     },
     addDays(date: IsoDate, days: number) {
-        return isoDate(dayjs(date.value).add(days, 'day').format('YYYY-MM-DD'));
+        return isoDate(utc(date.value).add(days, 'day').format('YYYY-MM-DD'));
     },
     dayOfWeek(date: IsoDate): DayOfWeek {
         return new Date(date.value).toLocaleDateString('en-GB', {weekday: 'long'}) as DayOfWeek;
@@ -224,8 +224,8 @@ export const isoDateFns = {
         return this.addDays(isoDate(), daysToAdd);
     },
     daysUntil(other: IsoDate): number {
-        const today = dayjs(isoDate().value);
-        const otherDate = dayjs(other.value);
+        const today = utc(isoDate().value);
+        const otherDate = utc(other.value);
         return otherDate.diff(today, 'days');
     },
     isWeekend(date: IsoDate) {
@@ -234,17 +234,17 @@ export const isoDateFns = {
     },
     daysInMonth(startOfMonth: IsoDate): IsoDate[] {
         const start = new Date(startOfMonth.value);
-        const end = new Date(dayjs(start).endOf('month').format('YYYY-MM-DD'));
-        return this.listDays(startOfMonth, isoDate(dayjs(end).format('YYYY-MM-DD')));
+        const end = new Date(utc(start).endOf('month').format('YYYY-MM-DD'));
+        return this.listDays(startOfMonth, isoDate(utc(end).format('YYYY-MM-DD')));
     },
     daysBetween(a: IsoDate, b: IsoDate): number {
-        return dayjs(b.value).diff(a.value, 'days');
+        return utc(b.value).diff(a.value, 'days');
     },
     addMonths(start: IsoDate, months: number): IsoDate {
-        return isoDate(dayjs(start.value).add(months, 'month').format('YYYY-MM-DD'));
+        return isoDate(utc(start.value).add(months, 'month').format('YYYY-MM-DD'));
     },
     startOfMonth(d: IsoDate):IsoDate {
-        return isoDate(dayjs(d.value).startOf('month').format('YYYY-MM-DD'));
+        return isoDate(utc(d.value).startOf('month').format('YYYY-MM-DD'));
     }
 };
 
@@ -444,7 +444,7 @@ export const time24Fns = {
     },
     addDays(start: IsoDate, days: Days | number): IsoDate {
         const numberOfDays = typeof days === 'number' ? days : days.value;
-        return isoDate(dayjs(start.value).add(numberOfDays, 'day').format('YYYY-MM-DD'));
+        return isoDate(utc(start.value).add(numberOfDays, 'day').format('YYYY-MM-DD'));
     },
     addDuration(time: TwentyFourHourClockTime, duration: Duration): TwentyFourHourClockTime {
         return time24Fns.addMinutes(time, durationFns.toMinutes(duration));
@@ -702,7 +702,7 @@ export const timePeriodFns = {
         return null;
     },
     duration(t: TimePeriod): Duration {
-        return duration(minutes(dayjs(`2021-01-01T${t.to.value}`).diff(`2021-01-01T${t.from.value}`, 'minutes')));
+        return duration(minutes(utc(`2021-01-01T${t.to.value}`).diff(`2021-01-01T${t.from.value}`, 'minutes')));
 
     },
 };
