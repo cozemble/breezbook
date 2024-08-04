@@ -1,95 +1,104 @@
-import express from "express";
-import {LanguageId, resourceType, ResourceType, TenantEnvironmentLocation} from "@breezbook/packages-types";
-import {resources} from "../../core/resources/resources.js";
+import express from 'express';
 import {
-    asHandler,
-    EndpointDependencies,
-    EndpointOutcome,
-    expressBridge,
-    httpResponseOutcome,
-    languageIdParam,
-    paramExtractor,
-    ParamExtractor,
-    path,
-    productionDeps,
-    RequestValueExtractor,
-    tenantEnvironmentLocationParam
-} from "../../infra/endpoint.js";
-import {RequestContext} from "../../infra/http/expressHttp4t.js";
-import {responseOf} from "@breezbook/packages-http/dist/responses.js";
+	dayAndTime,
+	isoDate,
+	LanguageId,
+	resourceType,
+	ResourceType,
+	TenantEnvironmentLocation,
+	time24
+} from '@breezbook/packages-types';
+import { resources } from '../../core/resources/resources.js';
 import {
-    ServiceAvailabilityRequest,
-    serviceAvailabilityRequestParam
-} from "../availability/getServiceAvailabilityForLocation.js";
-import {byLocation} from "../../availability/byLocation.js";
+	asHandler,
+	EndpointDependencies,
+	EndpointOutcome,
+	expressBridge,
+	httpResponseOutcome,
+	languageIdParam,
+	paramExtractor,
+	ParamExtractor,
+	path,
+	productionDeps,
+	RequestValueExtractor,
+	tenantEnvironmentLocationParam
+} from '../../infra/endpoint.js';
+import { RequestContext } from '../../infra/http/expressHttp4t.js';
+import { responseOf } from '@breezbook/packages-http/dist/responses.js';
 import {
-    availabilityConfiguration,
-    EarliestAvailability,
-    findEarliestAvailability,
-    serviceFns
-} from "@breezbook/packages-core";
-import {EarliestResourceAvailability} from "@breezbook/backend-api-types";
+	ServiceAvailabilityRequest,
+	serviceAvailabilityRequestParam
+} from '../availability/getServiceAvailabilityForLocation.js';
+import { byLocation } from '../../availability/byLocation.js';
+import {
+	availabilityConfiguration,
+	EarliestAvailability,
+	findEarliestAvailability,
+	serviceFns
+} from '@breezbook/packages-core';
+import { EarliestResourceAvailability } from '@breezbook/backend-api-types';
 
 export function resourceTypeParam(requestValue: RequestValueExtractor = path('type')): ParamExtractor<ResourceType> {
-    return paramExtractor('type', requestValue.extractor, resourceType);
+	return paramExtractor('type', requestValue.extractor, resourceType);
 }
 
 export async function onListResourcesByTypeRequestExpress(req: express.Request, res: express.Response): Promise<void> {
-    await expressBridge(productionDeps, listResourcesByTypeRequestEndpoint, req, res)
+	await expressBridge(productionDeps, listResourcesByTypeRequestEndpoint, req, res);
 }
 
 export async function listResourcesByTypeRequestEndpoint(deps: EndpointDependencies, request: RequestContext): Promise<EndpointOutcome[]> {
-    return asHandler(deps, request).withThreeRequestParams(tenantEnvironmentLocationParam(), resourceTypeParam(), languageIdParam(), listResourcesByType);
+	return asHandler(deps, request).withThreeRequestParams(tenantEnvironmentLocationParam(), resourceTypeParam(), languageIdParam(), listResourcesByType);
 }
 
 async function listResourcesByType(deps: EndpointDependencies, tenantEnvironmentLocation: TenantEnvironmentLocation, resourceType: ResourceType, languageId: LanguageId): Promise<EndpointOutcome[]> {
-    const outcome = await resources.listByType(deps.prisma, tenantEnvironmentLocation, resourceType, languageId);
-    return [httpResponseOutcome(responseOf(Array.isArray(outcome) ? 200 : 400, JSON.stringify(outcome), ['Content-Type', 'application/json']))];
+	const outcome = await resources.listByType(deps.prisma, tenantEnvironmentLocation, resourceType, languageId);
+	return [httpResponseOutcome(responseOf(Array.isArray(outcome) ? 200 : 400, JSON.stringify(outcome), ['Content-Type', 'application/json']))];
 }
 
 export async function onListResourcesAvailabilityByTypeRequestExpress(req: express.Request, res: express.Response): Promise<void> {
-    await expressBridge(productionDeps, listResourceAvailabilityByTypeRequestEndpoint, req, res)
+	await expressBridge(productionDeps, listResourceAvailabilityByTypeRequestEndpoint, req, res);
 }
 
 export async function listResourceAvailabilityByTypeRequestEndpoint(deps: EndpointDependencies, request: RequestContext): Promise<EndpointOutcome[]> {
-    return asHandler(deps, request)
-        .withThreeRequestParams(tenantEnvironmentLocationParam(), resourceTypeParam(), serviceAvailabilityRequestParam(), listResourceAvailabilityByType);
+	return asHandler(deps, request)
+		.withThreeRequestParams(tenantEnvironmentLocationParam(), resourceTypeParam(), serviceAvailabilityRequestParam(), listResourceAvailabilityByType);
 }
 
 
 function toEarliestResourceAvailability(earliest: EarliestAvailability): EarliestResourceAvailability {
-    return {
-        resourceId: earliest.resource.id.value,
-        earliestDate: earliest.earliestDate?.value ?? null,
-        earliestTime: earliest.earliestTime?.value ?? null,
-        cheapestPrice: earliest.cheapestPrice?.amount?.value ?? null,
-        checkedPeriod: {
-            startDate: earliest.period.start.value,
-            endDate: earliest.period.end.value
-        }
-    }
+	return {
+		resourceId: earliest.resource.id.value,
+		earliestDate: earliest.earliestDate?.value ?? null,
+		earliestTime: earliest.earliestTime?.value ?? null,
+		cheapestPrice: earliest.cheapestPrice?.amount?.value ?? null,
+		checkedPeriod: {
+			startDate: earliest.period.start.value,
+			endDate: earliest.period.end.value
+		}
+	};
 }
 
 export async function listResourceAvailabilityByType(deps: EndpointDependencies, tenantEnvLoc: TenantEnvironmentLocation, resourceType: ResourceType, request: ServiceAvailabilityRequest): Promise<EndpointOutcome[]> {
-    const everythingForAvailability = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate)
-    const config = availabilityConfiguration(
-        everythingForAvailability.businessConfiguration.availability,
-        everythingForAvailability.businessConfiguration.resourceAvailability,
-        everythingForAvailability.businessConfiguration.timeslots,
-        everythingForAvailability.businessConfiguration.startTimeSpec);
-    const service = serviceFns.maybeFindService(everythingForAvailability.businessConfiguration.services, request.serviceId);
-    if (!service) {
-        return [httpResponseOutcome(responseOf(404, JSON.stringify({error: `No service found with id '${request.serviceId.value}'`}), ['Content-Type', 'application/json']))];
-    }
+	const everythingForAvailability = await byLocation.getEverythingForAvailability(deps.prisma, tenantEnvLoc, request.fromDate, request.toDate);
+	const config = availabilityConfiguration(
+		everythingForAvailability.businessConfiguration.availability,
+		everythingForAvailability.businessConfiguration.resourceAvailability,
+		everythingForAvailability.businessConfiguration.timeslots,
+		everythingForAvailability.businessConfiguration.startTimeSpec);
+	const service = serviceFns.maybeFindService(everythingForAvailability.businessConfiguration.services, request.serviceId);
+	if (!service) {
+		return [httpResponseOutcome(responseOf(404, JSON.stringify({ error: `No service found with id '${request.serviceId.value}'` }), ['Content-Type', 'application/json']))];
+	}
 
-    const earliest = findEarliestAvailability(
-        config,
-        service,
-        everythingForAvailability.bookings,
-        resourceType,
-        request.fromDate,
-        request.toDate,
-        everythingForAvailability.pricingRules).map((earliest) => toEarliestResourceAvailability(earliest));
+	const now = dayAndTime(isoDate(), time24());
+	const earliest = findEarliestAvailability(
+		config,
+		service,
+		everythingForAvailability.bookings,
+		resourceType,
+		request.fromDate,
+		request.toDate,
+		everythingForAvailability.pricingRules, now).map((earliest) => toEarliestResourceAvailability(earliest));
 
-    return [httpResponseOutcome(responseOf(200, JSON.stringify(earliest), ['Content-Type', 'application/json']))];
+	return [httpResponseOutcome(responseOf(200, JSON.stringify(earliest), ['Content-Type', 'application/json']))];
 }

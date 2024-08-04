@@ -274,8 +274,14 @@ export const dayAndTimeFns = {
 		const bDate = new Date(`${b.day.value}T${b.time.value}`);
 		return aDate.getTime() > bDate.getTime();
 	},
+	gte(a: DayAndTime, b: DayAndTime) {
+		return this.gt(a, b) || this.equals(a, b);
+	},
+	equals(a: DayAndTime, b: DayAndTime) {
+		return a.day.value === b.day.value && a.time.value === b.time.value;
+	},
 	addDuration(d: DayAndTime, duration: Duration): DayAndTime {
-		const asUtc = utc(`${d.day.value}T${d.time.value}`)
+		const asUtc = utc(`${d.day.value}T${d.time.value}`);
 		const newDate = asUtc.add(durationFns.toMinutes(duration).value, 'minute');
 		return dayAndTime(isoDate(newDate.format('YYYY-MM-DD')), time24(newDate.format('HH:mm')));
 	}
@@ -294,7 +300,7 @@ export interface TwentyFourHourClockTime extends ValueType<string> {
 	timezone?: Timezone;
 }
 
-export function time24(value: string, timezone?: Timezone): TwentyFourHourClockTime {
+export function time24(value: string = utc().format("HH:mm"),  timezone?: Timezone): TwentyFourHourClockTime {
 	if (!value.match(/^\d{2}:\d{2}$/)) {
 		throw new Error(`Invalid time format '${value}' - expected HH:MM`);
 	}

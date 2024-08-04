@@ -2666,3 +2666,23 @@ to try again.
 # Update on the above
 Been pushing on this all day.  Hard going.  Need to step away to keep energy high, so I don't fall into wanting to take
 shortcuts.
+
+
+# Sun 4 Aug 2024
+I'm worried about timezone handling again.  I have consciously ignored it, thinking I can just map to and from the relevant
+timezone at the edge of the stack.
+
+But I am also creating date and time instances using `isoData()` and `time24()` functions.  These are implemented to create
+UTC date and time instances.  So I am not comfortable that this idea of mapping timezones at the edge will hold.
+
+When a business registers their dates and time slots, they do it in terms of their time zone.  For example, 
+"we open at 9am, Monday to Friday".  That business might be in Brazil.  When I map their config to `IsoDate` and 
+`Time24`, they will be UTC instances.  
+
+Lets say this business configures a minimum notice period of two hours and today is Sunday August 4th 2024 at 17.00 in 
+London.  That is 16.00 in UTC and 13.00 in Brazil.  
+
+That means that the earliest booking that the business can accept is 15.00 in Brazil, which is 18.00 in UTC.
+
+However, when I instantiate `now` as `isoDate` and `time24`, that time will be in UTC, which is 16.00.  I will add two 
+hours to that to get 18.00, and I will exclude all timeslots before that.  But that is not correct.

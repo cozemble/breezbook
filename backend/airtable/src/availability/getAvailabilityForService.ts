@@ -20,9 +20,11 @@ import {
     success,
 } from '@breezbook/packages-core';
 import {AvailabilityResponse} from '@breezbook/backend-api-types';
-import {byId, IsoDate, isoDateFns} from "@breezbook/packages-types";
+import { byId, dayAndTime, isoDate, IsoDate, isoDateFns, time24 } from '@breezbook/packages-types';
 import {ServiceAvailabilityRequest} from "../express/availability/getServiceAvailabilityForLocation.js";
 import {toAvailabilityResponse} from "./toAvailabilityResponse.js";
+import { resourcing } from '@breezbook/packages-resourcing';
+import dateAndTime = resourcing.dateAndTime;
 
 export const getAvailabilityForServiceErrorCodes = {
     serviceUnavailable: 'service.unavailable'
@@ -56,8 +58,9 @@ export function getAvailabilityForService(
 
 function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, addOns: AddOnAndQuantity[], serviceOptions: ServiceOptionAndQuantity[], fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {
     const dates = isoDateFns.listDays(fromDate, toDate);
+    const now = dayAndTime(isoDate(), time24())
     const eachDate = dates.map(date => {
-        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(service, date, addOns, serviceOptions));
+        const outcome = availability.calculateAvailableSlots(config, bookings, serviceRequest(service, date, addOns, serviceOptions), now);
         if (outcome._type === 'error.response' && outcome.errorCode === availability.errorCodes.noAvailabilityForDay) {
             return success([])
         }
