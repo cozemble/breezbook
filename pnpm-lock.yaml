@@ -488,9 +488,6 @@ importers:
       '@breezbook/packages-types':
         specifier: workspace:*
         version: link:../types
-      dayjs:
-        specifier: ^1.11.10
-        version: 1.11.10
       to-words:
         specifier: ^4.0.1
         version: 4.0.1
@@ -540,9 +537,6 @@ importers:
 
   packages/http:
     dependencies:
-      dayjs:
-        specifier: ^1.11.10
-        version: 1.11.10
       to-words:
         specifier: ^4.0.1
         version: 4.0.1
@@ -593,9 +587,6 @@ importers:
       '@breezbook/packages-types':
         specifier: workspace:*
         version: link:../types
-      dayjs:
-        specifier: ^1.11.10
-        version: 1.11.10
     devDependencies:
       eslint:
         specifier: ^8.28.0
