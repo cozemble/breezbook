@@ -292,6 +292,18 @@ export function fixedLength(days: Days): FixedLength {
     }
 }
 
+export interface MinimumNoticePeriod {
+    _type: 'minimum-notice-period'
+    duration: Duration
+}
+
+export function minimumNoticePeriod(d: DurationUnit): MinimumNoticePeriod {
+    return {
+        _type: 'minimum-notice-period',
+        duration: duration(d)
+    }
+}
+
 export type DayLength = VariableLength | FixedLength
 
 export interface SimpleScheduleConfig {
@@ -306,7 +318,26 @@ export function simpleScheduleConfig(duration: Duration): SimpleScheduleConfig {
     }
 }
 
-export type ScheduleConfig = SingleDayScheduling | MultiDayScheduling | SimpleScheduleConfig
+// export type ScheduleConfig = SingleDayScheduling | MultiDayScheduling | SimpleScheduleConfig
+
+export interface ScheduleConfig {
+    _type: 'schedule-config'
+    scheduling: SingleDayScheduling | MultiDayScheduling | SimpleScheduleConfig
+    minimumNoticePeriod?: MinimumNoticePeriod
+}
+
+export function scheduleConfig(
+    scheduling: SingleDayScheduling | MultiDayScheduling | SimpleScheduleConfig,
+    options?: {
+        minimumNoticePeriod?: MinimumNoticePeriod
+    }
+): ScheduleConfig {
+    return {
+        _type: 'schedule-config',
+        scheduling,
+        minimumNoticePeriod: options?.minimumNoticePeriod,
+    }
+}
 
 function willEndBefore(time: TwentyFourHourClockTime, duration: Minutes, endTime: TwentyFourHourClockTime) {
     return time24Fns.addMinutes(time, duration).value <= endTime.value
@@ -314,59 +345,63 @@ function willEndBefore(time: TwentyFourHourClockTime, duration: Minutes, endTime
 
 export const scheduleConfigFns = {
 
+    getMinimumNoticePeriod(config: ScheduleConfig): Duration | null {
+        return config.minimumNoticePeriod ? config.minimumNoticePeriod.duration : null
+    },
+
     duration(scheduleConfig: ScheduleConfig): Duration {
-        if(scheduleConfig._type === 'simple-schedule-config') {
-            return scheduleConfig.duration
+        if(scheduleConfig.scheduling._type === 'simple-schedule-config') {
+            return scheduleConfig.scheduling.duration
         }
-        if (scheduleConfig._type === 'multi-day-scheduling') {
+        if (scheduleConfig.scheduling._type === 'multi-day-scheduling') {
             throw new Error('Cannot get duration for multi-day scheduling')
         }
-        if (scheduleConfig.times._type === 'timeslot-selection') {
-            const firstSlot = mandatory(scheduleConfig.times.times[0], 'Expected at least one timeslot')
+        if (scheduleConfig.scheduling.times._type === 'timeslot-selection') {
+            const firstSlot = mandatory(scheduleConfig.scheduling.times.times[0], 'Expected at least one timeslot')
             return timePeriodFns.duration(firstSlot.slot)
         }
-        if (scheduleConfig.times._type === 'fixed-time') {
-            return timePeriodFns.duration(timePeriod(scheduleConfig.times.start, scheduleConfig.times.end))
+        if (scheduleConfig.scheduling.times._type === 'fixed-time') {
+            return timePeriodFns.duration(timePeriod(scheduleConfig.scheduling.times.start, scheduleConfig.scheduling.times.end))
         }
-        if (scheduleConfig.times._type === 'variable-duration-config') {
-            if (scheduleConfig.times.duration._type === 'duration-range') {
-                return scheduleConfig.times.duration.minDuration
+        if (scheduleConfig.scheduling.times._type === 'variable-duration-config') {
+            if (scheduleConfig.scheduling.times.duration._type === 'duration-range') {
+                return scheduleConfig.scheduling.times.duration.minDuration
             }
-            return scheduleConfig.times.duration
+            return scheduleConfig.scheduling.times.duration
         }
         throw new Error('Unexpected times type')
     },
     startTimes(scheduleConfig: ScheduleConfig, duration: Minutes): StartTime[] | null {
-        if(scheduleConfig._type === 'simple-schedule-config') {
+        if(scheduleConfig.scheduling._type === 'simple-schedule-config') {
             return null
         }
-        if (scheduleConfig._type === 'multi-day-scheduling') {
+        if (scheduleConfig.scheduling._type === 'multi-day-scheduling') {
             throw new Error('Cannot get start times for multi-day scheduling')
         }
-        if (scheduleConfig.times._type === 'timeslot-selection') {
-            return scheduleConfig.times.times
+        if (scheduleConfig.scheduling.times._type === 'timeslot-selection') {
+            return scheduleConfig.scheduling.times.times
         }
-        if (scheduleConfig.times._type === 'fixed-time') {
-            return [exactTimeAvailability(scheduleConfig.times.start)]
+        if (scheduleConfig.scheduling.times._type === 'fixed-time') {
+            return [exactTimeAvailability(scheduleConfig.scheduling.times.start)]
         }
-        if (scheduleConfig.times._type === 'variable-duration-config') {
-            if (scheduleConfig.times.times._type === 'pick-time') {
-                if (scheduleConfig.times.times.options._type === 'time-range') {
-                    const endTime = scheduleConfig.times.times.options.to
-                    return timeRangeFns.times(scheduleConfig.times.times.options)
+        if (scheduleConfig.scheduling.times._type === 'variable-duration-config') {
+            if (scheduleConfig.scheduling.times.times._type === 'pick-time') {
+                if (scheduleConfig.scheduling.times.times.options._type === 'time-range') {
+                    const endTime = scheduleConfig.scheduling.times.times.options.to
+                    return timeRangeFns.times(scheduleConfig.scheduling.times.times.options)
                         .filter(time => willEndBefore(time, duration, endTime))
                         .map(time => exactTimeAvailability(time))
                 }
-                if (scheduleConfig.times.times.options._type === 'time-list') {
-                    return scheduleConfig.times.times.options.times.map(time => exactTimeAvailability(time))
+                if (scheduleConfig.scheduling.times.times.options._type === 'time-list') {
+                    return scheduleConfig.scheduling.times.times.options.times.map(time => exactTimeAvailability(time))
                 }
-                const period = scheduleConfig.times.times.options.period.duration
-                const latestEndTime = scheduleConfig.times.times.options.blocks.map(block => block.to).reduce((latest, current) => current.value > latest.value ? current : latest)
-                return scheduleConfig.times.times.options.blocks.flatMap(block => timePeriodFns.listPossibleStartTimes(block, period))
+                const period = scheduleConfig.scheduling.times.times.options.period.duration
+                const latestEndTime = scheduleConfig.scheduling.times.times.options.blocks.map(block => block.to).reduce((latest, current) => current.value > latest.value ? current : latest)
+                return scheduleConfig.scheduling.times.times.options.blocks.flatMap(block => timePeriodFns.listPossibleStartTimes(block, period))
                     .filter(time => willEndBefore(time, duration, latestEndTime))
                     .map(time => exactTimeAvailability(time))
             }
-            if (scheduleConfig.times.times._type === 'any-time-between') {
+            if (scheduleConfig.scheduling.times.times._type === 'any-time-between') {
                 throw new Error('Cannot get start times for any-time-between')
             }
 

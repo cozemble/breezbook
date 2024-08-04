@@ -4,7 +4,7 @@ import {
     BusinessConfiguration,
     configuration,
     Coupon,
-    periodicStartTime, ScheduleConfig, singleDaySchedulingFns,
+    periodicStartTime, scheduleConfig, ScheduleConfig, singleDaySchedulingFns,
     TenantSettings,
 } from '@breezbook/packages-core';
 import {
@@ -70,8 +70,6 @@ import Resource = resourcing.Resource;
 import ResourceAvailability = configuration.ResourceAvailability;
 import availabilityBlock = configuration.availabilityBlock;
 import resourceDayAvailability = configuration.resourceAvailability;
-import ServiceAvailability = configuration.ServiceAvailability;
-import serviceAvailability = configuration.serviceAvailability;
 
 export interface EverythingForAvailability {
     _type: 'everything.for.availability';
@@ -286,8 +284,8 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
     const businessAvailability = makeBusinessAvailability(availabilityData.businessHours, availabilityData.blockedTime, dates)
     const services = availabilityData.services.map((s) => {
         const applicableScheduleConfig = availabilityData.serviceScheduleConfigs.find((sc) => sc.service_id === s.id);
-        const scheduleConfig = applicableScheduleConfig ? applicableScheduleConfig.schedule_config as unknown as ScheduleConfig : singleDaySchedulingFns.alwaysAvailable();
-        return toDomainService(s, availabilityData.serviceAddOns, availabilityData.resourceTypes, availabilityData.serviceForms, availabilityData.serviceResourceRequirements, mappedResources, scheduleConfig);
+        const theScheduleConfig = applicableScheduleConfig ? applicableScheduleConfig.schedule_config as unknown as ScheduleConfig : scheduleConfig(singleDaySchedulingFns.alwaysAvailable());
+        return toDomainService(s, availabilityData.serviceAddOns, availabilityData.resourceTypes, availabilityData.serviceForms, availabilityData.serviceResourceRequirements, mappedResources, theScheduleConfig);
     })
     const serviceOptions = availabilityData.serviceOptions.map((so) => toDomainServiceOption(so, availabilityData.resourceTypes, mappedResources))
 

@@ -10,7 +10,14 @@ import {
     withThreeRequestParams,
     withTwoRequestParams
 } from '../infra/functionalExpress.js';
-import {Clock, fixedTime, ScheduleConfig, singleDayScheduling, SystemClock} from '@breezbook/packages-core';
+import {
+    Clock,
+    fixedTime,
+    scheduleConfig,
+    ScheduleConfig,
+    singleDayScheduling,
+    SystemClock
+} from '@breezbook/packages-core';
 import {
     DbCancellationGrant,
     DbRefundRule,
@@ -78,7 +85,7 @@ async function grantCancellation(res: express.Response, db: DbExpressBridge, gra
 function makeScheduleToMatchBooking(theBooking: DbBookingAndResourceRequirements): ScheduleConfig {
     const start = time24(theBooking.start_time_24hr);
     const end = time24(theBooking.end_time_24hr);
-    return singleDayScheduling(fixedTime(start, "Start", end, "End"))
+    return scheduleConfig(singleDayScheduling(fixedTime(start, "Start", end, "End")))
 }
 
 export function doCancellationRequest(

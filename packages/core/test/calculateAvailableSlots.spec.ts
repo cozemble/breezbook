@@ -17,7 +17,7 @@ import {
     errorResponseFns,
     fixedResourceAllocation,
     periodicStartTime,
-    price,
+    price, scheduleConfig,
     Service,
     service,
     serviceFns,
@@ -63,7 +63,7 @@ describe("given a chatbot service that requires no resources, and is available m
     const theService = service(
         [],
         price(3500, currencies.GBP),
-        [], [], singleDaySchedulingFns.pickTime({startTime: nineAm, endTime: fivePm, duration: duration(minutes(60))}))
+        [], [], scheduleConfig(singleDaySchedulingFns.pickTime({startTime: nineAm, endTime: fivePm, duration: duration(minutes(60))})))
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -107,11 +107,11 @@ describe("given a chatbot service that requires no resources, and is available m
     test("if we permit starts on the half hour, we can do 15 services a day", () => {
         const mutatedService: Service = {
             ...theService,
-            scheduleConfig: singleDaySchedulingFns.pickTime({
+            scheduleConfig: scheduleConfig(singleDaySchedulingFns.pickTime({
                 startTime: nineAm,
                 endTime: fivePm,
                 period: minutes(30)
-            })
+            }))
         }
         const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(mutatedService, date)))
         const times = available.map(a => availableSlotTimeFns.getStartTime(a.startTime))
@@ -121,11 +121,11 @@ describe("given a chatbot service that requires no resources, and is available m
     test("if the service takes two hours, we can do 7 services a day", () => {
         const longerService: Service = {
             ...theService,
-            scheduleConfig: singleDaySchedulingFns.pickTime({
+            scheduleConfig: scheduleConfig(singleDaySchedulingFns.pickTime({
                 startTime: nineAm,
                 endTime: fivePm,
                 duration: minutes(120)
-            })
+            }))
         }
         const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(longerService, date)))
         const times = available.map(a => availableSlotTimeFns.getStartTime(a.startTime))
@@ -135,7 +135,7 @@ describe("given a chatbot service that requires no resources, and is available m
     test("discrete time specifications are honoured", () => {
         const mutatedService: Service = {
             ...theService,
-            scheduleConfig: singleDaySchedulingFns.timelist([time24("09:00"), time24("10:00"), time24("13:00"), time24("14:00")])
+            scheduleConfig: scheduleConfig(singleDaySchedulingFns.timelist([time24("09:00"), time24("10:00"), time24("13:00"), time24("14:00")]))
         }
         const available = expectSlots(availability.calculateAvailableSlots(config, [], serviceRequest(mutatedService, date)))
         const times = available.map(a => availableSlotTimeFns.getStartTime(a.startTime))
@@ -160,7 +160,7 @@ describe("given a carwash service that requires one of several interchangeable w
             anySuitableResource(carwasher)],
         price(3500, currencies.GBP),
         [],
-        [], singleDaySchedulingFns.pickTime({startTime: nineAm, endTime: fivePm, duration: duration(minutes(45))}))
+        [], scheduleConfig(singleDaySchedulingFns.pickTime({startTime: nineAm, endTime: fivePm, duration: duration(minutes(45))})))
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -216,7 +216,7 @@ describe("given a mobile carwash service that requires one of several interchang
         price(3500, currencies.GBP),
         [],
         [],
-        singleDayScheduling(timeslotSelection([morningSlot, afternoonSlot])),
+        scheduleConfig(singleDayScheduling(timeslotSelection([morningSlot, afternoonSlot]))),
         capacity(1))
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
@@ -276,11 +276,11 @@ describe("given a gym that offers personal training with specific trainers, and 
     const requiresPtMike = specificResource(ptMike)
     const theService = service(
         [requiresPtMike], price(3500, currencies.GBP), [], [],
-        singleDaySchedulingFns.pickTime({
+        scheduleConfig(singleDaySchedulingFns.pickTime({
             startTime: nineAm,
             endTime: fivePm,
             duration: duration(minutes(55))
-        }))
+        })))
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -346,7 +346,7 @@ describe("given a medical centre and an appointment type that requires two docto
     const anyDoctorAsLead = anySuitableResource(doctor, resourceAllocationRules.any, lead)
     const theService = service(
         [anyDoctorAsLead, anySuitableResource(doctor, resourceAllocationRules.unique, assistant), anySuitableResource(examinationRoom)], price(3500, currencies.GBP), [], [],
-        singleDaySchedulingFns.pickTime({startTime: nineAm, endTime: fivePm, duration: duration(minutes(60))}))
+        scheduleConfig(singleDaySchedulingFns.pickTime({startTime: nineAm, endTime: fivePm, duration: duration(minutes(60))})))
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -406,7 +406,7 @@ describe("given a gym that offers personal training requiring a specific trainer
     ];
     const theService = service(
         [anySuitableResource(personalTrainer), anySuitableResource(gymRoom)], price(3500, currencies.GBP), [], [],
-        singleDaySchedulingFns.pickTime({startTime: nineAm, endTime: fivePm, duration: duration(minutes(55))}));
+        scheduleConfig(singleDaySchedulingFns.pickTime({startTime: nineAm, endTime: fivePm, duration: duration(minutes(55))})));
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -463,11 +463,11 @@ describe("given a dog walking service that can take up to 6 dogs at 09.00, and i
     ];
     const theService = service(
         [anySuitableResource(dogIntake)], price(3500, currencies.GBP), [], [],
-        singleDaySchedulingFns.pickTime({
+        scheduleConfig(singleDaySchedulingFns.pickTime({
             startTime: nineAm,
             endTime: fivePm,
             duration: duration(minutes(480))
-        }), capacity(6));
+        })), capacity(6));
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -547,11 +547,11 @@ describe("given a hair salon that offers configurable services, and is available
     const hairStylingService = serviceFns.addOptions(
         service(
             [anySuitableResource(hairStylist)], price(3500, currencies.GBP), [], [],
-            singleDaySchedulingFns.pickTime({
+            scheduleConfig(singleDaySchedulingFns.pickTime({
                 startTime: nineAm,
                 endTime: fivePm,
                 duration: duration(minutes(30))
-            })), []);
+            }))), []);
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -613,11 +613,11 @@ describe("given a yoga studio with two instructors and two rooms", () => {
     ];
     const theService = service(
         [specificResource(smallRoom), specificResource(mikeInstructor)], price(3500, currencies.GBP), [], [],
-        singleDaySchedulingFns.pickTime({
+        scheduleConfig(singleDaySchedulingFns.pickTime({
             startTime: nineAm,
             endTime: fivePm,
             duration: duration(minutes(60))
-        }), capacity(10));
+        })), capacity(10));
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -671,10 +671,10 @@ describe("given a yoga studio with two instructors and two rooms", () => {
 describe("given a chatbot service that has capacity", () => {
     const theService = service(
         [], price(3500, currencies.GBP), [], [],
-        singleDaySchedulingFns.pickTime({
+        scheduleConfig(singleDaySchedulingFns.pickTime({
             startTime: nineAm,
             endTime: fivePm
-        }), capacity(5))
+        })), capacity(5))
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],
@@ -706,7 +706,7 @@ describe("given a chatbot service that has capacity", () => {
 
 describe("given a service that has its own availability", () => {
     const theService = service([], price(3500, currencies.GBP), [], [],
-        singleDaySchedulingFns.timeblocks([timePeriod(time24("10:00"), time24("13:00")), timePeriod(time24("14:00"), time24("16:00"))]))
+        scheduleConfig(singleDaySchedulingFns.timeblocks([timePeriod(time24("10:00"), time24("13:00")), timePeriod(time24("14:00"), time24("16:00"))])))
     const config = availabilityConfiguration(
         makeBusinessAvailability(makeBusinessHours(mondayToFriday, nineAm, fivePm), [], [date]),
         [],

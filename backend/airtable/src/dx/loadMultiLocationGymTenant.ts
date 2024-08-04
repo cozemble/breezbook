@@ -36,7 +36,7 @@ import {
 } from '@breezbook/packages-types';
 import {add, jexlExpression, pricingFactorName, PricingRule} from '@breezbook/packages-pricing';
 import {makeTestId} from './testIds.js';
-import {simpleScheduleConfig} from "@breezbook/packages-core";
+import {scheduleConfig, simpleScheduleConfig} from "@breezbook/packages-core";
 
 const tenant_id = 'breezbook-gym';
 const environment_id = 'dev';
@@ -600,35 +600,35 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
             tenant_id,
             environment_id,
             service_id: gym1Hr.create.data.id,
-            schedule_config: simpleScheduleConfig(duration(minutes(60))) as any
+            schedule_config: scheduleConfig(simpleScheduleConfig(duration(minutes(60)))) as any
         }),
         upsertServiceScheduleConfig({
             id: makeTestId(tenant_id, environment_id, `service_schedule_config.${pt1Hr.create.data.id}`),
             tenant_id,
             environment_id,
             service_id: pt1Hr.create.data.id,
-            schedule_config: simpleScheduleConfig(duration(minutes(60))) as any
+            schedule_config: scheduleConfig(simpleScheduleConfig(duration(minutes(60)))) as any
         }),
         upsertServiceScheduleConfig({
             id: makeTestId(tenant_id, environment_id, `service_schedule_config.${yoga1Hr.create.data.id}`),
             tenant_id,
             environment_id,
             service_id: yoga1Hr.create.data.id,
-            schedule_config: simpleScheduleConfig(duration(minutes(60))) as any
+            schedule_config: scheduleConfig(simpleScheduleConfig(duration(minutes(60)))) as any
         }),
         upsertServiceScheduleConfig({
             id: makeTestId(tenant_id, environment_id, `service_schedule_config.${massage30mins.create.data.id}`),
             tenant_id,
             environment_id,
             service_id: massage30mins.create.data.id,
-            schedule_config: simpleScheduleConfig(duration(minutes(30))) as any
+            schedule_config: scheduleConfig(simpleScheduleConfig(duration(minutes(30)))) as any
         }),
         upsertServiceScheduleConfig({
             id: makeTestId(tenant_id, environment_id, `service_schedule_config.${swim30mins.create.data.id}`),
             tenant_id,
             environment_id,
             service_id: swim30mins.create.data.id,
-            schedule_config: simpleScheduleConfig(duration(minutes(30))) as any
+            schedule_config: scheduleConfig(simpleScheduleConfig(duration(minutes(30)))) as any
         })
     ])
     await runUpserts(prisma, serviceLabelUpserts);

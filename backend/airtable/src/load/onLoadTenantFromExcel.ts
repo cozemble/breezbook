@@ -16,13 +16,13 @@ import * as XLSX from 'xlsx';
 import {WorkBook} from 'xlsx';
 import {
     EnvironmentId,
-    JsonSchemaForm,
     jsonSchemaFormFns,
     languages,
     mandatory,
     tenantEnvironment,
     TenantId,
-    tenantId, time24
+    tenantId,
+    time24
 } from "@breezbook/packages-types";
 import {mutations, Upsert} from "../mutation/mutations.js";
 import {
@@ -54,7 +54,7 @@ import {
     upsertTimeslot
 } from "../prisma/breezPrismaMutations.js";
 import {z, ZodType} from 'zod';
-import {singleDayScheduling, timeslot, timeslotSelection} from "@breezbook/packages-core";
+import {scheduleConfig, singleDayScheduling, timeslot, timeslotSelection} from "@breezbook/packages-core";
 
 export async function onLoadTenantFromExcel(req: express.Request, res: express.Response): Promise<void> {
     await expressBridge(productionDeps, onLoadTenantFromExcelEndpoint, req, res)
@@ -326,12 +326,12 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
             tenant_id,
             environment_id,
             service_id: serviceUpsert.create.data.id,
-            schedule_config: singleDayScheduling(timeslotSelection(timeslotData.map(ts => {
+            schedule_config: scheduleConfig(singleDayScheduling(timeslotSelection(timeslotData.map(ts => {
                 const description = ts["Start time"] + " - " + ts["End time"]
                 const start_time_24hr = ts["Start time"]
                 const end_time_24hr = ts["End time"]
                 return timeslot(time24(start_time_24hr), time24(end_time_24hr), description)
-            }))) as any
+            })))) as any
         })
         return [
             serviceUpsert,

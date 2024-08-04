@@ -3,7 +3,7 @@ import {
     carwash,
     currencies,
     price,
-    Price,
+    Price, scheduleConfig,
     singleDayScheduling,
     timeslot,
     timeslotSelection
@@ -261,11 +261,11 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
         tenant_id,
         environment_id,
         service_id: su.create.data.id,
-        schedule_config: singleDayScheduling(timeslotSelection(timeslots.map(t => {
+        schedule_config: scheduleConfig(singleDayScheduling(timeslotSelection(timeslots.map(t => {
             const start = t.split(' ')[0];
             const end = t.split(' ')[2];
             return timeslot(time24(start), time24(end), t);
-        }))) as any
+        })))) as any
     })))
     await runUpserts(prisma, serviceUpserts.flatMap((serviceUpsert) => {
         const labels = carwash.serviceLabels.filter(l => {

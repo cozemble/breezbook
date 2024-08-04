@@ -48,7 +48,7 @@ import {
     pricingFactorName,
     PricingRule
 } from "@breezbook/packages-pricing";
-import {consumesServiceCapacity, timeslot} from "@breezbook/packages-core";
+import {consumesServiceCapacity, scheduleConfig, timeslot} from "@breezbook/packages-core";
 import {
     singleDayScheduling,
     singleDaySchedulingFns,
@@ -275,12 +275,12 @@ function breezbookDogWalkUpserts(): Upsert[] {
             tenant_id,
             environment_id,
             service_id: dogWalkingTenant.serviceIds.individualDogWalk,
-            schedule_config: singleDaySchedulingFns.pickTime({
+            schedule_config: scheduleConfig(singleDaySchedulingFns.pickTime({
                 startTime: time24('11:00'),
                 endTime: time24('16:00'),
                 duration: minutes(60),
                 period: minutes(30)
-            }) as any
+            })) as any
         }),
         upsertServiceImage({
             tenant_id,
@@ -331,11 +331,11 @@ function breezbookDogWalkUpserts(): Upsert[] {
             tenant_id,
             environment_id,
             service_id: dogWalkingTenant.serviceIds.groupDogWalk,
-            schedule_config: singleDayScheduling(
+            schedule_config: scheduleConfig(singleDayScheduling(
                 timeslotSelection([
                     timeslot(time24('09:00'), time24('10:00'), "Morning walk"),
                     timeslot(time24('17:00'), time24('18:00'), "Evening walk")
-                ])) as any
+                ]))) as any
         }),
         upsertServiceImage({
             tenant_id,
@@ -374,12 +374,12 @@ function breezbookDogWalkUpserts(): Upsert[] {
             tenant_id,
             environment_id,
             service_id: dogWalkingTenant.serviceIds.dropInVisit,
-            schedule_config: singleDaySchedulingFns.pickTime({
+            schedule_config: scheduleConfig(singleDaySchedulingFns.pickTime({
                 startTime: time24('11:00'),
                 endTime: time24('16:00'),
                 duration: minutes(30),
                 period: minutes(30)
-            }) as any
+            })) as any
         }),
         upsertServiceImage({
             tenant_id,
@@ -418,12 +418,12 @@ function breezbookDogWalkUpserts(): Upsert[] {
             tenant_id,
             environment_id,
             service_id: dogWalkingTenant.serviceIds.petSit,
-            schedule_config: singleDaySchedulingFns.pickTime({
+            schedule_config: scheduleConfig(singleDaySchedulingFns.pickTime({
                 startTime: time24('11:00'),
                 endTime: time24('16:00'),
                 duration: minutes(120),
                 period: minutes(30)
-            }) as any
+            })) as any
         }),
         upsertServiceImage({
             tenant_id,

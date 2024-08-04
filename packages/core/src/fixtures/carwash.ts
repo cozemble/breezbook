@@ -29,7 +29,7 @@ import {
 import {carwashForm} from './carWashForms.js';
 import {jexlExpression, multiply, pricingFactorName, PricingRule} from "@breezbook/packages-pricing";
 import {resourcing} from "@breezbook/packages-resourcing";
-import {singleDayScheduling, timeslotSelection} from "../scheduleConfig.js";
+import {scheduleConfig, singleDayScheduling, timeslotSelection} from "../scheduleConfig.js";
 import anySuitableResource = resourcing.anySuitableResource;
 import resource = resourcing.resource;
 
@@ -57,7 +57,7 @@ const smallCarWash = service(
     price(1000, GBP),
     [wax.id, polish.id],
     [carwashForm.id],
-    singleDayScheduling(timeslotSelection(timeslots)),
+    scheduleConfig(singleDayScheduling(timeslotSelection(timeslots))),
     capacity(1),
     serviceId('smallCarWash.id')
 );
@@ -66,7 +66,7 @@ const mediumCarWash = service(
     price(1500, GBP),
     [wax.id, polish.id],
     [],
-    singleDayScheduling(timeslotSelection(timeslots)),
+    scheduleConfig(singleDayScheduling(timeslotSelection(timeslots))),
     capacity(1),
     serviceId('mediumCarWash.id'));
 const largeCarWash = service(
@@ -74,7 +74,7 @@ const largeCarWash = service(
     price(2000, GBP),
     [wax.id, polish.id, cleanSeats.id, cleanCarpets.id],
     [],
-    singleDayScheduling(timeslotSelection(timeslots)),
+    scheduleConfig(singleDayScheduling(timeslotSelection(timeslots))),
     capacity(1),
     serviceId('largeCarWash.id')
 );

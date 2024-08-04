@@ -14,8 +14,14 @@ import {
 } from '@breezbook/packages-types';
 import {resourcing} from "@breezbook/packages-resourcing";
 import {booking, customerId, periodicStartTime, price, service} from '../../src/types.js';
-import {availabilityConfiguration, configuration, GBP, singleDaySchedulingFns} from "../../src/index.js";
-import {findEarliestAvailability} from "../../src/availability/findEarliestAvailability.js";
+import {
+    availabilityConfiguration,
+    configuration,
+    GBP,
+    scheduleConfig,
+    singleDaySchedulingFns
+} from "../../src/index.js";
+import {findEarliestAvailability} from "../../src/index.js";
 import {makeBusinessAvailability, makeBusinessHours} from "../../src/makeBusinessAvailability.js";
 import {jexlExpression, multiply, pricingFactorName, PricingRule} from "@breezbook/packages-pricing";
 import resource = resourcing.resource;
@@ -39,10 +45,10 @@ describe('findEarliestAvailability', () => {
         price(1000, GBP),
         [],
         [],
-        singleDaySchedulingFns.pickTime({
+        scheduleConfig(singleDaySchedulingFns.pickTime({
             startTime: nineAm,
             endTime: fivePm,
-        }),
+        })),
         capacity(1),
         serviceId('test-service')
     );
