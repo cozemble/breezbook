@@ -322,6 +322,7 @@ export function simpleScheduleConfig(duration: Duration): SimpleScheduleConfig {
 
 export interface ScheduleConfig {
     _type: 'schedule-config'
+    version: number,
     scheduling: SingleDayScheduling | MultiDayScheduling | SimpleScheduleConfig
     minimumNoticePeriod?: MinimumNoticePeriod
 }
@@ -334,6 +335,7 @@ export function scheduleConfig(
 ): ScheduleConfig {
     return {
         _type: 'schedule-config',
+        version: 1,
         scheduling,
         minimumNoticePeriod: options?.minimumNoticePeriod,
     }
@@ -350,7 +352,7 @@ export const scheduleConfigFns = {
     },
 
     duration(scheduleConfig: ScheduleConfig): Duration {
-        if(scheduleConfig.scheduling._type === 'simple-schedule-config') {
+        if (scheduleConfig.scheduling._type === 'simple-schedule-config') {
             return scheduleConfig.scheduling.duration
         }
         if (scheduleConfig.scheduling._type === 'multi-day-scheduling') {
@@ -372,7 +374,7 @@ export const scheduleConfigFns = {
         throw new Error('Unexpected times type')
     },
     startTimes(scheduleConfig: ScheduleConfig, duration: Minutes): StartTime[] | null {
-        if(scheduleConfig.scheduling._type === 'simple-schedule-config') {
+        if (scheduleConfig.scheduling._type === 'simple-schedule-config') {
             return null
         }
         if (scheduleConfig.scheduling._type === 'multi-day-scheduling') {
