@@ -38,6 +38,11 @@
 </script>
 
 {#if showStripe && priced && state.customerDetails}
+    <div class="text-center text-sm text-base-content/70">
+        <p>Use test credit card 4242 4242 4242 4242</p>
+        <p>Expiry can be any date in future</p>
+        <p>CVC can be anything</p>
+    </div>
     <div>
         <StripePaymentForm {priced}
                            customerDetails={state.customerDetails}
