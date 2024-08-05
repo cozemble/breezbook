@@ -35,6 +35,10 @@ export interface Translations {
     thankYouSentence: string
     bookAnotherSession: string
     serviceUnavailableAtLocation: string
+    use4242: string
+    useFutureExpiry: string
+    useAnyCVC: string
+    loadingCheckoutForm: string
 }
 
 const translationsEnglish: Translations = {
@@ -73,7 +77,11 @@ const translationsEnglish: Translations = {
     bookingConfirmed: "Booking Confirmed",
     thankYouSentence: "Thank you for your booking. We look forward to seeing you soon",
     bookAnotherSession: "Book another session",
-    serviceUnavailableAtLocation: "Personal training unavailable at this location"
+    serviceUnavailableAtLocation: "Personal training unavailable at this location",
+    use4242:"Use test credit card 4242 4242 4242 4242",
+    useFutureExpiry:"Expiry can be any date in future",
+    useAnyCVC:"CVC can be any 3 digits",
+    loadingCheckoutForm:"Loading checkout form..."
 }
 
 const translationsTurkish: Translations = {
@@ -112,7 +120,11 @@ const translationsTurkish: Translations = {
     bookingConfirmed: "Rezervasyon Onaylandı",
     thankYouSentence: "Rezervasyonunuz için teşekkür ederiz. Sizi yakında görmekten mutluluk duyarız.",
     bookAnotherSession: "Başka bir oturum rezerve et",
-    serviceUnavailableAtLocation: "Bu konum için kişisel antrenman mevcut değil"
+    serviceUnavailableAtLocation: "Bu konum için kişisel antrenman mevcut değil",
+    use4242:"Test kredi kartı 4242 4242 4242 4242 kullanın",
+    useFutureExpiry:"Son kullanma tarihi gelecek bir tarih olabilir",
+    useAnyCVC:"CVC herhang bir 3 haneli sayı olabilir",
+    loadingCheckoutForm:"Ödeme formu yükleniyor..."
 }
 
 export function translationsFor(lang: string): Translations {
