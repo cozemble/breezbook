@@ -204,7 +204,6 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
 	const coupons = availabilityData.coupons.map((c) => c.definition as unknown as Coupon);
 
 	const dates = isoDateFns.listDays(fromDate, toDate);
-	// const mappedResourceTypes = availabilityData.resourceTypes.map((rt) => resourceType(rt.id));
 	const mappedAddOns = availabilityData.addOns.map((a) => toDomainAddOn(a));
 	const mappedForms = availabilityData.forms.map((f) => toDomainForm(f));
 	const customerFormId = availabilityData.tenantSettings.customer_form_id;
