@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {PickTimeConfig, Time, Timeslot} from "./timeSelectionUiTypes";
-    import {dayAndTime, dayAndTimeFns, type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {dayAndTime, dayAndTimeFns, type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-date-time";
     import {createEventDispatcher} from "svelte";
     import SelectEndTime from "./SelectEndTime.svelte";
     import {type Duration, durationFns, type SchedulingOptions} from "./types2";

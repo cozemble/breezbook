@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-date-time";
     import {getPossibleEndTimes} from "./toUiTypes";
     import SelectEndTime from "./SelectEndTime.svelte";
     import type {Time} from "./uiTypes";

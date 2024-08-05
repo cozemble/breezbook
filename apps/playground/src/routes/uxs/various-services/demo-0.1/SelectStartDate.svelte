@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {IsoDate} from "@breezbook/packages-types";
+    import type {IsoDate} from "@breezbook/packages-date-time";
     import DaySelector from "$lib/ui/time-picker/DaySelector.svelte";
     import {daysOfWeek} from "./uIConstants";
     import {disabledStartDays} from "./toUiModel";

@@ -1,4 +1,4 @@
-import {minutes, type Minutes, time24, type TwentyFourHourClockTime, type ValueType} from "@breezbook/packages-types";
+import {minutes, type Minutes, time24, type TwentyFourHourClockTime, type ValueType} from "@breezbook/packages-date-time";
 import {timeslotSpec, type TimeslotSpec} from "@breezbook/packages-core";
 
 export interface Period {

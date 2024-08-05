@@ -9,7 +9,7 @@
         type TimeString
     } from "$lib/ui/time-picker/types";
     import {translations} from "$lib/ui/stores";
-    import {isoDate, type IsoDate, time24, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {isoDate, type IsoDate, time24, type TwentyFourHourClockTime} from "@breezbook/packages-date-time";
     import {createEventDispatcher} from "svelte";
     import {ChevronLeft} from "lucide-svelte";
     import StickyFooterWrapper from "$lib/ui/StickyFooterWrapper.svelte";

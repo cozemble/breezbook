@@ -7,7 +7,14 @@
         type ResourceSummary,
         type Service
     } from "@breezbook/backend-api-types";
-    import {isoDate, type IsoDate, isoDateFns, time24, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {
+        isoDate,
+        type IsoDate,
+        isoDateFns,
+        time24,
+        timezones,
+        type TwentyFourHourClockTime
+    } from '@breezbook/packages-date-time';
     import {onMount} from "svelte";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import {language, translations} from "$lib/ui/stores";
@@ -51,14 +58,6 @@
             }
             return acc
         }, {} as DisabledDays)
-
-        // return Object.keys(dateTimes).reduce((acc, date) => {
-        //     if (dateTimes[date].length === 0) {
-        //         acc[date] = true
-        //     }
-        //     const asDate = isoDate(date)
-        //     return acc
-        // }, {} as DisabledDays)
     }
 
     onMount(getAvailability)

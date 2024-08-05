@@ -34,6 +34,7 @@
   "type": "module",
   "dependencies": {
     "@breezbook/backend-api-types": "workspace:*",
+    "@breezbook/packages-date-time": "workspace:*",
     "@breezbook/packages-core": "workspace:*",
     "@breezbook/packages-resourcing": "workspace:*",
     "@breezbook/packages-types": "workspace:*",

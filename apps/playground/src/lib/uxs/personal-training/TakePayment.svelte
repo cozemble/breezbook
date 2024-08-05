@@ -5,7 +5,7 @@
     import {mandatory, priceFns} from "@breezbook/packages-core";
     import {backendUrl, fetchJson} from "$lib/helpers";
     import StripePaymentForm from "$lib/uxs/personal-training/StripePaymentForm.svelte";
-    import {duration, minutes, time24} from "@breezbook/packages-types";
+    import {duration, minutes, time24} from "@breezbook/packages-date-time";
     import {translations} from "$lib/ui/stores";
     import {env, tenantId} from "$lib/uxs/personal-training/constants";
     import {ChevronLeft} from "lucide-svelte";

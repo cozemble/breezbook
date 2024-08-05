@@ -1,5 +1,5 @@
 import type {AvailabilityResponse} from "@breezbook/backend-api-types";
-import type {IsoDate} from "@breezbook/packages-types";
+import type {IsoDate} from "@breezbook/packages-date-time";
 
 export type LabelAndTime = {
     label: string;

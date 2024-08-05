@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {time24, time24Fns, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {time24, time24Fns, type TwentyFourHourClockTime} from "@breezbook/packages-date-time";
     import UserEnteredTimeSelector from "$lib/ui/time-picker/UserEnteredTimeSelector.svelte";
     import {createEventDispatcher} from "svelte";
     import {time, type Time} from "./uiTypes";

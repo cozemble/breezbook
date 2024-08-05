@@ -2,7 +2,7 @@
     import SelectStartDate from "./SelectStartDate.svelte";
     import {derived, type Readable, writable} from "svelte/store";
     import {initialMultiDaySelection, type SelectableTimeOption, type Time, time} from "./uiTypes";
-    import {type IsoDate, isoDate, time24Fns, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {type IsoDate, isoDate, time24Fns, type TwentyFourHourClockTime} from "@breezbook/packages-date-time";
     import {formatDate} from "$lib/ui/time-picker/types";
     import PickStartTime from "./PickStartTime.svelte";
     import {afterUpdate} from "svelte";

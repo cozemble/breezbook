@@ -1,7 +1,7 @@
 <script lang="ts">
     // import type {Time, Timeslot} from "./timeSelectionUiTypes";
     import TimeButton from "$lib/ui/time-picker/TimeButton.svelte";
-    import type {TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import type {TwentyFourHourClockTime} from "@breezbook/packages-date-time";
     import {createEventDispatcher} from "svelte";
     import type {Time} from "./uiTypes";
 

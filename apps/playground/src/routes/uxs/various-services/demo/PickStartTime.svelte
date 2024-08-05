@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type {IsoDate} from "@breezbook/packages-types";
+    import type {IsoDate} from "@breezbook/packages-date-time";
     import {getPossibleStartTimes} from "./toUiTypes";
     import type {SelectableTimeOption} from "./uiTypes";
     import SelectStartTime from "./SelectStartTime.svelte";

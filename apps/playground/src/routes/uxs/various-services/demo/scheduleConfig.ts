@@ -7,7 +7,7 @@ import {
     isoDateFns,
     type Minutes,
     type TwentyFourHourClockTime
-} from "@breezbook/packages-types";
+} from "@breezbook/packages-date-time";
 import {timeslotSpec, type TimeslotSpec} from "@breezbook/packages-core";
 
 export interface Period {

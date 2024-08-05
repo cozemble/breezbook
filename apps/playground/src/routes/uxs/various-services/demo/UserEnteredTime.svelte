@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {type TwentyFourHourClockTime} from "@breezbook/packages-date-time";
     import {type SelectableTimeOption, type Time, type Timeslot} from "./uiTypes";
     import UserEnteredStartTime from "./UserEnteredStartTime.svelte";
     import UserEnteredStartTimeslot from "./UserEnteredStartTimeslot.svelte";

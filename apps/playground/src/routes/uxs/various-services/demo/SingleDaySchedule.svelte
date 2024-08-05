@@ -3,7 +3,7 @@
     import {writable} from "svelte/store";
     import type {DurationReport, SelectableTimeOption, SingleDaySelection, TimeOption, Timeslot} from "./uiTypes";
     import {formatDate} from "$lib/ui/time-picker/types";
-    import {durationFns, isoDate, time24Fns} from "@breezbook/packages-types";
+    import {durationFns, isoDate, time24Fns} from "@breezbook/packages-date-time";
     import PickStartTime from "./PickStartTime.svelte";
     import UserEnteredTime from "./UserEnteredTime.svelte";
     import {Clock} from "lucide-svelte";

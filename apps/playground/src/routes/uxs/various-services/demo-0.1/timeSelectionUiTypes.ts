@@ -1,4 +1,4 @@
-import {type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+import {type IsoDate, type TwentyFourHourClockTime} from "@breezbook/packages-date-time";
 import {days, duration, type Duration, hours} from "./types2";
 
 export interface Disabled {

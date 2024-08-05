@@ -3,9 +3,10 @@
     import type {EarliestResourceAvailability, ResourceSummary} from "@breezbook/backend-api-types";
     import Markdown from "$lib/markdown/Markdown.svelte";
     import {translations} from "$lib/ui/stores";
-    import {isoDate, isoDateFns, mandatory} from "@breezbook/packages-types";
+    import { isoDate, isoDateFns, timezones } from '@breezbook/packages-date-time';
     import {currencies, price, priceFns} from "@breezbook/packages-core";
     import StickyFooterWrapper from "$lib/ui/StickyFooterWrapper.svelte";
+    import { mandatory } from '@breezbook/packages-types';
 
     export let trainers: ResourceSummary[]
     export let onTrainerChosen: (t: ResourceSummary) => void

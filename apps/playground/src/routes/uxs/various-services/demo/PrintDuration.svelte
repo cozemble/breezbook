@@ -2,7 +2,7 @@
 
     import {Clock} from "lucide-svelte";
     import PrintDurationUnits from "./PrintDurationUnits.svelte";
-    import type {Duration} from "@breezbook/packages-types";
+    import type {Duration} from "@breezbook/packages-date-time";
 
     export let duration: Duration
 </script>

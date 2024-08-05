@@ -144,6 +144,9 @@ importers:
       '@breezbook/packages-core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@breezbook/packages-date-time':
+        specifier: workspace:*
+        version: link:../../packages/date-time
       '@breezbook/packages-resourcing':
         specifier: workspace:*
         version: link:../../packages/resourcing

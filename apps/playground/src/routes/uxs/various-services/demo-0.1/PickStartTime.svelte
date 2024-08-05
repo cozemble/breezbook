@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {PickTimeConfig} from "./timeSelectionUiTypes";
-    import type {IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import type {IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-date-time";
     import SelectStartTime from "./SelectStartTime.svelte";
     import type {SchedulingOptions} from "./types2";
     import {getPossibleStartTimes} from "./toUiModel";

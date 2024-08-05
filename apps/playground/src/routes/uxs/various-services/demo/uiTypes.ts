@@ -1,4 +1,4 @@
-import type {Duration, IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-types";
+import type {Duration, IsoDate, TwentyFourHourClockTime} from "@breezbook/packages-date-time";
 
 import type {FixedTime} from "./scheduleConfig";
 

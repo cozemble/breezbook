@@ -1,5 +1,5 @@
 import {type DisabledDays, formatDate} from "$lib/ui/time-picker/types";
-import {type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbook/packages-types";
+import { type IsoDate, isoDate, isoDateFns, time24Fns, timezones } from '@breezbook/packages-date-time';
 import {disabled, type Disabled} from "../demo-0.1/timeSelectionUiTypes";
 import {type SelectableTimeOption, time, type Time, timeslot} from "./uiTypes";
 import type {DayConstraint, DayLength, PickTime, TimeRange, TimeslotSelection, VariableLength} from "./scheduleConfig";

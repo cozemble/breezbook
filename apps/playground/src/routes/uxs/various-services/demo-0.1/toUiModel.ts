@@ -30,7 +30,7 @@ import {
     type TimeslotSelection
 } from "./types2";
 import {type DisabledDays, formatDate} from "$lib/ui/time-picker/types";
-import {daysOfWeek, type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbook/packages-types";
+import { daysOfWeek, type IsoDate, isoDate, isoDateFns, time24Fns, timezones } from '@breezbook/packages-date-time';
 
 
 function disabledIfPast(date: IsoDate): Disabled | undefined {

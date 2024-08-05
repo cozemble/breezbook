@@ -1,4 +1,4 @@
-import {days, duration, hours, minutes, time24} from "@breezbook/packages-types";
+import {days, duration, hours, minutes, time24} from "@breezbook/packages-date-time";
 import {
     anyTimeBetween,
     daysOfWeek,

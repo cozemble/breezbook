@@ -1,7 +1,7 @@
 <script lang="ts">
     import {Clock} from 'lucide-svelte';
     import {type Time, type Timeslot} from "./timeSelectionUiTypes";
-    import {isoDate, type IsoDate, minutes, type TwentyFourHourClockTime} from "@breezbook/packages-types";
+    import {isoDate, type IsoDate, minutes, type TwentyFourHourClockTime} from "@breezbook/packages-date-time";
     import {allConfigs, duration} from "./types2";
     import SelectStartDate from "./SelectStartDate.svelte";
     import {formatDate} from "$lib/ui/time-picker/types.js";

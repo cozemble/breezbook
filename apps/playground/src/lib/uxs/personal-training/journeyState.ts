@@ -1,4 +1,4 @@
-import {type Form, type IsoDate, jsonSchemaFormFns, mandatory} from "@breezbook/packages-types";
+import {type Form,jsonSchemaFormFns, mandatory} from "@breezbook/packages-types";
 import {
     type AddOnSummary,
     type Availability,
@@ -6,6 +6,7 @@ import {
     type ResourceRequirementOverride,
     type Tenant
 } from "@breezbook/backend-api-types";
+import type { IsoDate } from '@breezbook/packages-date-time';
 
 export interface Slot {
     day: IsoDate;
