@@ -102,6 +102,7 @@ export interface AvailabilityResponse {
     _type: 'availability.response';
     slots: Slots;
     serviceId: string;
+    timezone: string;
 }
 
 export const availabilityResponseFns = {
@@ -123,8 +124,8 @@ export const availabilityResponseFns = {
     }
 }
 
-export function emptyAvailabilityResponse(serviceId: string): AvailabilityResponse {
-    return {_type: 'availability.response', serviceId, slots: {}};
+export function emptyAvailabilityResponse(serviceId: string, timezone:string): AvailabilityResponse {
+    return {_type: 'availability.response', serviceId, slots: {}, timezone};
 }
 
 export interface OrderCreatedResponse {

@@ -7,6 +7,7 @@ import {
     TimeSlotAvailability
 } from "@breezbook/backend-api-types";
 import {ServiceId} from "@breezbook/packages-types";
+import { Timezone } from '@breezbook/packages-date-time';
 
 function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
     const breakDown: PriceBreakdown = {
@@ -53,7 +54,7 @@ function toTimeSlotAvailability(priced: PricedSlot): TimeSlotAvailability {
     );
 }
 
-export function toAvailabilityResponse(priced: PricedSlot[], serviceId: ServiceId): AvailabilityResponse {
+export function toAvailabilityResponse(priced: PricedSlot[], serviceId: ServiceId, timezone:Timezone): AvailabilityResponse {
     return priced.reduce(
         (acc, curr) => {
             const slotsForDate = acc.slots[curr.slot.serviceRequest.date.value] ?? [];
@@ -64,6 +65,6 @@ export function toAvailabilityResponse(priced: PricedSlot[], serviceId: ServiceI
             acc.slots[curr.slot.serviceRequest.date.value] = slotsForDate;
             return acc;
         },
-        emptyAvailabilityResponse(serviceId.value)
+        emptyAvailabilityResponse(serviceId.value, timezone.value)
     );
 }

@@ -21,7 +21,7 @@ import {
 } from '@breezbook/packages-core';
 import { AvailabilityResponse } from '@breezbook/backend-api-types';
 import { byId } from '@breezbook/packages-types';
-import { dayAndTime, dayAndTimeFns, isoDate, IsoDate, isoDateFns, time24 } from '@breezbook/packages-date-time';
+import { dayAndTimeFns, IsoDate, isoDateFns } from '@breezbook/packages-date-time';
 import { ServiceAvailabilityRequest } from '../express/availability/getServiceAvailabilityForLocation.js';
 import { toAvailabilityResponse } from './toAvailabilityResponse.js';
 
@@ -52,7 +52,7 @@ export function getAvailabilityForService(
 	const mappedAddOns = addOns.map((id) => addOnAndQuantity(addOnFns.findById(everythingForAvailability.businessConfiguration.addOns, id.addOnId), id.quantity));
 	const availability = getAvailableSlots(config, everythingForAvailability.bookings, service, mappedAddOns, serviceOptions, fromDate, toDate);
 	const priced = availability.map((a) => calculatePrice(a, everythingForAvailability.pricingRules));
-	return toAvailabilityResponse(priced, service.id);
+	return toAvailabilityResponse(priced, service.id, everythingForAvailability.locationTimezone);
 }
 
 function getAvailableSlots(config: AvailabilityConfiguration, bookings: Booking[], service: Service, addOns: AddOnAndQuantity[], serviceOptions: ServiceOptionAndQuantity[], fromDate: IsoDate, toDate: IsoDate): AvailableSlot[] {

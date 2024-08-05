@@ -247,10 +247,9 @@ export function dateAndTime(date: IsoDate, time: TwentyFourHourClockTime): DateA
 export const dateAndTimeFns = {
 	now(timezone: Timezone): DateAndTime {
 		const nowInTz = dayjs().tz(timezone.value);
-		const nowInUtc = nowInTz.utc();
 		return dateAndTime(
-			isoDate(nowInUtc.format('YYYY-MM-DD')),
-			time24(nowInUtc.format('HH:mm'))
+			isoDate(nowInTz.format('YYYY-MM-DD')),
+			time24(nowInTz.format('HH:mm'))
 		);
 	}
 };
@@ -261,8 +260,7 @@ export const isoDateFns = {
 	},
 	today(timezone: Timezone): IsoDate {
 		const nowInTz = dayjs().tz(timezone.value);
-		const nowInUtc = nowInTz.utc();
-		return isoDate(nowInUtc.format('YYYY-MM-DD'));
+		return isoDate(nowInTz.format('YYYY-MM-DD'));
 	},
 	sameDay(date1: IsoDate, date2: IsoDate) {
 		return this.isEqual(date1, date2);
@@ -526,10 +524,9 @@ export const dayAndTimeFns = {
 	},
 	now(tz: Timezone): DayAndTime {
 		const nowInTz = dayjs().tz(tz.value);
-		const nowInUtc = nowInTz.utc();
 		return dayAndTime(
-			isoDate(nowInUtc.format('YYYY-MM-DD')),
-			time24(nowInUtc.format('HH:mm'))
+			isoDate(nowInTz.format('YYYY-MM-DD')),
+			time24(nowInTz.format('HH:mm'))
 		);
 	}
 };

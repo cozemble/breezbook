@@ -26,7 +26,7 @@ test("converts a timeslot to an availability response", () => {
                 capacity(0)),
             thePriceBreakdown
         )
-    ], carwash.smallCarWash.id);
+    ], carwash.smallCarWash.id, timezones.utc);
     const slots = availabilityResponseFns.slotsForDate(response, date)
     const firstSlot = mandatory(slots[0], `Expected a slot for date ${date.value}`);
     expect(firstSlot.startTime24hr).toBe("09:00");
@@ -45,7 +45,7 @@ test("converts an exact time slot to an availability response", () => {
                 capacity(0)),
             thePriceBreakdown
         )
-    ], carwash.smallCarWash.id);
+    ], carwash.smallCarWash.id, timezones.utc);
     const slots = availabilityResponseFns.slotsForDate(response, date)
     const firstSlot = mandatory(slots[0], `Expected a slot for date ${date.value}`);
     expect(firstSlot.startTime24hr).toBe("09:00");

@@ -1,5 +1,16 @@
 import { describe, expect, test } from 'vitest';
-import { dayAndTime, dayAndTimeFns, days, duration, hours, isoDate, minutes, time24 } from '../src/index.js';
+import {
+	dayAndTime,
+	dayAndTimeFns,
+	days,
+	duration,
+	hours,
+	isoDate,
+	minutes,
+	time24,
+	timezone,
+	timezones
+} from '../src/index.js';
 
 describe('dayAndTimeFns.addDuration', () => {
 	const initialTime = dayAndTime(isoDate('2024-03-31'), time24('12:00'));
@@ -35,5 +46,13 @@ describe('dayAndTimeFns.addDuration', () => {
 	test('can add day units', () => {
 		expect(dayAndTimeFns.addDuration(initialTime, duration(days(1)))).toEqual(dayAndTime(isoDate('2024-04-01'), time24('12:00')));
 	});
+});
 
+describe('dayAndTimeFns.now', () => {
+	test("converts now in the given timezone to utc", () => {
+		const nowBrazil = dayAndTimeFns.now(timezone('America/Sao_Paulo'));
+		const nowUtc = dayAndTimeFns.now(timezones.utc);
+		const diff = dayAndTimeFns.minutesBetween(nowBrazil, nowUtc);
+		expect(diff).toEqual(minutes(180));
+	});
 });
