@@ -38,7 +38,7 @@ importers:
         version: link:../../backend/api-types
       '@breezbook/packages-core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/dates
       '@breezbook/packages-types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -140,7 +140,7 @@ importers:
         version: link:../../backend/api-types
       '@breezbook/packages-core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/dates
       '@breezbook/packages-resourcing':
         specifier: workspace:*
         version: link:../../packages/resourcing
@@ -279,7 +279,7 @@ importers:
         version: link:../api-types
       '@breezbook/packages-core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/dates
       '@breezbook/packages-http':
         specifier: workspace:*
         version: link:../../packages/http
@@ -418,7 +418,7 @@ importers:
     dependencies:
       '@breezbook/packages-core':
         specifier: workspace:*
-        version: link:../../packages/core
+        version: link:../../packages/dates
       '@breezbook/packages-types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -498,6 +498,31 @@ importers:
       '@types/uuid':
         specifier: ^9.0.7
         version: 9.0.7
+      eslint:
+        specifier: ^8.28.0
+        version: 8.54.0
+      typescript:
+        specifier: 5.3.3
+        version: 5.3.3
+      vite:
+        specifier: 5.0.7
+        version: 5.0.7
+      vitest:
+        specifier: 0.33.0
+        version: 0.33.0
+
+  packages/dates:
+    dependencies:
+      dayjs:
+        specifier: 1.11.12
+        version: 1.11.12
+      timezone:
+        specifier: link:dayjs/plugin/timezone
+        version: link:dayjs/plugin/timezone
+      utc:
+        specifier: link:dayjs/plugin/utc
+        version: link:dayjs/plugin/utc
+    devDependencies:
       eslint:
         specifier: ^8.28.0
         version: 8.54.0
@@ -635,7 +660,7 @@ importers:
     dependencies:
       '@breezbook/packages-core':
         specifier: workspace:*
-        version: link:../core
+        version: link:../dates
       '@breezbook/packages-pricing':
         specifier: workspace:*
         version: link:../pricing

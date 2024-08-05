@@ -1,0 +1,27 @@
+{
+  "name": "@breezbook/packages-dates",
+  "version": "1.0.0",
+  "module": "./dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest watch"
+  },
+  "devDependencies": {
+    "eslint": "^8.28.0",
+    "typescript": "5.3.3",
+    "vite": "5.0.7",
+    "vitest": "0.33.0"
+  },
+  "dependencies": {
+    "dayjs": "1.11.12",
+    "timezone": "link:dayjs/plugin/timezone",
+    "utc": "link:dayjs/plugin/utc"
+  }
+}
