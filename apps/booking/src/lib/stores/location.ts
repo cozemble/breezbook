@@ -1,8 +1,9 @@
 import { createStoreContext } from '$lib/common/helpers/store';
+import type { Location } from '@breezbook/backend-api-types';
 
 const LOCATION_CTX_KEY = 'tenant-location';
 
-const createLocationStore = (location: TenantLocation) => {
+const createLocationStore = (location: Location) => {
 	return location;
 };
 

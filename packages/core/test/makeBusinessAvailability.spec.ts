@@ -1,7 +1,8 @@
 import {expect, test} from "vitest";
 import {BlockedTime, businessAvailability, BusinessHours} from "../src/types.js";
 import {makeBusinessAvailability} from "../src/makeBusinessAvailability.js";
-import {dayAndTimePeriod, daysOfWeek, isoDate, isoDateFns, makeId, tenantId, time24, timePeriod} from "@breezbook/packages-types";
+import {dayAndTimePeriod, daysOfWeek, isoDate, isoDateFns, time24, timePeriod} from "@breezbook/packages-date-time";
+import { makeId, tenantId } from '@breezbook/packages-types';
 
 
 const allWeek: BusinessHours[] = daysOfWeek.map(day => {

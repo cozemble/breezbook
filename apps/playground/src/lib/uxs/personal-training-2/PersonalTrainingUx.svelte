@@ -60,7 +60,7 @@
         journeyState = initializeJourneyState(tenant, personalTrainingService.id, locationId, [])
         navState = "chooseTrainer"
         selectedPersonalTrainer = null
-        const today = isoDate()
+        const today = isoDateFns.today(timezones.utc)
         const someDaysFromNow = isoDateFns.addDays(today, 14)
         const dateRange = `fromDate=${today.value}&toDate=${someDaysFromNow.value}`
 

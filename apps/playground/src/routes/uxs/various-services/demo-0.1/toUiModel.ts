@@ -34,7 +34,7 @@ import {daysOfWeek, type IsoDate, isoDate, isoDateFns, time24Fns} from "@breezbo
 
 
 function disabledIfPast(date: IsoDate): Disabled | undefined {
-    if (date.value <= isoDate().value) {
+    if (date.value <= isoDateFns.today(timezones.utc).value) {
         return disabled("Date is in the past")
     }
     return undefined;

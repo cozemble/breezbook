@@ -4,16 +4,14 @@ import {
     capacity,
     Capacity,
     CouponCode,
-    Duration,
-    IsoDate,
     locationId,
-    LocationId, Minutes,
+    LocationId,
     serviceId,
     ServiceId,
     ServiceOptionRequest,
-    TwentyFourHourClockTime
 } from "@breezbook/packages-types";
 import {PriceBreakdown} from "./index.js";
+import { Duration, IsoDate, TwentyFourHourClockTime } from '@breezbook/packages-date-time';
 
 
 export interface UnpricedBasketLine {
@@ -73,6 +71,12 @@ export interface PricedBasketLine {
     duration: Duration;
     serviceFormData: unknown[];
     resourceRequirementOverrides: ResourceRequirementOverride[];
+}
+
+export const pricedBasketFns = {
+    getLocations(pricedBasket: PricedBasket): LocationId[] {
+        return pricedBasket.lines.map((l) => l.locationId);
+    }
 }
 
 export interface PricedBasket {

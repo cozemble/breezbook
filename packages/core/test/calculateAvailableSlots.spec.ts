@@ -35,7 +35,6 @@ import {
 } from '../src/index.js';
 import { makeBusinessAvailability, makeBusinessHours } from '../src/makeBusinessAvailability.js';
 import {
-	capacity,
 	dayAndTime,
 	dayAndTimePeriod,
 	duration,
@@ -43,12 +42,11 @@ import {
 	isoDate,
 	minutes,
 	mondayToFriday,
-	resourceRequirementId,
-	resourceType,
 	time24,
 	time24Fns,
 	timePeriod
-} from '@breezbook/packages-types';
+} from '@breezbook/packages-date-time';
+import { capacity, resourceRequirementId, resourceType } from '@breezbook/packages-types';
 import { resourcing } from '@breezbook/packages-resourcing';
 import anySuitableResource = resourcing.anySuitableResource;
 import resourceDayAvailability = configuration.resourceAvailability;

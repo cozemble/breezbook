@@ -8,7 +8,7 @@ import {
     isoDateFns,
     time24,
     timePeriod
-} from "@breezbook/packages-types";
+} from "@breezbook/packages-date-time";
 import {DbBlockedTime, DbBusinessHours} from '../prisma/dbtypes.js';
 
 function availabilityForDate(businessHours: DbBusinessHours[], date: IsoDate): DayAndTimePeriod[] {

@@ -35,7 +35,8 @@ import {updateBooking, updateCancellationGrant} from '../prisma/breezPrismaMutat
 import {jsDateFns} from '@breezbook/packages-core/dist/jsDateFns.js';
 import {Mutations, mutations} from '../mutation/mutations.js';
 import {DbBookingAndResourceRequirements} from "./getEverythingForAvailability.js";
-import {BookingId, resourceType, time24} from "@breezbook/packages-types";
+import {BookingId} from "@breezbook/packages-types";
+import { time24 } from '@breezbook/packages-date-time';
 
 function findBookingById(bookingId: BookingId): DbResourceFinder<DbBookingAndResourceRequirements> {
     return (prisma, tenantEnvironment) => {

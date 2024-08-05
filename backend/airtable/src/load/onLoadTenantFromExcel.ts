@@ -22,7 +22,6 @@ import {
     tenantEnvironment,
     TenantId,
     tenantId,
-    time24
 } from "@breezbook/packages-types";
 import {mutations, Upsert} from "../mutation/mutations.js";
 import {
@@ -55,6 +54,7 @@ import {
 } from "../prisma/breezPrismaMutations.js";
 import {z, ZodType} from 'zod';
 import {scheduleConfig, singleDayScheduling, timeslot, timeslotSelection} from "@breezbook/packages-core";
+import { time24 } from '@breezbook/packages-date-time';
 
 export async function onLoadTenantFromExcel(req: express.Request, res: express.Response): Promise<void> {
     await expressBridge(productionDeps, onLoadTenantFromExcelEndpoint, req, res)
@@ -89,6 +89,7 @@ const LocationsSchema = z.object({
     "ID": z.string(),
     "Name": z.string(),
     "Slug": z.string(),
+    "Timezone": z.string(),
 });
 type Location = z.infer<typeof LocationsSchema>;
 
@@ -214,6 +215,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         environment_id,
         name: l.Name,
         slug: l.Slug,
+        iana_timezone: l.Timezone
     }))
 
     const businessHoursUpserts = businessHoursData.map(bh => upsertBusinessHours({
@@ -303,8 +305,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
         return upsertTenantSettings({
                 tenant_id,
                 environment_id,
-                customer_form_id: null,
-                iana_timezone: ts.Timezone
+                customer_form_id: null
             }
         );
     })

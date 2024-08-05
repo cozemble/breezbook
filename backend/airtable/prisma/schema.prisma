@@ -226,6 +226,7 @@ model locations {
   environment_id          String
   slug                    String
   name                    String
+  iana_timezone           String
   created_at              DateTime                  @default(now()) @db.Timestamptz(6)
   updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
   blocked_time            blocked_time[]
@@ -583,7 +584,6 @@ model tenant_settings {
   tenant_id        String
   environment_id   String
   customer_form_id String?
-  iana_timezone    String
   created_at       DateTime @default(now()) @db.Timestamptz(6)
   updated_at       DateTime @default(now()) @db.Timestamptz(6)
   forms            forms?   @relation(fields: [customer_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)

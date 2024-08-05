@@ -5,7 +5,7 @@ import {loadMultiLocationGymTenant} from "../../../src/dx/loadMultiLocationGymTe
 import {listResourceAvailabilityByType} from "../../../src/express/resources/resourcesHandler.js";
 import {multilocationGym} from "../../helpers/fixtures.js";
 import {serviceAvailabilityRequest} from "../../../src/express/availability/getServiceAvailabilityForLocation.js";
-import {isoDate} from "@breezbook/packages-types";
+import {isoDate} from "@breezbook/packages-date-time";
 import {dummyEventSender, endpointDependencies, httpResponseOutcome} from "../../../src/infra/endpoint.js";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 

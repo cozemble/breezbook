@@ -30,7 +30,7 @@
     export let personalTrainerRequirement: AnySuitableResourceSpec
     let availableSlots: AvailabilityResponse
     let showNoAvailabilityMessage = false
-    const today = isoDate()
+    const today = isoDateFns.today(timezones.utc)
     const sevenDaysFromNow = isoDateFns.addDays(today, 7)
     const dayList = isoDateFns.listDays(today, sevenDaysFromNow)
     let journeyState: JourneyState

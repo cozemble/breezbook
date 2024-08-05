@@ -12,17 +12,12 @@ import {
     CouponCode,
     couponId,
     CouponId,
-    DayAndTimePeriod,
-    DayOfWeek,
-    Duration,
     Email,
     email,
     Form,
     FormId,
     id,
     Id,
-    IsoDate,
-    isoDateFns,
     LanguageId,
     LocationId,
     makeId,
@@ -37,11 +32,6 @@ import {
     serviceId,
     serviceOptionId,
     ServiceOptionId,
-    timePeriod,
-    TimePeriod,
-    timePeriodFns,
-    Timezone,
-    TwentyFourHourClockTime,
     ValueType,
 } from '@breezbook/packages-types'
 import {resourcing} from "@breezbook/packages-resourcing";
@@ -51,17 +41,24 @@ import ResourceRequirement = resourcing.ResourceRequirement;
 import Resource = resourcing.Resource;
 import ResourceAvailability = configuration.ResourceAvailability;
 import specificResource = resourcing.specificResource;
+import {
+    DayAndTimePeriod, DayOfWeek,
+    Duration, IsoDate, isoDateFns,
+    timePeriod,
+    TimePeriod,
+    timePeriodFns,
+    Timezone,
+    TwentyFourHourClockTime
+} from '@breezbook/packages-date-time';
 
 export interface TenantSettings {
     _type: 'tenant.settings';
     customerFormId: FormId | null;
-    timezone: Timezone;
 }
 
-export function tenantSettings(timezone: Timezone, customerFormId: FormId | null): TenantSettings {
+export function tenantSettings(customerFormId: FormId | null): TenantSettings {
     return {
         _type: 'tenant.settings',
-        timezone,
         customerFormId
     };
 }

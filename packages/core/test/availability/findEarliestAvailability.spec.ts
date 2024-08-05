@@ -1,16 +1,19 @@
 import {describe, expect, test} from 'vitest';
 import {
-    capacity,
+    dayAndTime, dayAndTimeFns,
     daysOfWeek,
     duration,
     isoDate,
     isoDateFns,
     minutes,
+    time24,
+    timePeriod, timezones
+} from '@breezbook/packages-date-time';
+import {
+    capacity,
     resourceId,
     resourceType,
     serviceId,
-    time24,
-    timePeriod
 } from '@breezbook/packages-types';
 import {resourcing} from "@breezbook/packages-resourcing";
 import {booking, customerId, periodicStartTime, price, service} from '../../src/types.js';
@@ -73,7 +76,8 @@ describe('findEarliestAvailability', () => {
             roomType,
             startDate,
             endDate,
-            []
+            [],
+          dayAndTimeFns.now(timezones.utc)
         );
 
         expect(result).toHaveLength(2);

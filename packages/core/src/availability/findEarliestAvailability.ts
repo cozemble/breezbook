@@ -1,16 +1,11 @@
 import { resourcing } from '@breezbook/packages-resourcing';
-import {
-	DayAndTime,
-	IsoDate,
-	isoDateFns,
-	mandatory,
-	ResourceType,
-	TwentyFourHourClockTime
-} from '@breezbook/packages-types';
+import { DayAndTime, IsoDate, isoDateFns, TwentyFourHourClockTime } from '@breezbook/packages-date-time';
 import { Booking, Price, Service, serviceFns } from '../types.js';
 import { availability, AvailabilityConfiguration, serviceRequest } from '../availability.js';
 import { PricingRule } from '@breezbook/packages-pricing';
 import { calculatePrice } from '../calculatePrice.js';
+import { ResourceType } from '@breezbook/packages-types';
+import { mandatory } from '../utils.js';
 import Resource = resourcing.Resource;
 import specificResource = resourcing.specificResource;
 

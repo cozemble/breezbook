@@ -1,11 +1,12 @@
 import {expect, test} from "vitest";
 import {fitAvailability} from "../src/applyBookingsToResourceAvailability.js";
-import {dayAndTimePeriod, isoDate, resourceType, time24, timePeriod} from "@breezbook/packages-types";
+import {dayAndTimePeriod, isoDate,  time24, timePeriod} from "@breezbook/packages-date-time";
 import {configuration} from "../src/index.js";
 import resourceDayAvailability = configuration.resourceAvailability;
 import availabilityBlock = configuration.availabilityBlock;
 import {resourcing} from "@breezbook/packages-resourcing";
 import resource = resourcing.resource;
+import { resourceType } from '@breezbook/packages-types';
 
 const van = resourceType('van');
 const van1 = resource(van, []);

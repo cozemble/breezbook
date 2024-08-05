@@ -12,8 +12,6 @@ import {
 } from './types.js';
 import { errorResponse, ErrorResponse, mandatory, success, Success } from './utils.js';
 import {
-	Capacity,
-	capacityFns,
 	dayAndTime,
 	DayAndTime,
 	dayAndTimeFns,
@@ -22,8 +20,6 @@ import {
 	duration,
 	Duration,
 	durationFns,
-	exactTimeAvailability,
-	ExactTimeAvailability,
 	IsoDate,
 	minuteFns,
 	minutes,
@@ -32,8 +28,10 @@ import {
 	TimePeriod,
 	timePeriod,
 	timePeriodFns,
+	Timezone,
 	TwentyFourHourClockTime
-} from '@breezbook/packages-types';
+} from '@breezbook/packages-date-time';
+import { Capacity, capacityFns, exactTimeAvailability, ExactTimeAvailability } from '@breezbook/packages-types';
 import { resourcing } from '@breezbook/packages-resourcing';
 import { configuration } from './configuration/configuration.js';
 import { ScheduleConfig } from './scheduleConfig.js';
@@ -161,15 +159,17 @@ export interface AvailabilityConfiguration {
 	resourceAvailability: ResourceAvailability[];
 	timeslots: TimeslotSpec[];
 	startTimeSpec: StartTimeSpec;
+	locationTimezone: Timezone;
 }
 
-export function availabilityConfiguration(availability: BusinessAvailability, resourceAvailability: ResourceAvailability[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec): AvailabilityConfiguration {
+export function availabilityConfiguration(availability: BusinessAvailability, resourceAvailability: ResourceAvailability[], timeslots: TimeslotSpec[], startTimeSpec: StartTimeSpec, locationTimezone: Timezone): AvailabilityConfiguration {
 	return {
 		_type: 'availability.configuration',
 		availability,
 		resourceAvailability,
 		timeslots,
-		startTimeSpec
+		startTimeSpec,
+		locationTimezone
 	};
 }
 

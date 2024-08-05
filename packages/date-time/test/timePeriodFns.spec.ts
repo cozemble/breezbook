@@ -1,5 +1,5 @@
 import {test, expect} from "vitest";
-import {time24, timePeriod, timePeriodFns} from "../src/index.js";
+import { time24, timePeriod, timePeriodFns, timezones } from '../src/index.js';
 
 const nineToTen = timePeriod(time24('09:00'), time24('10:00'));
 const tenToEleven = timePeriod(time24('10:00'), time24('11:00'));

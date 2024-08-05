@@ -2,11 +2,10 @@ import {
     dayAndTimePeriod,
     DayAndTimePeriod,
     IsoDate,
-    ResourceId,
-    ServiceId,
     TimePeriod
-} from "@breezbook/packages-types";
+} from "@breezbook/packages-date-time";
 import {resourcing} from "@breezbook/packages-resourcing";
+import { ResourceId, ServiceId } from '@breezbook/packages-types';
 
 export namespace configuration {
 

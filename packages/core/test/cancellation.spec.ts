@@ -9,7 +9,8 @@ import {
     service,
 } from '../src/index.js';
 import {findRefundRule, hours, refundPolicy, timebasedRefundRule} from '../src/cancellation.js';
-import {isoDate, minutes, serviceId, time24, timePeriod} from "@breezbook/packages-types";
+import {isoDate, minutes,  time24, timePeriod} from "@breezbook/packages-date-time";
+import { serviceId } from '@breezbook/packages-types';
 
 describe('given a booking from 09:00 to 13:00 in two days time and a four level time based refund policy', () => {
     const theService = service("Test Service", "Test Description", [], minutes(60), price(3500, currencies.GBP), [], [], serviceId('444'));

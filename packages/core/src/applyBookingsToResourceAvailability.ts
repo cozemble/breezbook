@@ -1,4 +1,4 @@
-import {DayAndTimePeriod, dayAndTimePeriodFns, isoDateFns} from "@breezbook/packages-types";
+import {DayAndTimePeriod, dayAndTimePeriodFns, isoDateFns} from "@breezbook/packages-date-time";
 import {configuration} from "./configuration/configuration.js";
 import ResourceAvailability = configuration.ResourceAvailability;
 import AvailabilityBlock = configuration.AvailabilityBlock;

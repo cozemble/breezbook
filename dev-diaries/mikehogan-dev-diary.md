@@ -2677,7 +2677,7 @@ UTC date and time instances.  So I am not comfortable that this idea of mapping 
 
 When a business registers their dates and time slots, they do it in terms of their time zone.  For example, 
 "we open at 9am, Monday to Friday".  That business might be in Brazil.  When I map their config to `IsoDate` and 
-`Time24`, they will be UTC instances.  
+`Time24`, they will be UTC instances, because I don't construct dates using timezone values. 
 
 Lets say this business configures a minimum notice period of two hours and today is Sunday August 4th 2024 at 17.00 in 
 London.  That is 16.00 in UTC and 13.00 in Brazil.  

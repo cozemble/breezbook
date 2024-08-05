@@ -5,11 +5,12 @@ import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMul
 import {v4 as uuid} from 'uuid';
 import {byLocation} from "../../src/availability/byLocation.js";
 import {dbCarwashTenant, loadTestCarWashTenant} from "../../src/dx/loadTestCarWashTenant.js";
-import {environmentId, isoDate, mandatory, tenantEnvironmentLocation, tenantId} from "@breezbook/packages-types";
+import {environmentId, mandatory, tenantEnvironmentLocation, tenantId} from "@breezbook/packages-types";
 import {serviceAvailabilityRequest} from "../../src/express/availability/getServiceAvailabilityForLocation.js";
 import {AvailabilityResponse} from "@breezbook/backend-api-types";
 import {getAvailabilityForService} from "../../src/availability/getAvailabilityForService.js";
 import {multilocationGym} from "../helpers/fixtures.js";
+import { isoDate } from '@breezbook/packages-date-time';
 
 
 describe("Given a gym with services at various locations", () => {

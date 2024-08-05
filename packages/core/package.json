@@ -21,6 +21,7 @@
     "vitest": "0.33.0"
   },
   "dependencies": {
+    "@breezbook/packages-date-time": "workspace:*",
     "@breezbook/packages-types": "workspace:*",
     "@breezbook/packages-pricing": "workspace:*",
     "@breezbook/packages-resourcing": "workspace:*",

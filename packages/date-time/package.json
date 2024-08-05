@@ -1,5 +1,5 @@
 {
-  "name": "@breezbook/packages-dates",
+  "name": "@breezbook/packages-date-time",
   "version": "1.0.0",
   "module": "./dist/index.js",
   "main": "./dist/index.js",

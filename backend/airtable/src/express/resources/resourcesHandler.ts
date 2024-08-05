@@ -1,13 +1,6 @@
 import express from 'express';
-import {
-	dayAndTime,
-	isoDate,
-	LanguageId,
-	resourceType,
-	ResourceType,
-	TenantEnvironmentLocation,
-	time24
-} from '@breezbook/packages-types';
+import { dayAndTime, dayAndTimeFns, isoDate, time24 } from '@breezbook/packages-date-time';
+import { LanguageId, resourceType, ResourceType, TenantEnvironmentLocation } from '@breezbook/packages-types';
 import { resources } from '../../core/resources/resources.js';
 import {
 	asHandler,
@@ -84,13 +77,14 @@ export async function listResourceAvailabilityByType(deps: EndpointDependencies,
 		everythingForAvailability.businessConfiguration.availability,
 		everythingForAvailability.businessConfiguration.resourceAvailability,
 		everythingForAvailability.businessConfiguration.timeslots,
-		everythingForAvailability.businessConfiguration.startTimeSpec);
+		everythingForAvailability.businessConfiguration.startTimeSpec,
+		everythingForAvailability.locationTimezone);
 	const service = serviceFns.maybeFindService(everythingForAvailability.businessConfiguration.services, request.serviceId);
 	if (!service) {
 		return [httpResponseOutcome(responseOf(404, JSON.stringify({ error: `No service found with id '${request.serviceId.value}'` }), ['Content-Type', 'application/json']))];
 	}
 
-	const now = dayAndTime(isoDate(), time24());
+	const now = dayAndTimeFns.now(config.locationTimezone);
 	const earliest = findEarliestAvailability(
 		config,
 		service,

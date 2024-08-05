@@ -16,6 +16,7 @@
 	},
 	"devDependencies": {
 		"@breezbook/backend-api-types": "workspace:*",
+		"@breezbook/packages-date-time": "workspace:*",
 		"@breezbook/packages-types": "workspace:*",
 		"@breezbook/packages-core": "workspace:*",
 		"@iconify/svelte": "^3.1.6",

@@ -7,9 +7,10 @@ import {carwash, fullPaymentOnCheckout} from "@breezbook/packages-core";
 import * as api from "@breezbook/backend-api-types";
 import {fourDaysFromNow, goodCustomer} from "../helper.js";
 import {resourcing} from "@breezbook/packages-resourcing";
-import {capacity, duration, minutes} from "@breezbook/packages-types";
+import {capacity} from "@breezbook/packages-types";
 import AnySuitableResource = resourcing.AnySuitableResource;
 import SpecificResource = resourcing.SpecificResource;
+import { duration, minutes } from '@breezbook/packages-date-time';
 
 function createOrder(overrides: api.ResourceRequirementOverride[]) {
     return api.pricedCreateOrderRequest(api.pricedBasket([

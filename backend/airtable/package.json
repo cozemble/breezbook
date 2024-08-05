@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "@breezbook/backend-api-types": "workspace:*",
+    "@breezbook/packages-date-time": "workspace:*",
     "@breezbook/packages-core": "workspace:*",
     "@breezbook/packages-http": "workspace:*",
     "@breezbook/packages-pricing": "workspace:*",

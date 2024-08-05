@@ -1,6 +1,6 @@
 import {expect, test} from 'vitest'
 import {toAvailabilityResponse} from "../../src/availability/toAvailabilityResponse.js";
-import {capacity, exactTimeAvailability, isoDate, mandatory, time24} from "@breezbook/packages-types";
+import {capacity, exactTimeAvailability, mandatory} from "@breezbook/packages-types";
 import {
     availableSlot,
     carwash,
@@ -10,8 +10,9 @@ import {
     timeslotSpec
 } from "@breezbook/packages-core";
 import {availabilityResponseFns} from "@breezbook/backend-api-types";
+import { isoDateFns, time24, timezones } from '@breezbook/packages-date-time';
 
-const date = isoDate();
+const date = isoDateFns.today(timezones.utc);
 const thePriceBreakdown = priceBreakdown(carwash.smallCarWash.price, [], []);
 const theServiceRequest = serviceRequest(carwash.smallCarWash, date);
 test("converts a timeslot to an availability response", () => {

@@ -27,16 +27,15 @@ import {
 import {prismaMutationToPromise} from '../infra/prismaMutations.js';
 import {Upsert} from '../mutation/mutations.js';
 import {
-    duration,
     JsonSchemaForm,
     jsonSchemaFormLabels,
     languages,
-    minutes,
     schemaKeyLabel
 } from '@breezbook/packages-types';
 import {add, jexlExpression, pricingFactorName, PricingRule} from '@breezbook/packages-pricing';
 import {makeTestId} from './testIds.js';
 import {scheduleConfig, simpleScheduleConfig} from "@breezbook/packages-core";
+import { duration, minutes } from '@breezbook/packages-date-time';
 
 const tenant_id = 'breezbook-gym';
 const environment_id = 'dev';
@@ -51,21 +50,24 @@ const locationUpserts = [
         tenant_id,
         environment_id,
         name: 'London',
-        slug: 'london'
+        slug: 'london',
+        iana_timezone: 'Europe/London'
     }),
     upsertLocation({
         id: locationLiverpool,
         tenant_id,
         environment_id,
         name: 'Liverpool',
-        slug: 'liverpool'
+        slug: 'liverpool',
+        iana_timezone: 'Europe/London'
     }),
     upsertLocation({
         id: locationManchester,
         tenant_id,
         environment_id,
         name: 'Manchester',
-        slug: 'manchester'
+        slug: 'manchester',
+        iana_timezone: 'Europe/London'
     })
 ];
 
@@ -483,8 +485,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
         upsertTenantSettings({
             tenant_id,
             environment_id,
-            customer_form_id: null,
-            iana_timezone: 'Europe/London'
+            customer_form_id: null
         })
     ]);
     const upsertGoalsForm = upsertForm({

@@ -12,7 +12,6 @@ export function mandatory<T>(value: T | undefined | null, errorMessage: string):
 	return value as T;
 }
 
-
 export interface Timezone {
 	_type: 'timezone';
 	value: string;
@@ -22,30 +21,33 @@ export function timezone(value: string): Timezone {
 	return { _type: 'timezone', value };
 }
 
+export const timezones = {
+	utc: timezone('UTC'),
+	london: timezone('Europe/London')
+};
+
 export interface IsoDate {
 	_type: 'iso.date';
 	value: string;
-	timezone: Timezone;
 }
 
-export function isoDate(timezone: Timezone, value: string): IsoDate {
+export function isoDate(value: string): IsoDate {
 	if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) {
 		throw new Error(`Invalid date format ${value}. Expected YYYY-MM-DD`);
 	}
-	return { _type: 'iso.date', value, timezone };
+	return { _type: 'iso.date', value };
 }
 
 export interface TwentyFourHourClockTime {
 	_type: 'twenty.four.hour.clock.time';
 	value: string;
-	timezone: Timezone;
 }
 
-export function time24(timezone: Timezone, value: string): TwentyFourHourClockTime {
+export function time24(value: string): TwentyFourHourClockTime {
 	if (!value.match(/^\d{2}:\d{2}$/)) {
 		throw new Error(`Invalid time format '${value}' - expected HH:MM`);
 	}
-	return { _type: 'twenty.four.hour.clock.time', value, timezone };
+	return { _type: 'twenty.four.hour.clock.time', value };
 }
 
 export interface ValueType<T> {
@@ -157,7 +159,7 @@ export const time24Fns = {
 		const paddedHours = newHours.toString().padStart(2, '0');
 		const paddedMins = (newMinsMod60 < 10 ? '0' : '') + newMinsMod60;
 
-		return time24(time.timezone, `${paddedHours}:${paddedMins}`);
+		return time24(`${paddedHours}:${paddedMins}`);
 	},
 	toWords(time: TwentyFourHourClockTime): string {
 		const [hours, minutes] = time.value.split(':').map((s) => parseInt(s, 10));
@@ -182,7 +184,7 @@ export const time24Fns = {
 		return `${adjustedHours} ${adjustedMinutes} ${amPm}`;
 	},
 	equals(a: TwentyFourHourClockTime, b: TwentyFourHourClockTime) {
-		return a.value === b.value && a.timezone.value === b.timezone.value;
+		return a.value === b.value;
 	},
 	duration(startTime: TwentyFourHourClockTime, endTime: TwentyFourHourClockTime): Duration {
 		const startAsDate = new Date(`2021-01-01T${startTime.value}`);
@@ -218,13 +220,13 @@ export const time24Fns = {
 	fromHoursAndMinutes(hours: number, minutes: number, timezone: Timezone): TwentyFourHourClockTime {
 		const paddedHours = hours.toString().padStart(2, '0');
 		const paddedMins = minutes.toString().padStart(2, '0');
-		return time24(timezone, `${paddedHours}:${paddedMins}`);
+		return time24(`${paddedHours}:${paddedMins}`);
 	},
 	addDays(start: IsoDate, days: Days | number): IsoDate {
 		const numberOfDays = typeof days === 'number' ? days : days.value;
-		const startDate = dayjs.tz(start.value, start.timezone.value);
+		const startDate = dayjs.utc(start.value);
 		const endDate = startDate.add(numberOfDays, 'day');
-		return isoDate(start.timezone, endDate.format('YYYY-MM-DD'));
+		return isoDate(endDate.format('YYYY-MM-DD'));
 	},
 	addDuration(time: TwentyFourHourClockTime, duration: Duration): TwentyFourHourClockTime {
 		return time24Fns.addMinutes(time, durationFns.toMinutes(duration));
@@ -239,53 +241,17 @@ export interface DateAndTime {
 }
 
 export function dateAndTime(date: IsoDate, time: TwentyFourHourClockTime): DateAndTime {
-	if (date.timezone.value !== time.timezone.value) {
-		throw new Error('Date and time must be in the same timezone');
-	}
 	return { _type: 'date.and.time', date, time };
 }
 
 export const dateAndTimeFns = {
 	now(timezone: Timezone): DateAndTime {
-		const now = dayjs().tz(timezone.value);
+		const nowInTz = dayjs().tz(timezone.value);
+		const nowInUtc = nowInTz.utc();
 		return dateAndTime(
-			isoDate(timezone, now.format('YYYY-MM-DD')),
-			time24(timezone, now.format('HH:mm'))
+			isoDate(nowInUtc.format('YYYY-MM-DD')),
+			time24(nowInUtc.format('HH:mm'))
 		);
-	},
-
-	toUTC(dt: DateAndTime): string {
-		return dayjs.tz(`${dt.date.value} ${dt.time.value}`, dt.date.timezone.value).utc().format();
-	},
-
-	fromUTC(utcString: string, timezone: Timezone): DateAndTime {
-		const localDateTime = dayjs(utcString).tz(timezone.value);
-		return dateAndTime(
-			isoDate(timezone, localDateTime.format('YYYY-MM-DD')),
-			time24(timezone, localDateTime.format('HH:mm'))
-		);
-	},
-
-	add(dt: DateAndTime, minutes: number): DateAndTime {
-		const newDateTime = dayjs.tz(`${dt.date.value} ${dt.time.value}`, dt.date.timezone.value).add(minutes, 'minute');
-		return dateAndTime(
-			isoDate(dt.date.timezone, newDateTime.format('YYYY-MM-DD')),
-			time24(dt.date.timezone, newDateTime.format('HH:mm'))
-		);
-	},
-
-	isBefore(dt1: DateAndTime, dt2: DateAndTime): boolean {
-		return dayjs.tz(`${dt1.date.value} ${dt1.time.value}`, dt1.date.timezone.value)
-			.isBefore(dayjs.tz(`${dt2.date.value} ${dt2.time.value}`, dt2.date.timezone.value));
-	},
-
-	isAfter(dt1: DateAndTime, dt2: DateAndTime): boolean {
-		return dayjs.tz(`${dt1.date.value} ${dt1.time.value}`, dt1.date.timezone.value)
-			.isAfter(dayjs.tz(`${dt2.date.value} ${dt2.time.value}`, dt2.date.timezone.value));
-	},
-
-	equals(dt1: DateAndTime, dt2: DateAndTime): boolean {
-		return this.toUTC(dt1) === this.toUTC(dt2);
 	}
 };
 
@@ -294,7 +260,9 @@ export const isoDateFns = {
 		return date1.value === date2.value;
 	},
 	today(timezone: Timezone): IsoDate {
-		return isoDate(timezone, dayjs().format('YYYY-MM-DD'));
+		const nowInTz = dayjs().tz(timezone.value);
+		const nowInUtc = nowInTz.utc();
+		return isoDate(nowInUtc.format('YYYY-MM-DD'));
 	},
 	sameDay(date1: IsoDate, date2: IsoDate) {
 		return this.isEqual(date1, date2);
@@ -309,7 +277,7 @@ export const isoDateFns = {
 		return dates;
 	},
 	addDays(date: IsoDate, days: number): IsoDate {
-		return isoDate(date.timezone, dayjs.tz(date.value, date.timezone.value).add(days, 'day').format('YYYY-MM-DD'));
+		return isoDate(dayjs.utc(date.value).add(days, 'day').format('YYYY-MM-DD'));
 	},
 	dayOfWeek(date: IsoDate): DayOfWeek {
 		return new Date(date.value).toLocaleDateString('en-GB', { weekday: 'long' }) as DayOfWeek;
@@ -363,25 +331,205 @@ export const isoDateFns = {
 		return this.addDays(isoDateFns.today(timezone), daysToAdd);
 	},
 	daysUntil(other: IsoDate): number {
-		const today = isoDateFns.today(other.timezone);
-		return dayjs.tz(other.value, other.timezone.value).diff(today.value, 'days');
+		const today = isoDateFns.today(timezones.utc);
+		return dayjs.utc(other.value).diff(today.value, 'days');
 	},
 	isWeekend(date: IsoDate) {
 		const dayOfWeek = this.dayOfWeek(date);
 		return dayOfWeek === 'Saturday' || dayOfWeek === 'Sunday';
 	},
 	daysInMonth(startOfMonth: IsoDate): IsoDate[] {
-		const start = dayjs.tz(startOfMonth.value, startOfMonth.timezone.value).startOf('month');
-		const end = dayjs.tz(startOfMonth.value, startOfMonth.timezone.value).endOf('month');
-		return this.listDays(isoDate(startOfMonth.timezone, start.format('YYYY-MM-DD')), isoDate(startOfMonth.timezone, end.format('YYYY-MM-DD')));
+		const start = dayjs.utc(startOfMonth.value).startOf('month');
+		const end = dayjs.utc(startOfMonth.value).endOf('month');
+		return this.listDays(isoDate(start.format('YYYY-MM-DD')), isoDate(end.format('YYYY-MM-DD')));
 	},
 	daysBetween(a: IsoDate, b: IsoDate): number {
-		return dayjs.tz(b.value, b.timezone.value).diff(a.value, 'days');
+		return dayjs.utc(b.value).diff(a.value, 'days');
 	},
 	addMonths(d: IsoDate, months: number): IsoDate {
-		return isoDate(d.timezone, dayjs.tz(d.value, d.timezone.value).add(months, 'month').format('YYYY-MM-DD'));
+		return isoDate(dayjs.utc(d.value).add(months, 'month').format('YYYY-MM-DD'));
 	},
 	startOfMonth(d: IsoDate): IsoDate {
-		return isoDate(d.timezone, dayjs.tz(d.value, d.timezone.value).startOf('month').format('YYYY-MM-DD'));
+		return isoDate(dayjs.utc(d.value).startOf('month').format('YYYY-MM-DD'));
+	}
+};
+
+export interface TimePeriod {
+	_type: 'time.period';
+	from: TwentyFourHourClockTime;
+	to: TwentyFourHourClockTime;
+}
+
+export interface DayAndTimePeriod {
+	_type: 'day.and.time.period';
+	day: IsoDate;
+	period: TimePeriod;
+}
+
+export function dayAndTimePeriod(day: IsoDate, period: TimePeriod): DayAndTimePeriod {
+	return {
+		_type: 'day.and.time.period',
+		day,
+		period
+	};
+}
+
+// export function dayAndTimePeriod(date: IsoDate | string, from: TwentyFourHourClockTime | string, to: TwentyFourHourClockTime | string): DayAndTimePeriod {
+// 	const dateStr = typeof date === 'string' ? date : date.value;
+// 	const fromStr = typeof from === 'string' ? from : from.value;
+// 	const toStr = typeof to === 'string' ? to : to.value;
+// 	return {
+// 		_type: 'day.and.time.period',
+// 		day: isoDate(dateStr),
+// 		period: timePeriod(time24(fromStr), time24(toStr))
+// 	};
+// }
+
+export const dayAndTimePeriodFns = {
+	fromStrings: (date: string, from: string, to: string): DayAndTimePeriod => {
+		return dayAndTimePeriod(isoDate(date), timePeriod(time24(from), time24(to)));
+	},
+	overlaps: (dayAndTimePeriod1: DayAndTimePeriod, dayAndTimePeriod2: DayAndTimePeriod): boolean => {
+		return isoDateFns.isEqual(dayAndTimePeriod1.day, dayAndTimePeriod2.day) && timePeriodFns.overlaps(dayAndTimePeriod1.period, dayAndTimePeriod2.period);
+	},
+	splitPeriod(da: DayAndTimePeriod, bookingPeriod: DayAndTimePeriod, includeGivenPeriod = false): DayAndTimePeriod[] {
+		if (!dayAndTimePeriodFns.intersects(da, bookingPeriod)) {
+			return [da];
+		}
+		const remainingTimePeriods = [] as TimePeriod[];
+		if (timePeriodFns.startsEarlier(da.period, bookingPeriod.period)) {
+			remainingTimePeriods.push(timePeriod(da.period.from, bookingPeriod.period.from));
+		}
+		if (includeGivenPeriod) {
+			remainingTimePeriods.push(bookingPeriod.period);
+		}
+		if (timePeriodFns.endsLater(da.period, bookingPeriod.period)) {
+			remainingTimePeriods.push(timePeriod(bookingPeriod.period.to, da.period.to));
+		}
+		return remainingTimePeriods.map((tp) => dayAndTimePeriod(da.day, timePeriod(tp.from, tp.to)));
+	},
+	intersection(period1: DayAndTimePeriod, period2: DayAndTimePeriod) {
+		return dayAndTimePeriod(
+			period1.day,
+			timePeriod(timePeriodFns.startsEarlier(period1.period, period2.period) ? period2.period.from : period1.period.from,
+				timePeriodFns.endsLater(period1.period, period2.period) ? period2.period.to : period1.period.to));
+	},
+	intersects(period1: DayAndTimePeriod, period2: DayAndTimePeriod) {
+		return isoDateFns.sameDay(period1.day, period2.day) && timePeriodFns.intersects(period1.period, period2.period);
+	},
+	equals(when: DayAndTimePeriod, when2: DayAndTimePeriod) {
+		return isoDateFns.isEqual(when.day, when2.day) && timePeriodFns.equals(when.period, when2.period);
+	}
+};
+
+export function timePeriod(from: TwentyFourHourClockTime, to: TwentyFourHourClockTime): TimePeriod {
+	return {
+		_type: 'time.period',
+		from,
+		to
+	};
+}
+
+export const timePeriodFns = {
+	allDay: timePeriod(time24('00:00'), time24('23:59')),
+	overlaps: (period1: TimePeriod, period2: TimePeriod): boolean => {
+		return period1.from.value <= period2.from.value && period1.to.value >= period2.to.value;
+	},
+	startsEarlier(period: TimePeriod, period2: TimePeriod) {
+		return period.from.value < period2.from.value;
+	},
+	endsLater(period: TimePeriod, period2: TimePeriod) {
+		return period.to.value > period2.to.value;
+	},
+	intersects(period: TimePeriod, period2: TimePeriod) {
+		if (timePeriodFns.sequential(period, period2) || timePeriodFns.sequential(period2, period)) {
+			return false;
+		}
+		return (
+			(period2.from.value >= period.from.value && period2.from.value <= period.to.value) ||
+			(period2.to.value >= period.from.value && period2.to.value <= period.to.value) ||
+			(period2.from.value <= period.from.value && period2.to.value >= period.to.value)
+		);
+	},
+	listPossibleStartTimes(period: TimePeriod, duration: Minutes): TwentyFourHourClockTime[] {
+		let currentTime = period.from;
+		const result: TwentyFourHourClockTime[] = [];
+		while (currentTime.value < period.to.value) {
+			result.push(currentTime);
+			currentTime = time24Fns.addMinutes(currentTime, duration);
+		}
+		return result;
+	},
+	equals(period: TimePeriod, period2: TimePeriod) {
+		return period.from.value === period2.from.value && period.to.value === period2.to.value;
+	},
+	sequential(period: TimePeriod, period2: TimePeriod) {
+		return period.to.value === period2.from.value;
+	},
+	calcPeriod(from: TwentyFourHourClockTime, duration: Duration | Minutes): TimePeriod {
+		const durationMinutes = duration._type === 'duration' ? durationFns.toMinutes(duration) : duration;
+		return timePeriod(from, time24Fns.addMinutes(from, durationMinutes));
+	},
+	overlap(a: TimePeriod, b: TimePeriod): TimePeriod | null {
+		const start = time24Fns.max(a.from, b.from);
+		const end = time24Fns.min(a.to, b.to);
+		if (time24Fns.lt(start, end)) {
+			return timePeriod(start, end);
+		}
+		return null;
+	},
+	duration(t: TimePeriod): Duration {
+		const start = dayjs.utc(`2021-01-01T${t.from.value}`);
+		const end = dayjs.utc(`2021-01-01T${t.to.value}`);
+		const diff = end.diff(start, 'minutes');
+		return duration(minutes(diff));
+	}
+};
+
+
+export interface DayAndTime {
+	_type: 'day.and.time';
+	day: IsoDate;
+	time: TwentyFourHourClockTime;
+}
+
+export function dayAndTime(day: IsoDate, time: TwentyFourHourClockTime): DayAndTime {
+	return {
+		_type: 'day.and.time',
+		day,
+		time
+	};
+}
+
+export const dayAndTimeFns = {
+	minutesBetween(a: DayAndTime, b: DayAndTime): Minutes {
+		const aDate = new Date(`${a.day.value}T${a.time.value}`);
+		const bDate = new Date(`${b.day.value}T${b.time.value}`);
+		const diff = bDate.getTime() - aDate.getTime();
+		return minutes(diff / 1000 / 60);
+	},
+	gt: (a: DayAndTime, b: DayAndTime) => {
+		const aDate = new Date(`${a.day.value}T${a.time.value}`);
+		const bDate = new Date(`${b.day.value}T${b.time.value}`);
+		return aDate.getTime() > bDate.getTime();
+	},
+	gte(a: DayAndTime, b: DayAndTime) {
+		return this.gt(a, b) || this.equals(a, b);
+	},
+	equals(a: DayAndTime, b: DayAndTime) {
+		return a.day.value === b.day.value && a.time.value === b.time.value;
+	},
+	addDuration(d: DayAndTime, duration: Duration): DayAndTime {
+		const start = dayjs.utc(`${d.day.value}T${d.time.value}`);
+		const end = start.add(durationFns.toMinutes(duration).value, 'minute');
+		return dayAndTime(isoDate(end.format('YYYY-MM-DD')), time24(end.format('HH:mm')));
+	},
+	now(tz: Timezone): DayAndTime {
+		const nowInTz = dayjs().tz(tz.value);
+		const nowInUtc = nowInTz.utc();
+		return dayAndTime(
+			isoDate(nowInUtc.format('YYYY-MM-DD')),
+			time24(nowInUtc.format('HH:mm'))
+		);
 	}
 };

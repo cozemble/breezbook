@@ -19,9 +19,10 @@ import {
     pricingFactorName,
     PricingRule
 } from "@breezbook/packages-pricing";
-import {capacity, durationFns, IsoDate, isoDate, isoDateFns, time24, time24Fns} from '@breezbook/packages-types';
+import { durationFns, IsoDate, isoDate, isoDateFns, time24, time24Fns, timezones } from '@breezbook/packages-date-time';
+import { capacity } from '@breezbook/packages-types';
 
-const today = isoDate();
+const today = isoDateFns.today(timezones.utc);
 const tomorrow = isoDateFns.addDays(today, 1);
 const twoDaysFromNow = isoDateFns.addDays(today, 2);
 const GBP = currencies.GBP

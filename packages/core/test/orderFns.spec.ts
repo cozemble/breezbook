@@ -1,9 +1,11 @@
 import {expect, test} from 'vitest';
 import {addOnOrder, carwash, customer,  order, orderFns, orderLine} from '../src/index.js';
-import {isoDate, isoDateFns} from "@breezbook/packages-types";
+import { isoDate, isoDateFns, timezones } from '@breezbook/packages-date-time';
 
-const tomorrow = isoDateFns.addDays(isoDate(), 1);
-const dayAfterTomorrow = isoDateFns.addDays(isoDate(), 2);
+const today = isoDateFns.today(timezones.utc)
+
+const tomorrow = isoDateFns.addDays(today, 1);
+const dayAfterTomorrow = isoDateFns.addDays(today, 2);
 const mike = customer('Mike', 'Hogan', 'mike@email.com', "+14155552671", null);
 
 test('can get from and to date from an order with one order line', () => {

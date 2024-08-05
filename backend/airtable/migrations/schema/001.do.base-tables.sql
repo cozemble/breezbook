@@ -37,6 +37,7 @@ create table locations
     environment_id text                                not null,
     slug           text                                not null,
     name           text                                not null,
+    iana_timezone  text                                not null,
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp,
     unique (tenant_id, environment_id, slug)
@@ -199,17 +200,17 @@ create table time_slots
 
 create table services
 (
-    id              text primary key,
-    tenant_id       text references tenants (tenant_id) not null,
-    environment_id  text                                not null,
-    slug            text                                not null,
-    price           numeric                             not null,
-    price_currency  text                                not null,
-    capacity        integer                             not null default 1,
-    start_date      timestamp with time zone            not null default current_timestamp,
-    end_date        timestamp with time zone            null     default null,
-    created_at      timestamp with time zone            not null default current_timestamp,
-    updated_at      timestamp with time zone            not null default current_timestamp,
+    id             text primary key,
+    tenant_id      text references tenants (tenant_id) not null,
+    environment_id text                                not null,
+    slug           text                                not null,
+    price          numeric                             not null,
+    price_currency text                                not null,
+    capacity       integer                             not null default 1,
+    start_date     timestamp with time zone            not null default current_timestamp,
+    end_date       timestamp with time zone            null     default null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
     unique (tenant_id, environment_id, slug)
 );
 
@@ -219,7 +220,7 @@ create table service_schedule_config
     tenant_id       text references tenants (tenant_id) not null,
     environment_id  text                                not null,
     service_id      text references services (id)       not null,
-    location_id     text references locations (id)      null default null,
+    location_id     text references locations (id)      null     default null,
     schedule_config jsonb                               not null,
     created_at      timestamp with time zone            not null default current_timestamp,
     updated_at      timestamp with time zone            not null default current_timestamp,
@@ -387,7 +388,6 @@ create table tenant_settings
     tenant_id        text references tenants (tenant_id) not null,
     environment_id   text                                not null,
     customer_form_id text                                null     default null references forms (id),
-    iana_timezone    text                                not null,
     created_at       timestamp with time zone            not null default current_timestamp,
     updated_at       timestamp with time zone            not null default current_timestamp,
     primary key (tenant_id, environment_id)

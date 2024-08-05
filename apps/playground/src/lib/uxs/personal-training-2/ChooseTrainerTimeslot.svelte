@@ -24,7 +24,7 @@
     export let selectedSlot: Slot | null
     let currentMonth: Date = new Date();
 
-    // const today = isoDate()
+    // const today = isoDateFns.today(timezones.utc)
     // const someDaysFromNow = isoDateFns.addDays(today, 14)
     // const dayList = isoDateFns.listDays(today, someDaysFromNow)
     let showNoAvailabilityMessage = false
@@ -45,7 +45,7 @@
             if (dateTimes[date.value].length === 0) {
                 acc[date.value] = true
             }
-            const today = isoDate()
+            const today = isoDateFns.today(timezones.utc)
             if (date.value < today.value) {
                 acc[date.value] = true
             }

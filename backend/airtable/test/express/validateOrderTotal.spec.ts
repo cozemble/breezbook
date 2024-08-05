@@ -8,20 +8,17 @@ import {loadMultiLocationGymTenant, multiLocationGym} from "../../src/dx/loadMul
 import {byLocation} from "../../src/availability/byLocation.js";
 import {
     capacity,
-    duration,
     environmentId,
-    isoDate, isoDateFns,
     locationId,
     mandatory,
-    minutes,
     serviceId,
     tenantEnvironmentLocation,
     tenantId,
-    time24
 } from "@breezbook/packages-types";
 import {EverythingForAvailability} from "../../src/express/getEverythingForAvailability.js";
 import {resourcing} from "@breezbook/packages-resourcing";
 import Resource = resourcing.Resource;
+import { duration, isoDate, minutes, time24 } from '@breezbook/packages-date-time';
 
 const tenantEnvLoc = tenantEnvironmentLocation(environmentId(multiLocationGym.environment_id), tenantId(multiLocationGym.tenant_id), locationId(multiLocationGym.locationLondon))
 

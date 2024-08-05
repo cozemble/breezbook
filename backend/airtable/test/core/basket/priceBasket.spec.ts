@@ -12,15 +12,12 @@ import {
 import {addOrderErrorCodes} from '../../../src/express/onAddOrderExpress.js';
 import {
     couponCode,
-    duration,
-    isoDate,
-    isoDateFns,
     mandatory,
-    minutes,
-    serviceOptionRequest, timePeriodFns
+    serviceOptionRequest
 } from '@breezbook/packages-types';
+import { duration, isoDateFns, timePeriodFns, timezones, minutes } from '@breezbook/packages-date-time';
 
-const today = isoDate();
+const today = isoDateFns.today(timezones.utc);
 const dayBeyondDynamicPricing = isoDateFns.addDays(today, 10);
 
 test('can price an empty basket', () => {
@@ -36,8 +33,8 @@ test('can price a basket with one line item', () => {
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing([], dayBeyondDynamicPricing), basket) as PricedBasket;
     expect(result.total).toEqual(carwash.smallCarWash.price);
     expect(result.lines).toHaveLength(1);
-    expect(result.lines[0].priceBreakdown.total).toEqual(carwash.smallCarWash.price.amount.value);
-    expect(result.lines[0].priceBreakdown.servicePrice).toEqual(carwash.smallCarWash.price.amount.value);
+    expect(result.lines?.[0]?.priceBreakdown?.total).toEqual(carwash.smallCarWash.price.amount.value);
+    expect(result.lines?.[0]?.priceBreakdown?.servicePrice).toEqual(carwash.smallCarWash.price.amount.value);
 });
 
 test('uses dynamic pricing if applicable', () => {
@@ -45,7 +42,7 @@ test('uses dynamic pricing if applicable', () => {
     const result = priceBasket(everythingForCarWashTenantWithDynamicPricing(), basket) as PricedBasket;
     expect(result.total).toEqual(priceFns.multiply(carwash.smallCarWash.price, 1.4));
     expect(result.lines).toHaveLength(1);
-    expect(result.lines[0].priceBreakdown.total).toEqual(priceFns.multiply(carwash.smallCarWash.price, 1.4).amount.value);
+    expect(result.lines[0]?.priceBreakdown?.total).toEqual(priceFns.multiply(carwash.smallCarWash.price, 1.4).amount.value);
 });
 
 test('can price a basket with multiple line items', () => {

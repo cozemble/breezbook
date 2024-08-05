@@ -1,5 +1,5 @@
 import {test, expect} from 'vitest';
-import {minutes, time24, time24Fns} from "../src/index.js";
+import { minutes, time24, time24Fns, timezones } from '../src/index.js';
 
 test("can convert times into words", () => {
     expect(time24Fns.toWords(time24("00:00"))).toBe("midnight");

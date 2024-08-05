@@ -12,8 +12,6 @@ import {responseOf} from "@breezbook/packages-http/dist/responses.js";
 import {
     environmentId,
     EnvironmentId,
-    isoDate,
-    IsoDate,
     languageId,
     LanguageId,
     languages,
@@ -28,6 +26,7 @@ import {
     tenantId,
     TenantId
 } from "@breezbook/packages-types";
+import { isoDate, IsoDate } from '@breezbook/packages-date-time';
 
 export type EventSender = (event: { name: string, data: any }) => Promise<void>;
 

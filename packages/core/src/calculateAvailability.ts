@@ -1,4 +1,4 @@
-import {Minutes, time24Fns, timePeriod, TimePeriod} from "@breezbook/packages-types";
+import {Minutes, time24Fns, timePeriod, TimePeriod} from "@breezbook/packages-date-time";
 import {StartTime} from "./availability.js";
 
 

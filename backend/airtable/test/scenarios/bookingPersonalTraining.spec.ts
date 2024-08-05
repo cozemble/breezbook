@@ -30,30 +30,26 @@ import {addOrderEndpoint} from "../../src/express/onAddOrderExpress.js";
 import {applyMutations} from "../../src/prisma/applyMutations.js";
 import {requestOf} from "@breezbook/packages-http/dist/requests.js";
 import {
-    duration,
     environmentId,
-    IsoDate,
-    isoDateFns,
     locationId,
     mandatory,
-    minutes,
     resourceType,
     serviceId,
     tenantEnvironment,
     tenantId,
-    time24
 } from "@breezbook/packages-types";
 import serviceAvailabilityOptions = api.serviceAvailabilityOptions;
 import ServiceAvailabilityOptions = api.ServiceAvailabilityOptions;
+import { duration, IsoDate, isoDateFns, minutes, time24, timezones } from '@breezbook/packages-date-time';
 
 const env = environmentId(multiLocationGym.environment_id);
 const tenant = tenantId(multiLocationGym.tenant_id);
 const london = locationId(multiLocationGym.locationLondon)
 const personalTrainer = resourceType('personal.trainer')
 const personalTraining = serviceId(multiLocationGym.pt1Hr)
-const friday = isoDateFns.next('Friday')
-const saturday = isoDateFns.next('Saturday')
-const tuesday = isoDateFns.next('Tuesday')
+const friday = isoDateFns.next(timezones.utc,'Friday')
+const saturday = isoDateFns.next(timezones.utc,'Saturday')
+const tuesday = isoDateFns.next(timezones.utc,'Tuesday')
 
 const params = {
     'envId': env.value,

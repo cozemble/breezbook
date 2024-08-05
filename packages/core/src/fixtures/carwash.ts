@@ -4,14 +4,11 @@ import {
     couponCode,
     couponId,
     id,
-    isoDate,
     languages,
     locationId,
     resourceType,
     serviceId,
     tenantId,
-    time24,
-    timePeriod
 } from '@breezbook/packages-types';
 import {
     addOn,
@@ -32,6 +29,7 @@ import {resourcing} from "@breezbook/packages-resourcing";
 import {scheduleConfig, singleDayScheduling, timeslotSelection} from "../scheduleConfig.js";
 import anySuitableResource = resourcing.anySuitableResource;
 import resource = resourcing.resource;
+import { isoDate, time24, timePeriod, timezones } from '@breezbook/packages-date-time';
 
 const tenantIdCarwash = tenantId('carwash');
 const nineAm = time24('09:00');

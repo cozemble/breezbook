@@ -31,9 +31,9 @@
             }
             if (earliestForTrainer?.earliestDate) {
                 const date = isoDate(earliestForTrainer.earliestDate);
-                if (date.value === isoDate().value) {
+                if (date.value === isoDateFns.today(timezones.utc).value) {
                     whenAvailable = `today`;
-                } else if (date.value === isoDateFns.addDays(isoDate(), 1).value) {
+                } else if (date.value === isoDateFns.addDays(isoDateFns.today(timezones.utc), 1).value) {
                     whenAvailable = `tomorrow`;
                 } else {
                     whenAvailable = `from ${isoDateFns.dayOfWeek(date)}`;

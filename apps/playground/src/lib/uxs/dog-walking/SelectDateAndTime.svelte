@@ -19,7 +19,7 @@
     export let selectedSlot: Availability | null = null
     let selectedDate = selectedSlot?.date ?? null
     let selectedTime = selectedSlot?.startTime24hr ?? null
-    const today = isoDate()
+    const today = isoDateFns.today(timezones.utc)
     const dateInTheFuture = isoDateFns.addDays(today, 14)
     let availableSlots: AvailabilityResponse
     const dateRange = isoDateFns.listDays(today, dateInTheFuture)

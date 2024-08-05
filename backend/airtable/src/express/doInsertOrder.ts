@@ -22,9 +22,10 @@ import {
 import {Mutation, Mutations, mutations as mutationsConstructor} from '../mutation/mutations.js';
 import {DbPaymentMethod} from "../prisma/dbtypes.js";
 import {EverythingToCreateOrder, HydratedBasketLine} from "./onAddOrderExpress.js";
-import {FormId, mandatory, orderId, TenantEnvironment, timePeriodFns} from "@breezbook/packages-types";
+import {FormId, mandatory, orderId, TenantEnvironment} from "@breezbook/packages-types";
 import {resourcing} from "@breezbook/packages-resourcing";
 import ResourceRequirement = resourcing.ResourceRequirement;
+import { timePeriodFns } from '@breezbook/packages-date-time';
 
 function upsertCustomerAsMutations(tenantEnvironment: TenantEnvironment, customer: Customer, tenantSettings: TenantSettings): Mutation[] {
     const tenant_id = tenantEnvironment.tenantId.value;

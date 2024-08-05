@@ -28,8 +28,9 @@ import {
     tenantEnvironmentParam
 } from "../../infra/endpoint.js";
 import {RequestContext} from "../../infra/http/expressHttp4t.js";
-import {addOnId, durationFns, formId, languageId, LanguageId, TenantEnvironment} from "@breezbook/packages-types";
+import {addOnId, formId, languageId, LanguageId, TenantEnvironment} from "@breezbook/packages-types";
 import {responseOf} from "@breezbook/packages-http/dist/responses.js";
+import { durationFns } from '@breezbook/packages-date-time';
 
 export type RequiredServiceOptionData = DbServiceOption & {
     service_option_images: DbServiceOptionImage[];

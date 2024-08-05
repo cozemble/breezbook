@@ -21,8 +21,7 @@
     "vitest": "0.33.0"
   },
   "dependencies": {
-    "dayjs": "1.11.12",
-    "utc": "link:dayjs/plugin/utc",
+    "@breezbook/packages-date-time": "workspace:*",
     "uuid": "^9.0.1"
   }
 }

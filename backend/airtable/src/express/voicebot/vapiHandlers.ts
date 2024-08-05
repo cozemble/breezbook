@@ -2,14 +2,16 @@ import express from "express";
 import {locationIdParam, tenantEnvironmentParam, withTwoRequestParams} from "../../infra/functionalExpress.js";
 import {prismaClient} from "../../prisma/client.js";
 import {byLocation} from "../../availability/byLocation.js";
-import {isoDate, languages, mandatory, tenantEnvironmentLocation} from "@breezbook/packages-types";
+import {languages, mandatory, tenantEnvironmentLocation} from "@breezbook/packages-types";
 import {businessDescription, webQueryPrompt} from "@breezbook/packages-voicebot-prompting";
+import { isoDateFns, timezones } from '@breezbook/packages-date-time';
 
 export async function onVapiVoiceBotPromptRequest(req: express.Request, res: express.Response): Promise<void> {
     await withTwoRequestParams(req, res, tenantEnvironmentParam(), locationIdParam(), async (tenantEnvironment, locationid) => {
         const prisma = prismaClient();
         const tel = tenantEnvironmentLocation(tenantEnvironment.environmentId, tenantEnvironment.tenantId, locationid)
-        const everything = await byLocation.getEverythingForAvailability(prisma, tel, isoDate(), isoDate())
+        const today = isoDateFns.today(timezones.utc)
+        const everything = await byLocation.getEverythingForAvailability(prisma, tel, today, today)
         const tenantBranding = await prisma.tenant_branding.findUniqueOrThrow({
             where: {
                 tenant_id_environment_id: {

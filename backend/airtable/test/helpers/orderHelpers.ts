@@ -6,7 +6,8 @@ import {
     hydratedBasketLine
 } from "../../src/express/onAddOrderExpress.js";
 import {goodCustomer, goodServiceFormData, today} from "../helper.js";
-import {capacity, duration, IsoDate, LocationId, minutes, TwentyFourHourClockTime} from "@breezbook/packages-types";
+import {capacity,LocationId} from "@breezbook/packages-types";
+import { duration, IsoDate, TwentyFourHourClockTime, minutes } from '@breezbook/packages-date-time';
 
 export function orderForService(service: Service, location: LocationId, startTime: TwentyFourHourClockTime): EverythingToCreateOrder {
     const basket = hydratedBasket([

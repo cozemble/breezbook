@@ -5,7 +5,7 @@ import {type SelectableTimeOption, time, type Time, timeslot} from "./uiTypes";
 import type {DayConstraint, DayLength, PickTime, TimeRange, TimeslotSelection, VariableLength} from "./scheduleConfig";
 
 function disabledIfPast(date: IsoDate): Disabled | undefined {
-    if (date.value <= isoDate().value) {
+    if (date.value <= isoDateFns.today(timezones.utc).value) {
         return disabled("Date is in the past")
     }
     return undefined;
