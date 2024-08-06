@@ -46,7 +46,7 @@ type DbTenantAndStuff = DbTenant & {
 	locations: DbLocation[],
 	tenant_branding: (DbTenantBranding & { tenant_branding_labels: DbTenantBrandingLabel[] })[],
 	services: RequiredServiceData[],
-	service_locations: (DbServiceLocation & { service_location_prices: DbServiceLocationPrice | null })[],
+	service_locations: (DbServiceLocation & { service_location_prices: DbServiceLocationPrice[] })[],
 	service_resource_requirements: DbServiceResourceRequirement[],
 	pricing_rules: DbPricingRule[],
 	forms: (DbForm & { form_labels: DbFormLabel[] })[],
@@ -70,11 +70,12 @@ function toApiTenant(tenant: DbTenantAndStuff): Tenant {
 		locations: tenant.locations.map(l => ({ id: l.id, slug: l.slug, name: l.name })),
 		theme: branding.theme,
 		services: tenant.services.map(s => toApiService(s, tenant.service_resource_requirements, tenant.pricing_rules.length > 0)),
-		serviceLocations: tenant.service_locations.filter(sl => sl.service_location_prices).map(sl => {
-			const price = mandatory(sl.service_location_prices?.price, `Expected price for service location ${sl.service_id} ${sl.location_id}`);
-			const priceCurrency = mandatory(sl.service_location_prices?.price_currency, `Expected currency for service location ${sl.service_id} ${sl.location_id}`);
-			const priceWithNoDecimalPlaces = (typeof price === 'object' && 'toNumber' in price) ? price.toNumber() : price;
-			return ({ serviceId: sl.service_id, locationId: sl.location_id, priceCurrency, priceWithNoDecimalPlaces });
+		serviceLocations: tenant.service_locations.map(sl => {
+			const prices = sl.service_location_prices.map(slp => {
+				const priceWithNoDecimalPlaces = (typeof slp.price === 'object' && 'toNumber' in slp.price) ? slp.price.toNumber() : slp.price;
+				return ({ priceCurrency: slp.price_currency, priceWithNoDecimalPlaces });
+			});
+			return ({ serviceId: sl.service_id, locationId: sl.location_id, prices });
 		}),
 		customerForm: customerForm ? toDomainForm(customerForm) : null,
 		forms: tenant.forms.map(dbForm => {

@@ -355,7 +355,7 @@ create table service_location_prices
     price_currency text                                not null,
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp,
-    unique (tenant_id, environment_id, service_id, location_id),
+    unique (tenant_id, environment_id, service_id, location_id, price_currency),
     foreign key (tenant_id, environment_id, service_id, location_id) references service_locations (tenant_id, environment_id, service_id, location_id)
 );
 
@@ -459,7 +459,7 @@ create table order_lines
     total_price_currency       text                                not null,
     created_at                 timestamp with time zone            not null default current_timestamp,
     updated_at                 timestamp with time zone            not null default current_timestamp,
-    foreign key (tenant_id, environment_id, service_id, location_id) references service_location_prices (tenant_id, environment_id, service_id, location_id)
+    foreign key (tenant_id, environment_id, service_id, location_id, total_price_currency) references service_location_prices (tenant_id, environment_id, service_id, location_id, price_currency)
 );
 
 create table order_line_add_ons

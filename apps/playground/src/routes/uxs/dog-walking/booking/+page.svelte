@@ -190,7 +190,6 @@
 			{#if step > 1 && step < 7}
 				<BookingSummary
 					service={bookingData.service}
-					serviceLocation={bookingData.serviceLocation}
 					serviceOptions={bookingData.serviceOptions}
 					slot={bookingData.selectedSlot}
 				/>
@@ -244,7 +243,6 @@
 					<h3 class="text-2xl font-semibold mb-6 text-primary">Date and Time</h3>
 					{#if bookingData.service && bookingData.serviceLocation}
 						<SelectDateAndTime service={bookingData.service}
-															 serviceLocation={bookingData.serviceLocation}
 															 locationId={bookingData.serviceLocation.locationId}
 															 tenantId={tenant.id}
 															 serviceOptions={bookingData.serviceOptions}

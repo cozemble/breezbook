@@ -9,7 +9,6 @@
     import {formatPrice} from "./types.js";
 
     export let service: Service | null = null;
-    export let serviceLocation: ServiceLocation | null = null;
     export let serviceOptions: ServiceOption[] = [];
     export let slot: Availability | null = null;
 
@@ -27,11 +26,11 @@
 <div class="bg-base-200 p-4 rounded-lg mb-4">
     <h3 class="text-lg font-semibold mb-2">Booking Summary</h3>
     <div class="space-y-2">
-        {#if service && serviceLocation}
+        {#if service}
             <div class="flex justify-between">
                 <span>{service.name}</span>
                 {#if slot?.priceBreakdown}
-                    <span class="font-medium">{formatPrice(slot.priceBreakdown.servicePrice, serviceLocation.priceCurrency)}</span>
+                    <span class="font-medium">{formatPrice(slot.priceBreakdown.servicePrice, "GBP")}</span>
                 {/if}
             </div>
         {/if}

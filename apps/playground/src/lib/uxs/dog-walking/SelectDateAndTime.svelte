@@ -14,7 +14,6 @@
 
 	export let tenantId: string;
 	export let service: Service;
-	export let serviceLocation: ServiceLocation;
 	export let serviceOptions: ServiceOption[];
 	export let locationId: string;
 	export let selectedSlot: Availability | null = null;
@@ -43,7 +42,7 @@
 		Object.keys(availableSlots.slots).map(date => {
 			const available = availableSlots.slots[date] ?? [] as Availability[];
 			const minPriceForDay = Math.min(...available.map(a => a.priceBreakdown.total));
-			labelsForDay[date] = `${formatPrice(minPriceForDay, serviceLocation.priceCurrency)}`;
+			labelsForDay[date] = `${formatPrice(minPriceForDay, "GBP")}`;
 		});
 	});
 

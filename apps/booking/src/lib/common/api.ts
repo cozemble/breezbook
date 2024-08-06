@@ -69,6 +69,7 @@ const service = {
 
         const res: Service[] = tenant.services.map(s => {
             const firstLocation = mandatory(tenant.serviceLocations.find(sl => sl.serviceId === s.id), `Service ${s.id} has no location`);
+            const gbpPrice = mandatory(firstLocation.prices.find(p => p.priceCurrency.toLowerCase() === 'gbp'), `Service ${s.id} has no GBP price`);
 
             return ({
                 tenantId: tenant.id,
@@ -77,7 +78,7 @@ const service = {
                 name: s.name,
                 description: s.description,
                 image: s.image,
-                approximatePrice: firstLocation.priceWithNoDecimalPlaces,
+                approximatePrice: gbpPrice.priceWithNoDecimalPlaces,
                 approximateDuration: s.durationMinutes
             });
         })

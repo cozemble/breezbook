@@ -299,7 +299,7 @@ model order_lines {
   order_line_service_options order_line_service_options[]
   locations                  locations                    @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services                   services                     @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  service_location_prices    service_location_prices      @relation(fields: [tenant_id, environment_id, service_id, location_id], references: [tenant_id, environment_id, service_id, location_id], onDelete: NoAction, onUpdate: NoAction)
+  service_location_prices    service_location_prices      @relation(fields: [tenant_id, environment_id, service_id, location_id, total_price_currency], references: [tenant_id, environment_id, service_id, location_id, price_currency], onDelete: NoAction, onUpdate: NoAction)
   tenants                    tenants                      @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -504,12 +504,12 @@ model service_locations {
   environment_id          String
   service_id              String
   location_id             String
-  created_at              DateTime                 @default(now()) @db.Timestamptz(6)
-  updated_at              DateTime                 @default(now()) @db.Timestamptz(6)
-  service_location_prices service_location_prices?
-  locations               locations                @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services                services                 @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                 tenants                  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  service_location_prices service_location_prices[]
+  locations               locations                 @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services                services                  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                 tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id, service_id, location_id])
 }
@@ -1063,7 +1063,7 @@ model service_location_prices {
   service_locations service_locations @relation(fields: [tenant_id, environment_id, service_id, location_id], references: [tenant_id, environment_id, service_id, location_id], onDelete: NoAction, onUpdate: NoAction)
   tenants           tenants           @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([tenant_id, environment_id, service_id, location_id])
+  @@unique([tenant_id, environment_id, service_id, location_id, price_currency])
 }
 
 enum booking_event_type {
