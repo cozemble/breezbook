@@ -1,12 +1,14 @@
 import {
 	DbAddOn,
 	DbForm,
+	DbLocation,
 	DbPricingRule,
 	DbResource,
 	DbResourceType,
 	DbService,
 	DbServiceAddOn,
 	DbServiceForm,
+	DbServiceLocationPrice,
 	DbServiceOptionResourceRequirement,
 	DbServiceResourceRequirement,
 	DbTenantSettings,
@@ -55,7 +57,7 @@ import {
 } from '@breezbook/packages-types';
 import { resourcing } from '@breezbook/packages-resourcing';
 import { ScheduleConfig } from '@breezbook/packages-core/dist/scheduleConfig.js';
-import { duration, isoDate, time24, timePeriod, minutes } from '@breezbook/packages-date-time';
+import { duration, isoDate, minutes, time24, timePeriod } from '@breezbook/packages-date-time';
 import ResourceRequirement = resourcing.ResourceRequirement;
 import specificResource = resourcing.specificResource;
 import anySuitableResource = resourcing.anySuitableResource;
@@ -67,7 +69,7 @@ function toDomainResourceRequirement(rr: DbServiceResourceRequirement | DbServic
 	if (rr.requirement_type === 'specific_resource') {
 		return specificResource(byId.find(mappedResources, resourceId(rr.id)), resourceRequirementId(rr.id));
 	} else {
-		const dbResourceType = mandatory(resourceTypes.find(rt => rt.id === rr.resource_type), `No resource type found for resource requirement ${rr.resource_type}`);
+		const dbResourceType = mandatory(resourceTypes.find(rt => rt.id === rr.resource_type_id), `No resource type found for resource requirement ${rr.resource_type_id}`);
 		return anySuitableResource(resourceType(dbResourceType.name), resourceAllocationRules.any, resourceRequirementId(rr.id));
 	}
 }
@@ -86,14 +88,15 @@ export function toDomainServiceOption(so: DbServiceOptionFormsAndResources, reso
 		serviceOptionId(so.id));
 }
 
-export function toDomainService(dbService: DbService, addOns: DbServiceAddOn[], resourceTypes: DbResourceType[], dbServiceForms: DbServiceForm[], resourceRequirements: DbServiceResourceRequirement[], mappedResources: Resource[], scheduleConfig: ScheduleConfig): DomainService {
+export function toDomainService(location: DbLocation, dbService: DbService, addOns: DbServiceAddOn[], resourceTypes: DbResourceType[], dbServiceForms: DbServiceForm[], resourceRequirements: DbServiceResourceRequirement[], serviceLocationPrices: DbServiceLocationPrice[], mappedResources: Resource[], scheduleConfig: ScheduleConfig): DomainService {
+	const servicePrice = mandatory(serviceLocationPrices.find((slp) => slp.service_id === dbService.id && slp.location_id === location.id), `No price found for service ${dbService.id} at location ${location.id}`);
 	const permittedAddOns = addOns.filter((sa) => sa.service_id === dbService.id).map(s => addOnId(s.add_on_id));
 	const mappedResourceRequirements = resourceRequirements.filter(rr => rr.service_id === dbService.id).map(rr => toDomainResourceRequirement(rr, resourceTypes, mappedResources));
 	const forms = dbServiceForms.filter((sf) => sf.service_id === dbService.id).map((sf) => formId(sf.form_id));
-	const priceAmount = (typeof dbService.price === 'object' && 'toNumber' in dbService.price) ? dbService.price.toNumber() : dbService.price;
+	const priceAmount = (typeof servicePrice.price === 'object' && 'toNumber' in servicePrice.price) ? servicePrice.price.toNumber() : servicePrice.price;
 	return service(
 		mappedResourceRequirements,
-		price(priceAmount, currency(dbService.price_currency)),
+		price(priceAmount, currency(servicePrice.price_currency)),
 		permittedAddOns,
 		forms,
 		scheduleConfig,
@@ -143,6 +146,6 @@ export function toDomainPricingRule(rule: DbPricingRule): PricingRule {
 }
 
 export function toDomainResource(r: DbResource, dbResourceTypes: DbResourceType[]): Resource {
-	const dbResourceType = mandatory(dbResourceTypes.find(rt => rt.id === r.resource_type), `No resource type found for resource ${r.id}`);
+	const dbResourceType = mandatory(dbResourceTypes.find(rt => rt.id === r.resource_type_id), `No resource type found for resource ${r.id}`);
 	return resource(resourceType(dbResourceType.name), [], r.metadata as any ?? {}, resourceId(r.id));
 }

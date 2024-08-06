@@ -12,6 +12,7 @@ import {type PricedBasket} from '@breezbook/backend-api-types';
 
 import mock from '$lib/common/mock';
 import config from './config';
+import { mandatory } from '@breezbook/packages-types';
 
 // TODO: remove mock
 // TODO: enable real tenant and service slugs
@@ -66,16 +67,20 @@ const service = {
         const tenant = await api.tenant.getOne(tenantSlug);
         if (!tenant) return null;
 
-        const res: Service[] = tenant.services.map(s => ({
-            tenantId: tenant.id,
-            id: s.id,
-            slug: s.slug,
-            name: s.name,
-            description: s.description,
-            image: s.image,
-            approximatePrice: s.priceWithNoDecimalPlaces,
-            approximateDuration: s.durationMinutes,
-        }))
+        const res: Service[] = tenant.services.map(s => {
+            const firstLocation = mandatory(tenant.serviceLocations.find(sl => sl.serviceId === s.id), `Service ${s.id} has no location`);
+
+            return ({
+                tenantId: tenant.id,
+                id: s.id,
+                slug: s.slug,
+                name: s.name,
+                description: s.description,
+                image: s.image,
+                approximatePrice: firstLocation.priceWithNoDecimalPlaces,
+                approximateDuration: s.durationMinutes
+            });
+        })
 
         const tenantServices = config.devMode
             ? mock.services.filter((service) => service.tenantId === tenant.id)

@@ -65,7 +65,7 @@ async function getReferenceData(deps: EndpointDependencies): Promise<{
     ptMete: ResourceSummary,
 }> {
     const theTenant = expectJson<Tenant>(await onGetTenantRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.getTenant + `?slug=${tenant.value}`), params)))
-    const personalTrainingService: Service = mandatory(theTenant.services.find(s => s.id === multiLocationGym.pt1Hr), `Service ${multiLocationGym.pt1Hr} not found in ${JSON.stringify(theTenant.services)}`)
+    const personalTrainingService = mandatory(theTenant.services.find(s => s.id === multiLocationGym.pt1Hr), `Service ${multiLocationGym.pt1Hr} not found in ${JSON.stringify(theTenant.services)}`)
     expect(personalTrainingService.resourceRequirements).toHaveLength(1)
     const personalTrainerRequirement = mandatory(personalTrainingService.resourceRequirements[0], `No resource requirements`);
     const listOfPersonalTrainers = expectJson<ResourceSummary[]>(await listResourcesByTypeRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.listResourcesByType), {
@@ -115,7 +115,7 @@ describe("given the test gym tenant", () => {
         const mikeOnFriday = expectJson<AvailabilityResponse>(await getServiceAvailabilityForLocationEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.getAvailabilityForLocation + onFriday, availabilityOptions as any), params)))
         expect(mikeOnFriday.slots?.[friday.value]).toHaveLength(17)
         const firstSlot = mandatory(mikeOnFriday?.slots?.[friday.value]?.[0], `No slots found for Mike on Friday`)
-        expect(firstSlot.priceWithNoDecimalPlaces).toBe(personalTrainingService.priceWithNoDecimalPlaces)
+        expect(firstSlot.priceWithNoDecimalPlaces).toBe(7000)
         const basket = unpricedBasket([unpricedBasketLine(personalTrainingService.id, london, [], friday, time24(firstSlot.startTime24hr), duration(minutes(60)),[{goals: "get fit"}], [resourceRequirementOverride(personalTrainerRequirement.id.value, ptMike.id)])])
         const pricedBasket = expectJson<PricedBasket>(await basketPriceRequestEndpoint(deps, requestContext(requestOf('POST', externalApiPaths.priceBasket, basket as any), params)))
         const orderRequest = pricedCreateOrderRequest(pricedBasket, customer("Mike", "Hogan", "mike@email.com", "+14155552671"), fullPaymentOnCheckout())
@@ -154,7 +154,7 @@ describe("given the test gym tenant", () => {
     });
 
     test("Mete is more expensive than Mike because Mete is tagged as elite", async () => {
-        const {personalTrainingService, personalTrainerRequirement, ptMete} = await getReferenceData(deps);
+        const {personalTrainerRequirement, ptMete} = await getReferenceData(deps);
         const availabilityOptions = serviceAvailabilityOptions([], [{
                 requirementId: personalTrainerRequirement.id.value,
                 resourceId: ptMete.id
@@ -165,7 +165,7 @@ describe("given the test gym tenant", () => {
         expect(availabilityResponse.slots?.[tuesday.value]).toHaveLength(17)
         const availableSlots = availabilityResponse.slots?.[tuesday.value] ?? []
         const lastSlot = mandatory(availableSlots[availableSlots.length - 1], `No final slot available`)
-        expect(lastSlot.priceWithNoDecimalPlaces).toBeGreaterThan(personalTrainingService.priceWithNoDecimalPlaces)
+        expect(lastSlot.priceWithNoDecimalPlaces).toBe(9000)
     })
 })
 

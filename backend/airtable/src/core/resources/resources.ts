@@ -23,7 +23,7 @@ function toResourceSummary(r: DbResource & { resource_images: DbResourceImage[] 
         _type: 'resource.summary',
         id: r.id,
         name: r.name,
-        type: r.resource_type,
+        type: r.resource_type_id,
         locationIds,
         branding: {
             images: r.resource_images.map(i => ({
@@ -56,7 +56,7 @@ async function listByType(prisma: PrismaClient, tenantEnvironmentLoc: TenantEnvi
     }
     const foundResources = await prisma.resources.findMany({
         where: {
-            resource_type: foundType.id,
+            resource_type_id: foundType.id,
             tenant_id: tenantEnvironmentLoc.tenantId.value,
             environment_id: tenantEnvironmentLoc.environmentId.value
         },

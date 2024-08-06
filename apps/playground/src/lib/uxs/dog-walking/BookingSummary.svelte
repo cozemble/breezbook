@@ -1,11 +1,17 @@
 <script lang="ts">
-    import type {Availability, PriceBreakdown, Service, ServiceOption} from "@breezbook/backend-api-types";
+    import type {
+        Availability,
+        PriceBreakdown,
+        Service,
+        ServiceLocation,
+        ServiceOption
+    } from '@breezbook/backend-api-types';
     import {formatPrice} from "./types.js";
 
     export let service: Service | null = null;
+    export let serviceLocation: ServiceLocation | null = null;
     export let serviceOptions: ServiceOption[] = [];
     export let slot: Availability | null = null;
-
 
     function formatDateWithDayOfWeek(dateString: string): string {
         const date = new Date(dateString);
@@ -21,11 +27,11 @@
 <div class="bg-base-200 p-4 rounded-lg mb-4">
     <h3 class="text-lg font-semibold mb-2">Booking Summary</h3>
     <div class="space-y-2">
-        {#if service}
+        {#if service && serviceLocation}
             <div class="flex justify-between">
                 <span>{service.name}</span>
                 {#if slot?.priceBreakdown}
-                    <span class="font-medium">{formatPrice(slot.priceBreakdown.servicePrice, service.priceCurrency)}</span>
+                    <span class="font-medium">{formatPrice(slot.priceBreakdown.servicePrice, serviceLocation.priceCurrency)}</span>
                 {/if}
             </div>
         {/if}

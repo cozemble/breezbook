@@ -1,7 +1,8 @@
 <script lang="ts">
-    import type {Service} from "@breezbook/backend-api-types";
+    import type { Service, ServiceLocation } from '@breezbook/backend-api-types';
 
     export let service: Service;
+    export let serviceLocation: ServiceLocation;
     export let selected: boolean;
     export let onClick: () => void;
 
@@ -19,7 +20,7 @@
         <h2 class="card-title">{service.name}</h2>
         <p>{service.description}</p>
         <div class="flex justify-between items-center mt-4">
-            <span class="text-lg font-semibold">{formatPrice(service.priceWithNoDecimalPlaces, service.priceCurrency)}</span>
+            <span class="text-lg font-semibold">{formatPrice(serviceLocation.priceWithNoDecimalPlaces, serviceLocation.priceCurrency)}</span>
             <span class="text-sm">{service.durationMinutes} minutes</span>
         </div>
     </div>

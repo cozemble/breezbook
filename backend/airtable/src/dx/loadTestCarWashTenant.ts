@@ -46,6 +46,7 @@ import {
 	upsertServiceImage,
 	upsertServiceLabel,
 	upsertServiceLocation,
+	upsertServiceLocationPrice,
 	upsertServiceResourceRequirement,
 	upsertServiceScheduleConfig,
 	upsertTenant,
@@ -103,9 +104,7 @@ const serviceUpserts = carwash.services.map((service) => {
 		id: makeTestId(tenant_id, environment_id, slug),
 		tenant_id,
 		environment_id,
-		slug,
-		price: service.price.amount.value,
-		price_currency: service.price.currency.value
+		slug
 	});
 });
 
@@ -130,15 +129,15 @@ export const dbCarwashTenant = {
 	},
 	smallCarWash: {
 		id: serviceId(smallCarWashUpsert.create.data.id),
-		price: price(toNumber(smallCarWashUpsert.create.data.price), currencies.GBP)
+		price: price(toNumber(carwash.smallCarWash.price.amount.value), currencies.GBP)
 	} as ServiceEssential,
 	mediumCarWash: {
 		id: serviceId(mediumCarWashUpsert.create.data.id),
-		price: price(toNumber(mediumCarWashUpsert.create.data.price), currencies.GBP)
+		price: price(toNumber(carwash.mediumCarWash.price.amount.value), currencies.GBP)
 	} as ServiceEssential,
 	largeCarWash: {
 		id: serviceId(largeCarWashUpsert.create.data.id),
-		price: price(toNumber(largeCarWashUpsert.create.data.price), currencies.GBP)
+		price: price(toNumber(carwash.largeCarWash.price.amount.value), currencies.GBP)
 	} as ServiceEssential,
 	wax: {
 		id: addOnId(wax.create.data.id),
@@ -204,7 +203,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
 			tenant_id,
 			environment_id,
 			name: van,
-			resource_type: vanResourceTypeUpsert.create.data.id
+			resource_type_id: vanResourceTypeUpsert.create.data.id
 		})));
 	await runUpserts(prisma, vanUpserts.flatMap(van => daysOfWeek.map(day => upsertResourceAvailability({
 		id: makeTestId(tenant_id, environment_id, `resource-availability-${van.create.data.id}-${day}`),
@@ -302,7 +301,7 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
 		tenant_id,
 		environment_id,
 		requirement_type: 'any_suitable',
-		resource_type: vanResourceTypeUpsert.create.data.id
+		resource_type_id: vanResourceTypeUpsert.create.data.id
 	})));
 	await runUpserts(prisma, serviceUpserts.map(serviceUpsert => upsertServiceLocation({
 		tenant_id,
@@ -310,6 +309,36 @@ export async function loadTestCarWashTenant(prisma: PrismaClient): Promise<void>
 		service_id: serviceUpsert.create.data.id,
 		location_id: londonUpsert.create.data.id
 	})));
+	await runUpserts(prisma, [
+		upsertServiceLocationPrice({
+			id: makeTestId(tenant_id, environment_id, `service-location-price-${smallCarWashUpsert.create.data.id}-${londonUpsert.create.data.id}`),
+			tenant_id,
+			environment_id,
+			service_id: smallCarWashUpsert.create.data.id,
+			location_id: londonUpsert.create.data.id,
+			price: carwash.smallCarWash.price.amount.value,
+			price_currency: 'GBP'
+		}),
+		upsertServiceLocationPrice({
+			id: makeTestId(tenant_id, environment_id, `service-location-price-${mediumCarWashUpsert.create.data.id}-${londonUpsert.create.data.id}`),
+			tenant_id,
+			environment_id,
+			service_id: mediumCarWashUpsert.create.data.id,
+			location_id: londonUpsert.create.data.id,
+			price: carwash.mediumCarWash.price.amount.value,
+			price_currency: 'GBP'
+		}),
+		upsertServiceLocationPrice({
+			id: makeTestId(tenant_id, environment_id, `service-location-price-${largeCarWashUpsert.create.data.id}-${londonUpsert.create.data.id}`),
+			tenant_id,
+			environment_id,
+			service_id: largeCarWashUpsert.create.data.id,
+			location_id: londonUpsert.create.data.id,
+			price: carwash.largeCarWash.price.amount.value,
+			price_currency: 'GBP'
+		})
+	]);
+
 	await runUpserts(prisma, serviceUpserts.map(serviceUpsert => upsertServiceForm({
 		tenant_id,
 		environment_id,

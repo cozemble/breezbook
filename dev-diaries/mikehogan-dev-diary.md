@@ -2686,3 +2686,15 @@ That means that the earliest booking that the business can accept is 15.00 in Br
 
 However, when I instantiate `now` as `isoDate` and `time24`, that time will be in UTC, which is 16.00.  I will add two 
 hours to that to get 18.00, and I will exclude all timeslots before that.  But that is not correct.
+
+# Tue 6 Aug 2024
+I think I got the timezone stuff solved, by requiring a timezone any time that any sense of `now` is being constructed.
+That means that when I map a tenant config into `IsoDate`  and `Time24`, they are timezone-less, so the timezone of the
+business or location is implicit.  But when dealing with `now`, the need for a timezone is explicit.
+
+I think this seems to be working, but to be sure, I am making a truly global demo tenant, with offices all over the world.
+All of the offices have at least one shared service.  And now that I am configuring the price for each service, it becomes
+clear that a price is not really associated with a service, but more with a service-location pair.
+
+And recently I read about an Acuity user serving the island of Ireland.  She wanted Sterling prices for folks in Norther
+Ireland, and Euro prices for people in the south.

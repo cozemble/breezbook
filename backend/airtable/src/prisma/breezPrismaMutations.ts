@@ -614,3 +614,10 @@ export function upsertServiceScheduleConfig(create: Prisma.service_schedule_conf
     return makeUpsert('service_schedule_config', entityId, create)
 }
 
+export type UpsertServiceLocationPrice = Upsert<Prisma.service_location_pricesCreateArgs['data'], Prisma.service_location_pricesUpdateArgs['data'], Prisma.service_location_pricesUpdateArgs['where']>
+
+export function upsertServiceLocationPrice(create: Prisma.service_location_pricesUncheckedCreateInput): UpsertServiceLocationPrice {
+    const entityId = compositeKey("id", mandatory(create.id, "id"))
+    return makeUpsert('service_location_prices', entityId, create)
+}
+

@@ -20,7 +20,8 @@ import {
 	isoDateFns,
 	minutes,
 	time24,
-	timePeriod, timezone,
+	timePeriod,
+	timezone,
 	Timezone
 } from '@breezbook/packages-date-time';
 import { formId, mandatory, TenantEnvironment, values } from '@breezbook/packages-types';
@@ -34,7 +35,8 @@ import {
 	DbBookingServiceOption,
 	DbBusinessHours,
 	DbCoupon,
-	DbForm, DbLocation,
+	DbForm,
+	DbLocation,
 	DbPricingRule,
 	DbResource,
 	DbResourceAvailability,
@@ -43,14 +45,14 @@ import {
 	DbService,
 	DbServiceAddOn,
 	DbServiceForm,
+	DbServiceLocationPrice,
 	DbServiceOption,
 	DbServiceOptionForm,
 	DbServiceOptionResourceRequirement,
 	DbServiceResourceRequirement,
 	DbServiceScheduleConfig,
 	DbTenantSettings,
-	DbTimeSlot,
-	findManyForTenant
+	DbTimeSlot
 } from '../prisma/dbtypes.js';
 import {
 	toDomainAddOn,
@@ -65,7 +67,6 @@ import {
 } from '../prisma/dbToDomain.js';
 import { PricingRule } from '@breezbook/packages-pricing';
 import { resourcing } from '@breezbook/packages-resourcing';
-import { PrismaClient } from '@prisma/client';
 import Resource = resourcing.Resource;
 import ResourceAvailability = configuration.ResourceAvailability;
 import availabilityBlock = configuration.availabilityBlock;
@@ -178,7 +179,7 @@ export type DbServiceOptionFormsAndResources = (DbServiceOption & {
 })
 
 export interface AvailabilityData {
-	location: DbLocation
+	location: DbLocation;
 	businessHours: DbBusinessHours[];
 	blockedTime: DbBlockedTime[];
 	resources: DbResource[];
@@ -189,6 +190,7 @@ export interface AvailabilityData {
 	serviceAddOns: DbServiceAddOn[];
 	serviceOptions: DbServiceOptionFormsAndResources[];
 	serviceResourceRequirements: DbServiceResourceRequirement[];
+	serviceLocationPrices: DbServiceLocationPrice[];
 	timeSlots: DbTimeSlot[];
 	pricingRules: DbPricingRule[];
 	resourceTypes: DbResourceType[];
@@ -221,7 +223,16 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
 	const services = availabilityData.services.map((s) => {
 		const applicableScheduleConfig = availabilityData.serviceScheduleConfigs.find((sc) => sc.service_id === s.id);
 		const theScheduleConfig = applicableScheduleConfig ? applicableScheduleConfig.schedule_config as unknown as ScheduleConfig : scheduleConfig(singleDaySchedulingFns.alwaysAvailable());
-		return toDomainService(s, availabilityData.serviceAddOns, availabilityData.resourceTypes, availabilityData.serviceForms, availabilityData.serviceResourceRequirements, mappedResources, theScheduleConfig);
+		return toDomainService(
+			availabilityData.location,
+			s,
+			availabilityData.serviceAddOns,
+			availabilityData.resourceTypes,
+			availabilityData.serviceForms,
+			availabilityData.serviceResourceRequirements,
+			availabilityData.serviceLocationPrices,
+			mappedResources,
+			theScheduleConfig);
 	});
 	const serviceOptions = availabilityData.serviceOptions.map((so) => toDomainServiceOption(so, availabilityData.resourceTypes, mappedResources));
 
@@ -236,7 +247,7 @@ export function convertAvailabilityDataIntoEverythingForAvailability(tenantEnvir
 			mappedTimeSlots,
 			mappedForms,
 			periodicStartTime(duration(minutes(30))),
-			customerForm ? customerForm.id : null,
+			customerForm ? customerForm.id : null
 		),
 		availabilityData.pricingRules.map((pr) => toDomainPricingRule(pr)),
 		availabilityData.bookings.map((b) => toDomainBooking(b, services)),

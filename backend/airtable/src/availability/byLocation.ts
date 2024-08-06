@@ -159,6 +159,13 @@ export const byLocation = {
 				environment_id: location.environmentId.value
 			}
 		});
+		const serviceLocationPrices = await prisma.service_location_prices.findMany({
+			where: {
+				tenant_id: location.tenantId.value,
+				environment_id: location.environmentId.value,
+				location_id: location.locationId.value
+			}
+		});
 
 
 		return {
@@ -173,6 +180,7 @@ export const byLocation = {
 			serviceAddOns,
 			serviceOptions,
 			serviceResourceRequirements,
+			serviceLocationPrices,
 			timeSlots,
 			pricingRules,
 			resourceTypes,

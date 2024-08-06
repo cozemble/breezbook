@@ -237,6 +237,7 @@ model locations {
   pricing_rules           pricing_rules[]
   refund_rules            refund_rules[]
   resource_availability   resource_availability[]
+  service_location_prices service_location_prices[]
   service_locations       service_locations[]
   service_schedule_config service_schedule_config[]
   time_slots              time_slots[]
@@ -298,6 +299,7 @@ model order_lines {
   order_line_service_options order_line_service_options[]
   locations                  locations                    @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services                   services                     @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_location_prices    service_location_prices      @relation(fields: [tenant_id, environment_id, service_id, location_id], references: [tenant_id, environment_id, service_id, location_id], onDelete: NoAction, onUpdate: NoAction)
   tenants                    tenants                      @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -444,7 +446,7 @@ model resources {
   id                                   String                                 @id
   tenant_id                            String
   environment_id                       String
-  resource_type                        String
+  resource_type_id                     String
   name                                 String
   metadata                             Json                                   @default("{}")
   created_at                           DateTime                               @default(now()) @db.Timestamptz(6)
@@ -454,7 +456,7 @@ model resources {
   resource_blocked_time                resource_blocked_time[]
   resource_images                      resource_images[]
   resource_markup                      resource_markup[]
-  resource_types                       resource_types                         @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resource_types                       resource_types                         @relation(fields: [resource_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants                              tenants                                @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   service_option_resource_requirements service_option_resource_requirements[]
   service_resource_requirements        service_resource_requirements[]
@@ -498,15 +500,16 @@ model service_images {
 }
 
 model service_locations {
-  tenant_id      String
-  environment_id String
-  service_id     String
-  location_id    String
-  created_at     DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
-  locations      locations @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  services       services  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+  tenant_id               String
+  environment_id          String
+  service_id              String
+  location_id             String
+  created_at              DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                 @default(now()) @db.Timestamptz(6)
+  service_location_prices service_location_prices?
+  locations               locations                @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services                services                 @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                 tenants                  @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([tenant_id, environment_id, service_id, location_id])
 }
@@ -516,8 +519,6 @@ model services {
   tenant_id                     String
   environment_id                String
   slug                          String
-  price                         Decimal                         @db.Decimal
-  price_currency                String
   capacity                      Int                             @default(1)
   start_date                    DateTime                        @default(now()) @db.Timestamptz(6)
   end_date                      DateTime?                       @db.Timestamptz(6)
@@ -529,6 +530,7 @@ model services {
   service_forms                 service_forms[]
   service_images                service_images[]
   service_labels                service_labels[]
+  service_location_prices       service_location_prices[]
   service_locations             service_locations[]
   service_resource_requirements service_resource_requirements[]
   service_schedule_config       service_schedule_config[]
@@ -641,6 +643,7 @@ model tenants {
   service_forms                        service_forms[]
   service_images                       service_images[]
   service_labels                       service_labels[]
+  service_location_prices              service_location_prices[]
   service_locations                    service_locations[]
   service_option_forms                 service_option_forms[]
   service_option_images                service_option_images[]
@@ -721,11 +724,11 @@ model service_resource_requirements {
   service_id       String
   requirement_type resource_requirement_type
   resource_id      String?
-  resource_type    String?
+  resource_type_id String?
   created_at       DateTime                  @default(now()) @db.Timestamptz(6)
   updated_at       DateTime                  @default(now()) @db.Timestamptz(6)
   resources        resources?                @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  resource_types   resource_types?           @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resource_types   resource_types?           @relation(fields: [resource_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services         services                  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants          tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -945,11 +948,11 @@ model service_option_resource_requirements {
   service_option_id String
   requirement_type  resource_requirement_type
   resource_id       String?
-  resource_type     String?
+  resource_type_id  String?
   created_at        DateTime                  @default(now()) @db.Timestamptz(6)
   updated_at        DateTime                  @default(now()) @db.Timestamptz(6)
   resources         resources?                @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  resource_types    resource_types?           @relation(fields: [resource_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resource_types    resource_types?           @relation(fields: [resource_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   service_options   service_options           @relation(fields: [service_option_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants           tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -1040,6 +1043,25 @@ model service_schedule_config {
   locations       locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   services        services   @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants         tenants    @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenant_id, environment_id, service_id, location_id])
+}
+
+model service_location_prices {
+  id                String            @id
+  tenant_id         String
+  environment_id    String
+  service_id        String
+  location_id       String
+  price             Decimal           @db.Decimal
+  price_currency    String
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime          @default(now()) @db.Timestamptz(6)
+  order_lines       order_lines[]
+  locations         locations         @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  services          services          @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_locations service_locations @relation(fields: [tenant_id, environment_id, service_id, location_id], references: [tenant_id, environment_id, service_id, location_id], onDelete: NoAction, onUpdate: NoAction)
+  tenants           tenants           @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([tenant_id, environment_id, service_id, location_id])
 }

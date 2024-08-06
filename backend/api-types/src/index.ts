@@ -221,8 +221,6 @@ export interface Service {
     slug: string;
     name: string;
     description: string;
-    priceWithNoDecimalPlaces: number;
-    priceCurrency: string;
     hasDynamicPricing: boolean;
     durationMinutes: number;
     image: string;
@@ -241,6 +239,8 @@ export interface Location {
 export interface ServiceLocation {
     serviceId: string;
     locationId: string;
+    priceWithNoDecimalPlaces: number;
+    priceCurrency: string;
 }
 
 export interface FormAndLabels {

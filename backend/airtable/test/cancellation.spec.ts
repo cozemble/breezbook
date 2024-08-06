@@ -1,5 +1,5 @@
-import { IsoDate, isoDate, isoDateFns, timezones } from '@breezbook/packages-date-time';
-import { describe, expect, test } from 'vitest';
+import { IsoDate, isoDateFns, timezones } from '@breezbook/packages-date-time';
+import { beforeEach, describe, expect, test } from 'vitest';
 import { CancellationGranted } from '@breezbook/backend-api-types';
 import { doCancellationRequest, doCommitCancellation } from '../src/express/cancellation.js';
 import { DbCancellationGrant, DbService } from '../src/prisma/dbtypes.js';
@@ -9,48 +9,60 @@ import { HttpError } from '../src/infra/functionalExpress.js';
 import { mutations } from '../src/mutation/mutations.js';
 import { DbBookingAndResourceRequirements } from '../src/express/getEverythingForAvailability.js';
 import { SystemClock } from '@breezbook/packages-core';
+import { PrismaClient } from '@prisma/client';
+import { PrismockClient } from 'prismock';
+import { dbCarwashTenant, loadTestCarWashTenant } from '../src/dx/loadTestCarWashTenant.js';
+import { byLocation } from '../src/availability/byLocation.js';
+import { tenantEnvironmentLocation } from '@breezbook/packages-types';
 
-test('can\'t get a cancellation grant for a booking in the past', () => {
-	const theBooking = makeDbBooking(isoDateFns.addDays(isoDateFns.today(timezones.utc), -1));
-	const outcome = doCancellationRequest([], [], [makeDbService()], [], theBooking, [], [], new SystemClock()) as HttpError;
-	expect(outcome._type).toBe('http.error');
-	expect(outcome.status).toBe(400);
+const london = tenantEnvironmentLocation(dbCarwashTenant.environmentId, dbCarwashTenant.tenantId, dbCarwashTenant.locations.london);
+
+describe('given a configured tenant', () => {
+	let prisma: PrismaClient;
+
+	beforeEach(async () => {
+		prisma = new PrismockClient();
+		await loadTestCarWashTenant(prisma);
+	});
+
+	test('can\'t get a cancellation grant for a booking in the past', async () => {
+		const dayInPast = isoDateFns.addDays(isoDateFns.today(timezones.utc), -1);
+		const theBooking = makeDbBooking(dayInPast);
+		const everything = await byLocation.getEverythingForAvailability(prisma, london, dayInPast, dayInPast);
+		const outcome = doCancellationRequest(everything,[], theBooking, new SystemClock()) as HttpError;
+		expect(outcome._type).toBe('http.error');
+		expect(outcome.status).toBe(400);
+	});
+
+	test('full refund if there are no refund rules, and booking is in the future', async () => {
+		const dayInFuture = isoDateFns.addDays(isoDateFns.today(timezones.utc), 1);
+		const theBooking = makeDbBooking(dayInFuture);
+		const everything = await byLocation.getEverythingForAvailability(prisma, london, dayInFuture, dayInFuture);
+		const outcome = doCancellationRequest(everything,[], theBooking, new SystemClock()) as CancellationGranted;
+		expect(outcome._type).toBe('cancellation.granted');
+		expect(outcome.refundPercentageAsRatio).toBe(1.0);
+	});
+
 });
 
-test('full refund if there are no refund rules, and booking is in the future', () => {
-	const theBooking = makeDbBooking(isoDateFns.addDays(isoDateFns.today(timezones.utc), 1));
-	const outcome = doCancellationRequest([], [], [makeDbService()], [], theBooking, [], [], new SystemClock()) as CancellationGranted;
-	expect(outcome._type).toBe('cancellation.granted');
-	expect(outcome.refundPercentageAsRatio).toBe(1.0);
-});
-
-function makeDbBooking(yesterday: IsoDate): DbBookingAndResourceRequirements {
+function makeDbBooking(date: IsoDate): DbBookingAndResourceRequirements {
 	return {
 		id: 'booking-id',
-		environment_id: 'environment-id',
-		tenant_id: 'tenant-id',
+		environment_id: 'dev',
+		tenant_id: dbCarwashTenant.tenantId.value,
+		location_id: london.locationId.value,
+		booked_capacity: 1,
+		order_line_id: 'order-line-id',
 		created_at: new Date(),
 		updated_at: new Date(),
-		date: yesterday.value,
+		date: date.value,
 		status: 'confirmed',
-		service_id: 'service-id',
+		service_id: dbCarwashTenant.smallCarWash.id.value,
 		start_time_24hr: '09:00',
 		end_time_24hr: '10:00',
 		customer_id: 'customer-id',
 		order_id: 'order-id',
 		booking_resource_requirements: []
-	};
-}
-
-function makeDbService(): DbService {
-	return {
-		id: 'service-id',
-		tenant_id: 'tenant-id',
-		name: 'service-name',
-		description: 'service-description',
-		price: 3500,
-		price_currency: 'GBP',
-		permitted_add_on_ids: []
 	};
 }
 

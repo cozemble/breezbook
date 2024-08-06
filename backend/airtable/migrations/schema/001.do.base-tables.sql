@@ -84,14 +84,14 @@ create table resource_types
 
 create table resources
 (
-    id             text primary key,
-    tenant_id      text references tenants (tenant_id) not null,
-    environment_id text                                not null,
-    resource_type  text references resource_types (id) not null,
-    name           text                                not null,
-    metadata       jsonb                               not null default '{}',
-    created_at     timestamp with time zone            not null default current_timestamp,
-    updated_at     timestamp with time zone            not null default current_timestamp
+    id               text primary key,
+    tenant_id        text references tenants (tenant_id) not null,
+    environment_id   text                                not null,
+    resource_type_id text references resource_types (id) not null,
+    name             text                                not null,
+    metadata         jsonb                               not null default '{}',
+    created_at       timestamp with time zone            not null default current_timestamp,
+    updated_at       timestamp with time zone            not null default current_timestamp
 );
 
 create table resource_availability
@@ -204,8 +204,6 @@ create table services
     tenant_id      text references tenants (tenant_id) not null,
     environment_id text                                not null,
     slug           text                                not null,
-    price          numeric                             not null,
-    price_currency text                                not null,
     capacity       integer                             not null default 1,
     start_date     timestamp with time zone            not null default current_timestamp,
     end_date       timestamp with time zone            null     default null,
@@ -299,10 +297,10 @@ create table service_option_resource_requirements
     service_option_id text references service_options (id) not null,
     requirement_type  resource_requirement_type            not null,
     resource_id       text references resources (id)       null     default null,
-    resource_type     text references resource_types (id)  null     default null,
+    resource_type_id  text references resource_types (id)  null     default null,
     created_at        timestamp with time zone             not null default current_timestamp,
     updated_at        timestamp with time zone             not null default current_timestamp,
-    check ((requirement_type = 'any_suitable' and resource_type is not null)
+    check ((requirement_type = 'any_suitable' and resource_type_id is not null)
         or (requirement_type = 'specific_resource' and resource_id is not null))
 );
 
@@ -328,10 +326,10 @@ create table service_resource_requirements
     service_id       text references services (id)       not null,
     requirement_type resource_requirement_type           not null,
     resource_id      text references resources (id)      null     default null,
-    resource_type    text references resource_types (id) null     default null,
+    resource_type_id text references resource_types (id) null     default null,
     created_at       timestamp with time zone            not null default current_timestamp,
     updated_at       timestamp with time zone            not null default current_timestamp,
-    check ((requirement_type = 'any_suitable' and resource_type is not null)
+    check ((requirement_type = 'any_suitable' and resource_type_id is not null)
         or (requirement_type = 'specific_resource' and resource_id is not null))
 );
 
@@ -344,6 +342,21 @@ create table service_locations
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp,
     primary key (tenant_id, environment_id, service_id, location_id)
+);
+
+create table service_location_prices
+(
+    id             text primary key,
+    tenant_id      text references tenants (tenant_id) not null references tenants (tenant_id),
+    environment_id text                                not null,
+    service_id     text references services (id)       not null,
+    location_id    text references locations (id)      not null references locations (id),
+    price          numeric                             not null,
+    price_currency text                                not null,
+    created_at     timestamp with time zone            not null default current_timestamp,
+    updated_at     timestamp with time zone            not null default current_timestamp,
+    unique (tenant_id, environment_id, service_id, location_id),
+    foreign key (tenant_id, environment_id, service_id, location_id) references service_locations (tenant_id, environment_id, service_id, location_id)
 );
 
 create table service_forms
@@ -445,7 +458,8 @@ create table order_lines
     total_price_in_minor_units integer                             not null,
     total_price_currency       text                                not null,
     created_at                 timestamp with time zone            not null default current_timestamp,
-    updated_at                 timestamp with time zone            not null default current_timestamp
+    updated_at                 timestamp with time zone            not null default current_timestamp,
+    foreign key (tenant_id, environment_id, service_id, location_id) references service_location_prices (tenant_id, environment_id, service_id, location_id)
 );
 
 create table order_line_add_ons
