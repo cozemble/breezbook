@@ -24,7 +24,7 @@
 			<div class="flex justify-between">
 				<span>{service.name}</span>
 				{#if slot?.priceBreakdown}
-					<span class="font-medium">{formatPrice(slot.priceBreakdown.servicePrice, "GBP")}</span>
+					<span class="font-medium">{formatPrice(slot.priceBreakdown.servicePrice, slot.priceCurrency)}</span>
 				{/if}
 			</div>
 		{/if}

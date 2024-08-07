@@ -7,7 +7,8 @@ import {
 	upsertResourceType,
 	upsertService,
 	upsertServiceImage,
-	upsertServiceLabel, upsertServiceLocation,
+	upsertServiceLabel,
+	upsertServiceLocation,
 	upsertServiceLocationPrice,
 	upsertServiceResourceRequirement,
 	upsertServiceScheduleConfig,
@@ -20,8 +21,14 @@ import {
 import { runUpserts } from './loadMultiLocationGymTenant.js';
 import { makeTestId } from './testIds.js';
 import { environmentId, languages, locationId, tenantId } from '@breezbook/packages-types';
-import { scheduleConfig, singleDayScheduling, timeslot, timeslotSelection } from '@breezbook/packages-core';
-import { time24 } from '@breezbook/packages-date-time';
+import {
+	minimumNoticePeriod,
+	scheduleConfig,
+	singleDayScheduling,
+	timeslot,
+	timeslotSelection
+} from '@breezbook/packages-core';
+import { hours, time24 } from '@breezbook/packages-date-time';
 
 const tenant_id = 'breezbook-clockwork-sleuths';
 const environment_id = 'dev';
@@ -38,7 +45,12 @@ const locations = [
 ];
 
 type LocationSlug = 'london' | 'new-york' | 'tokyo' | 'sydney' | 'sao-paulo' | 'mumbai' | 'cairo' | 'anchorage';
-type PriceInfo = { amount: number; currency: string };
+
+interface PriceInfo {
+	amount: number;
+	currency: string;
+}
+
 type ServicePrices = Record<LocationSlug, PriceInfo>;
 
 const services = [
@@ -199,10 +211,11 @@ export async function loadClockworkSleuthTenant(prisma: PrismaClient): Promise<v
 			tenant_id,
 			environment_id,
 			service_id: su.create.data.id,
-			schedule_config: scheduleConfig(singleDayScheduling(timeslotSelection([
-				timeslot(time24('09:00'), time24('13:00'), 'Morning'),
-				timeslot(time24('13:00'), time24('18:00'), 'Afternoon')
-			]))) as any
+			schedule_config: scheduleConfig(singleDayScheduling(
+				timeslotSelection([
+					timeslot(time24('09:00'), time24('13:00'), 'Morning'),
+					timeslot(time24('13:00'), time24('18:00'), 'Afternoon')
+				])), { minimumNoticePeriod: minimumNoticePeriod(hours(24)) }) as any
 		})
 	));
 

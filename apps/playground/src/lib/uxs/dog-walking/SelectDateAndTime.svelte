@@ -42,7 +42,7 @@
 		Object.keys(availableSlots.slots).map(date => {
 			const available = availableSlots.slots[date] ?? [] as Availability[];
 			const minPriceForDay = Math.min(...available.map(a => a.priceBreakdown.total));
-			labelsForDay[date] = `${formatPrice(minPriceForDay, "GBP")}`;
+			labelsForDay[date] = `${formatPrice(minPriceForDay, available[0].priceCurrency)}`;
 		});
 	});
 
