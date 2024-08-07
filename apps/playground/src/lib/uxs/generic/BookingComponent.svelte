@@ -59,6 +59,7 @@
 			step++;
 		}
 		scrollToTop();
+		console.log({bookingData})
 	}
 
 	function bookAnotherService() {
@@ -81,6 +82,7 @@
 	function selectService(service: Service) {
 		bookingData.service = service;
 		bookingData.serviceLocation = availableServicesLocations.find(sl => sl.serviceId === service.id) ?? null;
+		updateFormValues();
 	}
 
 	function isSelectedServiceOption(option: ServiceOption): boolean {
