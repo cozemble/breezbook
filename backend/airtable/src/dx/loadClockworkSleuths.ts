@@ -55,21 +55,21 @@ const services = [
 		slug: 'temporal-alignment', 
 		price: 15000,
 		description: 'Expert consultation to align your personal timeline with the proper flow of time.',
-		imageUrl: 'https://example.com/images/temporal-alignment.jpg'
+		imageUrl: 'https://breezbook-playground.vercel.app/images/clockwork-sleuths/temporal-alignment.jpg'
 	},
 	{ 
 		name: 'Paradox Resolution', 
 		slug: 'paradox-resolution', 
 		price: 25000,
 		description: 'Professional assistance in resolving temporal paradoxes and their consequences.',
-		imageUrl: 'https://example.com/images/paradox-resolution.jpg'
+		imageUrl: 'https://breezbook-playground.vercel.app/images/clockwork-sleuths/paradox-resolution.jpg'
 	},
 	{ 
 		name: 'Timeline Repair', 
 		slug: 'timeline-repair', 
 		price: 35000,
 		description: 'Comprehensive service to repair damaged or altered timelines and restore proper chronological order.',
-		imageUrl: 'https://example.com/images/timeline-repair.jpg'
+		imageUrl: 'https://breezbook-playground.vercel.app/images/clockwork-sleuths/timeline-repair.jpg'
 	}
 ];
 
