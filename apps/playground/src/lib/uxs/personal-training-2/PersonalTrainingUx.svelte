@@ -143,7 +143,7 @@
 	<div class="bg-base-100 shadow-xl rounded-lg overflow-hidden border border-base-300">
 		{#if state === "loaded"}
 			<div class="p-4">
-				<TopNav {onLanguageChanged} {onLocationChanged} {locations} {language} location={locationId} />
+				<TopNav {onLanguageChanged} {onLocationChanged} {locations} {language} location={locationId} heading={$translations.personalTraining} />
 				{#if showServiceUnavailable}
 					<div class="bg-error p-4 text-center alert-error">{$translations.serviceUnavailableAtLocation}</div>
 				{:else}

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import BookingComponent from '$lib/uxs/generic/BookingComponent.svelte';
+	import LoadTenant from '$lib/uxs/generic/LoadTenant.svelte';
 </script>
 
-<BookingComponent tenantSlug="breezbook-dog-walks" />
+<LoadTenant tenantSlug="breezbook-dog-walks" />

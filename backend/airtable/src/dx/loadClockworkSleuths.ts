@@ -1,17 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import {
 	upsertBusinessHours,
-	upsertForm,
-	upsertFormLabels,
 	upsertLocation,
 	upsertResource,
 	upsertResourceAvailability,
 	upsertResourceType,
 	upsertService,
-	upsertServiceForm,
 	upsertServiceImage,
-	upsertServiceLabel,
-	upsertServiceLocation,
+	upsertServiceLabel, upsertServiceLocation,
 	upsertServiceLocationPrice,
 	upsertServiceResourceRequirement,
 	upsertServiceScheduleConfig,
@@ -23,15 +19,7 @@ import {
 } from '../prisma/breezPrismaMutations.js';
 import { runUpserts } from './loadMultiLocationGymTenant.js';
 import { makeTestId } from './testIds.js';
-import {
-	environmentId,
-	JsonSchemaForm,
-	jsonSchemaFormLabels,
-	languages,
-	locationId,
-	schemaKeyLabel,
-	tenantId
-} from '@breezbook/packages-types';
+import { environmentId, languages, locationId, tenantId } from '@breezbook/packages-types';
 import { scheduleConfig, singleDayScheduling, timeslot, timeslotSelection } from '@breezbook/packages-core';
 import { time24 } from '@breezbook/packages-date-time';
 
@@ -49,29 +37,60 @@ const locations = [
 	{ name: 'Anchorage', slug: 'anchorage', timezone: 'America/Anchorage' }
 ];
 
+type LocationSlug = 'london' | 'new-york' | 'tokyo' | 'sydney' | 'sao-paulo' | 'mumbai' | 'cairo' | 'anchorage';
+type PriceInfo = { amount: number; currency: string };
+type ServicePrices = Record<LocationSlug, PriceInfo>;
+
 const services = [
-	{ 
-		name: 'Temporal Alignment Consultation', 
-		slug: 'temporal-alignment', 
-		price: 15000,
+	{
+		name: 'Temporal Alignment Consultation',
+		slug: 'temporal-alignment',
 		description: 'Expert consultation to align your personal timeline with the proper flow of time.',
-		imageUrl: 'https://breezbook-playground.vercel.app/images/clockwork-sleuths/temporal-alignment.jpg'
+		imageUrl: 'https://breezbook-playground.vercel.app/images/clockwork-sleuths/temporal-alignment.jpg',
+		prices: {
+			'london': { amount: 15000, currency: 'GBP' },
+			'new-york': { amount: 18000, currency: 'USD' },
+			'tokyo': { amount: 2000000, currency: 'JPY' },
+			'sydney': { amount: 22000, currency: 'AUD' },
+			'sao-paulo': { amount: 75000, currency: 'BRL' },
+			'mumbai': { amount: 1100000, currency: 'INR' },
+			'cairo': { amount: 235000, currency: 'EGP' },
+			'anchorage': { amount: 17000, currency: 'USD' }
+		} as ServicePrices
 	},
-	{ 
-		name: 'Paradox Resolution', 
-		slug: 'paradox-resolution', 
-		price: 25000,
+	{
+		name: 'Paradox Resolution',
+		slug: 'paradox-resolution',
 		description: 'Professional assistance in resolving temporal paradoxes and their consequences.',
-		imageUrl: 'https://breezbook-playground.vercel.app/images/clockwork-sleuths/paradox-resolution.jpg'
+		imageUrl: 'https://breezbook-playground.vercel.app/images/clockwork-sleuths/paradox-resolution.jpg',
+		prices: {
+			'london': { amount: 25000, currency: 'GBP' },
+			'new-york': { amount: 30000, currency: 'USD' },
+			'tokyo': { amount: 3300000, currency: 'JPY' },
+			'sydney': { amount: 36000, currency: 'AUD' },
+			'sao-paulo': { amount: 125000, currency: 'BRL' },
+			'mumbai': { amount: 1800000, currency: 'INR' },
+			'cairo': { amount: 390000, currency: 'EGP' },
+			'anchorage': { amount: 28000, currency: 'USD' }
+		} as ServicePrices
 	},
-	{ 
-		name: 'Timeline Repair', 
-		slug: 'timeline-repair', 
-		price: 35000,
+	{
+		name: 'Timeline Repair',
+		slug: 'timeline-repair',
 		description: 'Comprehensive service to repair damaged or altered timelines and restore proper chronological order.',
-		imageUrl: 'https://breezbook-playground.vercel.app/images/clockwork-sleuths/timeline-repair.jpg'
+		imageUrl: 'https://breezbook-playground.vercel.app/images/clockwork-sleuths/timeline-repair.jpg',
+		prices: {
+			'london': { amount: 35000, currency: 'GBP' },
+			'new-york': { amount: 42000, currency: 'USD' },
+			'tokyo': { amount: 4600000, currency: 'JPY' },
+			'sydney': { amount: 50000, currency: 'AUD' },
+			'sao-paulo': { amount: 175000, currency: 'BRL' },
+			'mumbai': { amount: 2500000, currency: 'INR' },
+			'cairo': { amount: 545000, currency: 'EGP' },
+			'anchorage': { amount: 39000, currency: 'USD' }
+		} as ServicePrices
 	}
-];
+] as const;
 
 export const clockworkSleuthTenant = {
 	tenantId: tenantId(tenant_id),
@@ -216,101 +235,26 @@ export async function loadClockworkSleuthTenant(prisma: PrismaClient): Promise<v
 
 	// Service Locations and Prices
 	await runUpserts(prisma, serviceUpserts.flatMap(su =>
-		locations.map(loc =>
-			upsertServiceLocation({
-				tenant_id,
-				environment_id,
-				service_id: su.create.data.id,
-				location_id: makeTestId(tenant_id, environment_id, loc.slug)
-			})
-		)
-	));
+		locations.flatMap(loc => {
+			const service = services.find(s => makeTestId(tenant_id, environment_id, s.slug) === su.create.data.id);
+			const price = service?.prices[loc.slug as LocationSlug];
+			return [
+				upsertServiceLocation({
+					tenant_id,
+					environment_id,
+					service_id: su.create.data.id,
+					location_id: makeTestId(tenant_id, environment_id, loc.slug)
+				}),
 
-	await runUpserts(prisma, serviceUpserts.flatMap(su =>
-		locations.map(loc =>
-			upsertServiceLocationPrice({
-				id: makeTestId(tenant_id, environment_id, `service-location-price-${su.create.data.id}-${loc.slug}`),
-				tenant_id,
-				environment_id,
-				service_id: su.create.data.id,
-				location_id: makeTestId(tenant_id, environment_id, loc.slug),
-				price: services.find(s => makeTestId(tenant_id, environment_id, s.slug) === su.create.data.id)?.price ?? 0,
-				price_currency: 'GBP'
-			})
-		)
-	));
-
-	// Forms
-	const caseDetailsForm: JsonSchemaForm = {
-		'_type': 'json.schema.form',
-		'id': {
-			'_type': 'form.id',
-			'value': 'case-details-form'
-		},
-		'name': 'Case Details Form',
-		'schema': {
-			'$schema': 'http://json-schema.org/draft-07/schema#',
-			'type': 'object',
-			'properties': {
-				'caseTitle': {
-					'type': 'string'
-				},
-				'caseDescription': {
-					'type': 'string'
-				},
-				'timelineAffected': {
-					'type': 'string'
-				}
-			},
-			'required': [
-				'caseTitle',
-				'caseDescription',
-				'timelineAffected'
-			],
-			'additionalProperties': false
-		}
-	};
-
-	const [caseDetailsFormUpsert] = await runUpserts(prisma, [
-		upsertForm({
-			id: makeTestId(tenant_id, environment_id, caseDetailsForm.id.value),
-			tenant_id,
-			environment_id,
-			name: caseDetailsForm.name,
-			description: caseDetailsForm.name,
-			definition: caseDetailsForm as any
-		})
-	]);
-
-	// Form Labels
-	await runUpserts(prisma, [
-		upsertFormLabels({
-			tenant_id,
-			environment_id,
-			form_id: caseDetailsFormUpsert.create.data.id,
-			language_id: languages.en.value,
-			labels: jsonSchemaFormLabels(
-				caseDetailsForm.id,
-				languages.en,
-				'Case Details',
-				[
-					schemaKeyLabel('caseTitle', 'Case Title'),
-					schemaKeyLabel('caseDescription', 'Case Description'),
-					schemaKeyLabel('timelineAffected', 'Affected Timeline')
-				],
-				'Please provide details about your case'
-			) as any
-		})
-	]);
-
-	// Service Forms
-	await runUpserts(prisma, serviceUpserts.map(su =>
-		upsertServiceForm({
-			tenant_id,
-			environment_id,
-			service_id: su.create.data.id,
-			form_id: caseDetailsFormUpsert.create.data.id,
-			rank: 0
+				upsertServiceLocationPrice({
+					id: makeTestId(tenant_id, environment_id, `service-location-price-${su.create.data.id}-${loc.slug}`),
+					tenant_id,
+					environment_id,
+					service_id: su.create.data.id,
+					location_id: makeTestId(tenant_id, environment_id, loc.slug),
+					price: price?.amount ?? 0,
+					price_currency: price?.currency ?? 'GBP'
+				})];
 		})
 	));
 
