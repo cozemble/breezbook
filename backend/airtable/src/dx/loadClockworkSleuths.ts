@@ -1,235 +1,351 @@
-import { Upsert } from '../mutation/mutations.js';
+import { PrismaClient } from '@prisma/client';
 import {
-	upsertBusinessHours,
-	upsertLocation, upsertResource, upsertResourceAvailability, UpsertResourceAvailability,
-	upsertResourceType, upsertService, upsertServiceLabel, upsertServiceLocationPrice, upsertServiceResourceRequirement,
-	upsertTenant
+    upsertTenant,
+    upsertLocation,
+    upsertBusinessHours,
+    upsertResourceType,
+    upsertResource,
+    upsertResourceAvailability,
+    upsertService,
+    upsertServiceScheduleConfig,
+    upsertServiceLabel,
+    upsertServiceResourceRequirement,
+    upsertServiceLocation,
+    upsertServiceLocationPrice,
+    upsertForm,
+    upsertFormLabels,
+    upsertServiceForm,
+    upsertPricingRule,
+    upsertTenantBranding,
+    upsertTenantBrandingLabels,
+    upsertTenantSettings,
+    upsertServiceImage,
+    upsertTenantImage
 } from '../prisma/breezPrismaMutations.js';
+import { runUpserts } from './loadMultiLocationGymTenant.js';
 import { makeTestId } from './testIds.js';
+import { 
+    environmentId, 
+    JsonSchemaForm, 
+    jsonSchemaFormLabels, 
+    languages, 
+    locationId, 
+    schemaKeyLabel, 
+    tenantEnvironment, 
+    tenantId 
+} from '@breezbook/packages-types';
+import { scheduleConfig, singleDayScheduling, timeslotSelection, timeslot } from '@breezbook/packages-core';
+import { time24, minutes } from '@breezbook/packages-date-time';
 
 const tenant_id = 'breezbook-clockwork-sleuths';
-const environment_id = 'development';
+const environment_id = 'dev';
 
-const mondayToFriday = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-const satSun = ['Saturday', 'Sunday'];
-const daysOfWeek = [...mondayToFriday, ...satSun];
-const start_time_24hr = '09:00';
-const end_time_24hr = '18:00';
-const sleuthResourceTypeId = makeTestId(tenant_id, environment_id, `resource_type.sleuth`);
+const locations = [
+    { name: 'London', slug: 'london', timezone: 'Europe/London' },
+    { name: 'New York', slug: 'new-york', timezone: 'America/New_York' },
+    { name: 'Tokyo', slug: 'tokyo', timezone: 'Asia/Tokyo' },
+    { name: 'Sydney', slug: 'sydney', timezone: 'Australia/Sydney' },
+    { name: 'Sao Paulo', slug: 'sao-paulo', timezone: 'America/Sao_Paulo' },
+    { name: 'Mumbai', slug: 'mumbai', timezone: 'Asia/Kolkata' },
+    { name: 'Cairo', slug: 'cairo', timezone: 'Africa/Cairo' },
+    { name: 'Anchorage', slug: 'anchorage', timezone: 'America/Anchorage' }
+];
 
-function resourceAlwaysAvailable(resourceShortId: string, locationShortId: string):UpsertResourceAvailability[] {
-	const resource_id = makeTestId(tenant_id, environment_id, resourceShortId);
-	const location_id = makeTestId(tenant_id, environment_id, locationShortId);
-	return daysOfWeek.map(day => upsertResourceAvailability({
-		id: makeTestId(tenant_id, environment_id, `resource_availability.${resourceShortId}.${locationShortId}.${day}`),
-		tenant_id,
-		environment_id,
-		resource_id,
-		location_id,
-		day_of_week: day,
-		start_time_24hr,
-		end_time_24hr
-	}))
-}
+const services = [
+    { name: 'Temporal Alignment Consultation', slug: 'temporal-alignment', price: 15000 },
+    { name: 'Paradox Resolution', slug: 'paradox-resolution', price: 25000 },
+    { name: 'Timeline Repair', slug: 'timeline-repair', price: 35000 }
+];
 
-function clockworkSleuthUpserts(): Upsert[] {
+export const clockworkSleuthTenant = {
+    tenantId: tenantId(tenant_id),
+    environmentId: environmentId(environment_id),
+    locations: Object.fromEntries(
+        locations.map(loc => [loc.slug, locationId(makeTestId(tenant_id, environment_id, loc.slug))])
+    ),
+    services: Object.fromEntries(
+        services.map(service => [service.slug, makeTestId(tenant_id, environment_id, service.slug)])
+    )
+};
 
+export async function loadClockworkSleuthTenant(prisma: PrismaClient): Promise<void> {
+    await runUpserts(prisma, [
+        upsertTenant({
+            tenant_id,
+            name: 'Clockwork Sleuths',
+            slug: tenant_id
+        })
+    ]);
 
-	return [
-		upsertTenant({
-			tenant_id,
-			name: 'Clockwork Sleuths',
-			slug: tenant_id
-		}),
-		upsertLocation({
-			id: makeTestId(tenant_id, environment_id, 'location_london'),
-			tenant_id,
-			environment_id,
-			name: 'London',
-			slug: 'london',
-			iana_timezone: 'Europe/London'
-		}),
-		upsertLocation({
-			id: makeTestId(tenant_id, environment_id, 'location_new_york'),
-			tenant_id,
-			environment_id,
-			name: 'New York',
-			slug: 'new_york',
-			iana_timezone: 'America/New_York'
-		}),
-		upsertLocation({
-			id: makeTestId(tenant_id, environment_id, 'location_tokyo'),
-			tenant_id,
-			environment_id,
-			name: 'Tokyo',
-			slug: 'tokyo',
-			iana_timezone: 'Asia/Tokyo'
-		}),
-		upsertLocation({
-			id: makeTestId(tenant_id, environment_id, 'location_sydney'),
-			tenant_id,
-			environment_id,
-			name: 'Sydney',
-			slug: 'sydney',
-			iana_timezone: 'Australia/Sydney'
-		}),
-		upsertLocation({
-			id: makeTestId(tenant_id, environment_id, 'location_sao_paulo'),
-			tenant_id,
-			environment_id,
-			name: 'Sao Paulo',
-			slug: 'sao_paulo',
-			iana_timezone: 'America/Sao_Paulo'
-		}),
-		upsertLocation({
-			id: makeTestId(tenant_id, environment_id, 'location_mumbai'),
-			tenant_id,
-			environment_id,
-			name: 'Mumbai',
-			slug: 'mumbai',
-			iana_timezone: 'Asia/Kolkata'
-		}),
-		upsertLocation({
-			id: makeTestId(tenant_id, environment_id, 'location_cairo'),
-			tenant_id,
-			environment_id,
-			name: 'Cairo',
-			slug: 'cairo',
-			iana_timezone: 'Africa/Cairo'
-		}),
-		upsertLocation({
-			id: makeTestId(tenant_id, environment_id, 'location_anchorage'),
-			tenant_id,
-			environment_id,
-			name: 'Anchorage',
-			slug: 'anchorage',
-			iana_timezone: 'America/Anchorage'
-		}),
+    // Locations
+    await runUpserts(prisma, locations.map(loc => 
+        upsertLocation({
+            id: makeTestId(tenant_id, environment_id, loc.slug),
+            tenant_id,
+            environment_id,
+            name: loc.name,
+            slug: loc.slug,
+            iana_timezone: loc.timezone
+        })
+    ));
 
-		...daysOfWeek.map(day => upsertBusinessHours({
-			id: makeTestId(tenant_id, environment_id, `business_hours.${day}`),
-			tenant_id,
-			environment_id,
-			day_of_week: day,
-			start_time_24hr,
-			end_time_24hr
-		})),
-		upsertResourceType({
-			id: sleuthResourceTypeId,
-			tenant_id,
-			environment_id,
-			name: 'Sleuth'
-		}),
+    // Business Hours
+    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    await runUpserts(prisma, daysOfWeek.flatMap(day => 
+        locations.map(loc => 
+            upsertBusinessHours({
+                id: makeTestId(tenant_id, environment_id, `business_hours.${loc.slug}.${day}`),
+                tenant_id,
+                environment_id,
+                location_id: makeTestId(tenant_id, environment_id, loc.slug),
+                day_of_week: day,
+                start_time_24hr: '09:00',
+                end_time_24hr: '18:00'
+            })
+        )
+    ));
 
-		upsertResource({
-			id: makeTestId(tenant_id, environment_id, 'resource.reginald_pendleton'),
-			tenant_id,
-			environment_id,
-			name: 'Chief Inspector Reginald Pendleton',
-			resource_type_id: sleuthResourceTypeId
-		}),
-		...resourceAlwaysAvailable('resource.reginald_pendleton', 'location_london'),
+    // Resource Types
+    const resourceTypes = ['Sleuth', 'Assistant', 'Specialist'];
+    const resourceTypeUpserts = await runUpserts(prisma, resourceTypes.map(type => 
+        upsertResourceType({
+            id: makeTestId(tenant_id, environment_id, `resource_type.${type.toLowerCase()}`),
+            tenant_id,
+            environment_id,
+            name: type
+        })
+    ));
 
-		upsertResource({
-			id: makeTestId(tenant_id, environment_id, 'resource.zoe_rodriguez'),
-			tenant_id,
-			environment_id,
-			name: 'Detective Zoe "Tick-Tock" Rodriguez',
-			resource_type_id: sleuthResourceTypeId
-		}),
-		...resourceAlwaysAvailable('resource.zoe_rodriguez', 'location_new_york'),
+    // Resources
+    const resources = [
+        { name: 'Sherlock Holmes', type: 'Sleuth' },
+        { name: 'John Watson', type: 'Assistant' },
+        { name: 'Mycroft Holmes', type: 'Specialist' }
+    ];
+    const resourceUpserts = await runUpserts(prisma, resources.map(resource => 
+        upsertResource({
+            id: makeTestId(tenant_id, environment_id, `resource.${resource.name.toLowerCase().replace(' ', '_')}`),
+            tenant_id,
+            environment_id,
+            name: resource.name,
+            resource_type_id: makeTestId(tenant_id, environment_id, `resource_type.${resource.type.toLowerCase()}`)
+        })
+    ));
 
-		upsertResource({
-			id: makeTestId(tenant_id, environment_id, 'resource.kazuo_takahashi'),
-			tenant_id,
-			environment_id,
-			name: 'Inspector Kazuo Takahashi',
-			resource_type_id: sleuthResourceTypeId
-		}),
-		...resourceAlwaysAvailable('resource.kazuo_takahashi', 'location_tokyo'),
+    // Resource Availability
+    await runUpserts(prisma, resourceUpserts.flatMap(resource => 
+        daysOfWeek.map(day => 
+            upsertResourceAvailability({
+                id: makeTestId(tenant_id, environment_id, `resource_availability.${resource.create.data.id}.${day}`),
+                tenant_id,
+                environment_id,
+                resource_id: resource.create.data.id,
+                day_of_week: day,
+                start_time_24hr: '09:00',
+                end_time_24hr: '18:00'
+            })
+        )
+    ));
 
-		upsertResource({
-			id: makeTestId(tenant_id, environment_id, 'resource.jasmine_singh'),
-			tenant_id,
-			environment_id,
-			name: 'Inspector Jasmine Singh',
-			resource_type_id: sleuthResourceTypeId
-		}),
-		...resourceAlwaysAvailable('resource.jasmine_singh', 'location_sydney'),
+    // Services
+    const serviceUpserts = await runUpserts(prisma, services.map(service => 
+        upsertService({
+            id: makeTestId(tenant_id, environment_id, service.slug),
+            tenant_id,
+            environment_id,
+            slug: service.slug
+        })
+    ));
 
-		upsertResource({
-			id: makeTestId(tenant_id, environment_id, 'resource.rafael_santos'),
-			tenant_id,
-			environment_id,
-			name: 'Inspector Rafael Santos',
-			resource_type_id: sleuthResourceTypeId
-		}),
-		...resourceAlwaysAvailable('resource.rafael_santos', 'location_sao_paulo'),
+    // Service Schedule Configs
+    await runUpserts(prisma, serviceUpserts.map(su => 
+        upsertServiceScheduleConfig({
+            id: makeTestId(tenant_id, environment_id, `service-schedule-config-${su.create.data.id}`),
+            tenant_id,
+            environment_id,
+            service_id: su.create.data.id,
+            schedule_config: scheduleConfig(singleDayScheduling(timeslotSelection([
+                timeslot(time24('09:00'), time24('13:00'), 'Morning'),
+                timeslot(time24('13:00'), time24('18:00'), 'Afternoon')
+            ]))) as any
+        })
+    ));
 
-		upsertResource({
-			id: makeTestId(tenant_id, environment_id, 'resource.ishaan_sharma'),
-			tenant_id,
-			environment_id,
-			name: 'Inspector Ishaan Sharma',
-			resource_type_id: sleuthResourceTypeId
-		}),
-		...resourceAlwaysAvailable('resource.ishaan_sharma', 'location_mumbai'),
+    // Service Labels
+    await runUpserts(prisma, serviceUpserts.flatMap(su => 
+        services.filter(s => makeTestId(tenant_id, environment_id, s.slug) === su.create.data.id)
+            .map(s => 
+                upsertServiceLabel({
+                    tenant_id,
+                    environment_id,
+                    service_id: su.create.data.id,
+                    language_id: languages.en.value,
+                    name: s.name,
+                    description: `${s.name} service provided by Clockwork Sleuths`
+                })
+            )
+    ));
 
-		upsertResource({
-			id: makeTestId(tenant_id, environment_id, 'resource.sarah_mahmoud'),
-			tenant_id,
-			environment_id,
-			name: 'Detective Sarah Mahmoud',
-			resource_type_id: sleuthResourceTypeId
-		}),
-		...resourceAlwaysAvailable('resource.sarah_mahmoud', 'location_cairo'),
+    // Service Resource Requirements
+    await runUpserts(prisma, serviceUpserts.map(su => 
+        upsertServiceResourceRequirement({
+            id: makeTestId(tenant_id, environment_id, `service-requirement-${su.create.data.id}`),
+            service_id: su.create.data.id,
+            tenant_id,
+            environment_id,
+            requirement_type: 'any_suitable',
+            resource_type_id: resourceTypeUpserts[0].create.data.id // Assuming 'Sleuth' is the first resource type
+        })
+    ));
 
-		upsertResource({
-			id: makeTestId(tenant_id, environment_id, 'resource.jack_frost'),
-			tenant_id,
-			environment_id,
-			name: 'Inspector Jack Frost',
-			resource_type_id: sleuthResourceTypeId
-		}),
-		...resourceAlwaysAvailable('resource.jack_frost', 'location_anchorage'),
+    // Service Locations and Prices
+    await runUpserts(prisma, serviceUpserts.flatMap(su => 
+        locations.map(loc => 
+            upsertServiceLocation({
+                tenant_id,
+                environment_id,
+                service_id: su.create.data.id,
+                location_id: makeTestId(tenant_id, environment_id, loc.slug)
+            })
+        )
+    ));
 
-		upsertService({
-			id: makeTestId(tenant_id, environment_id, 'service.tac'),
-			tenant_id,
-			environment_id,
-			slug: 'tac',
-			// price: 6600,
-			// price_currency: 'GBP',
-		}),
-		upsertServiceLocationPrice({
-			id: makeTestId(tenant_id, environment_id, 'service_location_price.tac.london'),
-			tenant_id,
-			environment_id,
-			service_id: makeTestId(tenant_id, environment_id, 'service.tac'),
-			location_id: makeTestId(tenant_id, environment_id, 'location_london'),
-			price: 6600,
-			price_currency: 'GBP',
-		}),
+    await runUpserts(prisma, serviceUpserts.flatMap(su => 
+        locations.map(loc => 
+            upsertServiceLocationPrice({
+                id: makeTestId(tenant_id, environment_id, `service-location-price-${su.create.data.id}-${loc.slug}`),
+                tenant_id,
+                environment_id,
+                service_id: su.create.data.id,
+                location_id: makeTestId(tenant_id, environment_id, loc.slug),
+                price: services.find(s => makeTestId(tenant_id, environment_id, s.slug) === su.create.data.id)?.price ?? 0,
+                price_currency: 'GBP'
+            })
+        )
+    ));
 
-		upsertServiceLabel({
-			tenant_id,
-			environment_id,
-			service_id: makeTestId(tenant_id, environment_id, 'service.tac'),
-			language_id: 'en',
-			name: 'Temporal Alignment Consultation',
-			description: 'Helps clients navigate and resolve timezone-related issues',
-		}),
-		upsertServiceResourceRequirement({
-			id: makeTestId(tenant_id, environment_id, 'service_resource_requirement.tac'),
-			tenant_id,
-			environment_id,
-			service_id: makeTestId(tenant_id, environment_id, 'service.tac'),
-			requirement_type:'any_suitable',
-			resource_type_id: sleuthResourceTypeId,
-		})
+    // Forms
+    const caseDetailsForm: JsonSchemaForm = {
+        '_type': 'json.schema.form',
+        'id': {
+            '_type': 'form.id',
+            'value': 'case-details-form'
+        },
+        'name': 'Case Details Form',
+        'schema': {
+            '$schema': 'http://json-schema.org/draft-07/schema#',
+            'type': 'object',
+            'properties': {
+                'caseTitle': {
+                    'type': 'string'
+                },
+                'caseDescription': {
+                    'type': 'string'
+                },
+                'timelineAffected': {
+                    'type': 'string'
+                }
+            },
+            'required': [
+                'caseTitle',
+                'caseDescription',
+                'timelineAffected'
+            ],
+            'additionalProperties': false
+        }
+    };
 
+    const [caseDetailsFormUpsert] = await runUpserts(prisma, [
+        upsertForm({
+            id: makeTestId(tenant_id, environment_id, caseDetailsForm.id.value),
+            tenant_id,
+            environment_id,
+            name: caseDetailsForm.name,
+            description: caseDetailsForm.name,
+            definition: caseDetailsForm as any
+        })
+    ]);
 
+    // Form Labels
+    await runUpserts(prisma, [
+        upsertFormLabels({
+            tenant_id,
+            environment_id,
+            form_id: caseDetailsFormUpsert.create.data.id,
+            language_id: languages.en.value,
+            labels: jsonSchemaFormLabels(
+                caseDetailsForm.id,
+                languages.en,
+                'Case Details',
+                [
+                    schemaKeyLabel('caseTitle', 'Case Title'),
+                    schemaKeyLabel('caseDescription', 'Case Description'),
+                    schemaKeyLabel('timelineAffected', 'Affected Timeline')
+                ],
+                'Please provide details about your case'
+            ) as any
+        })
+    ]);
 
+    // Service Forms
+    await runUpserts(prisma, serviceUpserts.map(su => 
+        upsertServiceForm({
+            tenant_id,
+            environment_id,
+            service_id: su.create.data.id,
+            form_id: caseDetailsFormUpsert.create.data.id,
+            rank: 0
+        })
+    ));
 
-	];
+    // Tenant Branding
+    const tenantBrandingId = makeTestId(tenant_id, environment_id, 'tenant_branding');
+    await runUpserts(prisma, [
+        upsertTenantBranding({
+            id: tenantBrandingId,
+            tenant_id,
+            environment_id,
+            theme: {}
+        }),
+        upsertTenantBrandingLabels({
+            tenant_id,
+            environment_id,
+            language_id: languages.en.value,
+            tenant_branding_id: tenantBrandingId,
+            headline: 'Clockwork Sleuths',
+            description: 'Solving temporal mysteries across the multiverse'
+        })
+    ]);
+
+    // Tenant Settings
+    await runUpserts(prisma, [
+        upsertTenantSettings({
+            tenant_id,
+            environment_id,
+            customer_form_id: null
+        })
+    ]);
+
+    // Service Images
+    await runUpserts(prisma, serviceUpserts.map(su => 
+        upsertServiceImage({
+            tenant_id,
+            environment_id,
+            service_id: su.create.data.id,
+            public_image_url: `https://example.com/images/${su.create.data.id}.jpg`,
+            mime_type: 'image/jpeg',
+            context: 'thumbnail'
+        })
+    ));
+
+    // Tenant Image
+    await runUpserts(prisma, [
+        upsertTenantImage({
+            tenant_id,
+            environment_id,
+            public_image_url: 'https://example.com/images/clockwork-sleuths-hero.jpg',
+            mime_type: 'image/jpeg',
+            context: 'hero'
+        })
+    ]);
 }

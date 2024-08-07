@@ -78,7 +78,6 @@ const TenantSettingsSchema = z.object({
 	'Tenant ID': z.string(),
 	'Name': z.string(),
 	'Customer Form ID': z.string().optional(),
-	'Timezone': z.string(),
 	'Hero': z.string(),
 	'Description': z.string(),
 	'Headline': z.string(),
@@ -321,15 +320,6 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
 			environment_id,
 			slug: s.ID
 		});
-		const servicePriceUpsert = upsertServiceLocationPrice({
-			id: makeId(environment_id, 'service_location_prices', makeKey(tenant_id, s.ID, locationData[0].ID)),
-			tenant_id,
-			environment_id,
-			service_id: serviceUpsert.create.data.id,
-			location_id: locationData[0].ID,
-			price: s.Price * 100,
-			price_currency: 'GBP'
-		});
 		const scheduleConfigUpsert = upsertServiceScheduleConfig({
 			id: makeId(environment_id, 'service_schedule_config', makeKey(tenant_id, s.ID)),
 			tenant_id,
@@ -344,7 +334,6 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
 		});
 		return [
 			serviceUpsert,
-			servicePriceUpsert,
 			scheduleConfigUpsert,
 			...allAddOnIds.map(addOnId => upsertServiceAddOn({
 				tenant_id,
@@ -395,6 +384,17 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
 		location_id: locationUpsert.create.data.id
 	})));
 
+
+	const servicePriceUpserts = serviceData.map(sd => upsertServiceLocationPrice({
+		id: makeId(environment_id, 'service_location_prices', makeKey(tenant_id, sd.ID, locationData[0].ID)),
+		tenant_id,
+		environment_id,
+		service_id: makeId(environment_id, 'services', sd.ID),
+		location_id: makeId(environment_id, 'locations', locationData[0].ID),
+		price: sd.Price * 100,
+		price_currency: 'GBP'
+	}));
+
 	const pricingRuleUpserts = pricingRuleData.map(pr => upsertPricingRule({
 		id: makeId(environment_id, 'pricing_rules', pr.ID),
 		tenant_id,
@@ -418,6 +418,7 @@ function makeTenantUpserts(theTenantId: TenantId, environmentId: EnvironmentId, 
 		...tenantSettingsUpserts,
 		...serviceUpserts,
 		...serviceLocationUpserts,
+		...servicePriceUpserts,
 		...pricingRuleUpserts
 	];
 }

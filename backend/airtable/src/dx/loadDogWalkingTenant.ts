@@ -271,15 +271,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
 			id: dogWalkingTenant.serviceIds.individualDogWalk,
 			slug: 'individual_dog_walk',
 		}),
-		upsertServiceLocationPrice({
-			id: makeTestId(tenant_id, environment_id, 'service_location_price.individual_dog_walk'),
-			tenant_id,
-			environment_id,
-			service_id: dogWalkingTenant.serviceIds.individualDogWalk,
-			location_id: mainLocationId,
-			price: dogWalkingTenant.servicePrices.individualDogWalk,
-			price_currency: 'GBP'
-		}),
 		upsertServiceScheduleConfig({
 			id: makeTestId(tenant_id, environment_id, 'individual_dog_walk_schedule_config'),
 			tenant_id,
@@ -334,15 +325,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
 			slug: 'group_dog_walk',
 			capacity: 5
 		}),
-		upsertServiceLocationPrice({
-			id: makeTestId(tenant_id, environment_id, 'service_location_price.group_dog_walk'),
-			tenant_id,
-			environment_id,
-			service_id: dogWalkingTenant.serviceIds.groupDogWalk,
-			location_id: mainLocationId,
-			price: dogWalkingTenant.servicePrices.groupDogWalk,
-			price_currency: 'GBP'
-		}),
 		upsertServiceScheduleConfig({
 			id: makeTestId(tenant_id, environment_id, 'group_dog_walk_schedule_config'),
 			tenant_id,
@@ -383,15 +365,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
 			environment_id,
 			id: dogWalkingTenant.serviceIds.dropInVisit,
 			slug: 'drop_in_visit'
-		}),
-		upsertServiceLocationPrice({
-			id: makeTestId(tenant_id, environment_id, 'service_location_price.drop_in_visit'),
-			tenant_id,
-			environment_id,
-			service_id: dogWalkingTenant.serviceIds.dropInVisit,
-			location_id: mainLocationId,
-			price: dogWalkingTenant.servicePrices.dropInVisit,
-			price_currency: 'GBP'
 		}),
 		upsertServiceScheduleConfig({
 			id: makeTestId(tenant_id, environment_id, 'drop_in_visit_schedule_config'),
@@ -434,15 +407,6 @@ function breezbookDogWalkUpserts(): Upsert[] {
 			environment_id,
 			id: dogWalkingTenant.serviceIds.petSit,
 			slug: 'pet_sit'
-		}),
-		upsertServiceLocationPrice({
-			id: makeTestId(tenant_id, environment_id, 'service_location_price.pet_sit'),
-			tenant_id,
-			environment_id,
-			service_id: dogWalkingTenant.serviceIds.petSit,
-			location_id: mainLocationId,
-			price: dogWalkingTenant.servicePrices.petSit,
-			price_currency: 'GBP'
 		}),
 		upsertServiceScheduleConfig({
 			id: makeTestId(tenant_id, environment_id, 'pet_sit_schedule_config'),
@@ -541,6 +505,46 @@ function breezbookDogWalkUpserts(): Upsert[] {
 			service_id: dogWalkingTenant.serviceIds.petSit,
 			location_id: makeTestId(tenant_id, environment_id, 'main')
 		}),
+
+		upsertServiceLocationPrice({
+			id: makeTestId(tenant_id, environment_id, 'service_location_price.individual_dog_walk'),
+			tenant_id,
+			environment_id,
+			service_id: dogWalkingTenant.serviceIds.individualDogWalk,
+			location_id: mainLocationId,
+			price: dogWalkingTenant.servicePrices.individualDogWalk,
+			price_currency: 'GBP'
+		}),
+		upsertServiceLocationPrice({
+			id: makeTestId(tenant_id, environment_id, 'service_location_price.group_dog_walk'),
+			tenant_id,
+			environment_id,
+			service_id: dogWalkingTenant.serviceIds.groupDogWalk,
+			location_id: mainLocationId,
+			price: dogWalkingTenant.servicePrices.groupDogWalk,
+			price_currency: 'GBP'
+		}),
+		upsertServiceLocationPrice({
+			id: makeTestId(tenant_id, environment_id, 'service_location_price.drop_in_visit'),
+			tenant_id,
+			environment_id,
+			service_id: dogWalkingTenant.serviceIds.dropInVisit,
+			location_id: mainLocationId,
+			price: dogWalkingTenant.servicePrices.dropInVisit,
+			price_currency: 'GBP'
+		}),
+		upsertServiceLocationPrice({
+			id: makeTestId(tenant_id, environment_id, 'service_location_price.pet_sit'),
+			tenant_id,
+			environment_id,
+			service_id: dogWalkingTenant.serviceIds.petSit,
+			location_id: mainLocationId,
+			price: dogWalkingTenant.servicePrices.petSit,
+			price_currency: 'GBP'
+		}),
+
+
+
 		upsertServiceForm({
 			tenant_id,
 			environment_id,
