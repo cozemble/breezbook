@@ -4,7 +4,7 @@ export const load: PageServerLoad = async () => {
     return {
         title: "Demo of a global business using Breezbook",
         description: "This demo shows capabilities of Breezbook, mainly multiple locations, location based pricing and timezone support.",
-        imageUrl: "https://breezbook-playground.vercel.app/images/breez-gym-social-share.jpg",
+        imageUrl: "https://breezbook-playground.vercel.app/images/clockwork-sleuths-social-preview.jpg",
         url: "https://breezbook-playground.vercel.app/uxs/clockwork-sleuths",
     };
 };
