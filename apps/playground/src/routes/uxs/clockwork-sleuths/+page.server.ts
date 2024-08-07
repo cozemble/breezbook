@@ -1,10 +1,10 @@
-import type { PageServerLoad } from './$types';
+import type {PageServerLoad} from './$types';
 
 export const load: PageServerLoad = async () => {
     return {
-        title: "Clockwork Sleuths - Book Your Temporal Consultation",
-        description: "This is a demo of the Breezbook booking platform. Easily book temporal consultations with Clockwork Sleuths. Choose your service, time, and options all in one place!",
-        imageUrl: "https://example.com/images/clockwork-sleuths-social-preview.jpg",
-        url: "https://breezbook-playground.vercel.app/uxs/clockwork-sleuths"
+        title: "Demo of a global business using Breezbook",
+        description: "This demo shows capabilities of Breezbook, mainly multiple locations, location based pricing and timezone support.",
+        imageUrl: "https://breezbook-playground.vercel.app/images/breez-gym-social-share.jpg",
+        url: "https://breezbook-playground.vercel.app/uxs/clockwork-sleuths",
     };
 };

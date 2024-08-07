@@ -1,13 +1,12 @@
 <script lang="ts">
-    import { Clock } from 'lucide-svelte';
-    import ThemeSwitcher from "$lib/ui/ThemeSwitcher.svelte";
-    import { goto } from '$app/navigation';
-    import { page } from '$app/stores';
-    import type { PageData } from './$types';
+    import {Github} from 'lucide-svelte';
+    import {goto} from '$app/navigation';
+    import {page} from '$app/stores';
+    import type {PageData} from './$types';
 
     export let data: PageData;
 
-    function startBooking() {
+    function startDemo() {
         const currentPath = $page.url.pathname;
         goto(`${currentPath}/booking`);
     }
@@ -28,17 +27,33 @@
 
 <div class="flex justify-center items-center min-h-screen bg-base-200">
     <div class="w-full max-w-md bg-base-100 shadow-xl rounded-lg p-8">
-        <div class="flex justify-between items-center mb-4">
-            <div class="text-sm text-base-content/70">This is a demo to show what Breezbook can do</div>
+
+        <div class="flex flex-col items-center">
+            <h2 class="text-3xl font-bold mb-6 text-primary">Breezbook Demo</h2>
+            <h2 class="text-2xl font-bold mb-6 text-primary">Of A Global Business</h2>
         </div>
-        <div class="flex justify-between items-center mb-4">
-            <div class="text-sm text-base-content/70">Choose a colour schema</div>
-            <ThemeSwitcher showLabel={false}/>
+        <div class="text-base-contentmt-4">We built this app to demonstrate how Breezbook can be used by global businesses.
+        </div>
+        <div class="mt-2">You will find various capabilities on show:</div>
+        <ul class="list-disc ml-6 mt-4">
+            <li>Multi location support</li>
+            <li>Theme'ing - choose your colours</li>
+            <li>Location-dependent pricing</li>
+            <li>Timezone handling</li>
+            <li>Stripe integration</li>
+        </ul>
+
+        <div class="flex flex-col items-center mt-8">
+            <button class="btn btn-primary btn-lg" on:click={startDemo}>Start the demo</button>
+        </div>
+
+        <div class="flex flex-col items-center mt-4">
+            <a title="See code on github" href="https://github.com/cozemble/breezbook">
+                <Github size={32} class="text-primary mb-6"/>
+            </a>
         </div>
         <div class="flex flex-col items-center">
-            <h2 class="text-3xl font-bold mb-6 text-primary">Welcome to Clockwork Sleuths</h2>
-            <Clock size={64} class="text-primary mb-6"/>
-            <button class="btn btn-primary btn-lg" on:click={startBooking}>Book a Consultation</button>
+            <img src="/images/breezbook-logo.svg" alt="Breezbook Logo" class="w-32"/>
         </div>
     </div>
 </div>
