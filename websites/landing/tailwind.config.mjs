@@ -13,28 +13,28 @@ export default {
 		themes: [
 			{
 				breezbook: {
-					primary: '#347fff',
+					primary: '#04A7E2',
 					'primary-content': '#ffffff',
-					secondary: '#58cdfa',
+					secondary: '#96D9F2',
 					'secondary-content': '#051016',
-					accent: '#5fd08e',
+					accent: '#4de8ad',
 					'accent-content': '#031007',
-					neutral: '#070e20',
-					'neutral-content': '#c6c8ce',
+					neutral: '#00284B',
+					'neutral-content': '#ECF6FE',
 
-					'base-100': '#fafeff',
-					'base-200': '#e7edf2',
-					'base-300': '#d0dde7',
-					'base-content': '#151616',
+					'base-100': '#ffffff',
+					'base-200': '#EFF4F5',
+					'base-300': '#D4E2E8',
+					'base-content': '#0F1C26',
 
-					info: '#7dd3fc',
+					info: '#259630',
 					'info-content': '#051016',
-					success: '#4ade66',
+					success: '#0C78FC',
 					'success-content': '#021203',
-					warning: '#facc15',
+					warning: '#FFDC00',
 					'warning-content': '#150f00',
-					error: '#f87171',
-					'error-content': '#150404'
+					error: '#FF3E38',
+					'error-content': '#1C0101'
 				}
 			}
 		]

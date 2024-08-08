@@ -17,7 +17,7 @@
 				"
 >
 	<a href="/">
-		<img src="./breezbook-logo.svg" alt="Breezbook Logo" class="h-7 sm:h-8 md:h-10" />
+		<img src="./breezbook-logo.svg" alt="Breezbook Logo" class="h-6 sm:h-7 md:h-8" />
 	</a>
 
 	<HeaderNav />
