@@ -966,7 +966,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 			environment_id,
 			package_id: tenBoxingUpsert.create.data.id,
 			location_id: locationLondon,
-			price_amount: 25000,
+			price: 25000,
 			price_currency: 'GBP'
 		}),
 		upsertPackageLocationPrice({
@@ -975,7 +975,7 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 			environment_id,
 			package_id: tenBoxingUpsert.create.data.id,
 			location_id: locationManchester,
-			price_amount: 25000,
+			price: 25000,
 			price_currency: 'GBP'
 		})
 	]);

@@ -1096,7 +1096,7 @@ model package_location_prices {
   environment_id    String
   package_id        String
   location_id       String
-  price_amount      Int
+  price             Decimal           @db.Decimal
   price_currency    String
   created_at        DateTime          @default(now()) @db.Timestamptz(6)
   updated_at        DateTime          @default(now()) @db.Timestamptz(6)

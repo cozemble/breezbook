@@ -63,6 +63,7 @@ async function getReferenceData(deps: EndpointDependencies): Promise<{
     personalTrainerRequirement: ResourceRequirementSpec,
     ptMike: ResourceSummary,
     ptMete: ResourceSummary,
+    tenant:Tenant
 }> {
     const theTenant = expectJson<Tenant>(await onGetTenantRequestEndpoint(deps, requestContext(requestOf('GET', externalApiPaths.getTenant + `?slug=${tenant.value}`), params)))
     const personalTrainingService = mandatory(theTenant.services.find(s => s.id === multiLocationGym.pt1Hr), `Service ${multiLocationGym.pt1Hr} not found in ${JSON.stringify(theTenant.services)}`)
@@ -74,7 +75,7 @@ async function getReferenceData(deps: EndpointDependencies): Promise<{
     })))
     const ptMike: ResourceSummary = mandatory(listOfPersonalTrainers.find(pt => pt.name === 'Mike'), `PT Mike not found in ${JSON.stringify(listOfPersonalTrainers)}`)
     const ptMete: ResourceSummary = mandatory(listOfPersonalTrainers.find(pt => pt.name === 'Mete'), `PT Mete not found in ${JSON.stringify(listOfPersonalTrainers)}`)
-    return {personalTrainingService, personalTrainerRequirement, ptMike, ptMete};
+    return {personalTrainingService, personalTrainerRequirement, ptMike, ptMete, tenant: theTenant};
 }
 
 async function bookLastSlotOnDay(deps: EndpointDependencies, availabilityOptions: ServiceAvailabilityOptions, personalTrainingService: Service, personalTrainerRequirement: ResourceRequirementSpec, preferredPt: ResourceSummary, day: IsoDate): Promise<OrderCreatedResponse> {
@@ -97,6 +98,14 @@ describe("given the test gym tenant", () => {
         const prisma = new PrismockClient()
         await loadMultiLocationGymTenant(prisma)
         deps = specifiedDeps(prisma, () => Promise.resolve())
+    })
+
+    test("tenant endpoint exposes packages", async () => {
+        const {tenant} = await getReferenceData(deps);
+        expect(tenant.packages).toHaveLength(1)
+        const firstPackage = mandatory(tenant.packages[0], `No packages found in ${JSON.stringify(tenant)}`)
+        const locationsForPackage = tenant.packageLocations.filter(pl => pl.packageId === firstPackage.id)
+        expect(locationsForPackage).toHaveLength(2)
     })
 
     test("endpoints support an end to end booking flow", async () => {

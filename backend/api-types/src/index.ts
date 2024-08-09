@@ -230,6 +230,14 @@ export interface Service {
 	forms: FormId[];
 }
 
+export interface Package {
+	id: string;
+	slug: string;
+	name: string;
+	description: string;
+	image: string;
+}
+
 export interface Location {
 	id: string;
 	slug: string;
@@ -238,6 +246,15 @@ export interface Location {
 
 export interface ServiceLocation {
 	serviceId: string;
+	locationId: string;
+	prices: ({
+		priceWithNoDecimalPlaces: number;
+		priceCurrency: string;
+	})[];
+}
+
+export interface PackageLocation {
+	packageId: string;
 	locationId: string;
 	prices: ({
 		priceWithNoDecimalPlaces: number;
@@ -260,6 +277,8 @@ export interface Tenant {
 	locations: Location[];
 	services: Service[];
 	serviceLocations: ServiceLocation[];
+	packages: Package[];
+	packageLocations: PackageLocation[];
 	theme: unknown;
 	customerForm: Form | null;
 	forms: FormAndLabels[];

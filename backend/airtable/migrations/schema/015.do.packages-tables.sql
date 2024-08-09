@@ -43,7 +43,7 @@ create table package_location_prices
     environment_id text                                not null,
     package_id     text references packages (id)       not null,
     location_id    text references locations (id)      not null,
-    price_amount   integer                             not null,
+    price          numeric                             not null,
     price_currency text                                not null,
     created_at     timestamp with time zone            not null default current_timestamp,
     updated_at     timestamp with time zone            not null default current_timestamp,

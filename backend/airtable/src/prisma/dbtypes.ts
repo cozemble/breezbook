@@ -52,7 +52,12 @@ import {
 	tenant_images,
 	tenant_settings,
 	tenants,
-	time_slots
+	time_slots,
+	packages,
+	package_locations,
+	package_labels,
+	package_images,
+	package_location_prices,
 } from '@prisma/client';
 import { TenantEnvironment } from '@breezbook/packages-types';
 
@@ -110,7 +115,12 @@ export type {
 	booking_service_options as DbBookingServiceOption,
 	add_on_labels as DbAddOnLabel,
 	service_schedule_config as DbServiceScheduleConfig,
-	service_location_prices as DbServiceLocationPrice
+	service_location_prices as DbServiceLocationPrice,
+	package_locations as DbPackageLocation,
+	package_labels as DbPackageLabel,
+	package_images as DbPackageImage,
+	package_location_prices as DbPackageLocationPrice,
+	packages as DbPackage,
 };
 
 export interface TenantEnvironmentPair {

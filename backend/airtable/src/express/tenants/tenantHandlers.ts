@@ -3,6 +3,11 @@ import {
 	DbForm,
 	DbFormLabel,
 	DbLocation,
+	DbPackage,
+	DbPackageImage,
+	DbPackageLabel,
+	DbPackageLocation,
+	DbPackageLocationPrice,
 	DbPricingRule,
 	DbServiceLocation,
 	DbServiceLocationPrice,
@@ -13,7 +18,7 @@ import {
 	DbTenantImage,
 	DbTenantSettings
 } from '../../prisma/dbtypes.js';
-import { Tenant } from '@breezbook/backend-api-types';
+import { Package, PackageLocation, Tenant } from '@breezbook/backend-api-types';
 import { PrismaClient } from '@prisma/client';
 import {
 	EnvironmentId,
@@ -41,6 +46,14 @@ import { RequestContext } from '../../infra/http/expressHttp4t.js';
 import { responseOf } from '@breezbook/packages-http/dist/responses.js';
 import { toDomainForm } from '../../prisma/dbToDomain.js';
 
+
+type DbPackageLocationAndStuff = DbPackageLocation & { package_location_prices: DbPackageLocationPrice[] };
+type DbPackageAndStuff = (DbPackage & {
+	package_labels: DbPackageLabel[],
+	package_images: DbPackageImage[],
+	package_locations: DbPackageLocationAndStuff[]
+})
+
 type DbTenantAndStuff = DbTenant & {
 	tenant_images: DbTenantImage[],
 	locations: DbLocation[],
@@ -50,8 +63,32 @@ type DbTenantAndStuff = DbTenant & {
 	service_resource_requirements: DbServiceResourceRequirement[],
 	pricing_rules: DbPricingRule[],
 	forms: (DbForm & { form_labels: DbFormLabel[] })[],
-	tenant_settings: DbTenantSettings[]
+	tenant_settings: DbTenantSettings[],
+	packages: DbPackageAndStuff[]
 };
+
+function toApiPackage(p: DbPackageAndStuff):Package {
+	const labels = mandatory(p.package_labels[0], `Expected exactly one label for package ${p.id}, got ${p.package_labels.length}`);
+	return {
+		id: p.id,
+		name: labels.name,
+		slug: p.slug,
+		description: labels.description,
+		image: p.package_images.length > 0 ? p.package_images[0].public_image_url : 'https://picsum.photos/800/450',
+	};
+}
+
+function toApiPackageLocation(p: DbPackageAndStuff, pl: DbPackageLocationAndStuff):PackageLocation {
+	const prices = pl.package_location_prices.map(plp => {
+		const priceWithNoDecimalPlaces = (typeof plp.price === 'object' && 'toNumber' in plp.price) ? plp.price.toNumber() : plp.price;
+		return ({ priceCurrency: plp.price_currency, priceWithNoDecimalPlaces });
+	})
+	return {
+		packageId: p.id,
+		locationId: pl.location_id,
+		prices
+	}
+}
 
 function toApiTenant(tenant: DbTenantAndStuff): Tenant {
 	const tenantImages: DbTenantImage[] = tenant.tenant_images ?? [];
@@ -77,6 +114,8 @@ function toApiTenant(tenant: DbTenantAndStuff): Tenant {
 			});
 			return ({ serviceId: sl.service_id, locationId: sl.location_id, prices });
 		}),
+		packages: tenant.packages.map(p => toApiPackage(p)),
+		packageLocations: tenant.packages.flatMap(p => p.package_locations.map(pl => toApiPackageLocation(p,pl))),
 		customerForm: customerForm ? toDomainForm(customerForm) : null,
 		forms: tenant.forms.map(dbForm => {
 			const labels = mandatory(dbForm.form_labels[0], `Expected exactly one form label record for form ${dbForm.id}, got ${dbForm.form_labels.length}`);
@@ -95,7 +134,7 @@ function slugQueryParam(requestValue: RequestValueExtractor = query('slug')): Pa
 }
 
 async function findTenantAndLocations(prisma: PrismaClient, slug: string, environment_id: string, language_id: string): Promise<DbTenantAndStuff | null> {
-	const tenant = await prisma.tenants.findUnique({
+	const tenant: DbTenantAndStuff | null = await prisma.tenants.findUnique({
 		where: {
 			slug
 		},
@@ -118,6 +157,27 @@ async function findTenantAndLocations(prisma: PrismaClient, slug: string, enviro
 					form_labels: {
 						where: {
 							language_id
+						}
+					}
+				}
+			},
+			packages: {
+				where: {
+					environment_id
+				},
+				include: {
+					package_labels: {
+						where: {
+							language_id
+						}
+					},
+					package_images: true,
+					package_locations: {
+						where: {
+							environment_id
+						},
+						include: {
+							package_location_prices: true
 						}
 					}
 				}

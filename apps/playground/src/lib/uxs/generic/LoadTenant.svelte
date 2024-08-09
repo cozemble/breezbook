@@ -22,6 +22,7 @@
 	onMount(async () => {
 		try {
 			tenant = await fetchJson<Tenant>(backendUrl(`/api/dev/tenants?slug=${tenantSlug}`), { method: 'GET' });
+			console.log({ tenant });
 			locations = tenant.locations.map(location => keyValue(location.id, location.name));
 			$location = locations[0]?.key ?? null;
 		} catch (error) {
