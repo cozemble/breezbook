@@ -6,6 +6,10 @@ import {
 	upsertForm,
 	upsertFormLabels,
 	upsertLocation,
+	upsertPackage,
+	upsertPackageLabel,
+	upsertPackageLocation,
+	upsertPackageLocationPrice,
 	upsertPricingRule,
 	upsertResource,
 	upsertResourceAvailability,
@@ -27,11 +31,18 @@ import {
 } from '../prisma/breezPrismaMutations.js';
 import { prismaMutationToPromise } from '../infra/prismaMutations.js';
 import { Upsert } from '../mutation/mutations.js';
-import { JsonSchemaForm, jsonSchemaFormLabels, languages, schemaKeyLabel } from '@breezbook/packages-types';
+import { JsonSchemaForm, jsonSchemaFormLabels, languages, schemaKeyLabel, serviceId } from '@breezbook/packages-types';
 import { add, jexlExpression, pricingFactorName, PricingRule } from '@breezbook/packages-pricing';
 import { makeTestId } from './testIds.js';
-import { scheduleConfig, simpleScheduleConfig } from '@breezbook/packages-core';
-import { duration, minutes } from '@breezbook/packages-date-time';
+import {
+	createPackage,
+	currencies,
+	price,
+	scheduleConfig,
+	serviceCredit,
+	simpleScheduleConfig
+} from '@breezbook/packages-core';
+import { duration, minutes, weeks } from '@breezbook/packages-date-time';
 
 const tenant_id = 'breezbook-gym';
 const environment_id = 'dev';
@@ -131,11 +142,17 @@ const serviceUpserts = [
 		tenant_id,
 		environment_id,
 		slug: 'swim.30mins'
+	}),
+	upsertService({
+		id: makeTestId(tenant_id, environment_id, 'boxing.1hr'),
+		tenant_id,
+		environment_id,
+		slug: 'boxing.1hr'
 	})
 ];
 
 
-const [gym1Hr, pt1Hr, yoga1Hr, massage30mins, swim30mins] = serviceUpserts;
+const [gym1Hr, pt1Hr, yoga1Hr, massage30mins, swim30mins, boxing1Hr] = serviceUpserts;
 
 
 export const multiLocationGym = {
@@ -150,7 +167,8 @@ export const multiLocationGym = {
 	massage30mins: massage30mins.create.data.id,
 	swim30mins: swim30mins.create.data.id,
 	ptMike: upsertPtMike.create.data.id,
-	ptMete: upsertPtMete.create.data.id
+	ptMete: upsertPtMete.create.data.id,
+	boxing1Hr: boxing1Hr.create.data.id
 };
 
 export async function runUpserts(prisma: PrismaClient, upserts: Upsert[]): Promise<Upsert[]> {
@@ -497,7 +515,6 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 		)
 	);
 
-	const [gym1Hr, pt1Hr, yoga1Hr, massage30mins, swim30mins] = serviceUpserts;
 	const serviceLabelUpserts = [
 		upsertServiceLabel({
 			tenant_id,
@@ -578,6 +595,22 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 			language_id: tr,
 			name: '30 dakikalık yüzme',
 			description: '30 dakikalık yüzme seansı'
+		}),
+		upsertServiceLabel({
+			tenant_id,
+			environment_id,
+			service_id: boxing1Hr.create.data.id,
+			language_id: en,
+			name: '60 minute boxing session',
+			description: 'A 60-minute boxing session with one of our trainers'
+		}),
+		upsertServiceLabel({
+			tenant_id,
+			environment_id,
+			service_id: boxing1Hr.create.data.id,
+			language_id: tr,
+			name: '60 dakikalık boks seansı',
+			description: 'Antrenörlerimizden biriyle 60 dakikalık boks seansı'
 		})
 	];
 	await runUpserts(prisma, serviceUpserts);
@@ -616,6 +649,13 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 			environment_id,
 			service_id: swim30mins.create.data.id,
 			schedule_config: scheduleConfig(simpleScheduleConfig(duration(minutes(30)))) as any
+		}),
+		upsertServiceScheduleConfig({
+			id: makeTestId(tenant_id, environment_id, `service_schedule_config.${boxing1Hr.create.data.id}`),
+			tenant_id,
+			environment_id,
+			service_id: boxing1Hr.create.data.id,
+			schedule_config: scheduleConfig(simpleScheduleConfig(duration(minutes(60)))) as any
 		})
 	]);
 	await runUpserts(prisma, serviceLabelUpserts);
@@ -643,6 +683,14 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 			service_id: massage30mins.create.data.id,
 			requirement_type: 'any_suitable',
 			resource_type_id: massageTherapistResourceTypeId
+		}),
+		upsertServiceResourceRequirement({
+			id: makeTestId(tenant_id, environment_id, `service_resource_requirement.any_suitable.${boxing1Hr.create.data.id}`),
+			tenant_id,
+			environment_id,
+			service_id: boxing1Hr.create.data.id,
+			requirement_type: 'any_suitable',
+			resource_type_id: personalTrainerResourceTypeId
 		})
 	]);
 	await runUpserts(
@@ -805,6 +853,38 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 			location_id: locationLiverpool,
 			price: 4900,
 			price_currency: 'GBP'
+		}),
+
+		// Add boxing service to London and Manchester locations
+		upsertServiceLocation({
+			tenant_id,
+			environment_id,
+			service_id: boxing1Hr.create.data.id,
+			location_id: locationLondon
+		}),
+		upsertServiceLocation({
+			tenant_id,
+			environment_id,
+			service_id: boxing1Hr.create.data.id,
+			location_id: locationManchester
+		}),
+		upsertServiceLocationPrice({
+			id: makeTestId(tenant_id, environment_id, `service_location_price.${boxing1Hr.create.data.id}.${locationLondon}`),
+			tenant_id,
+			environment_id,
+			service_id: boxing1Hr.create.data.id,
+			location_id: locationLondon,
+			price: 8000,
+			price_currency: 'GBP'
+		}),
+		upsertServiceLocationPrice({
+			id: makeTestId(tenant_id, environment_id, `service_location_price.${boxing1Hr.create.data.id}.${locationManchester}`),
+			tenant_id,
+			environment_id,
+			service_id: boxing1Hr.create.data.id,
+			location_id: locationManchester,
+			price: 8000,
+			price_currency: 'GBP'
 		})
 	]);
 
@@ -831,6 +911,72 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 			tenant_branding_id: tenantBrandingId,
 			headline: 'Breez Gym',
 			description: 'Fit ve sağlıklı olmak hiç bu kadar kolay olmamıştı'
+		})
+	]);
+
+	const tenBoxingSessions = createPackage(
+		[serviceCredit(10, [serviceId(multiLocationGym.boxing1Hr)])],
+		price(25000, currencies.GBP),
+		weeks(26));
+
+	const tenBoxingUpsert = upsertPackage({
+		id: makeTestId(tenant_id, environment_id, 'package.boxing.10'),
+		tenant_id,
+		environment_id,
+		slug: 'boxing-10',
+		validity_period_type: tenBoxingSessions.validityPeriod._type,
+		validity_period_value: tenBoxingSessions.validityPeriod.value,
+		definition: tenBoxingSessions as any
+	});
+
+	await runUpserts(prisma, [
+		tenBoxingUpsert,
+		// Add the package to London and Manchester locations
+		upsertPackageLocation({
+			tenant_id,
+			environment_id,
+			package_id: tenBoxingUpsert.create.data.id,
+			location_id: locationLondon
+		}),
+		upsertPackageLocation({
+			tenant_id,
+			environment_id,
+			package_id: tenBoxingUpsert.create.data.id,
+			location_id: locationManchester
+		}),
+		upsertPackageLabel({
+			tenant_id,
+			environment_id,
+			package_id: tenBoxingUpsert.create.data.id,
+			language_id: en,
+			name: '10 boxing sessions',
+			description: '10 boxing sessions with one of our trainers'
+		}),
+		upsertPackageLabel({
+			tenant_id,
+			environment_id,
+			package_id: tenBoxingUpsert.create.data.id,
+			language_id: tr,
+			name: '10 boks seansı',
+			description: 'Antrenörlerimizden biriyle 10 boks seansı'
+		}),
+		upsertPackageLocationPrice({
+			id: makeTestId(tenant_id, environment_id, `package_location_price.${tenBoxingUpsert.create.data.id}.${locationLondon}`),
+			tenant_id,
+			environment_id,
+			package_id: tenBoxingUpsert.create.data.id,
+			location_id: locationLondon,
+			price_amount: 25000,
+			price_currency: 'GBP'
+		}),
+		upsertPackageLocationPrice({
+			id: makeTestId(tenant_id, environment_id, `package_location_price.${tenBoxingUpsert.create.data.id}.${locationManchester}`),
+			tenant_id,
+			environment_id,
+			package_id: tenBoxingUpsert.create.data.id,
+			location_id: locationManchester,
+			price_amount: 25000,
+			price_currency: 'GBP'
 		})
 	]);
 }

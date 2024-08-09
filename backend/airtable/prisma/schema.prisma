@@ -234,6 +234,8 @@ model locations {
   business_hours          business_hours[]
   tenants                 tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
   order_lines             order_lines[]
+  package_location_prices package_location_prices[]
+  package_locations       package_locations[]
   pricing_rules           pricing_rules[]
   refund_rules            refund_rules[]
   resource_availability   resource_availability[]
@@ -628,6 +630,11 @@ model tenants {
   order_lines                          order_lines[]
   order_payments                       order_payments[]
   orders                               orders[]
+  package_images                       package_images[]
+  package_labels                       package_labels[]
+  package_location_prices              package_location_prices[]
+  package_locations                    package_locations[]
+  packages                             packages[]
   pricing_rules                        pricing_rules[]
   received_webhooks                    received_webhooks[]
   refund_rules                         refund_rules[]
@@ -759,6 +766,7 @@ model languages {
   updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
   add_on_labels          add_on_labels[]
   form_labels            form_labels[]
+  package_labels         package_labels[]
   resource_markup_labels resource_markup_labels[]
   service_labels         service_labels[]
   service_option_labels  service_option_labels[]
@@ -1064,6 +1072,89 @@ model service_location_prices {
   tenants           tenants           @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@unique([tenant_id, environment_id, service_id, location_id, price_currency])
+}
+
+model package_labels {
+  tenant_id      String
+  environment_id String
+  package_id     String
+  language_id    String
+  name           String
+  description    String
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  languages      languages @relation(fields: [language_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  packages       packages  @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants        tenants   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, package_id, language_id])
+}
+
+model package_location_prices {
+  id                String            @id
+  tenant_id         String
+  environment_id    String
+  package_id        String
+  location_id       String
+  price_amount      Int
+  price_currency    String
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime          @default(now()) @db.Timestamptz(6)
+  locations         locations         @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  packages          packages          @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  package_locations package_locations @relation(fields: [tenant_id, environment_id, package_id, location_id], references: [tenant_id, environment_id, package_id, location_id], onDelete: NoAction, onUpdate: NoAction)
+  tenants           tenants           @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenant_id, environment_id, package_id, location_id, price_currency])
+}
+
+model package_locations {
+  tenant_id               String
+  environment_id          String
+  package_id              String
+  location_id             String
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  package_location_prices package_location_prices[]
+  locations               locations                 @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  packages                packages                  @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                 tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([tenant_id, environment_id, package_id, location_id])
+}
+
+model packages {
+  id                      String                    @id
+  tenant_id               String
+  environment_id          String
+  slug                    String
+  definition              Json
+  validity_period_type    String
+  validity_period_value   Int
+  created_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime                  @default(now()) @db.Timestamptz(6)
+  package_images          package_images[]
+  package_labels          package_labels[]
+  package_location_prices package_location_prices[]
+  package_locations       package_locations[]
+  tenants                 tenants                   @relation(fields: [tenant_id], references: [tenant_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenant_id, environment_id, slug])
+}
+
+model package_images {
+  package_id       String
+  tenant_id        String
+  environment_id   String
+  public_image_url String
+  mime_type        String
+  context          String
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  packages         packages @relation(fields: [package_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tenants          tenants  @relation(fields: [tenant_id], references: [tenant_id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([package_id, tenant_id, environment_id, context])
 }
 
 enum booking_event_type {

@@ -21,16 +21,16 @@ describe("Given a gym with services at various locations", () => {
         await loadMultiLocationGymTenant(prisma)
     })
 
-    test("london has gym, pt and massage as possible services", async () => {
+    test("london has gym, boxing, pt and massage as possible services", async () => {
         const location = mandatory(await byLocation.findServices(prisma, multilocationGym.london), `harlow services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
-        expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.massage30mins])
+        expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.massage30mins, multiLocationGym.boxing1Hr])
     })
 
-    test("manchester has gym, pt and swim as possible services", async () => {
+    test("manchester has gym, boxing,pt and swim as possible services", async () => {
         const location = mandatory(await byLocation.findServices(prisma, multilocationGym.manchester), `ware services`)
         const serviceIds = location.service_locations.map(s => s.service_id)
-        expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.swim30mins])
+        expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.swim30mins, multiLocationGym.boxing1Hr])
     });
 
     test("liverpool has gym, yoga and swim as possible services", async () => {
@@ -39,10 +39,10 @@ describe("Given a gym with services at various locations", () => {
         expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.yoga1Hr, multiLocationGym.swim30mins])
     })
 
-    test("there is availability for gym, pt and massage at london", async () => {
+    test("there is availability for gym, boxing,pt and massage at london", async () => {
         const everything = await byLocation.getEverythingForAvailability(prisma, multilocationGym.london, isoDate('2024-04-22'), isoDate('2024-04-23'));
         const serviceIds = everything.businessConfiguration.services.map(s => s.id.value)
-        expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.massage30mins])
+        expect(serviceIds).toEqual([multiLocationGym.gym1Hr, multiLocationGym.pt1Hr, multiLocationGym.massage30mins, multiLocationGym.boxing1Hr])
     });
 
     test("default business hours for liverpool and manchester, closed on wednesdays at london", async () => {
