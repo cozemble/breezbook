@@ -1,6 +1,6 @@
 #!/bin/bash
 
-directories=("types" "core" "resourcing" "pricing" "date-time" )
+directories=("types" "core" "resourcing" "pricing" )
 
 for dir in ${directories[@]}; do
     find "$dir" -type f -name "*.ts" | while read -r file; do

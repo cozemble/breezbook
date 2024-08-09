@@ -55,6 +55,29 @@ export interface ValueType<T> {
 	value: T;
 }
 
+export interface Months extends ValueType<number> {
+	_type: 'months';
+}
+
+export function months(value: number): Months {
+	return { value, _type: 'months' };
+}
+
+export interface Years extends ValueType<number> {
+	_type: 'years';
+}
+
+export function years(value: number): Years {
+	return { value, _type: 'years' };
+}
+
+export interface Weeks extends ValueType<number> {
+	_type: 'weeks';
+}
+
+export function weeks(value: number): Weeks {
+	return { value, _type: 'weeks' };
+}
 
 export interface Days extends ValueType<number> {
 	_type: 'days';
@@ -96,8 +119,17 @@ export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Frida
 export const daysOfWeek: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 export const mondayToFriday: DayOfWeek[] = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
+export interface DayOfWeekAndTimePeriod {
+	_type: 'day.of.week.and.time.period';
+	day: DayOfWeek;
+	period: TimePeriod;
+}
 
-export type DurationUnit = Minutes | Days | Hours
+export function dayOfWeekAndTimePeriod(day: DayOfWeek, period: TimePeriod): DayOfWeekAndTimePeriod {
+	return { _type: 'day.of.week.and.time.period', day, period };
+}
+
+export type DurationUnit = Minutes | Days | Hours | Weeks
 
 export interface Duration extends ValueType<DurationUnit> {
 	_type: 'duration';
@@ -119,6 +151,8 @@ export const durationFns = {
 				return minutes(duration.value.value * 60);
 			case 'days':
 				return minutes(duration.value.value * 60 * 24);
+			case 'weeks':
+				return minutes(duration.value.value * 60 * 24 * 7);
 		}
 	},
 	matchUnits(d: Duration, exemplar: Duration): Duration {
@@ -134,6 +168,9 @@ export const durationFns = {
 		}
 		if (exemplar.value._type === 'days') {
 			return duration(days(asMinutes.value / 60 / 24));
+		}
+		if (exemplar.value._type === 'weeks') {
+			return duration(weeks(asMinutes.value / 60 / 24 / 7));
 		}
 		throw new Error(`Unknown duration unit ${JSON.stringify(exemplar.value)}`);
 	},
@@ -216,11 +253,6 @@ export const time24Fns = {
 	},
 	getMinutes(t: TwentyFourHourClockTime): number {
 		return parseInt(t.value.split(':')[1]);
-	},
-	fromHoursAndMinutes(hours: number, minutes: number, timezone: Timezone): TwentyFourHourClockTime {
-		const paddedHours = hours.toString().padStart(2, '0');
-		const paddedMins = minutes.toString().padStart(2, '0');
-		return time24(`${paddedHours}:${paddedMins}`);
 	},
 	addDays(start: IsoDate, days: Days | number): IsoDate {
 		const numberOfDays = typeof days === 'number' ? days : days.value;
@@ -371,17 +403,6 @@ export function dayAndTimePeriod(day: IsoDate, period: TimePeriod): DayAndTimePe
 		period
 	};
 }
-
-// export function dayAndTimePeriod(date: IsoDate | string, from: TwentyFourHourClockTime | string, to: TwentyFourHourClockTime | string): DayAndTimePeriod {
-// 	const dateStr = typeof date === 'string' ? date : date.value;
-// 	const fromStr = typeof from === 'string' ? from : from.value;
-// 	const toStr = typeof to === 'string' ? to : to.value;
-// 	return {
-// 		_type: 'day.and.time.period',
-// 		day: isoDate(dateStr),
-// 		period: timePeriod(time24(fromStr), time24(toStr))
-// 	};
-// }
 
 export const dayAndTimePeriodFns = {
 	fromStrings: (date: string, from: string, to: string): DayAndTimePeriod => {
