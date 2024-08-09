@@ -230,12 +230,19 @@ export interface Service {
 	forms: FormId[];
 }
 
+
+export interface PackageSummary {
+	_type: 'service.credit.summary'
+	numberOfUses: number;
+}
+
 export interface Package {
 	id: string;
 	slug: string;
 	name: string;
 	description: string;
 	image: string;
+	summary: PackageSummary
 }
 
 export interface Location {

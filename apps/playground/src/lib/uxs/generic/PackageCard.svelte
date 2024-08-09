@@ -29,7 +29,7 @@
 		<p>{packageItem.description}</p>
 		<div class="flex justify-between items-center mt-4">
 			<span class="text-lg font-semibold">{formatPrice(packageLocation)}</span>
-			<span class="text-sm">xxx sessions</span>
+			<span class="text-sm">{packageItem.summary.numberOfUses} sessions</span>
 		</div>
 	</div>
 </div>

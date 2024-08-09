@@ -18,7 +18,7 @@ import {
 	DbTenantImage,
 	DbTenantSettings
 } from '../../prisma/dbtypes.js';
-import { Package, PackageLocation, Tenant } from '@breezbook/backend-api-types';
+import { PackageLocation, Tenant, Package, PackageSummary } from '@breezbook/backend-api-types';
 import { PrismaClient } from '@prisma/client';
 import {
 	EnvironmentId,
@@ -45,6 +45,7 @@ import {
 import { RequestContext } from '../../infra/http/expressHttp4t.js';
 import { responseOf } from '@breezbook/packages-http/dist/responses.js';
 import { toDomainForm } from '../../prisma/dbToDomain.js';
+import * as core from '@breezbook/packages-core'
 
 
 type DbPackageLocationAndStuff = DbPackageLocation & { package_location_prices: DbPackageLocationPrice[] };
@@ -69,12 +70,19 @@ type DbTenantAndStuff = DbTenant & {
 
 function toApiPackage(p: DbPackageAndStuff):Package {
 	const labels = mandatory(p.package_labels[0], `Expected exactly one label for package ${p.id}, got ${p.package_labels.length}`);
+	const packageDefinition = p.definition as any as core.Package;
+	const firstServiceCredit = packageDefinition.items.find(i => i._type === 'service.credit') as core.ServiceCredit | undefined;
+	const summary:PackageSummary = {
+		_type: 'service.credit.summary',
+		numberOfUses: firstServiceCredit ? firstServiceCredit.quantity : 0
+	}
 	return {
 		id: p.id,
 		name: labels.name,
 		slug: p.slug,
 		description: labels.description,
 		image: p.package_images.length > 0 ? p.package_images[0].public_image_url : 'https://picsum.photos/800/450',
+		summary
 	};
 }
 

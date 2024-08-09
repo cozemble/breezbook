@@ -72,12 +72,17 @@ export function createPackage(
 export type PackageItem = ServiceCredit | FixedPackage
 
 export interface ServiceCredit {
+	_type: 'service.credit';
 	quantity: number;
 	services: ServiceId[];
 }
 
 export function serviceCredit(quantity: number, services: ServiceId[]): ServiceCredit {
-	return { quantity, services };
+	return {
+		_type: 'service.credit',
+		quantity,
+		services
+	};
 }
 
 export type FixedPackageSchedule = SpecificDatesSchedule | ConstrainedSchedule
@@ -114,10 +119,15 @@ export function constrainedSchedule(permittedSlots: PermittedSlot[]): Constraine
 }
 
 export interface FixedPackage {
+	_type:'fixed.package';
 	serviceId: ServiceId;
 	schedule: FixedPackageSchedule;
 }
 
 export function fixedPackage(serviceId: ServiceId, schedule: FixedPackageSchedule): FixedPackage {
-	return { serviceId, schedule };
+	return {
+		_type: 'fixed.package',
+		serviceId,
+		schedule
+	};
 }
