@@ -35,8 +35,8 @@
 </div>
 
 <style>
-	figure {
-		height: 100px;
-		overflow: hidden;
-	}
+    figure {
+        height: 100px;
+        overflow: hidden;
+    }
 </style>

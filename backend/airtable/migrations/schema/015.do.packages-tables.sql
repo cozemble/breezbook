@@ -62,4 +62,29 @@ create table package_images
     created_at       timestamp                                             not null default current_timestamp,
     updated_at       timestamp                                             not null default current_timestamp,
     primary key (package_id, tenant_id, environment_id, context)
-)
+);
+
+create table package_markup
+(
+    id             text primary key,
+    package_id     text references packages (id) on delete cascade       not null,
+    tenant_id      text references tenants (tenant_id) on delete cascade not null,
+    environment_id text                                                  not null,
+    markup_type    text                                                  not null,
+    context        text                                                  not null,
+    created_at     timestamp                                             not null default current_timestamp,
+    updated_at     timestamp                                             not null default current_timestamp,
+    unique (package_id, context)
+);
+
+create table package_markup_labels
+(
+    tenant_id         text references tenants (tenant_id) on delete cascade not null,
+    environment_id    text                                                  not null,
+    language_id       text references languages (id)                        not null,
+    package_markup_id text references package_markup (id)                   not null,
+    markup            text                                                  not null,
+    created_at        timestamp                                             not null default current_timestamp,
+    updated_at        timestamp                                             not null default current_timestamp,
+    primary key (package_markup_id, language_id)
+);

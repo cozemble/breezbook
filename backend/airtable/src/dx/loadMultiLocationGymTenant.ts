@@ -9,7 +9,7 @@ import {
 	upsertPackage,
 	upsertPackageLabel,
 	upsertPackageLocation,
-	upsertPackageLocationPrice,
+	upsertPackageLocationPrice, upsertPackageMarkup, upsertPackageMarkupLabels,
 	upsertPricingRule,
 	upsertResource,
 	upsertResourceAvailability,
@@ -977,6 +977,30 @@ export async function loadMultiLocationGymTenant(prisma: PrismaClient): Promise<
 			location_id: locationManchester,
 			price: 25000,
 			price_currency: 'GBP'
+		}),
+		// Add package markup
+		upsertPackageMarkup({
+			id: makeTestId(tenant_id, environment_id, `package_markup.${tenBoxingUpsert.create.data.id}`),
+			tenant_id,
+			environment_id,
+			package_id: tenBoxingUpsert.create.data.id,
+			context: 'description',
+			markup_type: 'markdown'
+		}),
+		// Add package markup labels
+		upsertPackageMarkupLabels({
+			tenant_id,
+			environment_id,
+			package_markup_id: makeTestId(tenant_id, environment_id, `package_markup.${tenBoxingUpsert.create.data.id}`),
+			language_id: en,
+			markup: '# 10 Boxing Sessions Package\n\n- 10 one-hour boxing sessions\n- Valid for 26 weeks\n- Train with our expert boxing instructors\n- Improve your fitness, technique, and confidence\n- Suitable for all skill levels'
+		}),
+		upsertPackageMarkupLabels({
+			tenant_id,
+			environment_id,
+			package_markup_id: makeTestId(tenant_id, environment_id, `package_markup.${tenBoxingUpsert.create.data.id}`),
+			language_id: tr,
+			markup: '# 10 Boks Seansı Paketi\n\n- 10 adet bir saatlik boks seansı\n- 26 hafta geçerli\n- Uzman boks eğitmenlerimizle antrenman yapın\n- Fitness, teknik ve özgüveninizi geliştirin\n- Tüm beceri seviyeleri için uygundur'
 		})
 	]);
 }

@@ -624,49 +624,66 @@ export function upsertServiceLocationPrice(create: Prisma.service_location_price
 export type UpsertPackage = Upsert<Prisma.packagesCreateArgs['data'], Prisma.packagesUpdateArgs['data'], Prisma.packagesUpdateArgs['where']>
 
 export function upsertPackage(create: Prisma.packagesUncheckedCreateInput): UpsertPackage {
-    const entityId = compositeKey("id", mandatory(create.id, "Package ID"))
-    return makeUpsert('packages', entityId, create)
+	const entityId = compositeKey('id', mandatory(create.id, 'Package ID'));
+	return makeUpsert('packages', entityId, create);
 }
 
 export type UpsertPackageLabel = Upsert<Prisma.package_labelsCreateArgs['data'], Prisma.package_labelsUpdateArgs['data'], Prisma.package_labelsUpdateArgs['where']>
 
 export function upsertPackageLabel(create: Prisma.package_labelsUncheckedCreateInput): UpsertPackageLabel {
-    const entityId = compositeKey(
-        "tenant_id", mandatory(create.tenant_id, "Tenant ID"),
-        "environment_id", mandatory(create.environment_id, "Environment ID"),
-        "package_id", mandatory(create.package_id, "Package ID"),
-        "language_id", mandatory(create.language_id, "Language ID")
-    )
-    return makeUpsert('package_labels', entityId, create)
+	const entityId = compositeKey(
+		'tenant_id', mandatory(create.tenant_id, 'Tenant ID'),
+		'environment_id', mandatory(create.environment_id, 'Environment ID'),
+		'package_id', mandatory(create.package_id, 'Package ID'),
+		'language_id', mandatory(create.language_id, 'Language ID')
+	);
+	return makeUpsert('package_labels', entityId, create);
 }
 
 export type UpsertPackageImage = Upsert<Prisma.package_imagesCreateArgs['data'], Prisma.package_imagesUpdateArgs['data'], Prisma.package_imagesUpdateArgs['where']>
 
 export function upsertPackageImage(create: Prisma.package_imagesUncheckedCreateInput): UpsertPackageImage {
-    const entityId = compositeKey(
-        "package_id", mandatory(create.package_id, "Package ID"),
-        "tenant_id", mandatory(create.tenant_id, "Tenant ID"),
-        "environment_id", mandatory(create.environment_id, "Environment ID"),
-        "context", mandatory(create.context, "Package Image Context")
-    )
-    return makeUpsert('package_images', entityId, create)
+	const entityId = compositeKey(
+		'package_id', mandatory(create.package_id, 'Package ID'),
+		'tenant_id', mandatory(create.tenant_id, 'Tenant ID'),
+		'environment_id', mandatory(create.environment_id, 'Environment ID'),
+		'context', mandatory(create.context, 'Package Image Context')
+	);
+	return makeUpsert('package_images', entityId, create);
 }
 
 export type UpsertPackageLocation = Upsert<Prisma.package_locationsCreateArgs['data'], Prisma.package_locationsUpdateArgs['data'], Prisma.package_locationsUpdateArgs['where']>
 
 export function upsertPackageLocation(create: Prisma.package_locationsUncheckedCreateInput): UpsertPackageLocation {
-    const entityId = compositeKey(
-        "tenant_id", mandatory(create.tenant_id, "Tenant ID"),
-        "environment_id", mandatory(create.environment_id, "Environment ID"),
-        "package_id", mandatory(create.package_id, "Package ID"),
-        "location_id", mandatory(create.location_id, "Location ID")
-    )
-    return makeUpsert('package_locations', entityId, create)
+	const entityId = compositeKey(
+		'tenant_id', mandatory(create.tenant_id, 'Tenant ID'),
+		'environment_id', mandatory(create.environment_id, 'Environment ID'),
+		'package_id', mandatory(create.package_id, 'Package ID'),
+		'location_id', mandatory(create.location_id, 'Location ID')
+	);
+	return makeUpsert('package_locations', entityId, create);
 }
 
 export type UpsertPackageLocationPrice = Upsert<Prisma.package_location_pricesCreateArgs['data'], Prisma.package_location_pricesUpdateArgs['data'], Prisma.package_location_pricesUpdateArgs['where']>
 
 export function upsertPackageLocationPrice(create: Prisma.package_location_pricesUncheckedCreateInput): UpsertPackageLocationPrice {
-    const entityId = compositeKey("id", mandatory(create.id, "Package Location Price ID"))
-    return makeUpsert('package_location_prices', entityId, create)
+	const entityId = compositeKey('id', mandatory(create.id, 'Package Location Price ID'));
+	return makeUpsert('package_location_prices', entityId, create);
+}
+
+export type UpsertPackageMarkup = Upsert<Prisma.package_markupCreateArgs['data'], Prisma.package_markupUpdateArgs['data'], Prisma.package_markupUpdateArgs['where']>
+
+export function upsertPackageMarkup(create: Prisma.package_markupUncheckedCreateInput): UpsertPackageMarkup {
+	const entityId = compositeKey('id', mandatory(create.id, 'Package ID'));
+	return makeUpsert('package_markup', entityId, create);
+}
+
+export type UpsertPackageMarkupLabels = Upsert<Prisma.package_markup_labelsCreateArgs['data'], Prisma.package_markup_labelsUpdateArgs['data'], Prisma.package_markup_labelsUpdateArgs['where']>
+
+export function upsertPackageMarkupLabels(create: Prisma.package_markup_labelsUncheckedCreateInput): UpsertPackageMarkupLabels {
+	const entityId = compositeKey(
+		'package_markup_id', mandatory(create.package_markup_id, 'Package Markup ID'),
+		'language_id', mandatory(create.language_id, 'Language ID')
+	);
+	return makeUpsert('package_markup_labels', entityId, create);
 }
